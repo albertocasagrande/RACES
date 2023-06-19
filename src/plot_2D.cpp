@@ -49,7 +49,7 @@ Color::Color(const uint8_t red, const uint8_t green, const uint8_t blue, const u
 {}
 
 Plot2DWindow::Plot2DWindow(const unsigned int width, const unsigned int height, const std::string name):
-	background_color()
+	background_color(), w_closed(false)
 {
 	(void)width;
 	(void)height;

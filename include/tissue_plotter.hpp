@@ -32,6 +32,7 @@
 #define __RACES_TISSUE_PLOTTER__
 
 #include <memory>
+#include <sstream>
 
 #include "tissue.hpp"
 
@@ -74,7 +75,7 @@ public:
 		auto sizes(tissue.size());
 		if constexpr(PLOT_WINDOW::dimensions()==2) {
 			window = std::make_unique<PLOT_WINDOW>(total_width(), total_height(), name);
-			plot();
+			plot(0);
 			
 			return;
 		}
@@ -90,9 +91,9 @@ public:
 
 	unsigned int total_height() const
 	{
-		unsigned int height =  tissue.num_of_species()*(legend_rectangle_height+frame_border)+frame_border;
+		unsigned int height =  tissue.num_of_species()*(legend_rectangle_height+frame_border);
 
-		return std::max(height, static_cast<unsigned int>(tissue.size()[1]+2*frame_border));
+		return std::max(height, static_cast<unsigned int>(tissue.size()[1]+2*frame_border+legend_rectangle_height));
 	}
 
 	void draw_frame()
@@ -100,9 +101,25 @@ public:
 		auto sizes(tissue.size());
 		if constexpr(PLOT_WINDOW::dimensions()==2) {
 			window->set_color(Color(0xFF,0xFF,0xFF));
-			window->draw_rectangle(frame_border-frame_thickness, frame_border-frame_thickness,
+			window->draw_rectangle(frame_border-frame_thickness, 
+								   legend_rectangle_height+frame_border-frame_thickness,
 							       sizes[0]+2*frame_thickness, sizes[1]+2*frame_thickness);
 		}
+	}
+
+	void draw_time(const Time& time)
+	{
+		unsigned int label_width, label_height;
+
+		std::ostringstream oss;
+		oss << "Time: " << time << "s";
+
+		window->get_text_size(oss.str(), label_width, label_height);
+		const unsigned int label_x_pos = frame_border;
+		const unsigned int label_y_pos = (frame_border+legend_rectangle_height-label_height)/2;
+
+		window->set_color(Color(0xFF,0xFF,0xFF));
+		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
 	void draw_tissue()
@@ -117,7 +134,8 @@ public:
 
 			for (const auto& cell: species) {
 				if constexpr(PLOT_WINDOW::dimensions()==2) {
-					window->draw_point(cell.x+frame_border,cell.y+frame_border);
+					window->draw_point(cell.x+frame_border,
+									   cell.y+frame_border+legend_rectangle_height);
 				} else {
 					window->draw_point(cell.x+frame_border,
 									   cell.y+frame_border,
@@ -156,25 +174,21 @@ public:
 		}
 	}
 
-	inline bool redraw()
+    void plot(const Time& time)
 	{
 		window->clear();
-
-		draw_legend();
-		draw_tissue();
-
-		return !window->update();
-	}
-
-    inline bool plot()
-	{
-		window->clear();
+		
+		draw_time(time);
 
 		draw_legend();
 		draw_tissue();
 		
-		return redraw();
+		window->update();
+	}
 
+	inline const bool& closed() const
+	{
+		return window->closed();
 	}
 
 	~TissuePlotter()

@@ -325,7 +325,10 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     
     if (++epochs_since_last_plot>=plot_time_interval) {
         epochs_since_last_plot = 0;
-        quitting = plotter.plot();
+        if (!plotter.closed()) {
+            plotter.plot(time);
+            quitting = plotter.closed();
+        }
     }
 
     return *this;
@@ -341,13 +344,18 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     }
 
     num_of_mutated_cells = tissue.num_of_mutated_cells();
-    while (!quitting && num_of_mutated_cells>0 && time < final_time && 4*num_of_mutated_cells<total_cells) {
+    while (!quitting && num_of_mutated_cells>0 && time < final_time) {
         run_up_to_next_event();
 
         if (last_snapshot_time+snapshot_interval<time) {
             last_snapshot_time = time;
             logger.snapshot(tissue, last_snapshot_time);
         }
+    }
+
+    while (!quitting) {
+        plotter.plot(time);
+        quitting = plotter.closed();
     }
 
     return *this;

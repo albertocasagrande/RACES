@@ -54,10 +54,10 @@ class SDLWindow : public Plot2DWindow
 		ALPHA
 	};
 
-	SDL_Window* window;         //!< Graphical window
-	SDL_Renderer* renderer;     //!< Renderer
+	SDL_Window* window;         //!< graphical window
+	SDL_Renderer* renderer;     //!< renderer
 
-	TTF_Font* font;				//!< Text font
+	TTF_Font* font;				//!< text font
 public:
 	SDLWindow(const unsigned int width, const unsigned int height, const std::string name);
 
@@ -81,7 +81,7 @@ public:
 
 	void delete_point(const unsigned int x, const unsigned int y);
 
-	bool update();
+	void update();
 
 	~SDLWindow();
 };

@@ -56,7 +56,9 @@ struct Color {
 
 class Plot2DWindow {
 protected:
-	Color background_color;
+	Color background_color;		//!< background color
+
+	bool w_closed;				//!< flag reporting whether the window has been closed
 public:
 	Plot2DWindow(const unsigned int width, const unsigned int height, const std::string name);
 
@@ -84,7 +86,9 @@ public:
 
 	void delete_point(const unsigned int x, const unsigned int y);
 
-	bool update();
+	void update();
+
+	const bool& closed() const;
 
 	static constexpr uint8_t dimensions();
 };
@@ -164,10 +168,15 @@ inline void Plot2DWindow::delete_point(const unsigned int x, const unsigned int 
 	(void)y;
 }
 
-inline bool Plot2DWindow::update()
+inline void Plot2DWindow::update()
 {
-	return true;
 }
+
+inline const bool& Plot2DWindow::closed() const
+{
+	return w_closed;
+}
+
 }
 
 }

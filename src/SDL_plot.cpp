@@ -158,7 +158,7 @@ void SDLWindow::draw_text(const std::string& text,
 	SDL_DestroyTexture(msg);
 }
 
-bool SDLWindow::update()
+void SDLWindow::update()
 {
 	SDL_RenderPresent( renderer );
 
@@ -166,11 +166,11 @@ bool SDLWindow::update()
 	while(SDL_PollEvent(&e)!=0) {
 		//User requests quit
 		if( e.type == SDL_QUIT ) {
-			return false;
+			this->w_closed = true;
+
+			return;
 		}
     }
-
-	return true;
 }
 
 SDLWindow::~SDLWindow()
