@@ -80,7 +80,7 @@ PositionInTissue::PositionInTissue():
     x(0), y(0), z(0)
 {}
 
-PositionInTissue::PositionInTissue(const unsigned int x, const unsigned int y, const unsigned int z):
+PositionInTissue::PositionInTissue(const AxisValue x, const AxisValue y, const AxisValue z):
     x(x), y(y), z(z)
 {}
 
@@ -155,7 +155,7 @@ Position::Position():
     PositionInTissue(), tissue(nullptr)
 {}
 
-Position::Position(Tissue& tissue, const unsigned int& x, const unsigned int& y, const unsigned int& z):
+Position::Position(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z):
     PositionInTissue(x, y, z), tissue(&tissue)
 {}
 

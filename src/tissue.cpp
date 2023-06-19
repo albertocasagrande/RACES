@@ -35,7 +35,7 @@
 
 namespace Races {
 
-Tissue::Tissue(const std::string name, const unsigned int x_size, const unsigned int  y_size, const unsigned int  z_size):
+Tissue::Tissue(const std::string name, const AxisValue x_size, const AxisValue  y_size, const AxisValue  z_size):
     name(name)
 {
     CellInTissue template_cell(*this, 0, 0, 0);
@@ -43,11 +43,11 @@ Tissue::Tissue(const std::string name, const unsigned int x_size, const unsigned
     std::vector<std::vector<CellInTissue>> y_vector(y_size, z_vector);
     std::vector<std::vector<std::vector<CellInTissue>>> x_vector(x_size, y_vector);
 
-    unsigned int x{0};
+    AxisValue x{0};
     for (auto x_it=std::begin(x_vector); x_it!=std::end(x_vector); ++x_it, ++x) {
-        unsigned int y{0};
+        AxisValue y{0};
         for (auto y_it=std::begin(*x_it); y_it!=std::end(*x_it); ++y_it, ++y) {
-        unsigned int z{0};
+        AxisValue z{0};
             for (auto cell_it=std::begin(*y_it); cell_it!=std::end(*y_it); ++cell_it, ++z) {
                 cell_it->x = x;
                 cell_it->y = y;
@@ -59,7 +59,7 @@ Tissue::Tissue(const std::string name, const unsigned int x_size, const unsigned
     std::swap(x_vector, space);
 }
 
-Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const unsigned int  x_size, const unsigned int  y_size, const unsigned int  z_size):
+Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue  z_size):
     Tissue(name, x_size, y_size, z_size)
 {
     for (const auto& genotype: genotypes) {
@@ -67,12 +67,12 @@ Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotyp
     }
 }
 
-Tissue::Tissue(const unsigned int  x_size, const unsigned int  y_size, const unsigned int  z_size):
+Tissue::Tissue(const AxisValue  x_size, const AxisValue  y_size, const AxisValue  z_size):
     Tissue("", x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<DriverGenotype> genotypes, const unsigned int  x_size, const unsigned int  y_size, const unsigned int  z_size):
+Tissue::Tissue(const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue  z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
 {
 }

@@ -61,7 +61,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const unsigned int x_size, const unsigned int  y_size, const unsigned int  z_size=1);
+    Tissue(const AxisValue x_size, const AxisValue  y_size, const AxisValue  z_size=1);
 
     /**
      * @brief A constructor
@@ -71,7 +71,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<DriverGenotype> genotypes, const unsigned int  x_size, const unsigned int  y_size, const unsigned int z_size=1);
+    Tissue(const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue z_size=1);
 
     /**
      * @brief A constructor
@@ -81,7 +81,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const unsigned int x_size, const unsigned int  y_size, const unsigned int  z_size=1);
+    Tissue(const std::string name, const AxisValue x_size, const AxisValue  y_size, const AxisValue  z_size=1);
 
     /**
      * @brief A constructor
@@ -92,7 +92,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const unsigned int  x_size, const unsigned int  y_size, const unsigned int z_size=1);
+    Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue z_size=1);
 
     /**
      * @brief Get the initial iterator for the tissue species

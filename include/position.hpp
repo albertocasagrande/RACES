@@ -77,14 +77,16 @@ struct PositionDelta {
     PositionDelta operator-() const;
 };
 
+typedef uint16_t AxisValue;
+
 /**
  * @brief A 3D position in a tissues
  * 
  */
 struct PositionInTissue {
-    unsigned int x;  //!< x axis
-    unsigned int y;  //!< y axis
-    unsigned int z;  //!< z axis
+    AxisValue x;  //!< x axis
+    AxisValue y;  //!< y axis
+    AxisValue z;  //!< z axis
 
     /**
      * @brief A constructor
@@ -98,7 +100,7 @@ struct PositionInTissue {
      * @param y is the y-axis position
      * @param z is the z-axis position
      */
-    PositionInTissue(const unsigned int x, const unsigned int y, const unsigned int z=0);
+    PositionInTissue(const AxisValue x, const AxisValue y, const AxisValue z=0);
 
     /**
      * @brief Add a delta to the position
@@ -191,7 +193,7 @@ struct Position : public PositionInTissue
      * @param y is the y axis position in the tissue
      * @param z is the z axis position in the tissue
      */
-    Position(Tissue& tissue, const unsigned int& x, const unsigned int& y, const unsigned int& z);
+    Position(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z);
 
     /**
      * @brief Construct a new Position object

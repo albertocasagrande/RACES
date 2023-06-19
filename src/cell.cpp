@@ -56,7 +56,7 @@ Cell& Cell::clone(const Cell& cell)
     return *this;
 }
 
-CellInTissue::CellInTissue(Tissue& tissue, const unsigned int& x, const unsigned int& y, const unsigned int& z):
+CellInTissue::CellInTissue(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z):
     Cell(), Position(tissue, x, y, z)
 {
 }

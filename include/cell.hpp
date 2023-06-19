@@ -119,7 +119,7 @@ protected:
      * @param y is the y axis position in the tissue
      * @param z is the z axis position in the tissue
      */
-    CellInTissue(Tissue& tissue, const unsigned int& x, const unsigned int& y, const unsigned int& z);
+    CellInTissue(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z);
 
     /**
      * @brief Copy a cell into a cell in a tissue
