@@ -38,7 +38,7 @@
 
 namespace Races {
 
-typedef unsigned int DriverGenotypeId;
+using DriverGenotypeId = uint16_t;
 
 #define NULL_MUTATION std::numeric_limits<DriverGenotypeId>::max() 
 

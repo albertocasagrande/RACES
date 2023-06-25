@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,6 +42,8 @@
 
 namespace Races {
 
+using AxisSize = uint16_t;
+
 class Tissue {
     std::string name;                               //!< tissue name
     std::vector<Species> species;                   //!< species in the tissue
@@ -61,7 +63,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const AxisValue x_size, const AxisValue  y_size, const AxisValue  z_size=1);
+    Tissue(const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size=1);
 
     /**
      * @brief A constructor
@@ -71,7 +73,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue z_size=1);
+    Tissue(const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
 
     /**
      * @brief A constructor
@@ -81,7 +83,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const AxisValue x_size, const AxisValue  y_size, const AxisValue  z_size=1);
+    Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size=1);
 
     /**
      * @brief A constructor
@@ -92,7 +94,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue z_size=1);
+    Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
 
     /**
      * @brief Get the initial iterator for the tissue species
@@ -107,6 +109,14 @@ public:
      * @return the final iterator for the tissue species
      */
     std::vector<Species>::const_iterator end() const;
+
+    /**
+     * @brief Get a tissue species by driver identifier
+     * 
+     * @param genotype_id is the driver genotype identifier
+     * @return a constant reference to the tissue species
+     */
+    const Species& get_species(const DriverGenotypeId& genotype_id) const;
 
     /**
      * @brief Get a tissue species by driver identifier
@@ -188,15 +198,6 @@ public:
     PositionInTissue get_non_driver_in_direction(PositionInTissue position, const Direction& direction) const;
 
     /**
-     * @brief Push a cell in a direction
-     * 
-     * @param position is the position of the cell to push
-     * @param direction is the direction of the push
-     * @return a reference to the updated object
-     */
-    Tissue& push_cells(PositionInTissue position, const Direction& direction);
-
-    /**
      * @brief Get the cell in a position
      * 
      * @param position is the position of the aimed cell
@@ -253,6 +254,11 @@ inline std::vector<Species>::const_iterator Tissue::end() const
     return std::end(species);
 }
 
+inline const Species& Tissue::get_species(const DriverGenotypeId& genotype) const
+{
+    return species[pos_map.at(genotype)];
+}
+
 inline Species& Tissue::get_species(const DriverGenotypeId& genotype)
 {
     return species[pos_map.at(genotype)];
@@ -265,7 +271,10 @@ inline size_t Tissue::num_of_species() const
 
 inline bool Tissue::is_valid(const PositionInTissue& position) const
 {
-    return position.x<space.size() && position.y<space[0].size() && position.z<space[0][0].size();
+    return (static_cast<size_t>(position.x)<space.size() && 
+            static_cast<size_t>(position.y)<space[0].size() && 
+            static_cast<size_t>(position.z)<space[0][0].size() &&
+            position.x>=0 && position.y>=0 && position.z>=0);
 }
 
 inline std::vector<size_t> Tissue::size() const

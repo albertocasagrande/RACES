@@ -2,8 +2,8 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.1
- * @date 2023-06-09
+ * @version 0.2
+ * @date 2023-06-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,6 +65,16 @@ class BasicSimulator
                                              const DriverGenotypeId& genotype);
 
     /**
+     * @brief Push cells towards a non-driver mutated cell
+     * 
+     * @param tissue is the tissue in which cells are pushed
+     * @param position is the position from which cells are pushed
+     * @param direction is the pushing direction
+     * @return a reference to the updated object
+     */
+    BasicSimulator<LOGGER,PLOT_WINDOW>& push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction);    
+
+    /**
      * @brief Duplicate the cell in the specified position
      * 
      * This method simulates the duplication of a cell in the 
@@ -80,7 +90,7 @@ class BasicSimulator
      * 
      * @param position is the position of the cell to be duplicate
      * @param time is the cell duplication time
-     * @return a pair of pointers to the sibling cells
+     * @return a reference to the updated object
      */
     BasicSimulator<LOGGER,PLOT_WINDOW>& duplicate_cell(Position& position, const Time& time);
 
@@ -97,6 +107,13 @@ class BasicSimulator
      */
     BasicSimulator<LOGGER,PLOT_WINDOW>& kill_cell(Position& position, const Time& time);
 
+    /**
+     * @brief Update position of a cell in the species data
+     * 
+     * @param tissue is the tissue containing the cell
+     * @param position is the position of the cell to be updated
+     */
+    static void update_position_in_species(Tissue& tissue, const PositionInTissue& position);
 public:
     Time snapshot_interval;     //!< time interval between two snapshots
     /**
@@ -182,7 +199,7 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
             if (event.delay>candidate_delay) {
                 event.type = event_type;
                 event.delay = candidate_delay;
-                event.position = species.choose_a_cell(random_gen);
+                event.position = Position(tissue, species.choose_a_cell(random_gen));
             }
         }
     }
@@ -203,7 +220,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cel
     logger.record(CellEventType::DIE, cell, time);
 
     // remove former cell from the species
-    Species& species = cell.get_species();
+    Species& species = position.tissue->get_species(cell.get_driver_genotype());
     species.remove(cell.get_id(), time);
 
     return *this;
@@ -226,18 +243,18 @@ DriverGenotypeId BasicSimulator<LOGGER,PLOT_WINDOW>::select_epigenetic_clone(con
 }
 
 template<typename GENERATOR>
-inline Direction select_random_direction(GENERATOR& random_gen, const Position& position)
+inline Direction select_2D_random_direction(GENERATOR& random_gen, const Position& position)
 {
     const Tissue& tissue = *(position.tissue);
 
-    std::vector<Direction> directions{Direction::X_LEFT,
-                                      Direction::X_RIGHT,
-                                      Direction::Y_LEFT,
-                                      Direction::Y_RIGHT,
-                                      Direction::Z_LEFT,
-                                      Direction::Z_RIGHT};
-    
-     std::vector<Direction> valid_dirs;
+    std::vector<Direction> directions{Direction::X_UP, Direction::X_DOWN,
+                                      Direction::Y_UP, Direction::Y_DOWN,
+                                      Direction::X_UP|Direction::Y_UP,
+                                      Direction::X_UP|Direction::Y_DOWN,
+                                      Direction::X_DOWN|Direction::Y_UP,
+                                      Direction::X_DOWN|Direction::Y_DOWN};
+
+    std::vector<Direction> valid_dirs;
     for (const Direction& dir: directions) {
         auto free_cell_pos = tissue.get_non_driver_in_direction(position, dir);
 
@@ -256,6 +273,40 @@ inline Direction select_random_direction(GENERATOR& random_gen, const Position& 
 }  
 
 template<typename LOGGER, typename PLOT_WINDOW>
+void BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(Tissue& tissue, const PositionInTissue& position)
+{
+    CellInTissue& cell = tissue(position);
+    Species &species = tissue.get_species(cell.get_driver_genotype());
+
+    species.update_cell(cell);
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction)
+{
+    PositionDelta delta(direction);
+    PositionInTissue to_position(from_position+delta);
+    Cell to_be_moved=tissue(from_position);
+    while (tissue.is_valid(to_position)&&tissue(to_position).has_driver_genotype()) {   
+        swap(tissue(to_position), to_be_moved);
+
+        BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(tissue, to_position);
+
+        to_position += delta;
+    }
+
+    if (!tissue.is_valid(to_position)) {
+        Species &species = tissue.get_species(to_be_moved.get_driver_genotype());
+
+        species.remove(to_be_moved.get_id(), time);
+    } else {
+        swap(tissue(to_position), to_be_moved);
+    }
+
+    return *this;
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
 BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(Position& position, const Time& time)
 {
     Tissue& tissue = *(position.tissue);
@@ -266,10 +317,10 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::duplicat
         return *this;
     }
 
-    Direction push_dir = select_random_direction(random_gen, position);
+    Direction push_dir = select_2D_random_direction(random_gen, position);
 
-    // copy the current cell in push direction
-    tissue.push_cells(position, push_dir);
+    // push the cell in position towards push direction
+    push_cells(tissue, position, push_dir);
 
     CellInTissue& cell2 = tissue(position + PositionDelta(push_dir));
 
@@ -322,7 +373,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
         default:
             throw std::runtime_error("Unknown event type");
     }
-    
+
     if (++epochs_since_last_plot>=plot_time_interval) {
         epochs_since_last_plot = 0;
         if (!plotter.closed()) {

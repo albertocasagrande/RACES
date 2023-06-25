@@ -1,5 +1,5 @@
 /**
- * @file simulator.cpp
+ * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
  * @version 0.1
@@ -75,7 +75,7 @@ int main()
 
     simulator.snapshot_interval = 150000;
 
-    simulator.run_up_to(300000);
+    simulator.run_up_to(70);
 
     return 0;
 }

@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,8 +58,7 @@ class Species: public DriverGenotype {
     /**
      * @brief Update cell pointer
      * 
-     * @param cell_id is the identifier of the cell to update 
-     * @param pointer is new 
+     * @param cell is a reference to the cell in the tissue
      * @return Species& 
      */
     Species& update_cell(CellInTissue& cell);
@@ -242,8 +241,8 @@ public:
      */
     Species& add(CellInTissue& cell, const Time time);
 
-    //friend class Cell;
-    friend class Tissue; 
+    template<typename LOGGER, typename PLOT_WINDOW>
+    friend class BasicSimulator;
 };
 
 /**

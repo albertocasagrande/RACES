@@ -2,8 +2,8 @@
  * @file position.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a position class in a tissue
- * @version 0.1
- * @date 2023-05-31
+ * @version 0.2
+ * @date 2023-06-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,42 +33,70 @@
 
 namespace Races {
 
+Direction::Direction(const uint8_t value):
+    bit_vector(value)
+{
+    for (size_t i=0; i<3; ++i) {
+        const uint8_t axis = (value >> 2*i)&0x03;
+
+        if (axis == 0x03) {
+            throw std::domain_error("Unsupported direction");
+        }
+    }
+}
+
+
+int Direction::get_delta(const size_t& axis_index) const
+{
+    const uint8_t axis = (bit_vector>>2*axis_index)&0x03;
+
+    if (axis == 0x00) {
+        return 0;
+    }
+
+    if (axis == 0x01) {
+        return 1;
+    }
+
+    return -1;
+}
+
+std::ostream& operator<<(std::ostream& os, const Direction& direction)
+{
+    for (size_t i=0; i<3; ++i) {
+        switch(direction.get_delta(i)) {
+            case 1:
+                os << "U";
+                break;
+            case -1:
+                os << "D";
+                break;
+            case 0:
+                os << "N";
+                break;
+            default:
+                throw std::runtime_error("Unknown direction");
+        }
+    }
+
+    return os;
+}
+
 PositionDelta::PositionDelta(const int x, const int y, const int z):
     x(x), y(y), z(z)
 {
 }
 
 PositionDelta::PositionDelta(const Direction& direction):
-    PositionDelta(0,0,0)
+    PositionDelta(direction.get_delta_x(),direction.get_delta_y(),direction.get_delta_z())
 {
-    switch(direction) {
-        case Direction::X_LEFT:
-            x = -1;
+}
 
-            break;
-        case Direction::X_RIGHT:
-            x = 1;
+std::ostream& operator<<(std::ostream& os, const PositionDelta& delta)
+{
+    os << "(" << delta.x << "," << delta.y << "," << delta.z << ")";
 
-            break;
-        case Direction::Y_LEFT:
-            y = -1;
-
-            break;
-        case Direction::Y_RIGHT:
-            y = 1;
-
-            break;
-        case Direction::Z_LEFT:
-            z = -1;
-
-            break;
-        case Direction::Z_RIGHT:
-            z = 1;
-
-            break;
-        default:
-            throw std::domain_error("Unsupported direction");
-    }
+    return os;
 }
 
 PositionDelta PositionDelta::operator-() const
@@ -157,6 +185,10 @@ Position::Position():
 
 Position::Position(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z):
     PositionInTissue(x, y, z), tissue(&tissue)
+{}
+
+Position::Position(Tissue& tissue, const PositionInTissue& pos):
+    PositionInTissue(pos), tissue(&tissue)
 {}
 
 std::ostream& operator<<(std::ostream& os, const Position& position)

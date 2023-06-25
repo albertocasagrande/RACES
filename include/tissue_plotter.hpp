@@ -61,7 +61,6 @@ public:
 	TissuePlotter(const Tissue& tissue):
 		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulator"+((tissue.get_name()=="")?"":" - "+tissue.get_name()))
 	{
-		std::cout << tissue.get_name() << std::endl;
 	}
 
 	TissuePlotter(const Tissue& tissue, const std::string name):

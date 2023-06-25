@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,7 @@
 
 namespace Races {
 
-typedef size_t CellId;
+using CellId = size_t;
 
 class Cell {
     static unsigned long counter;   //!< total number of cell along the computation
@@ -96,7 +96,25 @@ public:
     friend class Tissue;
     friend class Species;
     friend class CellInTissue;
+    friend void swap(Cell& a, Cell &b);
 };
+
+/**
+ * @brief Swap two cells
+ * 
+ * @param a is a cell
+ * @param b is a cell
+ */
+void swap(Cell& a, Cell &b);
+
+/**
+ * @brief Write a cell in an output stream
+ * 
+ * @param os is the output stream
+ * @param cell is the cell to be streamed
+ * @return a reference to the updated stream
+ */
+std::ostream& operator<<(std::ostream& os, const Cell& cell);
 
 class Species;
 
@@ -106,7 +124,7 @@ class Species;
  * A cell in a tissue is a cell provided with a position 
  * in the tissue
  */
-class CellInTissue : public Cell, public Position {
+class CellInTissue : public Cell, public PositionInTissue {
 
 protected:
     /**
@@ -119,7 +137,7 @@ protected:
      * @param y is the y axis position in the tissue
      * @param z is the z axis position in the tissue
      */
-    CellInTissue(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z);
+    CellInTissue(const AxisValue& x, const AxisValue& y, const AxisValue& z);
 
     /**
      * @brief Copy a cell into a cell in a tissue
@@ -140,27 +158,6 @@ public:
     CellInTissue& operator=(const Cell& cell);
 
     /**
-     * @brief Get the cell species
-     * 
-     * @return a constant reference to the cell species
-     */
-    const Species& get_species() const;
-
-    /**
-     * @brief Get the cell species
-     * 
-     * @return a non-constant reference to the cell species
-     */
-    Species& get_species();
-
-    /**
-     * @brief Get the cell tissue
-     * 
-     * @return a pointer to the cell tissue
-     */
-    Tissue* get_tissue() const;
-
-    /**
      * @brief Test whether the cell has a driver genotype
      * 
      * @return true if and only if the cell has a driver genotype
@@ -169,6 +166,16 @@ public:
 
     friend class Tissue;
 };
+
+
+/**
+ * @brief Write a cell in a tissue in an output stream
+ * 
+ * @param os is the output stream
+ * @param cell is the cell in the tissue to be streamed
+ * @return a reference to the updated stream
+ */
+std::ostream& operator<<(std::ostream& os, const CellInTissue& cell);
 
 /* Inline Implementation */
 
@@ -186,10 +193,6 @@ inline const CellId& Cell::get_parent_id() const
 inline const DriverGenotypeId& Cell::get_driver_genotype() const
 {
     return genotype;
-}
-
-inline Tissue* CellInTissue::get_tissue() const {
-    return tissue;
 }
 
 inline bool CellInTissue::has_driver_genotype() const {

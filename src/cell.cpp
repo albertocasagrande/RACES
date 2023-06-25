@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,6 +47,13 @@ Cell::Cell(const DriverGenotypeId genotype, const CellId parent_id):
 {
 }
 
+void swap(Cell& a, Cell &b)
+{
+    std::swap(a.id,b.id);
+    std::swap(a.parent, b.parent);
+    std::swap(a.genotype, b.genotype);
+}
+
 Cell& Cell::clone(const Cell& cell)
 {
     id = cell.id;
@@ -56,8 +63,18 @@ Cell& Cell::clone(const Cell& cell)
     return *this;
 }
 
-CellInTissue::CellInTissue(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z):
-    Cell(), Position(tissue, x, y, z)
+std::ostream& operator<<(std::ostream& os, const Cell& cell)
+{
+    os << "Cell{id: "<< cell.get_id() 
+       << ", parent_id: "<< cell.get_parent_id()
+       << ", driver_genotype: " << cell.get_driver_genotype() 
+       << "}";
+
+    return os;
+}
+
+CellInTissue::CellInTissue(const AxisValue& x, const AxisValue& y, const AxisValue& z):
+    Cell(), PositionInTissue(x, y, z)
 {
 }
 
@@ -80,13 +97,15 @@ CellInTissue& CellInTissue::operator=(const PositionInTissue& position)
     return *this;
 }
 
-Species& CellInTissue::get_species()
+std::ostream& operator<<(std::ostream& os, const CellInTissue& cell)
 {
-    if (tissue == nullptr) {
-        throw std::domain_error("The cell has not been placed in any tissue");
-    }
+    os << "Cell{id: "<< cell.get_id() 
+       << ", parent_id: "<< cell.get_parent_id()
+       << ", driver_genotype: " << cell.get_driver_genotype() 
+       << ", position: " << static_cast<PositionInTissue>(cell)
+       << "}";
 
-    return tissue->get_species(genotype);
+    return os;
 }
 
 };

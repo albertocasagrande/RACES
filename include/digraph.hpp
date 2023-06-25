@@ -35,7 +35,7 @@
 
 namespace Races {
 
-typedef unsigned int VertexId;
+using VertexId = unsigned int;
 
 /**
  * @brief Labelled directed graphs
@@ -45,7 +45,7 @@ typedef unsigned int VertexId;
 template<typename LABEL>
 struct DiGraph
 {
-    typedef std::map<VertexId, LABEL> DstEdgeMap;
+    using DstEdgeMap = std::map<VertexId, LABEL>;
 
 protected:
     std::map<VertexId, DstEdgeMap> edge_map; //!< Adjacency map

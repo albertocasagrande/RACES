@@ -145,7 +145,7 @@ std::ostream& operator<<(std::ostream& out, const Species& species)
     for (const auto& cell: species) {
         out << sep << " {id: " << cell.get_id() 
             << ", parent: " << cell.get_parent_id()
-            << ", position: " << static_cast<Position>(cell) 
+            << ", position: " << static_cast<PositionInTissue>(cell) 
             << "}";
         sep = ',';
     }

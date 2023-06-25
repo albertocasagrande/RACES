@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,10 +35,10 @@
 
 namespace Races {
 
-Tissue::Tissue(const std::string name, const AxisValue x_size, const AxisValue  y_size, const AxisValue  z_size):
+Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size):
     name(name)
 {
-    CellInTissue template_cell(*this, 0, 0, 0);
+    CellInTissue template_cell(0, 0, 0);
     std::vector<CellInTissue> z_vector(z_size, template_cell);
     std::vector<std::vector<CellInTissue>> y_vector(y_size, z_vector);
     std::vector<std::vector<std::vector<CellInTissue>>> x_vector(x_size, y_vector);
@@ -59,7 +59,7 @@ Tissue::Tissue(const std::string name, const AxisValue x_size, const AxisValue  
     std::swap(x_vector, space);
 }
 
-Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue  z_size):
+Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue(name, x_size, y_size, z_size)
 {
     for (const auto& genotype: genotypes) {
@@ -67,12 +67,12 @@ Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotyp
     }
 }
 
-Tissue::Tissue(const AxisValue  x_size, const AxisValue  y_size, const AxisValue  z_size):
+Tissue::Tissue(const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue("", x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<DriverGenotype> genotypes, const AxisValue  x_size, const AxisValue  y_size, const AxisValue  z_size):
+Tissue::Tissue(const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
 {
 }
@@ -166,32 +166,5 @@ PositionInTissue Tissue::get_non_driver_in_direction(PositionInTissue position, 
 
     return position;
 }
-
-Tissue& Tissue::push_cells(PositionInTissue position, const Direction& direction)
-{
-
-    // search the first empty space in the tissue 
-    auto free_cell_pos = get_non_driver_in_direction(position, direction);
-    if (!is_valid(free_cell_pos)) {
-        // if there is no available space in that direction
-        throw std::domain_error("Trying to push outside borders");
-    }
-
-    PositionDelta delta(direction);
-    PositionInTissue from_pos(free_cell_pos);
-    while (free_cell_pos != position) {
-        from_pos -= delta;
-        Cell& dest_cell = (*this)(free_cell_pos);
-        dest_cell.clone((*this)(from_pos));
-        Species &species = this->get_species(dest_cell.get_driver_genotype());
-
-        species.update_cell((*this)(free_cell_pos));
-
-        free_cell_pos = from_pos;
-    }
-
-    return *this;
-}
-
 
 };

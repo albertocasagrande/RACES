@@ -35,7 +35,7 @@
 
 namespace Races {
 
-typedef long double Time;
+using Time = long double;
 
 };
 
