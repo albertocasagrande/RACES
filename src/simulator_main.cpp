@@ -29,17 +29,77 @@
  */
 
 #include <iostream> 
-
 #include <vector>
+
+#include <boost/program_options.hpp>
 
 #include "logger.hpp"
 #include "simulator.hpp"
 
+#ifdef WITH_SDL2
 #include "SDL_plot.hpp"
+#endif
 
-int main()
+std::ostream& print_help(std::ostream& os, const std::string& program_name, 
+                         const boost::program_options::options_description& options)
+{
+   os << "Syntax: "<< program_name <<" <time horizon>" << std::endl
+      << options << std::endl;
+
+   return os;   
+}
+
+int main(int argc, char* argv[])
 {
     using namespace Races;
+    namespace po = boost::program_options;
+
+    po::options_description visible("Options");
+    visible.add_options()
+        ("help,h", "get the help")
+        // ("bar,b", "show a bar for the elapsed simulation time")
+#ifdef WITH_SDL2
+        ("plot,p", 
+         "plot a graphical representation of the simulation")
+#endif
+    ;
+    
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("time-horizon", po::value<long double>(), 
+         "the simulation time horizon")
+    ;
+
+
+    po::options_description generic;
+    generic.add(visible).add(hidden);
+
+    po::positional_options_description p;
+    p.add("time-horizon", -1);
+
+    po::variables_map vm;
+    try {
+        po::command_line_parser parser{argc, argv};
+        po::store(parser.options(generic).positional(p).run(), vm);
+        po::notify(vm);
+    } catch (boost::wrapexcept<boost::program_options::unknown_option> &except) {
+        std::cout << except.what() << std::endl;
+        print_help(std::cout, argv[0], visible);
+        exit(1);
+    }
+
+    if (vm.count("help")) {
+        print_help(std::cout, argv[0], visible);
+        return 1;
+    }
+
+    if (!vm.count("time-horizon")) {
+        std::cout << "Missing simulation time horizon!" << std::endl << std::endl;
+        print_help(std::cout, argv[0], visible);
+        return 1;
+    }
+
+    long double time_horizon = vm["time-horizon"].as<long double>();
 
     std::vector<DriverGenotype> genotypes;
 
@@ -70,12 +130,24 @@ int main()
     tissue.add(genotypes[0].get_id(), {250, 500}, 0);
     tissue.add(genotypes[2].get_id(), {750, 500}, 0);
 
-    BasicSimulator<BasicLogger, UI::SDLWindow> simulator(tissue);
-    //BasicSimulator<BasicLogger> simulator(tissue);
+#ifdef WITH_SDL2
+    if (vm.count("plot")) {
+        BasicSimulator<BasicLogger, UI::SDLWindow> simulator(tissue);
 
-    simulator.snapshot_interval = 150000;
+        simulator.snapshot_interval = 150000;
 
-    simulator.run_up_to(70);
+        simulator.run_up_to(time_horizon);
+    } else {
+#endif
+        BasicSimulator<BasicLogger> simulator(tissue);
+
+        simulator.snapshot_interval = 150000;
+
+        simulator.run_up_to(time_horizon);
+
+#ifdef WITH_SDL2
+    }
+#endif
 
     return 0;
 }
