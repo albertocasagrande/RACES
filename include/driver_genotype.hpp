@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,8 +37,6 @@
 #include "cell_event.hpp"
 
 namespace Races {
-
-using DriverGenotypeId = uint16_t;
 
 #define NULL_MUTATION std::numeric_limits<DriverGenotypeId>::max() 
 

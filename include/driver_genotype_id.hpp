@@ -1,8 +1,8 @@
 /**
- * @file cell_event.hpp
+ * @file driver_genotype_id.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell events
- * @version 0.2
+ * @brief Defines driver genotype type
+ * @version 0.1
  * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
@@ -28,32 +28,15 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_CELL_EVENT__
-#define __RACES_CELL_EVENT__
+#ifndef __RACES_DRIVER_GENOTYPE_ID__
+#define __RACES_DRIVER_GENOTYPE_ID__
 
-#include <string>
-
-#include "driver_genotype_id.hpp"
-#include "position.hpp"
+#include <cstdint>
 
 namespace Races {
 
-enum class CellEventType {
-    DIE,
-    DUPLICATE,
-    EPIGENETIC_EVENT,
-    DUPLICATION_AND_EPIGENETIC_EVENT,
-    PASSENGER_MUTATION
-};
-
-struct CellEvent
-{
-    CellEventType type;                     //!< event type
-    Position position;                      //!< event position
-    DriverGenotypeId epigenetic_genotype;   //!< destination genotype for epigenetic events
-    double delay;                           //!< event delay
-};
+using DriverGenotypeId = uint16_t;
 
 };
 
-#endif // __RACES_CELL_EVENT__
+#endif // __RACES_DRIVER_GENOTYPE_ID__
