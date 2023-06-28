@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,27 +37,18 @@ namespace Races {
 Species::Species(const std::string& name,
                  const std::map<CellEventType, double>& rates,
                  const bool methylated):
-    DriverGenotype(name, rates, methylated), rise_time(1), extinction_time(0)
+    DriverGenotype(name, rates, methylated)
 {}
 
 Species::Species(const Species& species):
-    DriverGenotype(species), cells(species.cells), pos_map(species.pos_map), 
-    rise_time(species.rise_time), 
-    extinction_time(species.extinction_time)
+    DriverGenotype(species), cells(species.cells), pos_map(species.pos_map)
 {}
 
 Species::Species(const DriverGenotype& driver):
-    DriverGenotype(driver), rise_time(1), extinction_time(0)
+    DriverGenotype(driver)
 {}
 
-Species& Species::update_cell(CellInTissue& cell)
-{
-    cells[pos_map.at(cell.get_id())] = &cell;
-
-    return *this;
-}
-
-Species& Species::remove(const CellId& cell_id, const Time time)
+Species& Species::remove(const CellId& cell_id)
 {
     // find the cell to be removed
     const size_t pos = pos_map.at(cell_id);
@@ -75,11 +66,9 @@ Species& Species::remove(const CellId& cell_id, const Time time)
             // update the former last cell position
             pos_map[cells[pos]->get_id()] = pos;
         }
-
-        cells[last_pos]->genotype = NON_DRIVER_GENOTYPE;
-    } else {
-        extinction_time = time;
     }
+
+    cells[last_pos]->genotype = NON_DRIVER_GENOTYPE;
 
     // remove the cell to be removed 
     cells.pop_back();
@@ -87,17 +76,13 @@ Species& Species::remove(const CellId& cell_id, const Time time)
     return *this;
 }
 
-Species& Species::add(CellInTissue& cell, const Time time)
+Species& Species::add(CellInTissue& cell)
 {
     // find a position for the new cell
     const size_t new_pos = num_of_cells();
 
     // set it position in the position map
     pos_map[cell.get_id()] = new_pos;
-
-    if (rise_time>extinction_time) {
-        rise_time = time;
-    }
 
     cells.push_back(&cell);
 

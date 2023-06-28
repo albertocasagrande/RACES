@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.2
- * @date 2023-06-22
+ * @version 0.3
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -131,10 +131,9 @@ public:
      * 
      * @param genotype is the driver genotype of the cell
      * @param position is the initial position in the tissue
-     * @param time is the insertion time
      * @return a reference to the updated object
      */
-    Tissue& add(const DriverGenotypeId genotype, const PositionInTissue position, const Time time);
+    Tissue& add(const DriverGenotypeId genotype, const PositionInTissue position);
 
     /**
      * @brief Add a new species to the tissue

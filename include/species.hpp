@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.2
- * @date 2023-06-23
+ * @version 0.3
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -151,9 +151,6 @@ class Species: public DriverGenotype {
 
 public:
 
-    double rise_time;                   //!< appearance time
-    double extinction_time;             //!< extinction time
-
     /**
      * @brief A constructor
      * 
@@ -227,19 +224,17 @@ public:
      * @brief Remove a cell from the species
      * 
      * @param cell_id is the id of the cell to be removed
-     * @param time is the removal time
      * @return a reference to the updated species
      */
-    Species& remove(const CellId& cell_id, const Time time);
+    Species& remove(const CellId& cell_id);
 
     /**
      * @brief Add a cell to the species
      * 
      * @param cell is the cell to be added to the species
-     * @param time is the adding time
      * @return a reference to the updated species
      */
-    Species& add(CellInTissue& cell, const Time time);
+    Species& add(CellInTissue& cell);
 
     template<typename LOGGER, typename PLOT_WINDOW>
     friend class BasicSimulator;
@@ -259,6 +254,13 @@ std::ostream& operator<<(std::ostream& out, const Species& species);
 inline size_t Species::num_of_cells() const
 {
     return cells.size();
+}
+
+inline Species& Species::update_cell(CellInTissue& cell)
+{
+    cells[pos_map.at(cell.get_id())] = &cell;
+
+    return *this;
 }
 
 };

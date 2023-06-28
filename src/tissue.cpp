@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.2
- * @date 2023-06-25
+ * @version 0.3
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -88,7 +88,7 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue position, const Time time)
+Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue position)
 {
     auto& cell = (*this)(position);
 
@@ -98,7 +98,7 @@ Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue posi
 
     Species& local_species = get_species(genotype);
 
-    local_species.add(cell, time);
+    local_species.add(cell);
 
     return *this;
 }
