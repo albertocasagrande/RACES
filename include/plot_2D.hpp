@@ -175,7 +175,7 @@ public:
 	const bool& closed() const;
 
 	/**
-	 * @brief Test whenever the plotting window is waiting for and event
+	 * @brief Test whenever the plotting window is waiting for any event
 	 * 
 	 * @return `false`
 	 */

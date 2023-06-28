@@ -153,9 +153,9 @@ public:
 	void update();
 
 	/**
-	 * @brief Test whenever the plotting window is waiting for and event
+	 * @brief Test whenever the plotting window is waiting for any event
 	 * 
-	 * @return `false`
+	 * @return `true` if and only if the plotting window has not been closed
 	 */
 	bool waiting_end() const;
 
