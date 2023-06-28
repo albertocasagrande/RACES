@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 
 #include <boost/program_options.hpp>
 
-#include "logger.hpp"
+#include "binary_logger.hpp"
 #include "simulator.hpp"
 
 #ifdef WITH_SDL2
@@ -104,14 +104,14 @@ int main(int argc, char* argv[])
     std::vector<DriverGenotype> genotypes;
 
     genotypes.push_back(DriverGenotype("A",{
-            {CellEventType::DIE, 0.002},{CellEventType::DUPLICATE, 0.1}}));
+            {CellEventType::DIE, 0.1},{CellEventType::DUPLICATE, 0.2}}));
     genotypes.push_back(DriverGenotype("A",{
-            {CellEventType::DIE, 0.001},{CellEventType::DUPLICATE, 0.3}},true));
+            {CellEventType::DIE, 0.1},{CellEventType::DUPLICATE, 0.3}},true));
 
     genotypes.push_back(DriverGenotype("B",{
-            {CellEventType::DIE, 0.002},{CellEventType::DUPLICATE, 0.2}}));
+            {CellEventType::DIE, 0.1},{CellEventType::DUPLICATE, 0.2}}));
     genotypes.push_back(DriverGenotype("B",{
-            {CellEventType::DIE, 0.001},{CellEventType::DUPLICATE, 0.02}},true));
+            {CellEventType::DIE, 0.01},{CellEventType::DUPLICATE, 0.02}},true));
 
     Tissue tissue("Liver", 1000,1000);
 
@@ -127,21 +127,23 @@ int main(int argc, char* argv[])
     tissue.add_driver_somatic_mutation(genotypes[0].get_id(),genotypes[2].get_id(), 100);
     tissue.add_driver_somatic_mutation(genotypes[1].get_id(),genotypes[3].get_id(), 100);
 
-    tissue.add(genotypes[0].get_id(), {250, 500}, 0);
-    tissue.add(genotypes[2].get_id(), {750, 500}, 0);
+    tissue.add(genotypes[0].get_id(), {250, 500});
+    tissue.add(genotypes[2].get_id(), {750, 500});
 
 #ifdef WITH_SDL2
     if (vm.count("plot")) {
-        BasicSimulator<BasicLogger, UI::SDLWindow> simulator(tissue);
+        BinaryLogger logger(tissue.get_name());
 
-        simulator.snapshot_interval = 150000;
+        BasicSimulator<BinaryLogger, UI::SDLWindow> simulator(tissue, &logger);
+
+        simulator.snapshot_interval = 20;
 
         simulator.run_up_to(time_horizon);
     } else {
 #endif
-        BasicSimulator<BasicLogger> simulator(tissue);
+        BinaryLogger logger(tissue.get_name());
 
-        simulator.snapshot_interval = 150000;
+        BasicSimulator<BinaryLogger> simulator(tissue, &logger);
 
         simulator.run_up_to(time_horizon);
 
