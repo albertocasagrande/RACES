@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a UI window to plot a tissue
- * @version 0.1
- * @date 2023-06-14
+ * @version 0.2
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,44 +50,32 @@ class TissuePlotter {
 
 	std::unique_ptr<PLOT_WINDOW> window;	//!< the plotting window
 
-	const unsigned int frame_border;
-	const unsigned int frame_thickness;
+	const unsigned int frame_border;		//!< frame border width
+	const unsigned int frame_thickness;		//!< frame line thickness
 
-	const unsigned int legend_rectangle_width;
-	const unsigned int legend_rectangle_height;
-	const unsigned int legend_label_height;
+	const unsigned int legend_rectangle_width;	//!< legend rectangle width
+	const unsigned int legend_rectangle_height;	//!< legend rectangle height
+	const unsigned int legend_label_height;		//!< legend label height
 
-public:
-	TissuePlotter(const Tissue& tissue):
-		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulator"+((tissue.get_name()=="")?"":" - "+tissue.get_name()))
-	{
-	}
+	const size_t redraw_interval;	            //!< epochs between two redraws
+	size_t epochs_since_last_redraw;            //!< epochs since the last redraw
 
-	TissuePlotter(const Tissue& tissue, const std::string name):
-		tissue(tissue), frame_border(20), frame_thickness(5), legend_rectangle_width(200),
-		legend_rectangle_height(35), legend_label_height(16)
-	{
-		if (tissue.num_of_species()>driver_palette.size()) {
-			throw std::domain_error("The color palette does not support so many species");
-		}
-
-		auto sizes(tissue.size());
-		if constexpr(PLOT_WINDOW::dimensions()==2) {
-			window = std::make_unique<PLOT_WINDOW>(total_width(), total_height(), name);
-			plot(0);
-			
-			return;
-		}
-
-		throw std::runtime_error("Unsupported plot window type");
-	}
-
+	/**
+	 * @brief Get the total width of the plotting window
+	 * 
+	 * @return the total width of the plotting window in pixels
+	 */
 	unsigned int total_width() const
 	{
 		return static_cast<unsigned int>(tissue.size()[0])
 				+3*frame_border+legend_rectangle_width;
 	}
 
+	/**
+	 * @brief Get the total height of the plotting window
+	 * 
+	 * @return the total height of the plotting window in pixels
+	 */
 	unsigned int total_height() const
 	{
 		unsigned int height =  tissue.num_of_species()*(legend_rectangle_height+frame_border);
@@ -95,7 +83,10 @@ public:
 		return std::max(height, static_cast<unsigned int>(tissue.size()[1]+2*frame_border+legend_rectangle_height));
 	}
 
-	void draw_frame()
+	/**
+	 * @brief Draw the tissue frame
+	 */
+	void draw_tissue_frame()
 	{
 		auto sizes(tissue.size());
 		if constexpr(PLOT_WINDOW::dimensions()==2) {
@@ -106,6 +97,11 @@ public:
 		}
 	}
 
+	/**
+	 * @brief Draw the elapsed time
+	 * 
+	 * @param time is the time to be printed
+	 */
 	void draw_time(const Time& time)
 	{
 		unsigned int label_width, label_height;
@@ -121,9 +117,12 @@ public:
 		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
+	/**
+	 * @brief Draw the tissue
+	 */
 	void draw_tissue()
 	{	
-		draw_frame();
+		draw_tissue_frame();
 	
 		size_t species_idx=0;
 		for (const auto& species: tissue) {
@@ -144,6 +143,9 @@ public:
 		}
 	}
 
+	/**
+	 * @brief Draw the leggend
+	 */
 	void draw_legend()
 	{
 		auto sizes(tissue.size());
@@ -173,23 +175,87 @@ public:
 		}
 	}
 
-    void plot(const Time& time)
+public:
+	/**
+	 * @brief A constructor
+	 * 
+	 * @param tissue is the tissue to plot
+	 */
+	TissuePlotter(const Tissue& tissue, const size_t redraw_interval=2000):
+		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulator"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), redraw_interval)
 	{
-		window->clear();
-		
-		draw_time(time);
-
-		draw_legend();
-		draw_tissue();
-		
-		window->update();
 	}
 
+	/**
+	 * @brief A constructor
+	 * 
+	 * @param tissue is the tissue to plot
+	 * @param name is the name of the plotting window
+	 */
+	TissuePlotter(const Tissue& tissue, const std::string name, const size_t redraw_interval=2000):
+		tissue(tissue), frame_border(20), frame_thickness(5), legend_rectangle_width(200),
+		legend_rectangle_height(35), legend_label_height(16), redraw_interval(redraw_interval), 
+		epochs_since_last_redraw(redraw_interval)
+	{
+		if (tissue.num_of_species()>driver_palette.size()) {
+			throw std::domain_error("The color palette does not support so many species");
+		}
+
+		auto sizes(tissue.size());
+		if constexpr(PLOT_WINDOW::dimensions()==2) {
+			window = std::make_unique<PLOT_WINDOW>(total_width(), total_height(), name);
+			plot(0);
+			
+			return;
+		}
+
+		throw std::runtime_error("Unsupported plot window type");
+	}
+
+	/**
+	 * @brief Plot the tissue
+	 * 
+	 * @param time is the time to report
+	 */
+    void plot(const Time& time)
+	{
+		if (++epochs_since_last_redraw>=redraw_interval) {
+			epochs_since_last_redraw = 0;
+			window->clear();
+			
+			draw_time(time);
+
+			draw_legend();
+			draw_tissue();
+			
+			window->update();
+		}
+	}
+
+	/**
+	 * @brief Test whether the plotting window has been closed
+	 * 
+	 * @return `true` if and only if the plotting window has been closed
+	 */
 	inline const bool& closed() const
 	{
 		return window->closed();
 	}
 
+	/**
+	 * @brief Test whenever the plotting window is waiting for any event
+	 * 
+	 * @return `true` if and only if the plotting window is waiting 
+	 *     for any event
+	 */
+	inline bool waiting_end() const
+	{
+		return window->waiting_end();
+	}
+
+	/**
+	 * @brief The destroyer
+	 */
 	~TissuePlotter()
 	{}
 };
