@@ -2,8 +2,8 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.2
- * @date 2023-06-23
+ * @version 0.3
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,7 @@
 #include "logger.hpp"
 #include "plot_2D.hpp"
 #include "tissue_plotter.hpp"
+#include "statistics.hpp"
 
 namespace Races {
 
@@ -53,13 +54,11 @@ class BasicSimulator
     Time last_snapshot_time;    //!< time of the last snapshot
     size_t num_of_mutated_cells; //!< number of mutated cells
 
-    LOGGER logger;                          //!< event logger
+    bool logging_enabled;           //!< a flag to pause logging
+    LOGGER *logger;                         //!< event logger
+
     UI::TissuePlotter<PLOT_WINDOW> plotter; //!< tissue plotter UI
-
     bool quitting;                          //!< quitting flag
-
-	const size_t plot_time_interval;	    //!< epochs between two plots
-	size_t epochs_since_last_plot;          //!< epochs since the last plot
 
     DriverGenotypeId select_epigenetic_clone(const DriverEpigeneticGraph& epigenetic_graph,
                                              const DriverGenotypeId& genotype);
@@ -90,9 +89,11 @@ class BasicSimulator
      * 
      * @param position is the position of the cell to be duplicate
      * @param time is the cell duplication time
-     * @return a reference to the updated object
+     * @return the positions in the tissue of the siblings if 
+     *         the specified position contains a cell having a 
+     *         driver genotype. An empty vector otherwise.
      */
-    BasicSimulator<LOGGER,PLOT_WINDOW>& duplicate_cell(Position& position, const Time& time);
+    std::vector<PositionInTissue> duplicate_cell(const Position& position, const Time& time);
 
     /**
      * @brief Kill the cell in the specified position
@@ -103,10 +104,38 @@ class BasicSimulator
      * 
      * @param position is the position of the cell to be killed
      * @param time is the cell death time
-     * @return a reference to the updated object
+     * @return the former position in the tissue of the killed cell
      */
-    BasicSimulator<LOGGER,PLOT_WINDOW>& kill_cell(Position& position, const Time& time);
+    PositionInTissue kill_cell(const Position& position, const Time& time);
 
+    /**
+     * @brief Apply an epigenetic event on the cell in the specified position
+     * 
+     * This method simulates an epigenetic event on a cell in tissue.
+     * If the cell in the provided position has non-driver genotype, 
+     * then nothing is done.  
+     * 
+     * @param position is the position of the cell to be methylated/demethylated
+     * @param destination_id is the resulting genotype identifier of the cell
+     * @param time is the epigenetic event time
+     * @return the position in the tissue of the epigenetic event
+     */
+    PositionInTissue apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time);
+
+    /**
+     * @brief Duplicate the cell and apply an epigenetic event
+     * 
+     * This method simulates the duplication of a cell in the 
+     * tissue and applies an epigenetic event to one of the siblings.
+     * 
+     * @param position is the position of the cell to be duplicate
+     * @param destination_id is the resulting genotype identifier of the cell
+     * @param time is the event time
+     * @return the positions in the tissue of the siblings if 
+     *         the specified position contains a cell having a 
+     *         driver genotype. An empty vector otherwise.
+     */
+    std::vector<PositionInTissue> duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time);
     /**
      * @brief Update position of a cell in the species data
      * 
@@ -116,15 +145,42 @@ class BasicSimulator
     static void update_position_in_species(Tissue& tissue, const PositionInTissue& position);
 public:
     Time snapshot_interval;     //!< time interval between two snapshots
+
     /**
      * @brief The basic simulator constructor
      * 
      * @param tissue is the tissue on which simulation is performed
-     * @param logger is the simulation logger
-     * @param random_seed is the simulator random seed
+     * @param logger is a pointer to the simulation logger
      * @param snapshot_interval is the time interval between two snapshots
+     * @param random_seed is the simulator random seed
      */
-    BasicSimulator(Tissue &tissue, LOGGER logger=LOGGER(), Time snapshot_interval=std::numeric_limits<Time>::max(), int random_seed=0);
+    BasicSimulator(Tissue &tissue, LOGGER *logger, Time snapshot_interval, int random_seed=0);
+
+    /**
+     * @brief The basic simulator constructor
+     * 
+     * @param tissue is the tissue on which simulation is performed
+     * @param random_seed is the simulator random seed
+     */
+    BasicSimulator(Tissue &tissue, int random_seed=0);
+
+    /**
+     * @brief The basic simulator constructor
+     * 
+     * @param tissue is the tissue on which simulation is performed
+     * @param logger is a pointer to the simulation logger
+     * @param random_seed is the simulator random seed
+     */
+    BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed=0);
+
+    /**
+     * @brief The basic simulator constructor
+     * 
+     * @param tissue is the tissue on which simulation is performed
+     * @param snapshot_interval is the time interval between two snapshots
+     * @param random_seed is the simulator random seed
+     */
+    BasicSimulator(Tissue &tissue, Time snapshot_interval, int random_seed=0);
 
     /**
      * @brief Select the next event
@@ -170,12 +226,30 @@ inline const Time& BasicSimulator<LOGGER,PLOT_WINDOW>::get_time() const
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER logger, Time snapshot_interval, int random_seed):
+BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, Time snapshot_interval, int random_seed):
     time(0), tissue(tissue), random_gen(), last_snapshot_time(0), num_of_mutated_cells(0), 
-    logger(logger), plotter(tissue), quitting(false), plot_time_interval(1000), 
-    epochs_since_last_plot(0), snapshot_interval(snapshot_interval)
+    logging_enabled(logger!=nullptr), logger(logger), plotter(tissue), quitting(false),
+    snapshot_interval(snapshot_interval)
 {
     random_gen.seed(random_seed);
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, int random_seed):
+    BasicSimulator(tissue, nullptr, std::numeric_limits<Time>::max(), random_seed)
+{
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed):
+    BasicSimulator(tissue, logger, std::numeric_limits<Time>::max(), random_seed)
+{
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, Time snapshot_interval, int random_seed):
+    BasicSimulator(tissue, nullptr, snapshot_interval, random_seed)
+{
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -183,15 +257,14 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
 {
     std::uniform_real_distribution<double> uni_dist(0.0, 1.0);
 
-    std::vector<CellEventType> event_types{CellEventType::DIE, CellEventType::DUPLICATE};
-
     CellEvent event;
-
     event.delay = std::numeric_limits<double>::max();
 
     for (const auto& species: tissue) {
         const auto num_of_cells{species.num_of_cells()};
-        for (const auto& event_type: event_types) {
+
+        // deal with exclusively somatic events
+        for (const auto& event_type: {CellEventType::DIE, CellEventType::DUPLICATE}) {
             const double r_value = uni_dist(random_gen);
             const double event_rate = species.get_rate(event_type);
             const double candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
@@ -202,28 +275,44 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
                 event.position = Position(tissue, species.choose_a_cell(random_gen));
             }
         }
+
+        // Deal with possible epigenetic events whenever admitted
+        const auto& epigenetic_graph = tissue.get_epigenetic_graph();
+        for (const auto& [dst_id, event_rate]: epigenetic_graph.get_outgoing_edge_map(species.get_id())) {
+            const double r_value = uni_dist(random_gen);
+            const double candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
+            
+            if (event.delay>candidate_delay) {
+                event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
+                event.delay = candidate_delay;
+                event.position = Position(tissue, species.choose_a_cell(random_gen));
+                event.epigenetic_genotype = static_cast<DriverGenotypeId>(dst_id);
+            }
+        }
     }
 
     return event;
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(Position& position, const Time& time)
+PositionInTissue BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(const Position& position, const Time& time)
 {
     CellInTissue& cell = (*(position.tissue))(position);
 
     if (!cell.has_driver_genotype()) {
-        return *this;
+        return position;
     }
     num_of_mutated_cells -= 1;
 
-    logger.record(CellEventType::DIE, cell, time);
+    if (logging_enabled) {
+        logger->record(CellEventType::DIE, cell, time);
+    }
 
     // remove former cell from the species
     Species& species = position.tissue->get_species(cell.get_driver_genotype());
-    species.remove(cell.get_id(), time);
+    species.remove(cell.get_id());
 
-    return *this;
+    return position;
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -245,8 +334,6 @@ DriverGenotypeId BasicSimulator<LOGGER,PLOT_WINDOW>::select_epigenetic_clone(con
 template<typename GENERATOR>
 inline Direction select_2D_random_direction(GENERATOR& random_gen, const Position& position)
 {
-    const Tissue& tissue = *(position.tissue);
-
     std::vector<Direction> directions{Direction::X_UP, Direction::X_DOWN,
                                       Direction::Y_UP, Direction::Y_DOWN,
                                       Direction::X_UP|Direction::Y_UP,
@@ -254,22 +341,11 @@ inline Direction select_2D_random_direction(GENERATOR& random_gen, const Positio
                                       Direction::X_DOWN|Direction::Y_UP,
                                       Direction::X_DOWN|Direction::Y_DOWN};
 
-    std::vector<Direction> valid_dirs;
-    for (const Direction& dir: directions) {
-        auto free_cell_pos = tissue.get_non_driver_in_direction(position, dir);
+    (void)position;
 
-        if (tissue.is_valid(free_cell_pos)) {
-            valid_dirs.push_back(dir);
-        }
-    };
+    std::uniform_int_distribution<size_t> distribution(0,directions.size()-1);
 
-    if (valid_dirs.size()==0) {
-        throw std::runtime_error("No valid direction from position");
-    }
-
-    std::uniform_int_distribution<size_t> distribution(0,valid_dirs.size()-1);
-
-    return valid_dirs[distribution(random_gen)];
+    return directions[distribution(random_gen)];
 }  
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -296,25 +372,67 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::push_cel
     }
 
     if (!tissue.is_valid(to_position)) {
-        Species &species = tissue.get_species(to_be_moved.get_driver_genotype());
+        if (to_be_moved.get_id() != tissue(from_position).get_id()) {
+            Species &species = tissue.get_species(to_be_moved.get_driver_genotype());
 
-        species.remove(to_be_moved.get_id(), time);
+            species.remove(to_be_moved.get_id());
+        }
     } else {
         swap(tissue(to_position), to_be_moved);
+
+        BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(tissue, to_position);
     }
 
     return *this;
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(Position& position, const Time& time)
+PositionInTissue BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time)
+{
+    const auto& graph = tissue.get_epigenetic_graph();
+
+    CellInTissue& cell = tissue(position);
+
+    DriverGenotypeId genotype(cell.get_driver_genotype());
+
+    const auto& dst_map = graph.get_outgoing_edge_map(genotype);
+
+    Species& species = tissue.get_species(genotype);
+
+    if (dst_map.find(destination_id)==dst_map.end()) {
+        std::ostringstream oss;
+
+        oss << "Unsupported epigenetic event from driver genotype " 
+            << static_cast<DriverGenotype>(species) << " to " 
+            << static_cast<DriverGenotype>(tissue.get_species(destination_id)) << std::endl;
+        
+        throw std::domain_error(oss.str());
+    }
+
+    species.remove(cell.get_id());
+
+    cell.genotype = destination_id;
+
+    tissue.get_species(destination_id).add(cell);
+
+    if (logging_enabled) {
+        logger->record(CellEventType::EPIGENETIC_EVENT, cell, time);
+    }
+    
+    return position;
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+std::vector<PositionInTissue>
+BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position, const Time& time)
 {
     Tissue& tissue = *(position.tissue);
+    std::vector<PositionInTissue> siblings;
 
     CellInTissue& cell1 = tissue(position);
 
     if (!cell1.has_driver_genotype()) {
-        return *this;
+        return siblings;
     }
 
     Direction push_dir = select_2D_random_direction(random_gen, position);
@@ -322,35 +440,66 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::duplicat
     // push the cell in position towards push direction
     push_cells(tissue, position, push_dir);
 
-    CellInTissue& cell2 = tissue(position + PositionDelta(push_dir));
-
     DriverGenotypeId genotype(cell1.get_driver_genotype());
+    Species& species{tissue.get_species(genotype)};
 
-    // remove former cell from the species
-    tissue.get_species(genotype).remove(cell1.get_id(), time);
-
-    DriverGenotypeId new_genotype;
-    
-    // select the epigenetic clone
-    new_genotype = select_epigenetic_clone(tissue.get_epigenetic_graph(), genotype);
-
-    // set siblings' parent
     auto parent_id = cell1.get_id();
-    cell1 = Cell(new_genotype, parent_id);
-    cell2 = Cell(new_genotype, parent_id);
 
-    num_of_mutated_cells +=1;
+    species.remove(parent_id);
 
-    // add new cells to the new species
-    tissue.get_species(new_genotype).add(cell1, time)
-                                    .add(cell2, time);
+    cell1 = Cell(genotype, parent_id);
+    species.add(cell1);
 
-    logger.record(CellEventType::DUPLICATE, cell1, time);
-    logger.record(CellEventType::DUPLICATE, cell2, time);
+    siblings.push_back(cell1);
 
-    return *this;
+    PositionInTissue new_cell_position{position + PositionDelta(push_dir)};
+    if (tissue.is_valid(new_cell_position)) {
+        CellInTissue& cell2 = tissue(new_cell_position);
+        cell2 = Cell(genotype, parent_id);
+        species.add(cell2);
+
+        siblings.push_back(cell2);
+
+        num_of_mutated_cells +=1;
+    }
+
+    if (logging_enabled) {
+        for (const auto& cell : siblings) {
+            logger->record(CellEventType::DUPLICATE, tissue(cell), time);
+        }
+    }
+
+    return siblings;
 }
 
+template<typename LOGGER, typename PLOT_WINDOW>
+std::vector<PositionInTissue>
+BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time)
+{
+    bool former_logging_status{logging_enabled};
+
+    logging_enabled = false;
+
+    const auto siblings = duplicate_cell(position, time);
+
+    if (siblings.size()==0) {
+        return siblings;
+    }
+
+    apply_epigenetic_event(position, destination_id, time);
+
+    const Tissue& tissue = *position.tissue;
+
+    logging_enabled = former_logging_status;
+
+    if (logging_enabled) {
+        for (const auto& cell : siblings) {
+            logger->record(CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT, tissue(cell), time);
+        }
+    }
+
+    return siblings;
+}
 
 template<typename LOGGER, typename PLOT_WINDOW>
 BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_to_next_event()
@@ -364,23 +513,20 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
             kill_cell(event.position, time);
             break;
         case CellEventType::DUPLICATE:
-            try {
-                duplicate_cell(event.position, time);
-            } catch (std::exception&) {
-                time -= event.delay;
-            }
+            duplicate_cell(event.position, time);
+            break;
+        case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
+            duplicate_cell_and_apply_epigenetic_event(event.position, event.epigenetic_genotype, time);
             break;
         default:
-            throw std::runtime_error("Unknown event type");
+            throw std::runtime_error("Unhandled event type");
     }
 
-    if (++epochs_since_last_plot>=plot_time_interval) {
-        epochs_since_last_plot = 0;
-        if (!plotter.closed()) {
-            plotter.plot(time);
-            quitting = plotter.closed();
-        }
+    if (!plotter.closed()) {
+        plotter.plot(time);
     }
+    
+    quitting = quitting || plotter.closed();
 
     return *this;
 }
@@ -400,13 +546,19 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
 
         if (last_snapshot_time+snapshot_interval<time) {
             last_snapshot_time = time;
-            logger.snapshot(tissue, last_snapshot_time);
+            if (logging_enabled) {
+                logger->snapshot(tissue, last_snapshot_time);
+            }
         }
     }
 
     while (!quitting) {
         plotter.plot(time);
-        quitting = plotter.closed();
+        quitting = !plotter.waiting_end();
+    }
+
+    if (logging_enabled) {
+        logger->snapshot(tissue, time);
     }
 
     return *this;

@@ -35,7 +35,7 @@
 
 namespace Races {
 
-unsigned long int Cell::counter = 0;
+uint64_t Cell::counter = 0;
 
 Cell::Cell():
     id(0), parent(0), genotype(NON_DRIVER_GENOTYPE)
@@ -80,9 +80,7 @@ CellInTissue::CellInTissue(const AxisValue& x, const AxisValue& y, const AxisVal
 
 CellInTissue& CellInTissue::operator=(const Cell& cell)
 {
-    id = cell.id;
-    parent = cell.parent;
-    genotype = cell.genotype;
+    Cell::operator=(cell);
 
     return *this;
 }

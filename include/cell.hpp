@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.2
- * @date 2023-06-25
+ * @version 0.3
+ * @date 2023-06-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,6 +32,7 @@
 #define __RACES_CELL__
 
 #include <limits>
+#include <cstdint>
 
 #include "time.hpp"
 #include "position.hpp"
@@ -41,12 +42,13 @@
 
 namespace Races {
 
-using CellId = size_t;
+using CellId = uint64_t;
 
 class Cell {
-    static unsigned long counter;   //!< total number of cell along the computation
-    CellId id;                      //!< cell identifier
-    CellId parent;                  //!< parent cell
+protected:
+    static uint64_t counter;   //!< total number of cell along the computation
+    CellId id;                 //!< cell identifier
+    CellId parent;             //!< parent cell
 
     DriverGenotypeId genotype;     //!< cell species reference
 
@@ -95,7 +97,10 @@ public:
 
     friend class Tissue;
     friend class Species;
-    friend class CellInTissue;
+
+    template<typename LOGGER, typename PLOT_WINDOW>
+    friend class BasicSimulator; 
+
     friend void swap(Cell& a, Cell &b);
 };
 
