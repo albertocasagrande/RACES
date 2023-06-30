@@ -40,7 +40,8 @@ set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_palette.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_palette.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp)
 
 if(${COMPILE_SDL2_CODE})
     add_compile_definitions(WITH_SDL2)
