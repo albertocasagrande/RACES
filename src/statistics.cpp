@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.1
- * @date 2023-06-29
+ * @version 0.2
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -75,25 +75,21 @@ void TissueStatistics::record_lost(const DriverGenotypeId& genotype_id, const Ti
     }
 }
 
-void TissueStatistics::record_duplication(const DriverGenotypeId& genotype_id, const bool& lost_a_cell)
+void TissueStatistics::record_duplication(const DriverGenotypeId& genotype_id)
 {
     auto& s_stats = s_statistics.at(genotype_id);
 
     s_stats.total_cells += 2;
-
-    if (lost_a_cell) {
-        s_stats.lost_cells += 1;
-    } else {
-        s_stats.curr_cells += 1;
-    }
+    s_stats.curr_cells += 1;
 }
 
-void TissueStatistics::record_duplication_and_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time, const bool& lost_a_cell)
+void TissueStatistics::record_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time)
 {
-    s_statistics.at(genotype_id).total_cells += 1;
-    
-    if (lost_a_cell) {
-        record_lost(genotype_id, time);
+    auto& s_stats = s_statistics.at(genotype_id);
+    s_stats.curr_cells -= 1;
+    s_stats.total_cells -= 1;
+    if (s_stats.curr_cells==0) {
+        s_stats.extinction_time = time;
     }
 
     auto& s_stats2 = s_statistics.at(epigenetic_genotype);
@@ -104,7 +100,13 @@ void TissueStatistics::record_duplication_and_epigenetic_event(const DriverGenot
     }
 }
 
-void TissueStatistics::record_event(const CellEvent& event, const Time &time, const bool lost_a_cell)
+void TissueStatistics::record_duplication_and_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time)
+{
+    record_duplication(genotype_id);
+    record_epigenetic_event(genotype_id,epigenetic_genotype,time);
+}
+
+void TissueStatistics::record_event(const CellEvent& event, const Time &time)
 {
     ++total_events;
 
@@ -125,11 +127,12 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time, co
             record_death(event.initial_genotype, time);
             break;
         case CellEventType::DUPLICATE:
-            record_duplication(event.initial_genotype, lost_a_cell);
+            record_duplication(event.initial_genotype);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            record_duplication_and_epigenetic_event(event.initial_genotype, event.epigenetic_genotype, 
-                                                    time, lost_a_cell);
+            record_duplication(event.initial_genotype);
+            record_epigenetic_event(event.initial_genotype, 
+                                    event.epigenetic_genotype, time);
             break;
         default:
             throw std::runtime_error("Unsupported event type");

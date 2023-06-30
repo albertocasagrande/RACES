@@ -2,8 +2,8 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.3
- * @date 2023-06-28
+ * @version 0.4
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,6 +32,7 @@
 #define __RACES_SIMULATOR__
 
 #include <random>
+#include <list>
 
 #include "tissue.hpp"
 #include "logger.hpp"
@@ -48,17 +49,24 @@ namespace Races {
 template<typename LOGGER=BasicLogger, typename PLOT_WINDOW=UI::Plot2DWindow>
 class BasicSimulator 
 {
+    struct EventAffectedCells
+    {
+        std::list<CellInTissue> new_cells;
+        std::list<Cell> lost_cells;
+    };
+
     Time time;  //!< simulation time
     Tissue &tissue; //!< simulated tissue
     std::mt19937_64 random_gen;  //!< pseudo-random generator
     Time last_snapshot_time;    //!< time of the last snapshot
-    size_t num_of_mutated_cells; //!< number of mutated cells
 
     bool logging_enabled;           //!< a flag to pause logging
     LOGGER *logger;                         //!< event logger
 
     UI::TissuePlotter<PLOT_WINDOW> plotter; //!< tissue plotter UI
     bool quitting;                          //!< quitting flag
+
+    TissueStatistics statistics;    //!< the tissue simulation statistics
 
     DriverGenotypeId select_epigenetic_clone(const DriverEpigeneticGraph& epigenetic_graph,
                                              const DriverGenotypeId& genotype);
@@ -69,9 +77,11 @@ class BasicSimulator
      * @param tissue is the tissue in which cells are pushed
      * @param position is the position from which cells are pushed
      * @param direction is the pushing direction
-     * @return a reference to the updated object
+     * @return the list of the cells that have been pushed outside 
+     *      the tissue border. Either this list is empty or 
+     *      it contains one single cell.
      */
-    BasicSimulator<LOGGER,PLOT_WINDOW>& push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction);    
+    std::list<Cell> push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction);    
 
     /**
      * @brief Duplicate the cell in the specified position
@@ -88,12 +98,14 @@ class BasicSimulator
      * genotype, then nothing is done.  
      * 
      * @param position is the position of the cell to be duplicate
-     * @param time is the cell duplication time
-     * @return the positions in the tissue of the siblings if 
-     *         the specified position contains a cell having a 
-     *         driver genotype. An empty vector otherwise.
+     * @return list of the affected cells. Whenever the specified position 
+     *      is not in the tissue or does not correspond to a driver 
+     *      mutation, the returned list is empty. If one of the two 
+     *      siblings is pushed outside the tissue borders, the returned 
+     *      list contains only the new cell in position `position`. 
+     *      In the remaining case, the returned list contains two cells
      */
-    std::vector<PositionInTissue> duplicate_cell(const Position& position, const Time& time);
+    EventAffectedCells duplicate_cell(const Position& position);
 
     /**
      * @brief Kill the cell in the specified position
@@ -103,10 +115,10 @@ class BasicSimulator
      * genotype, then nothing is done.
      * 
      * @param position is the position of the cell to be killed
-     * @param time is the cell death time
-     * @return the former position in the tissue of the killed cell
+     * @return list of the affected cells, i.e., a list containing 
+     *      the former status of the killed cell at most
      */
-    PositionInTissue kill_cell(const Position& position, const Time& time);
+    EventAffectedCells kill_cell(const Position& position);
 
     /**
      * @brief Apply an epigenetic event on the cell in the specified position
@@ -117,10 +129,10 @@ class BasicSimulator
      * 
      * @param position is the position of the cell to be methylated/demethylated
      * @param destination_id is the resulting genotype identifier of the cell
-     * @param time is the epigenetic event time
-     * @return the position in the tissue of the epigenetic event
+     * @return list of the affected cells, i.e., a list containing 
+     *      the status of the mutated cell at most
      */
-    PositionInTissue apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time);
+    EventAffectedCells apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id);
 
     /**
      * @brief Duplicate the cell and apply an epigenetic event
@@ -130,12 +142,15 @@ class BasicSimulator
      * 
      * @param position is the position of the cell to be duplicate
      * @param destination_id is the resulting genotype identifier of the cell
-     * @param time is the event time
-     * @return the positions in the tissue of the siblings if 
-     *         the specified position contains a cell having a 
-     *         driver genotype. An empty vector otherwise.
+     * @return list of the affected cells. Whenever the specified position 
+     *      is not in the tissue or does not correspond to a driver 
+     *      mutation, the returned list is empty. If one of the two 
+     *      siblings is pushed outside the tissue borders, the returned 
+     *      list contains only the new cell in position `position`. 
+     *      In the remaining case, the returned list contains two cells
      */
-    std::vector<PositionInTissue> duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time);
+    EventAffectedCells duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id);
+
     /**
      * @brief Update position of a cell in the species data
      * 
@@ -183,6 +198,23 @@ public:
     BasicSimulator(Tissue &tissue, Time snapshot_interval, int random_seed=0);
 
     /**
+     * @brief Set the simulator logger
+     * 
+     * @param logger is the simulator logger
+     */
+    void set_logger(LOGGER *logger);
+
+    /**
+     * @brief Enable logging
+     */
+    void enable_logging();
+
+    /**
+     * @brief Disable logging
+     */
+    void disable_logging();
+
+    /**
      * @brief Select the next event
      * 
      * This method select the next event by using the Gillespie's 
@@ -205,6 +237,7 @@ public:
     /**
      * @brief Simulate up to 
      * 
+     * @param final_time is the final simulation time
      * @return a reference to the updated simulator
      */
     BasicSimulator<LOGGER,PLOT_WINDOW>& run_up_to(const Time& final_time);
@@ -215,6 +248,13 @@ public:
      * @return a constant reference to the simulator time
      */
     const Time& get_time() const;
+
+    /**
+     * @brief Get the simulation plotter 
+     * 
+     * @return a non-constant reference to the plotter
+     */
+    UI::TissuePlotter<PLOT_WINDOW>& get_plotter();
 };
 
 /* Implementation */
@@ -227,9 +267,9 @@ inline const Time& BasicSimulator<LOGGER,PLOT_WINDOW>::get_time() const
 
 template<typename LOGGER, typename PLOT_WINDOW>
 BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, Time snapshot_interval, int random_seed):
-    time(0), tissue(tissue), random_gen(), last_snapshot_time(0), num_of_mutated_cells(0), 
-    logging_enabled(logger!=nullptr), logger(logger), plotter(tissue), quitting(false),
-    snapshot_interval(snapshot_interval)
+    time(0), tissue(tissue), random_gen(), last_snapshot_time(0), 
+    logging_enabled(logger!=nullptr), logger(logger), plotter(tissue), 
+    quitting(false), statistics(tissue), snapshot_interval(snapshot_interval)
 {
     random_gen.seed(random_seed);
 }
@@ -258,35 +298,37 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
     std::uniform_real_distribution<double> uni_dist(0.0, 1.0);
 
     CellEvent event;
-    event.delay = std::numeric_limits<double>::max();
+    event.delay = std::numeric_limits<Time>::max();
 
     for (const auto& species: tissue) {
         const auto num_of_cells{species.num_of_cells()};
 
         // deal with exclusively somatic events
         for (const auto& event_type: {CellEventType::DIE, CellEventType::DUPLICATE}) {
-            const double r_value = uni_dist(random_gen);
-            const double event_rate = species.get_rate(event_type);
-            const double candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
+            const Time r_value = uni_dist(random_gen);
+            const Time event_rate = species.get_rate(event_type);
+            const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
 
             if (event.delay>candidate_delay) {
                 event.type = event_type;
                 event.delay = candidate_delay;
                 event.position = Position(tissue, species.choose_a_cell(random_gen));
+                event.initial_genotype = species.get_id();
             }
         }
 
         // Deal with possible epigenetic events whenever admitted
         const auto& epigenetic_graph = tissue.get_epigenetic_graph();
         for (const auto& [dst_id, event_rate]: epigenetic_graph.get_outgoing_edge_map(species.get_id())) {
-            const double r_value = uni_dist(random_gen);
-            const double candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
+            const Time r_value = uni_dist(random_gen);
+            const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
             
             if (event.delay>candidate_delay) {
                 event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
                 event.delay = candidate_delay;
                 event.position = Position(tissue, species.choose_a_cell(random_gen));
                 event.epigenetic_genotype = static_cast<DriverGenotypeId>(dst_id);
+                event.initial_genotype = species.get_id();
             }
         }
     }
@@ -295,24 +337,20 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-PositionInTissue BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(const Position& position, const Time& time)
+typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
+BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(const Position& position)
 {
-    CellInTissue& cell = (*(position.tissue))(position);
+    CellInTissue cell = (*(position.tissue))(position);
 
     if (!cell.has_driver_genotype()) {
-        return position;
-    }
-    num_of_mutated_cells -= 1;
-
-    if (logging_enabled) {
-        logger->record(CellEventType::DIE, cell, time);
+        return {{},{}};
     }
 
     // remove former cell from the species
     Species& species = position.tissue->get_species(cell.get_driver_genotype());
     species.remove(cell.get_id());
 
-    return position;
+    return {{cell},{}};
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -358,7 +396,7 @@ void BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(Tissue& tiss
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction)
+std::list<Cell> BasicSimulator<LOGGER,PLOT_WINDOW>::push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction)
 {
     PositionDelta delta(direction);
     PositionInTissue to_position(from_position+delta);
@@ -377,17 +415,20 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::push_cel
 
             species.remove(to_be_moved.get_id());
         }
-    } else {
-        swap(tissue(to_position), to_be_moved);
 
-        BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(tissue, to_position);
+        return {to_be_moved};
     }
 
-    return *this;
+    swap(tissue(to_position), to_be_moved);
+
+    BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(tissue, to_position);
+
+    return {};
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-PositionInTissue BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time)
+typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
+BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id)
 {
     const auto& graph = tissue.get_epigenetic_graph();
 
@@ -415,30 +456,26 @@ PositionInTissue BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(cons
 
     tissue.get_species(destination_id).add(cell);
 
-    if (logging_enabled) {
-        logger->record(CellEventType::EPIGENETIC_EVENT, cell, time);
-    }
-    
-    return position;
+    return {{tissue(position)},{}};
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-std::vector<PositionInTissue>
-BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position, const Time& time)
+typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
+BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position)
 {
     Tissue& tissue = *(position.tissue);
-    std::vector<PositionInTissue> siblings;
+    EventAffectedCells affected;
 
     CellInTissue& cell1 = tissue(position);
 
     if (!cell1.has_driver_genotype()) {
-        return siblings;
+        return affected;
     }
 
     Direction push_dir = select_2D_random_direction(random_gen, position);
 
     // push the cell in position towards push direction
-    push_cells(tissue, position, push_dir);
+    affected.lost_cells = push_cells(tissue, position, push_dir);
 
     DriverGenotypeId genotype(cell1.get_driver_genotype());
     Species& species{tissue.get_species(genotype)};
@@ -450,7 +487,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position, con
     cell1 = Cell(genotype, parent_id);
     species.add(cell1);
 
-    siblings.push_back(cell1);
+    affected.new_cells.push_back(cell1);
 
     PositionInTissue new_cell_position{position + PositionDelta(push_dir)};
     if (tissue.is_valid(new_cell_position)) {
@@ -458,47 +495,31 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position, con
         cell2 = Cell(genotype, parent_id);
         species.add(cell2);
 
-        siblings.push_back(cell2);
-
-        num_of_mutated_cells +=1;
+        affected.new_cells.push_back(cell2);
     }
 
-    if (logging_enabled) {
-        for (const auto& cell : siblings) {
-            logger->record(CellEventType::DUPLICATE, tissue(cell), time);
-        }
-    }
-
-    return siblings;
+    return affected;
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-std::vector<PositionInTissue>
-BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id, const Time& time)
+typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
+BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id)
 {
-    bool former_logging_status{logging_enabled};
+    auto affected = duplicate_cell(position);
 
-    logging_enabled = false;
-
-    const auto siblings = duplicate_cell(position, time);
-
-    if (siblings.size()==0) {
-        return siblings;
+    if (affected.new_cells.size()==0) {
+        return affected;
     }
 
-    apply_epigenetic_event(position, destination_id, time);
+    apply_epigenetic_event(position, destination_id);
 
     const Tissue& tissue = *position.tissue;
 
-    logging_enabled = former_logging_status;
-
-    if (logging_enabled) {
-        for (const auto& cell : siblings) {
-            logger->record(CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT, tissue(cell), time);
-        }
+    for (auto& cell : affected.new_cells) {
+        cell = tissue(cell);
     }
 
-    return siblings;
+    return affected;
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -508,22 +529,36 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
 
     time += event.delay;
 
+    EventAffectedCells affected;
+
     switch(event.type) {
         case CellEventType::DIE:
-            kill_cell(event.position, time);
+            affected = kill_cell(event.position);
             break;
         case CellEventType::DUPLICATE:
-            duplicate_cell(event.position, time);
+            affected = duplicate_cell(event.position);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            duplicate_cell_and_apply_epigenetic_event(event.position, event.epigenetic_genotype, time);
+            affected = duplicate_cell_and_apply_epigenetic_event(event.position, event.epigenetic_genotype);
             break;
         default:
             throw std::runtime_error("Unhandled event type");
     }
 
+    if (logging_enabled) {
+        for (const auto& cell : affected.new_cells) {
+            logger->record(event.type, cell, time);
+        }
+    }
+
+    statistics.record_event(event, time);
+
+    for (const auto& cell: affected.lost_cells) {
+        statistics.record_lost(cell.get_driver_genotype(), time);
+    }
+
     if (!plotter.closed()) {
-        plotter.plot(time);
+        plotter.plot(statistics);
     }
     
     quitting = quitting || plotter.closed();
@@ -540,8 +575,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
         total_cells *= axis_size;
     }
 
-    num_of_mutated_cells = tissue.num_of_mutated_cells();
-    while (!quitting && num_of_mutated_cells>0 && time < final_time) {
+    while (!quitting && tissue.num_of_mutated_cells()>0 && time < final_time) {
         run_up_to_next_event();
 
         if (last_snapshot_time+snapshot_interval<time) {
@@ -553,7 +587,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     }
 
     while (!quitting) {
-        plotter.plot(time);
+        plotter.plot(statistics);
         quitting = !plotter.waiting_end();
     }
 
@@ -562,6 +596,32 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     }
 
     return *this;
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+void BasicSimulator<LOGGER,PLOT_WINDOW>::set_logger(LOGGER *logger)
+{
+    logging_enabled = logging_enabled | (this->logger==nullptr);
+    
+    this->logger = logger;
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+void BasicSimulator<LOGGER,PLOT_WINDOW>::enable_logging()
+{
+    logging_enabled = (this->logger!=nullptr);
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+void BasicSimulator<LOGGER,PLOT_WINDOW>::disable_logging()
+{
+    logging_enabled = false;
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+UI::TissuePlotter<PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::get_plotter()
+{
+    return plotter;
 }
 
 }

@@ -2,7 +2,7 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.1
+ * @version 0.2
  * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
@@ -151,23 +151,27 @@ public:
     /**
      * @brief Record a cell duplication
      * 
-     * @param genotype_id is the driver genotype id of the duplicating cell 
-     * @param lost_a_cell is a flag to signal whenever a cell has been lost 
-     *     during the event.
+     * @param genotype_id is the driver genotype id of the duplicating cell
      */
-    void record_duplication(const DriverGenotypeId& genotype_id, const bool& lost_a_cell);
+    void record_duplication(const DriverGenotypeId& genotype_id);
+
+    /**
+     * @brief Record an epigenetic event
+     * 
+     * @param genotype_id is the original driver genotype id of the mutating cell 
+     * @param epigenetic_genotype is the driver genotype id of the mutated cell
+     * @param time is the epigenetic event time
+     */
+    void record_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time);
 
     /**
      * @brief Record a cell duplication and an epigenetic event
      * 
      * @param genotype_id is the driver genotype id of the duplicating cell 
      * @param epigenetic_genotype is the driver genotype id of the mutated cell
-     * @param time is the duplication time
-     * @param lost_a_cell is a flag to signal whenever a cell has been lost 
-     *     during the event. The lost cell is assumed to always be the 
-     *     non-mutated one
+     * @param time is the epigenetic event time
      */
-    void record_duplication_and_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time, const bool& lost_a_cell);
+    void record_duplication_and_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time);
 
     /**
      * @brief Record the last event
@@ -178,10 +182,8 @@ public:
      * 
      * @param event is the event to record
      * @param time is the event time
-     * @param lost_a_cell is a flag to signal whenever a cell has been lost 
-     *     during the event
      */
-    void record_event(const CellEvent& event, const Time &time, const bool lost_a_cell);
+    void record_event(const CellEvent& event, const Time &time);
 
     /**
      * @brief Get the number of recorded times
