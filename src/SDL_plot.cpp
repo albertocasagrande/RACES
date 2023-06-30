@@ -2,8 +2,8 @@
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window by using SDL2
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,7 +49,7 @@ SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const 
 		throw std::runtime_error("SDL_ttf initialization error");
 	}
 
-	font = TTF_OpenFont("fonts/Roboto-Regular.ttf", 24);
+	font = TTF_OpenFont("assets/Roboto-Regular.ttf", 24);
 	if ( !font ) {
 		throw std::runtime_error("Failed to load font.");
 	}
@@ -62,6 +62,9 @@ SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const 
 	if (window == NULL) {
 		throw std::runtime_error( "Window could not be created" );
 	}
+
+	SDL_Surface* icon = IMG_Load("assets/RACES.png");
+	SDL_SetWindowIcon(window, icon);
 
 	//Create renderer for window
 	renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
