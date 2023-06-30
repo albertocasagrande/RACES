@@ -2,7 +2,7 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.2
+ * @version 0.3
  * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
@@ -61,29 +61,34 @@ std::filesystem::path BinaryLogger::get_next_cell_path() const
     return directory / (oss.str()+".dat") ;
 }
 
-std::filesystem::path BinaryLogger::get_snapshot_path_for(const Time& time) const
-{
-    std::ostringstream oss;
-
-    oss << "snapshot_" << time << ".dat";
-
-    return directory / oss.str();
-}
-
-std::string get_directory_name(const std::string& prefix_name)
+std::string get_time_string()
 {
     std::time_t time;
     std::tm* info;
-    char buffer [80];
+    char buffer[18];
 
     std::time(&time);
     info = std::localtime(&time);
 
     std::strftime(buffer,80,"%Y%m%d-%H%M%S",info);
 
+    return buffer;
+}
+
+std::filesystem::path BinaryLogger::get_snapshot_path() const
+{
     std::ostringstream oss;
 
-    oss << prefix_name << "_" << buffer;
+    oss << "snapshot_" << get_time_string() << ".dat";
+
+    return directory / oss.str();
+}
+
+std::string get_directory_name(const std::string& prefix_name)
+{
+    std::ostringstream oss;
+
+    oss << prefix_name << "_" << get_time_string();
 
     return oss.str();
 }
@@ -133,9 +138,9 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
     }
 }
 
-void BinaryLogger::snapshot(const Tissue& tissue, const Time& time)
+void BinaryLogger::snapshot(const Tissue& tissue)
 {
-    auto filename = get_snapshot_path_for(time);
+    auto filename = get_snapshot_path();
 
     std::ofstream ofs(filename, std::ios::out | std::ios::binary);
 

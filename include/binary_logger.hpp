@@ -1,8 +1,8 @@
 /**
- * @file sqlite_logger.hpp
+ * @file binary_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.2
+ * @version 0.3
  * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
@@ -60,13 +60,11 @@ struct BinaryLogger : public BasicLogger
     std::filesystem::path get_next_cell_path() const;
 
     /**
-     * @brief Get the a snapshot file full path
+     * @brief Get a new snapshot file full path
      * 
-     * @param time is the snapshot simulated time
-     * @return a snapshot file full path for the 
-     *      provided simulated time 
+     * @return a new snapshot file full path
      */
-    std::filesystem::path get_snapshot_path_for(const Time& time) const;
+    std::filesystem::path get_snapshot_path() const;
 
     /**
      * @brief Open a new cell file
@@ -108,9 +106,8 @@ public:
      * @brief Save a tissue snapshot
      * 
      * @param tissue is the tissue whose snapshot is requested
-     * @param time is the snapshot simulated time
      */
-    void snapshot(const Tissue& tissue, const Time& time);
+    void snapshot(const Tissue& tissue);
 
     /**
      * @brief The destructor

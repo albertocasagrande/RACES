@@ -2,7 +2,7 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.4
+ * @version 0.5
  * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
@@ -581,7 +581,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
         if (last_snapshot_time+snapshot_interval<time) {
             last_snapshot_time = time;
             if (logging_enabled) {
-                logger->snapshot(tissue, last_snapshot_time);
+                logger->snapshot(tissue);
             }
         }
     }
@@ -592,7 +592,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     }
 
     if (logging_enabled) {
-        logger->snapshot(tissue, time);
+        logger->snapshot(tissue);
     }
 
     return *this;

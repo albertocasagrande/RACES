@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,6 +29,7 @@
  */
 
 #include <iostream>
+#include <chrono>
 
 #include "logger.hpp"
 #include "tissue.hpp"
@@ -45,7 +46,7 @@ void BasicLogger::record(const CellEventType& type, const CellInTissue& cell, co
     (void)time;
 }
 
-void BasicLogger::snapshot(const Tissue& tissue, const Time& time)
+void BasicLogger::snapshot(const Tissue& tissue)
 {
     (void)tissue;
     (void)time;
@@ -112,9 +113,10 @@ void JSONLogger::snapshot(const Species& species)
 }
 */
 
-void JSONLogger::snapshot(const Tissue& tissue, const Time& time)
+void JSONLogger::snapshot(const Tissue& tissue)
 {
-    os << "{time: "<< time <<", {name: \"" << tissue.get_name() << "\"";
+    auto epoch = std::chrono::system_clock::now().time_since_epoch().count();
+    os << "{epoch: "<< epoch <<", {name: \"" << tissue.get_name() << "\"";
     for (const auto& species: tissue) {
         os << "," << species;
     }
