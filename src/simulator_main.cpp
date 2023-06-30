@@ -2,7 +2,7 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.3
+ * @version 0.4
  * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
@@ -30,6 +30,7 @@
 
 #include <iostream> 
 #include <vector>
+#include <chrono>
 
 #include <boost/program_options.hpp>
 
@@ -130,8 +131,11 @@ int main(int argc, char* argv[])
     tissue.add_driver_somatic_mutation(genotypes[1].get_id(),genotypes[3].get_id(), 100);
 
     tissue.add(genotypes[0].get_id(), {250, 500});
-    tissue.add(genotypes[2].get_id(), {750, 500});
+    tissue.add(genotypes[2].get_id(), {350, 500});
 
+    using namespace std::chrono_literals;
+
+    auto snapshot_interval = 20s;
 #ifdef WITH_SDL2
     if (vm.count("plot")) {
         BinaryLogger logger(tissue.get_name());
@@ -144,7 +148,7 @@ int main(int argc, char* argv[])
             simulator.disable_logging();
         }
 
-        simulator.snapshot_interval = 20;
+        simulator.set_interval_between_snapshots(snapshot_interval);
 
         simulator.run_up_to(time_horizon);
     } else {
@@ -156,6 +160,8 @@ int main(int argc, char* argv[])
         if (vm.count("no-logging")) {
             simulator.disable_logging();
         }
+
+        simulator.set_interval_between_snapshots(snapshot_interval);
 
         simulator.run_up_to(time_horizon);
 

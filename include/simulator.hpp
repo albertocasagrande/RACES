@@ -2,7 +2,7 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.5
+ * @version 0.6
  * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
@@ -58,7 +58,8 @@ class BasicSimulator
     Time time;  //!< simulation time
     Tissue &tissue; //!< simulated tissue
     std::mt19937_64 random_gen;  //!< pseudo-random generator
-    Time last_snapshot_time;    //!< time of the last snapshot
+    std::chrono::system_clock::time_point last_snapshot_time;    //!< time of the last snapshot
+    long secs_between_snapshots;     //!< the number of minutes between two snapshots
 
     bool logging_enabled;           //!< a flag to pause logging
     LOGGER *logger;                         //!< event logger
@@ -158,18 +159,8 @@ class BasicSimulator
      * @param position is the position of the cell to be updated
      */
     static void update_position_in_species(Tissue& tissue, const PositionInTissue& position);
-public:
-    Time snapshot_interval;     //!< time interval between two snapshots
 
-    /**
-     * @brief The basic simulator constructor
-     * 
-     * @param tissue is the tissue on which simulation is performed
-     * @param logger is a pointer to the simulation logger
-     * @param snapshot_interval is the time interval between two snapshots
-     * @param random_seed is the simulator random seed
-     */
-    BasicSimulator(Tissue &tissue, LOGGER *logger, Time snapshot_interval, int random_seed=0);
+public:
 
     /**
      * @brief The basic simulator constructor
@@ -187,15 +178,6 @@ public:
      * @param random_seed is the simulator random seed
      */
     BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed=0);
-
-    /**
-     * @brief The basic simulator constructor
-     * 
-     * @param tissue is the tissue on which simulation is performed
-     * @param snapshot_interval is the time interval between two snapshots
-     * @param random_seed is the simulator random seed
-     */
-    BasicSimulator(Tissue &tissue, Time snapshot_interval, int random_seed=0);
 
     /**
      * @brief Set the simulator logger
@@ -255,6 +237,14 @@ public:
      * @return a non-constant reference to the plotter
      */
     UI::TissuePlotter<PLOT_WINDOW>& get_plotter();
+
+    /**
+     * @brief Set the interval between snapshots
+     * 
+     * @param time_interval is the time interval between two snapshots
+     */
+    template<class Rep, class Period>
+    void set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval);
 };
 
 /* Implementation */
@@ -266,29 +256,17 @@ inline const Time& BasicSimulator<LOGGER,PLOT_WINDOW>::get_time() const
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, Time snapshot_interval, int random_seed):
-    time(0), tissue(tissue), random_gen(), last_snapshot_time(0), 
-    logging_enabled(logger!=nullptr), logger(logger), plotter(tissue), 
-    quitting(false), statistics(tissue), snapshot_interval(snapshot_interval)
+BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed):
+    time(0), tissue(tissue), random_gen(), last_snapshot_time(std::chrono::system_clock::now()), 
+    secs_between_snapshots(0), logging_enabled(logger!=nullptr), logger(logger),
+    plotter(tissue), quitting(false), statistics(tissue)
 {
     random_gen.seed(random_seed);
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
 BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, int random_seed):
-    BasicSimulator(tissue, nullptr, std::numeric_limits<Time>::max(), random_seed)
-{
-}
-
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed):
-    BasicSimulator(tissue, logger, std::numeric_limits<Time>::max(), random_seed)
-{
-}
-
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, Time snapshot_interval, int random_seed):
-    BasicSimulator(tissue, nullptr, snapshot_interval, random_seed)
+    BasicSimulator(tissue, nullptr, random_seed)
 {
 }
 
@@ -576,10 +554,15 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     }
 
     while (!quitting && tissue.num_of_mutated_cells()>0 && time < final_time) {
+        using namespace std::chrono;
+
         run_up_to_next_event();
 
-        if (last_snapshot_time+snapshot_interval<time) {
-            last_snapshot_time = time;
+        const auto curr_time = system_clock::now();
+        const auto from_last_snapshot = duration_cast<seconds>(curr_time-last_snapshot_time);
+
+        if (secs_between_snapshots>0 &&from_last_snapshot.count()>=secs_between_snapshots) {
+            last_snapshot_time = curr_time;
             if (logging_enabled) {
                 logger->snapshot(tissue);
             }
@@ -616,6 +599,15 @@ template<typename LOGGER, typename PLOT_WINDOW>
 void BasicSimulator<LOGGER,PLOT_WINDOW>::disable_logging()
 {
     logging_enabled = false;
+}
+ 
+template<typename LOGGER, typename PLOT_WINDOW>
+template<class Rep, class Period>
+inline void BasicSimulator<LOGGER,PLOT_WINDOW>::set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval)
+{
+    using namespace std::chrono;
+
+    secs_between_snapshots = duration_cast<seconds>(time_interval).count();
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
