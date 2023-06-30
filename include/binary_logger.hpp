@@ -2,8 +2,8 @@
  * @file sqlite_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.1
- * @date 2023-06-28
+ * @version 0.2
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,11 +50,30 @@ struct BinaryLogger : public BasicLogger
     std::ofstream cell_of;             //!< the current cell output file
     const size_t cells_per_file;       //!< the number of cells to be saved before changing file
     size_t cell_in_current_file;       //!< cells saved in current file
-    uint16_t file_number;                //!< the current file number
+    uint16_t next_file_number;         //!< the next file number
 
+    /**
+     * @brief Get the next cell file full path
+     * 
+     * @return the next cell file full path
+     */
     std::filesystem::path get_next_cell_path() const;
 
-    std::filesystem::path get_next_snapshot_path(const Time& time) const;
+    /**
+     * @brief Get the a snapshot file full path
+     * 
+     * @param time is the snapshot simulated time
+     * @return a snapshot file full path for the 
+     *      provided simulated time 
+     */
+    std::filesystem::path get_snapshot_path_for(const Time& time) const;
+
+    /**
+     * @brief Open a new cell file
+     * 
+     * This method close the last opened cell file and open a new one.
+     */
+    void rotate_cell_file();
 public:
     /**
      * @brief The empty constructor
@@ -89,7 +108,7 @@ public:
      * @brief Save a tissue snapshot
      * 
      * @param tissue is the tissue whose snapshot is requested
-     * @param time is the snapshot time
+     * @param time is the snapshot simulated time
      */
     void snapshot(const Tissue& tissue, const Time& time);
 

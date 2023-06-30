@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.1
- * @date 2023-06-28
+ * @version 0.2
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -56,12 +56,12 @@ std::filesystem::path BinaryLogger::get_next_cell_path() const
 
     size_t digits = static_cast<size_t>(ceil(log10(numeric_limits<uint16_t>::max())));
 
-    oss << "cells_" << std::setfill('0') << std::setw(digits) << file_number;
+    oss << "cells_" << std::setfill('0') << std::setw(digits) << next_file_number;
 
     return directory / (oss.str()+".dat") ;
 }
 
-std::filesystem::path BinaryLogger::get_next_snapshot_path(const Time& time) const
+std::filesystem::path BinaryLogger::get_snapshot_path_for(const Time& time) const
 {
     std::ostringstream oss;
 
@@ -90,22 +90,37 @@ std::string get_directory_name(const std::string& prefix_name)
 
 BinaryLogger::BinaryLogger(const std::string prefix_name, const size_t cells_per_file):
     BasicLogger(), directory(get_directory_name(prefix_name)), cell_of(), 
-    cells_per_file(cells_per_file), cell_in_current_file(0), file_number(0)
+    cells_per_file(cells_per_file), cell_in_current_file(0), next_file_number(0)
 {
-    std::filesystem::create_directory(directory);
-
-    auto filename = get_next_cell_path();
-
-    cell_of.open(filename, std::ios::out | std::ios::binary);
 }
 
 BinaryLogger::~BinaryLogger()
 {
-    cell_of.close();
+    if (cell_of.is_open()) {
+        cell_of.close();
+    }
+}
+
+void BinaryLogger::rotate_cell_file()
+{
+    if (cell_of.is_open()) {
+        cell_of.close();
+    }
+    auto filename = get_next_cell_path();
+
+    cell_in_current_file=0;
+    cell_of.open(filename, std::ios::out | std::ios::binary);
+    ++next_file_number;  
 }
 
 void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)
 {
+    if (!cell_of.is_open()) {
+        std::filesystem::create_directory(directory);
+
+        rotate_cell_file();
+    }
+
     if (type==CellEventType::DUPLICATE || type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT) {
 
         cell_of.write((char*)(&(cell.get_parent_id())), sizeof(CellId));
@@ -113,21 +128,14 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
         cell_of.write((char*)(&time), sizeof(Time));
 
         if (++cell_in_current_file>=cells_per_file) {
-            cell_of.close();
-
-            cell_in_current_file=0;
-            ++file_number;
-
-            auto filename = get_next_cell_path();
-
-            cell_of.open(filename, std::ios::out | std::ios::binary);
+            rotate_cell_file();
         }
     }
 }
 
 void BinaryLogger::snapshot(const Tissue& tissue, const Time& time)
 {
-    auto filename = get_next_snapshot_path(time);
+    auto filename = get_snapshot_path_for(time);
 
     std::ofstream ofs(filename, std::ios::out | std::ios::binary);
 
