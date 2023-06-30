@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell events
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,9 +35,14 @@
 
 #include "driver_genotype_id.hpp"
 #include "position.hpp"
+#include "time.hpp"
 
 namespace Races {
 
+/**
+ * @brief Supported event type
+ * 
+ */
 enum class CellEventType {
     DIE,
     DUPLICATE,
@@ -46,12 +51,16 @@ enum class CellEventType {
     PASSENGER_MUTATION
 };
 
+/**
+ * @brief A description of a simulation event
+ */
 struct CellEvent
 {
     CellEventType type;                     //!< event type
     Position position;                      //!< event position
+    DriverGenotypeId initial_genotype;      //!< genotype of the cell on which event occurs
     DriverGenotypeId epigenetic_genotype;   //!< destination genotype for epigenetic events
-    double delay;                           //!< event delay
+    Time delay;                             //!< event delay
 };
 
 };
