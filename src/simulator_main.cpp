@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-06-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -61,8 +61,10 @@ int main(int argc, char* argv[])
 #ifdef WITH_SDL2
         ("plot,p", 
          "plot a graphical representation of the simulation")
+        ("frames-per-second,f", po::value<unsigned int>()->default_value(5), 
+         "the number of frames per second")
 #endif
-    ;
+        ("no-logging,n", "avoid logging");
     
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -136,6 +138,12 @@ int main(int argc, char* argv[])
 
         BasicSimulator<BinaryLogger, UI::SDLWindow> simulator(tissue, &logger);
 
+        simulator.get_plotter().set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
+
+        if (vm.count("no-logging")) {
+            simulator.disable_logging();
+        }
+
         simulator.snapshot_interval = 20;
 
         simulator.run_up_to(time_horizon);
@@ -144,6 +152,10 @@ int main(int argc, char* argv[])
         BinaryLogger logger(tissue.get_name());
 
         BasicSimulator<BinaryLogger> simulator(tissue, &logger);
+
+        if (vm.count("no-logging")) {
+            simulator.disable_logging();
+        }
 
         simulator.run_up_to(time_horizon);
 
