@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -97,9 +97,16 @@ public:
     /**
      * @brief Get the driver genotype name
      * 
-     * @return a constant reference to the driver identifier
+     * @return a constant reference to the driver genotype name
      */
     const std::string& get_name() const;
+
+    /**
+     * @brief Get the epigenetic driver genotype name
+     * 
+     * @return the epigenetic driver genotype name
+     */
+    std::string get_epigenetic_name() const;
 
     /**
      * @brief Get the driver genotype event rates
@@ -144,6 +151,11 @@ inline const DriverGenotypeId& DriverGenotype::get_id() const
 inline const std::string& DriverGenotype::get_name() const
 {
     return name;
+}
+
+inline std::string DriverGenotype::get_epigenetic_name() const
+{
+    return get_name() + (is_methylated()?"+":"-");
 }
 
 inline const std::map<CellEventType, double>& DriverGenotype::get_rates() const

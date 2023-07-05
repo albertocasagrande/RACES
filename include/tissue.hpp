@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.3
- * @date 2023-06-28
+ * @version 0.5
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,6 +32,7 @@
 #define __RACES_TISSUE__
 
 #include <vector>
+#include <list>
 #include <map>
 #include <string>
 
@@ -52,9 +53,80 @@ class Tissue {
     DriverSomaticGraph somatic_graph;               //!< somatic mutation graph
     DriverEpigeneticGraph epigenetic_graph;         //!< epigenetic mutation graph
     
-    std::vector<std::vector<std::vector<CellInTissue>>> space;     //!< Space in the tissue
+    std::vector<std::vector<std::vector<CellInTissue *>>> space;     //!< Space in the tissue
+
+    /**
+     * @brief Get the pointer to the cell in a position
+     * 
+     * This method returns a pointer to a cell in a given position.
+     * The returned value is undefined when the position is not 
+     * a valid position for the tissue.
+     * 
+     * @param position is the position of the aimed cell pointer
+     * @return a non-constant reference to a pointer to the cell 
+     *          in `position`
+     */
+    CellInTissue*& cell_pointer(const PositionInTissue& position);
+
+    /**
+     * @brief Get the pointer to the cell in a position
+     * 
+     * This method returns a pointer to a cell in a given position.
+     * The returned value is undefined when the position is not 
+     * a valid position for the tissue.
+     * 
+     * @param position is the position of the aimed cell pointer
+     * @return a constant reference to a pointer to the cell 
+     *          in `position`
+     */
+    const CellInTissue* cell_pointer(const PositionInTissue& position) const;
 
 public:
+    /**
+     * @brief This class wraps pointer to constant cells in tissue space
+     */
+    template<typename TISSUE_TYPE>
+    class BaseCellInTissueProxy
+    {
+    protected:
+        TISSUE_TYPE &tissue;                //!< tissue
+        const PositionInTissue position;    //!< position of the cell
+
+        BaseCellInTissueProxy(TISSUE_TYPE &tissue, const PositionInTissue position);
+    public:
+
+        bool has_driver_mutations() const;
+
+        operator CellInTissue() const;
+
+        friend class Tissue;
+    };
+
+    /**
+     * @brief This class wraps pointer to constant cells in tissue space
+     */    
+    class CellInTissueConstantProxy : public BaseCellInTissueProxy<const Tissue>
+    {
+        CellInTissueConstantProxy(const Tissue &tissue, const PositionInTissue position);
+
+        friend class Tissue;
+    };
+
+    /**
+     * @brief This class wraps pointer to cells in tissue space
+     */
+    class CellInTissueProxy : public BaseCellInTissueProxy<Tissue>
+    {
+        CellInTissueProxy(Tissue &tissue, const PositionInTissue position);
+    public:
+        CellInTissueProxy& operator=(const Cell& cell);
+
+        void kill();
+
+        CellInTissue copy_and_kill();
+
+        friend class Tissue;
+    };
 
     /**
      * @brief A constructor
@@ -131,9 +203,10 @@ public:
      * 
      * @param genotype is the driver genotype of the cell
      * @param position is the initial position in the tissue
+     * @param passenger_mutation is the number of cell passenger mutations
      * @return a reference to the updated object
      */
-    Tissue& add(const DriverGenotypeId genotype, const PositionInTissue position);
+    Tissue& add(const DriverGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations=0);
 
     /**
      * @brief Add a new species to the tissue
@@ -200,17 +273,17 @@ public:
      * @brief Get the cell in a position
      * 
      * @param position is the position of the aimed cell
-     * @return a non-constant reference to the aimed cell
+     * @return a cell in tissue proxy
      */
-    CellInTissue& operator()(const PositionInTissue& position);
+    CellInTissueProxy operator()(const PositionInTissue& position);
 
     /**
      * @brief Get the cell in a position
      * 
      * @param position is the position of the aimed cell
-     * @return a constant reference to the aimed cell
+     * @return a constant cell in tissue proxy
      */
-    const CellInTissue& operator()(const PositionInTissue& position) const;
+    const CellInTissueConstantProxy operator()(const PositionInTissue& position) const;
 
     /**
      * @brief Get tissue name
@@ -234,11 +307,28 @@ public:
     const DriverEpigeneticGraph& get_epigenetic_graph() const;
 
     /**
+     * @brief Push contiguous driver mutated cells in a direction
+     * 
+     * This method pushes the contiguous driver mutated cells from a
+     * position towards a direction and returns the list of the cells
+     * that are pushed outside the tissue. 
+     * 
+     * @param from_position is the position from which the cells are pushed
+     * @param direction is the push direction
+     * @return the list of the cells that have been pushed outside the 
+     *      tissue border
+     */
+    std::list<Cell> push_cells(const PositionInTissue from_position, const Direction& direction);
+
+    /**
      * @brief Get the tissue size
      * 
      * @return the tissue size for the 3 dimensions
      */
     std::vector<size_t> size() const;
+
+    template<typename TISSUE_TYPE>
+    friend class BaseCellInTissueProxy;
 };
 
 /* Inline implementation */
@@ -294,6 +384,44 @@ inline const DriverSomaticGraph& Tissue::get_somatic_graph() const
 inline const DriverEpigeneticGraph& Tissue::get_epigenetic_graph() const
 {
     return epigenetic_graph;
+}
+
+inline CellInTissue*& Tissue::cell_pointer(const PositionInTissue& position)
+{
+    return this->space[position.x][position.y][position.z];
+}
+
+
+inline const CellInTissue* Tissue::cell_pointer(const PositionInTissue& position) const
+{
+    return this->space[position.x][position.y][position.z];
+}
+
+template<typename TISSUE_TYPE>
+Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::BaseCellInTissueProxy(TISSUE_TYPE &tissue, const PositionInTissue position):
+    tissue(tissue), position(position)
+{
+    if (!tissue.is_valid(position)) {
+        throw std::out_of_range("The position does not belong to the tissue");
+    }
+}
+
+template<typename TISSUE_TYPE>
+inline bool Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::has_driver_mutations() const
+{
+    return tissue.cell_pointer(position)!=nullptr;
+}
+
+template<typename TISSUE_TYPE>
+Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::operator CellInTissue() const
+{
+    const auto ptr = tissue.cell_pointer(position);
+
+    if (ptr!=nullptr) {
+        return *ptr;
+    }
+
+    throw std::runtime_error("Non-driver mutated cell");
 }
 
 };

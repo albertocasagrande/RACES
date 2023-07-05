@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.2
- * @date 2023-06-25
+ * @version 0.4
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,12 +38,22 @@ namespace Races {
 uint64_t Cell::counter = 0;
 
 Cell::Cell():
-    id(0), parent(0), genotype(NON_DRIVER_GENOTYPE)
+    id(0), parent(0), genotype(NON_DRIVER_GENOTYPE), passenger_mutations(0)
 {
 }
 
-Cell::Cell(const DriverGenotypeId genotype, const CellId parent_id):
-    id(++Cell::counter), parent(parent_id), genotype(genotype)
+Cell::Cell(const DriverGenotypeId genotype):
+    Cell(genotype, 0)
+{
+}
+
+Cell::Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations):
+    id(++Cell::counter), parent(Cell::counter), genotype(genotype), passenger_mutations(passenger_mutations)
+{
+}
+
+Cell::Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id):
+    id(++Cell::counter), parent(parent_id), genotype(genotype), passenger_mutations(passenger_mutations)
 {
 }
 
@@ -52,29 +62,37 @@ void swap(Cell& a, Cell &b)
     std::swap(a.id,b.id);
     std::swap(a.parent, b.parent);
     std::swap(a.genotype, b.genotype);
-}
-
-Cell& Cell::clone(const Cell& cell)
-{
-    id = cell.id;
-    parent = cell.parent;
-    genotype = cell.genotype;
-
-    return *this;
+    std::swap(a.passenger_mutations, b.passenger_mutations);
 }
 
 std::ostream& operator<<(std::ostream& os, const Cell& cell)
 {
-    os << "Cell{id: "<< cell.get_id() 
+    os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
-       << ", driver_genotype: " << cell.get_driver_genotype() 
+       << ", driver_genotype: " << cell.get_driver_genotype()
+       << ", passenger_mutations: " << cell.get_passenger_mutations()
        << "}";
 
     return os;
 }
 
+CellInTissue::CellInTissue(const DriverGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position):
+    Cell(genotype, passenger_mutations), PositionInTissue(position)
+{
+}
+
+CellInTissue::CellInTissue(const PositionInTissue& position):
+    Cell(), PositionInTissue(position)
+{
+}
+
 CellInTissue::CellInTissue(const AxisValue& x, const AxisValue& y, const AxisValue& z):
     Cell(), PositionInTissue(x, y, z)
+{
+}
+
+CellInTissue::CellInTissue(const Cell& cell, const PositionInTissue& position):
+    Cell(cell), PositionInTissue(position)
 {
 }
 
@@ -97,9 +115,10 @@ CellInTissue& CellInTissue::operator=(const PositionInTissue& position)
 
 std::ostream& operator<<(std::ostream& os, const CellInTissue& cell)
 {
-    os << "Cell{id: "<< cell.get_id() 
+    os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
-       << ", driver_genotype: " << cell.get_driver_genotype() 
+       << ", driver_genotype: " << cell.get_driver_genotype()
+       << ", passenger_mutations: " << cell.get_passenger_mutations()
        << ", position: " << static_cast<PositionInTissue>(cell)
        << "}";
 

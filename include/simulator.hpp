@@ -2,8 +2,8 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.6
- * @date 2023-06-30
+ * @version 0.8
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,18 +73,6 @@ class BasicSimulator
                                              const DriverGenotypeId& genotype);
 
     /**
-     * @brief Push cells towards a non-driver mutated cell
-     * 
-     * @param tissue is the tissue in which cells are pushed
-     * @param position is the position from which cells are pushed
-     * @param direction is the pushing direction
-     * @return the list of the cells that have been pushed outside 
-     *      the tissue border. Either this list is empty or 
-     *      it contains one single cell.
-     */
-    std::list<Cell> push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction);    
-
-    /**
      * @brief Duplicate the cell in the specified position
      * 
      * This method simulates the duplication of a cell in the 
@@ -151,14 +139,6 @@ class BasicSimulator
      *      In the remaining case, the returned list contains two cells
      */
     EventAffectedCells duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id);
-
-    /**
-     * @brief Update position of a cell in the species data
-     * 
-     * @param tissue is the tissue containing the cell
-     * @param position is the position of the cell to be updated
-     */
-    static void update_position_in_species(Tissue& tissue, const PositionInTissue& position);
 
 public:
 
@@ -318,17 +298,13 @@ template<typename LOGGER, typename PLOT_WINDOW>
 typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
 BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(const Position& position)
 {
-    CellInTissue cell = (*(position.tissue))(position);
+    auto cell = (*(position.tissue))(position);
 
-    if (!cell.has_driver_genotype()) {
+    if (!cell.has_driver_mutations()) {
         return {{},{}};
     }
 
-    // remove former cell from the species
-    Species& species = position.tissue->get_species(cell.get_driver_genotype());
-    species.remove(cell.get_id());
-
-    return {{cell},{}};
+    return {{cell.copy_and_kill()},{}};
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -362,64 +338,23 @@ inline Direction select_2D_random_direction(GENERATOR& random_gen, const Positio
     std::uniform_int_distribution<size_t> distribution(0,directions.size()-1);
 
     return directions[distribution(random_gen)];
-}  
-
-template<typename LOGGER, typename PLOT_WINDOW>
-void BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(Tissue& tissue, const PositionInTissue& position)
-{
-    CellInTissue& cell = tissue(position);
-    Species &species = tissue.get_species(cell.get_driver_genotype());
-
-    species.update_cell(cell);
-}
-
-template<typename LOGGER, typename PLOT_WINDOW>
-std::list<Cell> BasicSimulator<LOGGER,PLOT_WINDOW>::push_cells(Tissue& tissue, PositionInTissue from_position, const Direction& direction)
-{
-    PositionDelta delta(direction);
-    PositionInTissue to_position(from_position+delta);
-    Cell to_be_moved=tissue(from_position);
-    while (tissue.is_valid(to_position)&&tissue(to_position).has_driver_genotype()) {   
-        swap(tissue(to_position), to_be_moved);
-
-        BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(tissue, to_position);
-
-        to_position += delta;
-    }
-
-    if (!tissue.is_valid(to_position)) {
-        if (to_be_moved.get_id() != tissue(from_position).get_id()) {
-            Species &species = tissue.get_species(to_be_moved.get_driver_genotype());
-
-            species.remove(to_be_moved.get_id());
-        }
-
-        return {to_be_moved};
-    }
-
-    swap(tissue(to_position), to_be_moved);
-
-    BasicSimulator<LOGGER,PLOT_WINDOW>::update_position_in_species(tissue, to_position);
-
-    return {};
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
 typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
 BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id)
 {
-    const auto& graph = tissue.get_epigenetic_graph();
-
-    CellInTissue& cell = tissue(position);
+    CellInTissue cell = tissue(position);
 
     DriverGenotypeId genotype(cell.get_driver_genotype());
 
+    const auto& graph = tissue.get_epigenetic_graph();
     const auto& dst_map = graph.get_outgoing_edge_map(genotype);
-
-    Species& species = tissue.get_species(genotype);
 
     if (dst_map.find(destination_id)==dst_map.end()) {
         std::ostringstream oss;
+
+        Species& species = tissue.get_species(genotype);
 
         oss << "Unsupported epigenetic event from driver genotype " 
             << static_cast<DriverGenotype>(species) << " to " 
@@ -428,11 +363,9 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& posit
         throw std::domain_error(oss.str());
     }
 
-    species.remove(cell.get_id());
-
     cell.genotype = destination_id;
 
-    tissue.get_species(destination_id).add(cell);
+    tissue(position) = cell;
 
     return {{tissue(position)},{}};
 }
@@ -444,36 +377,25 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position)
     Tissue& tissue = *(position.tissue);
     EventAffectedCells affected;
 
-    CellInTissue& cell1 = tissue(position);
-
-    if (!cell1.has_driver_genotype()) {
+    if (!tissue(position).has_driver_mutations()) {
         return affected;
     }
 
+    Cell parent_cell = tissue(position);
+
+    // push the cell in position towards a random direction
     Direction push_dir = select_2D_random_direction(random_gen, position);
+    affected.lost_cells = tissue.push_cells(position, push_dir);
+    
+    tissue(position) = parent_cell.generate_descendent();
 
-    // push the cell in position towards push direction
-    affected.lost_cells = push_cells(tissue, position, push_dir);
-
-    DriverGenotypeId genotype(cell1.get_driver_genotype());
-    Species& species{tissue.get_species(genotype)};
-
-    auto parent_id = cell1.get_id();
-
-    species.remove(parent_id);
-
-    cell1 = Cell(genotype, parent_id);
-    species.add(cell1);
-
-    affected.new_cells.push_back(cell1);
+    affected.new_cells.push_back(tissue(position));
 
     PositionInTissue new_cell_position{position + PositionDelta(push_dir)};
     if (tissue.is_valid(new_cell_position)) {
-        CellInTissue& cell2 = tissue(new_cell_position);
-        cell2 = Cell(genotype, parent_id);
-        species.add(cell2);
+        tissue(new_cell_position) = parent_cell.generate_descendent();
 
-        affected.new_cells.push_back(cell2);
+        affected.new_cells.push_back(tissue(new_cell_position));
     }
 
     return affected;
@@ -494,7 +416,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell_and_apply_epigenetic_event(co
     const Tissue& tissue = *position.tissue;
 
     for (auto& cell : affected.new_cells) {
-        cell = tissue(cell);
+        cell = static_cast<Cell>(tissue(cell));
     }
 
     return affected;

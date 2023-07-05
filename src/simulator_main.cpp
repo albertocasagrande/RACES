@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.4
- * @date 2023-06-30
+ * @version 0.5
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -107,14 +107,22 @@ int main(int argc, char* argv[])
     std::vector<DriverGenotype> genotypes;
 
     genotypes.push_back(DriverGenotype("A",{
-            {CellEventType::DIE, 0.1},{CellEventType::DUPLICATE, 0.2}}));
+            {CellEventType::DIE, 0.1},
+            {CellEventType::DUPLICATE, 0.2},
+            {CellEventType::PASSENGER_MUTATION, 20}}));
     genotypes.push_back(DriverGenotype("A",{
-            {CellEventType::DIE, 0.1},{CellEventType::DUPLICATE, 0.3}},true));
+            {CellEventType::DIE, 0.1},
+            {CellEventType::DUPLICATE, 0.3},
+            {CellEventType::PASSENGER_MUTATION, 2}},true));
 
     genotypes.push_back(DriverGenotype("B",{
-            {CellEventType::DIE, 0.1},{CellEventType::DUPLICATE, 0.2}}));
+            {CellEventType::DIE, 0.1},
+            {CellEventType::DUPLICATE, 0.2},
+            {CellEventType::PASSENGER_MUTATION, 1}}));
     genotypes.push_back(DriverGenotype("B",{
-            {CellEventType::DIE, 0.01},{CellEventType::DUPLICATE, 0.02}},true));
+            {CellEventType::DIE, 0.01},
+            {CellEventType::DUPLICATE, 0.02},
+            {CellEventType::PASSENGER_MUTATION, 20}},true));
 
     Tissue tissue("Liver", 1000,1000);
 
@@ -135,7 +143,7 @@ int main(int argc, char* argv[])
 
     using namespace std::chrono_literals;
 
-    auto snapshot_interval = 20s;
+    auto snapshot_interval = 5min;
 #ifdef WITH_SDL2
     if (vm.count("plot")) {
         BinaryLogger logger(tissue.get_name());

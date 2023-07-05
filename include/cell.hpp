@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.3
- * @date 2023-06-28
+ * @version 0.5
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,11 +46,13 @@ using CellId = uint64_t;
 
 class Cell {
 protected:
-    static uint64_t counter;   //!< total number of cell along the computation
-    CellId id;                 //!< cell identifier
-    CellId parent;             //!< parent cell
+    static uint64_t counter;            //!< total number of cell along the computation
+    CellId id;                          //!< cell identifier
+    CellId parent;                      //!< parent cell
 
-    DriverGenotypeId genotype;     //!< cell species reference
+    DriverGenotypeId genotype;          //!< cell species reference
+
+    unsigned int passenger_mutations;   //!< number of passenger mutations
 
     /**
      * @brief The empty constructor
@@ -59,12 +61,28 @@ protected:
 
 public:
     /**
+     * @brief Create a new cell with no passenger mutations
+     * 
+     * @param genotype is the driver genotype identifier
+     */
+    Cell(const DriverGenotypeId genotype);
+
+    /**
      * @brief Create a new cell
      * 
      * @param genotype is the driver genotype identifier
+     * @param passenger_mutations is the number of passenger mutations
+     */
+    Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations);
+
+    /**
+     * @brief Create a new cell
+     * 
+     * @param genotype is the driver genotype identifier
+     * @param passenger_mutations is the number of passenger mutations
      * @param parent_id is the parent cell identifier
      */
-    Cell(const DriverGenotypeId genotype, const CellId parent_id=0);
+    Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id);
 
     /**
      * @brief Get the cell identifier
@@ -88,12 +106,19 @@ public:
     const DriverGenotypeId& get_driver_genotype() const;
 
     /**
-     * @brief Clone a cell
+     * @brief Get the number of passenger mutations
      * 
-     * @param cell is the template cell
-     * @return a reference to the updated object
+     * @return a constant reference to the number of passenger mutations
      */
-    Cell& clone(const Cell& cell);
+    const unsigned int& get_passenger_mutations() const;
+
+    /**
+     * @brief Generate a descendent cell
+     * 
+     * @param new_passenger_mutations is the number of new passenger mutations
+     * @return the generated cell
+     */
+    Cell generate_descendent(const unsigned int new_passenger_mutations=0) const;
 
     friend class Tissue;
     friend class Species;
@@ -135,9 +160,34 @@ protected:
     /**
      * @brief A cell in tissue constructor
      * 
-     * This constructor is meant to build non-driver-genotype cells
+     * @param genotype is the cell driver genotype id
+     * @param passenger_mutations is the number of passenger mutations
+     * @param position is the cell position
+     */
+    CellInTissue(const DriverGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position);
+
+    /**
+     * @brief A cell in tissue constructor
      * 
-     * @param tissue is the tissue referred by the position
+     * @param cell is the cell
+     * @param position is the cell position
+     */
+    CellInTissue(const Cell& cell, const PositionInTissue& position);
+
+    /**
+     * @brief A cell in tissue constructor
+     * 
+     * This constructor is meant to build non-driver-genotype cells.
+     * 
+     * @param position is the cell position
+     */
+    CellInTissue(const PositionInTissue& position);
+
+    /**
+     * @brief A cell in tissue constructor
+     * 
+     * This constructor is meant to build non-driver-genotype cells.
+     * 
      * @param x is the x axis position in the tissue
      * @param y is the y axis position in the tissue
      * @param z is the z axis position in the tissue
@@ -167,9 +217,10 @@ public:
      * 
      * @return true if and only if the cell has a driver genotype
      */
-    bool has_driver_genotype() const;
+    bool has_driver_mutations() const;
 
     friend class Tissue;
+    friend class CellInTissueProxy;
 };
 
 
@@ -200,7 +251,17 @@ inline const DriverGenotypeId& Cell::get_driver_genotype() const
     return genotype;
 }
 
-inline bool CellInTissue::has_driver_genotype() const {
+inline const unsigned int& Cell::get_passenger_mutations() const
+{
+    return passenger_mutations;
+}
+
+inline Cell Cell::generate_descendent(const unsigned int new_passenger_mutations) const
+{
+    return Cell(get_driver_genotype(), passenger_mutations+new_passenger_mutations, get_id());
+}
+
+inline bool CellInTissue::has_driver_mutations() const {
     return get_driver_genotype() != NON_DRIVER_GENOTYPE;
 }
 

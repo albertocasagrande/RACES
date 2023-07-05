@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.3
- * @date 2023-06-30
+ * @version 0.4
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,24 +58,30 @@ JSONLogger::JSONLogger():
 
 void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)
 {
+    char event_symbol;
     switch(type) {
         case CellEventType::DIE:
-            os << "K " << cell.get_id();
+            event_symbol = 'K';
             break;
         case CellEventType::DUPLICATE:
-            os << "D " << cell.get_id() << " " << cell.get_parent_id() << " " << cell.get_driver_genotype();
+            event_symbol = 'D';
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            os << "F " << cell.get_id() << " " << cell.get_parent_id() << " " << cell.get_driver_genotype();
+            event_symbol = 'F';
             break;
         case CellEventType::EPIGENETIC_EVENT:
-            os << "E " << cell.get_id() << " " << cell.get_parent_id() << " " << cell.get_driver_genotype();
+            event_symbol = 'E';
             break;
         default:
             throw std::domain_error("Unhandled event");
     }
 
-    os << " " << time << std::endl;
+    os << event_symbol << " " 
+       << cell.get_id() << " " 
+       << cell.get_parent_id() << " " 
+       << cell.get_driver_genotype() << " "
+       << cell.get_passenger_mutations() << " " 
+       << time << std::endl;
 }
 
 /*
@@ -115,6 +121,8 @@ void JSONLogger::snapshot(const Species& species)
 
 void JSONLogger::snapshot(const Tissue& tissue)
 {
+    (void)tissue;
+/*
     auto epoch = std::chrono::system_clock::now().time_since_epoch().count();
     os << "{epoch: "<< epoch <<", {name: \"" << tissue.get_name() << "\"";
     for (const auto& species: tissue) {
@@ -122,6 +130,7 @@ void JSONLogger::snapshot(const Tissue& tissue)
     }
 
     os << "}" << std::endl;
+*/
 }
 
 }

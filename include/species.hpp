@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.3
- * @date 2023-06-28
+ * @version 0.4
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,16 +52,8 @@ class Tissue;
  * This class represents the set of cells having the same driver genotype.
  */
 class Species: public DriverGenotype {
-    std::vector<CellInTissue*> cells;    //!< species cell
+    std::vector<CellInTissue *> cells;     //!< species cell
     std::map<CellId, size_t> pos_map;    //!< map from CellId to `cells` position
-
-    /**
-     * @brief Update cell pointer
-     * 
-     * @param cell is a reference to the cell in the tissue
-     * @return Species& 
-     */
-    Species& update_cell(CellInTissue& cell);
 
     /**
      * @brief A constant iterator for the species cells
@@ -207,7 +199,7 @@ public:
      *       cell in the species 
      */
     template<typename GENERATOR>
-    CellInTissue& choose_a_cell(GENERATOR& generator) const
+    const CellInTissue& choose_a_cell(GENERATOR& generator) const
     {
         if (num_of_cells()==0) {
             throw std::domain_error("No cells in the species");
@@ -226,7 +218,7 @@ public:
      * @param cell_id is the id of the cell to be removed
      * @return a reference to the updated species
      */
-    Species& remove(const CellId& cell_id);
+    void remove(const CellId& cell_id);
 
     /**
      * @brief Add a cell to the species
@@ -234,7 +226,36 @@ public:
      * @param cell is the cell to be added to the species
      * @return a reference to the updated species
      */
-    Species& add(CellInTissue& cell);
+    CellInTissue* add(CellInTissue cell);
+
+    /**
+     * @brief Get cell by identifier
+     * 
+     * @param cell_id is the identifier of the aimed cell
+     * @return a non-constant reference to the aimed cell
+     */
+    CellInTissue& operator()(const CellId& cell_id);
+
+    /**
+     * @brief Get cell by identifier
+     * 
+     * @param cell_id is the identifier of the aimed cell
+     * @return a constant reference to the aimed cell
+     */
+    const CellInTissue& operator()(const CellId& cell_id) const;
+
+    /**
+     * @brief Test whether a cell is already contained in a species
+     * 
+     * @param cell_id is the identifier of the cell to be tested
+     * @return `true` is an only if the cell is already in the species
+     */
+    bool contains(const CellId& cell_id) const;
+
+    /**
+     * @brief The destroyer
+     */
+    ~Species();
 
     template<typename LOGGER, typename PLOT_WINDOW>
     friend class BasicSimulator;
@@ -251,16 +272,24 @@ std::ostream& operator<<(std::ostream& out, const Species& species);
 
 /* Inline Implementation */
 
+inline bool Species::contains(const CellId& cell_id) const
+{
+    return pos_map.find(cell_id) != pos_map.end();
+}
+
+inline CellInTissue& Species::operator()(const CellId& cell_id)
+{
+    return *(cells[pos_map.at(cell_id)]);
+}
+
+inline const CellInTissue& Species::operator()(const CellId& cell_id) const
+{
+    return *(cells[pos_map.at(cell_id)]);
+}
+
 inline size_t Species::num_of_cells() const
 {
     return cells.size();
-}
-
-inline Species& Species::update_cell(CellInTissue& cell)
-{
-    cells[pos_map.at(cell.get_id())] = &cell;
-
-    return *this;
 }
 
 };

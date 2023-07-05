@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.3
- * @date 2023-06-28
+ * @version 0.5
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,26 +35,69 @@
 
 namespace Races {
 
+Tissue::CellInTissueConstantProxy::CellInTissueConstantProxy(const Tissue &tissue, const PositionInTissue position):
+    BaseCellInTissueProxy<const Tissue>(tissue, position)
+{
+}
+
+Tissue::CellInTissueProxy::CellInTissueProxy(Tissue &tissue, const PositionInTissue position):
+    BaseCellInTissueProxy<Tissue>(tissue, position)
+{}
+
+Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell)
+{
+    // kill the cell in the position
+    kill();
+
+    Species& species = tissue.get_species(cell.get_driver_genotype());
+
+    // if the new cell is already in its species
+    if (species.contains(cell.get_id())) {
+        auto cell_ptr = &(species(cell.get_id()));
+
+        // reset the corresponding tissue position
+        tissue.cell_pointer(*cell_ptr) = nullptr;
+
+        // update the cell position in the species
+        *cell_ptr = position;
+        tissue.cell_pointer(position) = cell_ptr;
+    } else { // if, otherwise, the new cell is not in its species
+        // add the cell to the species
+        tissue.cell_pointer(position) = species.add(CellInTissue(cell, position));
+    }
+
+    return *this;
+}
+
+void Tissue::CellInTissueProxy::kill()
+{
+    // if the position already contains a cell with driver mutation
+    if (has_driver_mutations()) {
+        CellInTissue*& space_ptr = tissue.cell_pointer(position);
+
+        // remove the cell from its species
+        Species& former_species = tissue.get_species(space_ptr->get_driver_genotype());
+        former_species.remove(space_ptr->get_id());
+
+        space_ptr = nullptr;
+    }
+}
+
+CellInTissue Tissue::CellInTissueProxy::copy_and_kill()
+{
+    CellInTissue copy = *this;
+
+    kill();
+
+    return copy;
+}
+
 Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size):
     name(name)
 {
-    CellInTissue template_cell(0, 0, 0);
-    std::vector<CellInTissue> z_vector(z_size, template_cell);
-    std::vector<std::vector<CellInTissue>> y_vector(y_size, z_vector);
-    std::vector<std::vector<std::vector<CellInTissue>>> x_vector(x_size, y_vector);
-
-    AxisValue x{0};
-    for (auto x_it=std::begin(x_vector); x_it!=std::end(x_vector); ++x_it, ++x) {
-        AxisValue y{0};
-        for (auto y_it=std::begin(*x_it); y_it!=std::end(*x_it); ++y_it, ++y) {
-        AxisValue z{0};
-            for (auto cell_it=std::begin(*y_it); cell_it!=std::end(*y_it); ++cell_it, ++z) {
-                cell_it->x = x;
-                cell_it->y = y;
-                cell_it->z = z;
-            }
-        }
-    }
+    std::vector<CellInTissue *> z_vector(z_size, nullptr);
+    std::vector<std::vector<CellInTissue *>> y_vector(y_size, z_vector);
+    std::vector<std::vector<std::vector<CellInTissue *>>> x_vector(x_size, y_vector);
 
     std::swap(x_vector, space);
 }
@@ -88,17 +131,17 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue position)
+Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations)
 {
-    auto& cell = (*this)(position);
+    auto*& cell = space[position.x][position.y][position.z];
 
-    if (cell.has_driver_genotype()) {
+    if (cell!=nullptr) {
         throw std::runtime_error("The position has been already taken");
     }
 
-    Species& local_species = get_species(genotype);
+    Species& species = get_species(genotype);
 
-    local_species.add(cell);
+    cell = species.add(CellInTissue(genotype, passenger_mutations, position));
 
     return *this;
 }
@@ -131,22 +174,15 @@ Tissue& Tissue::add_driver_epigenetic_mutation(const DriverGenotypeId& src, cons
     return *this;
 }
 
-CellInTissue& Tissue::operator()(const PositionInTissue& position)
+Tissue::CellInTissueProxy Tissue::operator()(const PositionInTissue& position)
 {
-    if (!is_valid(position)) {
-        throw std::out_of_range("The position does not belong to the tissue");
-    }
-
-    return space[position.x][position.y][position.z];
+    return CellInTissueProxy(*this, position);
 }
 
-const CellInTissue& Tissue::operator()(const PositionInTissue& position) const
-{
-    if (!is_valid(position)) {
-        throw std::out_of_range("The position does not belong to the tissue");
-    }
 
-    return space[position.x][position.y][position.z];
+const Tissue::CellInTissueConstantProxy Tissue::operator()(const PositionInTissue& position) const
+{
+    return CellInTissueConstantProxy(*this, position);
 }
 
 PositionInTissue Tissue::get_non_driver_in_direction(PositionInTissue position, const Direction& direction) const
@@ -156,7 +192,7 @@ PositionInTissue Tissue::get_non_driver_in_direction(PositionInTissue position, 
     }
  
     PositionDelta delta(direction);
-    while ((*this)(position).has_driver_genotype()) {
+    while ((*this)(position).has_driver_mutations()) {
         position += delta;
 
         if (!is_valid(position)) {
@@ -165,6 +201,36 @@ PositionInTissue Tissue::get_non_driver_in_direction(PositionInTissue position, 
     }
 
     return position;
+}
+
+std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const Direction& direction)
+{
+    PositionDelta delta(direction);
+    PositionInTissue to_position(from_position+delta);
+    CellInTissue *to_be_moved = cell_pointer(from_position);
+    while (to_be_moved!=nullptr&&is_valid(to_position)) {
+        CellInTissue* &dest_ptr = cell_pointer(to_position);
+
+        std::swap(dest_ptr, to_be_moved);
+
+        *dest_ptr = to_position;
+
+        to_position += delta;
+    }
+
+    std::list<Cell> lost_cell;
+
+    if (to_be_moved!=nullptr) {
+        lost_cell.push_back(*to_be_moved);
+
+        Species &species = get_species(to_be_moved->get_driver_genotype());
+
+        species.remove(to_be_moved->get_id());
+    }
+
+    cell_pointer(from_position) = nullptr;
+
+    return lost_cell;
 }
 
 };

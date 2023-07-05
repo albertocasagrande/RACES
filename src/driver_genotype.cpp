@@ -2,8 +2,8 @@
  * @file driver.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.1
- * @date 2023-05-30
+ * @version 0.2
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,6 +29,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 
 #include "driver_genotype.hpp"
 
@@ -41,6 +42,22 @@ DriverGenotype::DriverGenotype(const std::string& name,
                                const bool methylated): id(counter++), name(name), 
                                rates(rates), methylated(methylated)
 {
+    std::map<CellEventType, std::string> event_types{
+        {{CellEventType::DIE}, "death rate"},
+        {{CellEventType::DUPLICATE}, "duplicate rate"},
+        {{CellEventType::PASSENGER_MUTATION}, "passenger mutation rate"},
+    };
+
+    for (const auto& [event_type, name]: event_types) {
+        if (rates.find(event_type)==rates.end()) {
+            std::ostringstream oss;
+
+            oss << "Missing " << name << " for driver \""
+                << get_epigenetic_name() << "\".";
+
+            throw std::domain_error(oss.str());
+        }
+    }
 }
 
 DriverGenotype::DriverGenotype(const DriverGenotype& orig): id(orig.id), name(orig.name), 
@@ -69,7 +86,7 @@ DriverGenotype& DriverGenotype::operator=(DriverGenotype&& orig)
 
 std::ostream& operator<<(std::ostream& out, const DriverGenotype& driver)
 {
-    out << driver.get_name() << (driver.is_methylated()?"+":"-")
+    out << driver.get_epigenetic_name() 
         << "(die rate: " << driver.get_rate(CellEventType::DIE)<< ", "
         << "duplication rate: " << driver.get_rate(CellEventType::DUPLICATE)
         << ")";

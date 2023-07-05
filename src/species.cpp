@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-07-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -48,7 +48,7 @@ Species::Species(const DriverGenotype& driver):
     DriverGenotype(driver)
 {}
 
-Species& Species::remove(const CellId& cell_id)
+void Species::remove(const CellId& cell_id)
 {
     // find the cell to be removed
     const size_t pos = pos_map.at(cell_id);
@@ -68,29 +68,36 @@ Species& Species::remove(const CellId& cell_id)
         }
     }
 
-    cells[last_pos]->genotype = NON_DRIVER_GENOTYPE;
+    delete cells[last_pos];
 
     // remove the cell to be removed 
     cells.pop_back();
-
-    return *this;
 }
 
-Species& Species::add(CellInTissue& cell)
+CellInTissue* Species::add(CellInTissue cell)
 {
     // find a position for the new cell
-    const size_t new_pos = num_of_cells();
+    const size_t new_pos = cells.size();
 
     // set it position in the position map
     pos_map[cell.get_id()] = new_pos;
-
-    cells.push_back(&cell);
-
+ 
     cell.genotype = get_id();
+    
+    cells.push_back(new CellInTissue(cell));
 
-    return *this;
+    return cells[new_pos];
 }
 
+Species::~Species()
+{
+    for (auto& cell: cells) {
+        delete cell;
+    }
+
+    cells.clear();
+    pos_map.clear();
+}
 
 Species::const_iterator Species::begin() const
 {
@@ -125,16 +132,13 @@ Species::const_iterator Species::const_iterator::operator--(int)
 std::ostream& operator<<(std::ostream& out, const Species& species)
 {
     out << "Species {genotype: " << static_cast<DriverGenotype>(species) 
-        << ", cells: ";
-    char sep{'{'};
+        << ", cells: {";
+    std::string sep{""};
     for (const auto& cell: species) {
-        out << sep << " {id: " << cell.get_id() 
-            << ", parent: " << cell.get_parent_id()
-            << ", position: " << static_cast<PositionInTissue>(cell) 
-            << "}";
-        sep = ',';
+        out << sep << cell;
+        sep = ",";
     }
-    out <<"}}";
+    out <<"}";
 
     return out;
 }
