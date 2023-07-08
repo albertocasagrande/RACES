@@ -126,7 +126,9 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
         rotate_cell_file();
     }
 
-    if (type==CellEventType::DUPLICATE || type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT) {
+    if (type==CellEventType::DUPLICATE || 
+            type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT ||
+            type==CellEventType::DRIVER_SOMATIC_MUTATION) {
 
         cell_of.write((char*)(&(cell.get_parent_id())), sizeof(CellId));
         cell_of.write((char*)(&(cell.get_genotype_id())), sizeof(EpigeneticGenotypeId));
