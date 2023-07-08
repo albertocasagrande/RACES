@@ -2,7 +2,7 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.6
+ * @version 0.7
  * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
@@ -129,42 +129,30 @@ int main(int argc, char* argv[])
 
     tissue.add(B["-"].get_id(), {250, 500});
 
-    using namespace std::chrono_literals;
+    BinaryLogger logger(tissue.get_name());
 
-    auto snapshot_interval = 5min;
+    BasicSimulator<BinaryLogger> simulator(tissue, logger);
+
+    simulator.death_activation_level = 100;
+
+    simulator.add_somatic_mutation(B,A,50);
+
+    using namespace std::chrono_literals;
+    simulator.set_interval_between_snapshots(5min);
+
+    if (vm.count("no-logging")) {
+        simulator.disable_logging();
+    }
 #ifdef WITH_SDL2
     if (vm.count("plot")) {
-        BinaryLogger logger(tissue.get_name());
 
-        BasicSimulator<BinaryLogger, UI::SDLWindow> simulator(tissue, &logger);
+        UI::TissuePlotter<UI::SDLWindow> plotter(tissue);
 
-        simulator.get_plotter().set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
+        plotter.set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
 
-        if (vm.count("no-logging")) {
-            simulator.disable_logging();
-        }
-
-        simulator.death_activation_level = 100;
-
-        simulator.add_somatic_mutation(B,A,50);
-
-        simulator.set_interval_between_snapshots(snapshot_interval);
-
-        simulator.run_up_to(time_horizon);
+        simulator.run_up_to(time_horizon, plotter);
     } else {
 #endif
-        BinaryLogger logger(tissue.get_name());
-
-        BasicSimulator<BinaryLogger> simulator(tissue, &logger);
-
-        if (vm.count("no-logging")) {
-            simulator.disable_logging();
-        }
-
-        simulator.add_somatic_mutation(B,A,50);
-
-        simulator.set_interval_between_snapshots(snapshot_interval);
-
         simulator.run_up_to(time_horizon);
 
 #ifdef WITH_SDL2

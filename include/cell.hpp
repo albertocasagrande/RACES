@@ -2,7 +2,7 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.6
+ * @version 0.7
  * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
@@ -123,7 +123,7 @@ public:
     friend class Tissue;
     friend class Species;
 
-    template<typename LOGGER, typename PLOT_WINDOW>
+    template<typename LOGGER>
     friend class BasicSimulator; 
 
     friend void swap(Cell& a, Cell &b);

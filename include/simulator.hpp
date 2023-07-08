@@ -2,7 +2,7 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.9
+ * @version 0.10
  * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
@@ -48,7 +48,7 @@ namespace Races {
 /**
  * @brief A tumor evolution simulator
  */
-template<typename LOGGER=BasicLogger, typename PLOT_WINDOW=UI::Plot2DWindow>
+template<typename LOGGER=BasicLogger>
 class BasicSimulator 
 {
     struct EventAffectedCells
@@ -68,10 +68,9 @@ class BasicSimulator
     std::chrono::system_clock::time_point last_snapshot_time;    //!< Time of the last snapshot
     long secs_between_snapshots;     //!< The number of minutes between two snapshots
 
-    bool logging_enabled;           //!< A flag to pause logging
-    LOGGER *logger;                         //!< Event logger
+    bool logging_enabled;            //!< A flag to pause logging
+    LOGGER *logger;                  //!< Event logger
 
-    UI::TissuePlotter<PLOT_WINDOW> plotter; //!< Tissue plotter UI
     bool quitting;                          //!< Quitting flag
 
     TissueStatistics statistics;    //!< The tissue simulation statistics
@@ -169,9 +168,10 @@ public:
      * @brief The basic simulator constructor
      * 
      * @param tissue is the tissue on which simulation is performed
+     * @param logger is the simulation logger
      * @param random_seed is the simulator random seed
      */
-    BasicSimulator(Tissue &tissue, int random_seed=0);
+    BasicSimulator(Tissue &tissue, LOGGER &logger, int random_seed=0);
 
     /**
      * @brief The basic simulator constructor
@@ -180,7 +180,7 @@ public:
      * @param logger is a pointer to the simulation logger
      * @param random_seed is the simulator random seed
      */
-    BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed=0);
+    BasicSimulator(Tissue &tissue, LOGGER *logger=nullptr, int random_seed=0);
 
     /**
      * @brief Set the simulator logger
@@ -188,6 +188,13 @@ public:
      * @param logger is the simulator logger
      */
     void set_logger(LOGGER *logger);
+
+    /**
+     * @brief Set the simulator logger
+     * 
+     * @param logger is the simulator logger
+     */
+    void set_logger(LOGGER &logger);
 
     /**
      * @brief Enable logging
@@ -220,22 +227,92 @@ public:
      * @param time is the mutation timing
      * @return a reference to the updated simulator
      */
-    BasicSimulator<LOGGER,PLOT_WINDOW>& add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time);
+    BasicSimulator<LOGGER>& add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time);
 
     /**
      * @brief Simulate up to the next event
      * 
+     * This method simulates a tissue up to the next 
+     * event. If the user provide a pointer to a 
+     * plotter, then the simulation is also plotted
+     * in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param plotter is a tissue plotter pointer
      * @return a reference to the updated simulator
      */
-    BasicSimulator<LOGGER,PLOT_WINDOW>& run_up_to_next_event();
+    template<typename PLOT_WINDOW>
+    BasicSimulator<LOGGER>& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter);
 
     /**
-     * @brief Simulate up to 
+     * @brief Simulate a tissue up to a given time
+     * 
+     * This method simulates a tissue up to a given 
+     * simulated time. If the user provide a pointer 
+     * to a plotter, then the simulation is also plotted
+     * in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param final_time is the final simulation time
+     * @param plotter is a tissue plotter pointer
+     * @return a reference to the updated simulator
+     */
+    template<typename PLOT_WINDOW>
+    BasicSimulator<LOGGER>& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter);
+
+    /**
+     * @brief Simulate up to the next event
+     * 
+     * This method simulates a tissue up to the next 
+     * event. The simulation is also plotted in a 
+     * graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param plotter is a tissue plotter
+     * @return a reference to the updated simulator
+     */
+    template<typename PLOT_WINDOW>
+    BasicSimulator<LOGGER>& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter);
+
+    /**
+     * @brief Simulate a tissue up to a given time
+     * 
+     * This method simulates a tissue up to a given 
+     * simulated time. The simulation is also plotted
+     * in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param final_time is the final simulation time
+     * @param plotter is a tissue plotter
+     * @return a reference to the updated simulator
+     */
+    template<typename PLOT_WINDOW>
+    BasicSimulator<LOGGER>& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter);
+
+    /**
+     * @brief Simulate up to the next event
+     * 
+     * This method simulates a tissue up to the next 
+     * event. If the user provide a pointer to a 
+     * plotter, then the simulation is also plotted
+     * in a graphical window.
+     * 
+     * @return a reference to the updated simulator
+     */
+    BasicSimulator<LOGGER>& run_up_to_next_event();
+
+    /**
+     * @brief Simulate a tissue up to a given time
+     * 
+     * This method simulates a tissue up to a given 
+     * simulated time. If the user provide a pointer 
+     * to a plotter, then the simulation is also plotted
+     * in a graphical window.
      * 
      * @param final_time is the final simulation time
      * @return a reference to the updated simulator
      */
-    BasicSimulator<LOGGER,PLOT_WINDOW>& run_up_to(const Time& final_time);
+    BasicSimulator<LOGGER>& run_up_to(const Time& final_time);
 
     /**
      * @brief Get the current simulator time
@@ -243,13 +320,6 @@ public:
      * @return a constant reference to the simulator time
      */
     const Time& get_time() const;
-
-    /**
-     * @brief Get the simulation plotter 
-     * 
-     * @return a non-constant reference to the plotter
-     */
-    UI::TissuePlotter<PLOT_WINDOW>& get_plotter();
 
     /**
      * @brief Set the interval between snapshots
@@ -262,17 +332,17 @@ public:
 
 /* Implementation */
 
-template<typename LOGGER, typename PLOT_WINDOW>
-inline const Time& BasicSimulator<LOGGER,PLOT_WINDOW>::get_time() const
+template<typename LOGGER>
+inline const Time& BasicSimulator<LOGGER>::get_time() const
 {
     return time;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed):
+template<typename LOGGER>
+BasicSimulator<LOGGER>::BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed):
     time(0), tissue(tissue), random_gen(), last_snapshot_time(std::chrono::system_clock::now()), 
     secs_between_snapshots(0), logging_enabled(logger!=nullptr), logger(logger),
-    plotter(tissue), quitting(false), statistics(tissue), death_activation_level(1)
+    quitting(false), statistics(tissue), death_activation_level(1)
 {
     random_gen.seed(random_seed);
 
@@ -281,11 +351,10 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logge
     }
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, int random_seed):
-    BasicSimulator(tissue, nullptr, random_seed)
-{
-}
+template<typename LOGGER>
+BasicSimulator<LOGGER>::BasicSimulator(Tissue &tissue, LOGGER &logger, int random_seed):
+    BasicSimulator(tissue, &logger, random_seed)
+{}
 
 template<typename GENERATOR_TYPE>
 void select_liveness_event_in_species(CellEvent& event, Tissue& tissue, 
@@ -352,8 +421,8 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
     select_epigenetic_event_in_species(event, tissue, species, uni_dist, random_gen);
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
+template<typename LOGGER>
+CellEvent BasicSimulator<LOGGER>::select_next_event()
 {
     std::uniform_real_distribution<double> uni_dist(0.0, 1.0);
 
@@ -397,9 +466,9 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
     return event;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_death(const Position& position)
+template<typename LOGGER>
+typename BasicSimulator<LOGGER>::EventAffectedCells 
+BasicSimulator<LOGGER>::simulate_death(const Position& position)
 {
     auto cell = (*(position.tissue))(position);
 
@@ -427,9 +496,9 @@ inline Direction select_2D_random_direction(GENERATOR& random_gen, const Positio
     return directions[distribution(random_gen)];
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_mutation(const Position& position, const EpigeneticGenotypeId& final_id)
+template<typename LOGGER>
+typename BasicSimulator<LOGGER>::EventAffectedCells 
+BasicSimulator<LOGGER>::simulate_mutation(const Position& position, const EpigeneticGenotypeId& final_id)
 {
     CellInTissue cell = tissue(position);
 
@@ -440,9 +509,9 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_mutation(const Position& position, 
     return {{tissue(position)},{}};
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_duplication(const Position& position)
+template<typename LOGGER>
+typename BasicSimulator<LOGGER>::EventAffectedCells 
+BasicSimulator<LOGGER>::simulate_duplication(const Position& position)
 {
     Tissue& tissue = *(position.tissue);
     EventAffectedCells affected;
@@ -471,9 +540,9 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_duplication(const Position& positio
     return affected;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_duplication_epigenetic_event(const Position& position, const EpigeneticGenotypeId& final_id)
+template<typename LOGGER>
+typename BasicSimulator<LOGGER>::EventAffectedCells 
+BasicSimulator<LOGGER>::simulate_duplication_epigenetic_event(const Position& position, const EpigeneticGenotypeId& final_id)
 {
     auto affected = simulate_duplication(position);
 
@@ -492,10 +561,10 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_duplication_epigenetic_event(const 
     return affected;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
+template<typename LOGGER>
 template<typename GENERATOR>
 const CellInTissue*
-BasicSimulator<LOGGER,PLOT_WINDOW>::choose_a_cell_in_somatic_species(const Tissue& tissue, const SomaticGenotypeId& genotype_id, GENERATOR& generator)
+BasicSimulator<LOGGER>::choose_a_cell_in_somatic_species(const Tissue& tissue, const SomaticGenotypeId& genotype_id, GENERATOR& generator)
 {
     std::vector<size_t> num_of_cells;
 
@@ -522,9 +591,9 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::choose_a_cell_in_somatic_species(const Tissu
     return &(species[i].choose_a_cell(generator));
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>&
-BasicSimulator<LOGGER,PLOT_WINDOW>::add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time)
+template<typename LOGGER>
+BasicSimulator<LOGGER>&
+BasicSimulator<LOGGER>::add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time)
 {
     if (src.num_of_promoters()>dst.num_of_promoters()) {
         std::ostringstream oss;
@@ -540,8 +609,9 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::add_somatic_mutation(const SomaticGenotype& 
     return *this;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_to_next_event()
+template<typename LOGGER>
+template<typename PLOT_WINDOW>
+BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter)
 {
     CellEvent event = select_next_event();
 
@@ -584,17 +654,18 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
         statistics.record_lost(cell.get_genotype_id(), time);
     }
 
-    if (!plotter.closed()) {
-        plotter.plot(statistics);
+    if (plotter != nullptr && !plotter->closed()) {
+        plotter->plot(statistics);
     }
     
-    quitting = quitting || plotter.closed();
+    quitting = quitting || (plotter != nullptr && plotter->closed());
 
     return *this;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_to(const Time& final_time)
+template<typename LOGGER>
+template<typename PLOT_WINDOW>
+BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter)
 {
     size_t total_cells{1};
 
@@ -605,7 +676,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     while (!quitting && tissue.num_of_mutated_cells()>0 && time < final_time) {
         using namespace std::chrono;
 
-        run_up_to_next_event();
+        run_up_to_next_event(plotter);
 
         const auto curr_time = system_clock::now();
         const auto from_last_snapshot = duration_cast<seconds>(curr_time-last_snapshot_time);
@@ -618,9 +689,11 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
         }
     }
 
-    while (!quitting) {
-        plotter.plot(statistics);
-        quitting = !plotter.waiting_end();
+    if (plotter != nullptr) {
+        while (!quitting) {
+            plotter->plot(statistics);
+            quitting = !plotter->waiting_end();
+        }
     }
 
     if (logging_enabled) {
@@ -630,39 +703,59 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
     return *this;
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-void BasicSimulator<LOGGER,PLOT_WINDOW>::set_logger(LOGGER *logger)
+template<typename LOGGER>
+template<typename PLOT_WINDOW>
+inline BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter)
 {
-    logging_enabled = logging_enabled | (this->logger==nullptr);
-    
-    this->logger = logger;
+    return run_up_to_next_event(&plotter);
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-void BasicSimulator<LOGGER,PLOT_WINDOW>::enable_logging()
+template<typename LOGGER>
+template<typename PLOT_WINDOW>
+inline BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter)
+{
+    return run_up_to(final_time, &plotter);
+}
+
+template<typename LOGGER>
+inline BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to_next_event()
+{
+    return run_up_to_next_event<UI::Plot2DWindow>(nullptr);
+}
+
+template<typename LOGGER>
+inline BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time)
+{
+    return run_up_to<UI::Plot2DWindow>(final_time, nullptr);
+}
+
+template<typename LOGGER>
+inline void BasicSimulator<LOGGER>::set_logger(LOGGER& logger)
+{
+    this->logger = &logger;
+
+    enable_logging();
+}
+
+template<typename LOGGER>
+inline void BasicSimulator<LOGGER>::enable_logging()
 {
     logging_enabled = (this->logger!=nullptr);
 }
 
-template<typename LOGGER, typename PLOT_WINDOW>
-void BasicSimulator<LOGGER,PLOT_WINDOW>::disable_logging()
+template<typename LOGGER>
+inline void BasicSimulator<LOGGER>::disable_logging()
 {
     logging_enabled = false;
 }
  
-template<typename LOGGER, typename PLOT_WINDOW>
+template<typename LOGGER>
 template<class Rep, class Period>
-inline void BasicSimulator<LOGGER,PLOT_WINDOW>::set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval)
+inline void BasicSimulator<LOGGER>::set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval)
 {
     using namespace std::chrono;
 
     secs_between_snapshots = duration_cast<seconds>(time_interval).count();
-}
-
-template<typename LOGGER, typename PLOT_WINDOW>
-UI::TissuePlotter<PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::get_plotter()
-{
-    return plotter;
 }
 
 }

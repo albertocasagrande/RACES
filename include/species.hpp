@@ -2,7 +2,7 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.5
+ * @version 0.6
  * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
@@ -239,7 +239,7 @@ public:
      */
     ~Species();
 
-    template<typename LOGGER, typename PLOT_WINDOW>
+    template<typename LOGGER>
     friend class BasicSimulator;
 };
 
