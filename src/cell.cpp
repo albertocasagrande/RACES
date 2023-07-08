@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.4
- * @date 2023-07-05
+ * @version 0.5
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,17 +42,17 @@ Cell::Cell():
 {
 }
 
-Cell::Cell(const DriverGenotypeId genotype):
+Cell::Cell(const EpigeneticGenotypeId genotype):
     Cell(genotype, 0)
 {
 }
 
-Cell::Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations):
+Cell::Cell(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations):
     id(++Cell::counter), parent(Cell::counter), genotype(genotype), passenger_mutations(passenger_mutations)
 {
 }
 
-Cell::Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id):
+Cell::Cell(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id):
     id(++Cell::counter), parent(parent_id), genotype(genotype), passenger_mutations(passenger_mutations)
 {
 }
@@ -69,14 +69,14 @@ std::ostream& operator<<(std::ostream& os, const Cell& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
-       << ", driver_genotype: " << cell.get_driver_genotype()
+       << ", driver_genotype: " << cell.get_genotype_id()
        << ", passenger_mutations: " << cell.get_passenger_mutations()
        << "}";
 
     return os;
 }
 
-CellInTissue::CellInTissue(const DriverGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position):
+CellInTissue::CellInTissue(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position):
     Cell(genotype, passenger_mutations), PositionInTissue(position)
 {
 }
@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& os, const CellInTissue& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
-       << ", driver_genotype: " << cell.get_driver_genotype()
+       << ", driver_genotype: " << cell.get_genotype_id()
        << ", passenger_mutations: " << cell.get_passenger_mutations()
        << ", position: " << static_cast<PositionInTissue>(cell)
        << "}";

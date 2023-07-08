@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.5
- * @date 2023-07-05
+ * @version 0.6
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,24 +34,25 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 #include <string>
+#include <memory> // SpeciesView::const_iterator
 
 #include "time.hpp"
 #include "species.hpp"
 #include "cell.hpp"
-#include "mutation_graphs.hpp"
 
 namespace Races {
 
 using AxisSize = uint16_t;
 
 class Tissue {
-    std::string name;                               //!< tissue name
-    std::vector<Species> species;                   //!< species in the tissue
-    std::map<DriverGenotypeId, size_t> pos_map;     //!< identifier to position map
+    using SomaticGenotypePosition = std::map<SomaticGenotypeId, std::vector<size_t>>;
 
-    DriverSomaticGraph somatic_graph;               //!< somatic mutation graph
-    DriverEpigeneticGraph epigenetic_graph;         //!< epigenetic mutation graph
+    std::string name;                               //!< The tissue name
+    std::vector<Species> species;                   //!< The species in the tissue
+    std::map<EpigeneticGenotypeId, size_t> pos_map; //!< The identifier to position map
+    SomaticGenotypePosition somatic_genotope_pos;   //!< The positions of the species associated to the same somatic genotype 
     
     std::vector<std::vector<std::vector<CellInTissue *>>> space;     //!< Space in the tissue
 
@@ -82,6 +83,245 @@ class Tissue {
     const CellInTissue* cell_pointer(const PositionInTissue& position) const;
 
 public:
+
+    /**
+     * @brief A view class for species
+     * 
+     * This class allows to have a partial view of the 
+     * tissue's species. For instance, it allows to 
+     * list all the species having the same somatic 
+     * genotype.
+     */
+    class SpeciesView {
+        const std::vector<Species>& species;       //!< The species vector
+        const std::vector<size_t>& species_pos;    //!< The species position vector
+
+        /**
+         * @brief A constructor
+         * 
+         * @param species is a reference to the tissue's species vector
+         * @param species_pos is a vector of valid positions for `vector`
+         */
+        SpeciesView(const std::vector<Species>& species, const std::vector<size_t>& species_pos);
+    public:
+
+        /**
+         * @brief A constant iterator over species views
+         */
+        class const_iterator {
+            const std::vector<Species>* species;    //!< The tissue's species vector
+            std::shared_ptr<std::vector<size_t>::const_iterator> it; //!< A constant iterator over a vector of position in `species`
+
+            /**
+             * @brief A private constructor
+             * 
+             * @param species is the vector of the tissue's species
+             * @param it is a constant iterator over a vector of the positions in `species`
+             */
+            const_iterator(const std::vector<Species>& species, const std::vector<size_t>::const_iterator it);
+        public:
+            using difference_type   =   std::ptrdiff_t;
+            using value_type        =   Species;
+            using pointer           =   const Species*;
+            using reference         =   const Species&;
+            using iterator_category =   std::random_access_iterator_tag;
+
+            /**
+             * @brief An empty construtor
+             */
+            const_iterator();
+
+            /**
+             * @brief Reference operator
+             * 
+             * @return a reference to the species pointer by the iterator 
+             */
+            inline reference operator*() const 
+            { 
+                return (*species)[**it]; 
+            }
+
+            /**
+             * @brief Pointer operator
+             * 
+             * @return a pointer to the species pointer by the iterator 
+             */
+            inline pointer operator->() 
+            {
+                return &((*species)[**it]);
+            }
+
+            /**
+             * @brief The prefix increment
+             * 
+             * @return a reference to the updated object
+             */
+            inline const_iterator& operator++() 
+            {
+                ++(*it);
+                return *this;
+            }  
+
+            /**
+             * @brief The postfix increment
+             * 
+             * @return a copy of the original object
+             */
+            const_iterator operator++(int);
+
+            /**
+             * @brief The prefix decrement
+             * 
+             * @return a reference to the updated object
+             */
+            inline const_iterator& operator--() 
+            {
+                --(*it);
+                return *this;
+            }  
+
+            /**
+             * @brief The postfix decrement
+             * 
+             * @return a copy of the original object
+             */
+            const_iterator operator--(int);
+
+            /**
+             * @brief Add operator
+             * 
+             * @param delta is the value to add
+             * @return a new iterator that points `delta` position ahead 
+             *      with respect to the original object 
+             */
+            inline const_iterator operator+(const int delta) 
+            {
+                return const_iterator(*species, *it + delta);
+            }
+
+            /**
+             * @brief Subtract operator
+             * 
+             * @param delta is the value to subtract
+             * @return a new iterator that points `delta` position backwards 
+             *      with respect to the original object 
+             */
+            inline const_iterator operator-(const int delta) 
+            {
+                return const_iterator(*species, *it - delta);
+            }
+
+            /**
+             * @brief Inplace add operator
+             * 
+             * @param delta is the value to add
+             * @return a reference to the update object  
+             */
+            inline const_iterator& operator+=(const int& delta) {
+                (*it) += delta;
+
+                return *this;
+            }
+
+            /**
+             * @brief Inplace subtract operator
+             * 
+             * @param delta is the value to subtract
+             * @return a reference to the update object  
+             */
+            inline const_iterator& operator-=(const int& delta) {
+                (*it) -= delta;
+
+                return *this;
+            }
+
+            /**
+             * @brief Index operator
+             * 
+             * @param index is the index to access 
+             * @return a reference to the `index`-th objects after 
+             *      that pointer by the current iterator 
+             */
+            inline reference operator[](const int& index) const 
+            {
+                return (*species)[(*it)[index]];
+            }
+
+            /**
+             * @brief Test whether two iterator are the same
+             * 
+             * @param a is the first iterator to compare
+             * @param b is the second iterator to compare
+             * @return `true` if and only if the two iterators 
+             *      refer to the same object
+             */
+            friend inline bool operator==(const const_iterator& a, const const_iterator& b)
+            { 
+                return (*a.it == *b.it) && (a.species == b.species); 
+            }
+
+            /**
+             * @brief Test whether two iterator differs
+             * 
+             * @param a is the first iterator to compare
+             * @param b is the second iterator to compare
+             * @return `true` if and only if the two iterators 
+             *      do not refer to the same object
+             */
+            friend inline bool operator!=(const const_iterator& a, const const_iterator& b)
+            { 
+                return !(a==b); 
+            }
+
+            friend class Tissue::SpeciesView;
+        };
+
+        /**
+         * @brief Index operator
+         * 
+         * @param index is the index to access
+         * @return a constant reference to the `index`-th species 
+         *      in the view
+         */
+        inline const Species& operator[](const size_t& index) const
+        {
+            return species[species_pos[index]];
+        }
+
+        /**
+         * @brief Get the view size
+         * 
+         * @return the view size
+         */
+        inline size_t size() const
+        {
+            return species_pos.size();
+        }
+
+        /**
+         * @brief Get the view begin
+         * 
+         * @return a constant iterator to the first element 
+         *      in the view 
+         */
+        inline const_iterator begin() const
+        {
+            return const_iterator(species, species_pos.begin());
+        }
+
+        /**
+         * @brief Get the view end
+         * 
+         * @return a constant iterator to the view end
+         */
+        inline const_iterator end() const
+        {
+            return const_iterator(species, species_pos.end());
+        }
+
+        friend class Tissue;
+    };
+
     /**
      * @brief This class wraps pointer to constant cells in tissue space
      */
@@ -145,7 +385,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
+    Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
 
     /**
      * @brief A constructor
@@ -166,7 +406,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
+    Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
 
     /**
      * @brief Get the initial iterator for the tissue species
@@ -188,7 +428,7 @@ public:
      * @param genotype_id is the driver genotype identifier
      * @return a constant reference to the tissue species
      */
-    const Species& get_species(const DriverGenotypeId& genotype_id) const;
+    const Species& get_species(const EpigeneticGenotypeId& genotype_id) const;
 
     /**
      * @brief Get a tissue species by driver identifier
@@ -196,7 +436,7 @@ public:
      * @param genotype_id is the driver genotype identifier
      * @return a non-constant reference to the tissue species
      */
-    Species& get_species(const DriverGenotypeId& genotype_id);
+    Species& get_species(const EpigeneticGenotypeId& genotype_id);
 
     /**
      * @brief Add cell driver genotype
@@ -206,7 +446,7 @@ public:
      * @param passenger_mutation is the number of cell passenger mutations
      * @return a reference to the updated object
      */
-    Tissue& add(const DriverGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations=0);
+    Tissue& add(const EpigeneticGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations=0);
 
     /**
      * @brief Add a new species to the tissue
@@ -214,27 +454,7 @@ public:
      * @param genotype is the driver genotype of the new species
      * @return a reference to the updated object
      */
-    Tissue& add_species(const DriverGenotype& genotype);
-
-    /**
-     * @brief Add a delayed somatic mutation between driver genotypes
-     * 
-     * @param src is the original driver genotype
-     * @param dst is the final driver genotype
-     * @param delay is the time delay for the occurrence of the mutation
-     * @return the updated tissue
-     */
-    Tissue& add_driver_somatic_mutation(const DriverGenotypeId& src, const DriverGenotypeId& dst, const Time delay);
-
-    /**
-     * @brief Add a delayed epigenetic mutation between driver genotypes
-     * 
-     * @param src is the original driver genotype
-     * @param dst is the final driver genotype
-     * @param probability is the methylation/demethylation probability 
-     * @return the updated tissue
-     */
-    Tissue& add_driver_epigenetic_mutation(const DriverGenotypeId& src, const DriverGenotypeId& dst, const double probability);
+    Tissue& add_species(const SomaticGenotype& genotype);
 
     /**
      * @brief Test whether a position is valid in a tissue
@@ -260,14 +480,13 @@ public:
     size_t num_of_mutated_cells() const;
 
     /**
-     * @brief Get the position of the first non-driver cell in a direction
+     * @brief Get an iterator over the species having the same somatic genotype
      * 
-     * @param position is a position
-     * @param direction is the direction along which non-driver cells are searched
-     * @return get the position of the first non-driver cell in a direction when 
-     *     available. When such a cell is not available, a non valid position.
+     * @param genotype_id is the identifier of the somatic genotype whose species are aimed 
+     * @return an interator over the tissue's species having `genotype_id` as somatic
+     *       genotype identifier
      */
-    PositionInTissue get_non_driver_in_direction(PositionInTissue position, const Direction& direction) const;
+    SpeciesView get_somatic_genotype_species(const SomaticGenotypeId& genotype_id) const;
 
     /**
      * @brief Get the cell in a position
@@ -291,20 +510,6 @@ public:
      * @return a constant reference to the tissue name
      */
     const std::string& get_name() const;
-
-    /**
-     * @brief Get the tissue somatic graph
-     * 
-     * @return a constant reference to the tissue somatic graph
-     */
-    const DriverSomaticGraph& get_somatic_graph() const;
-
-    /**
-     * @brief Get the tissue epigenetic graph
-     * 
-     * @return a constant reference to the tissue epigenetic graph
-     */
-    const DriverEpigeneticGraph& get_epigenetic_graph() const;
 
     /**
      * @brief Push contiguous driver mutated cells in a direction
@@ -343,12 +548,17 @@ inline std::vector<Species>::const_iterator Tissue::end() const
     return std::end(species);
 }
 
-inline const Species& Tissue::get_species(const DriverGenotypeId& genotype) const
+inline Tissue::SpeciesView Tissue::get_somatic_genotype_species(const SomaticGenotypeId& genotype_id) const
+{
+    return Tissue::SpeciesView(species, somatic_genotope_pos.at(genotype_id));
+}
+
+inline const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype) const
 {
     return species[pos_map.at(genotype)];
 }
 
-inline Species& Tissue::get_species(const DriverGenotypeId& genotype)
+inline Species& Tissue::get_species(const EpigeneticGenotypeId& genotype)
 {
     return species[pos_map.at(genotype)];
 }
@@ -374,16 +584,6 @@ inline std::vector<size_t> Tissue::size() const
 inline const std::string& Tissue::get_name() const
 {
     return name;
-}
-
-inline const DriverSomaticGraph& Tissue::get_somatic_graph() const
-{
-    return somatic_graph;
-}
-
-inline const DriverEpigeneticGraph& Tissue::get_epigenetic_graph() const
-{
-    return epigenetic_graph;
 }
 
 inline CellInTissue*& Tissue::cell_pointer(const PositionInTissue& position)

@@ -32,11 +32,12 @@ endif()
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_graphs.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/somatic_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp

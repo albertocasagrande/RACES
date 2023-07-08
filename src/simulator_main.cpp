@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.5
- * @date 2023-07-05
+ * @version 0.6
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -104,42 +104,30 @@ int main(int argc, char* argv[])
 
     long double time_horizon = vm["time-horizon"].as<long double>();
 
-    std::vector<DriverGenotype> genotypes;
+    std::vector<SomaticGenotype> genotypes;
 
-    genotypes.push_back(DriverGenotype("A",{
-            {CellEventType::DIE, 0.1},
-            {CellEventType::DUPLICATE, 0.2},
-            {CellEventType::PASSENGER_MUTATION, 20}}));
-    genotypes.push_back(DriverGenotype("A",{
-            {CellEventType::DIE, 0.1},
-            {CellEventType::DUPLICATE, 0.3},
-            {CellEventType::PASSENGER_MUTATION, 2}},true));
+    SomaticGenotype A("A",{{0.01,0.01}});
+    A["-"].set_rates({{CellEventType::DIE, 0.1},
+                      {CellEventType::DUPLICATE, 0.3},
+                      {CellEventType::PASSENGER_MUTATION, 20}});
+    A["+"].set_rates({{CellEventType::DIE, 0.1},
+                      {CellEventType::DUPLICATE, 0.45},
+                      {CellEventType::PASSENGER_MUTATION, 2}});
 
-    genotypes.push_back(DriverGenotype("B",{
-            {CellEventType::DIE, 0.1},
-            {CellEventType::DUPLICATE, 0.2},
-            {CellEventType::PASSENGER_MUTATION, 1}}));
-    genotypes.push_back(DriverGenotype("B",{
-            {CellEventType::DIE, 0.01},
-            {CellEventType::DUPLICATE, 0.02},
-            {CellEventType::PASSENGER_MUTATION, 20}},true));
+    SomaticGenotype B("B",{{0.01,0.01}});
+    B["-"].set_rates({{CellEventType::DIE, 0.1},
+                      {CellEventType::DUPLICATE, 0.2},
+                      {CellEventType::PASSENGER_MUTATION, 1}});
+    B["+"].set_rates({{CellEventType::DIE, 0.01},
+                      {CellEventType::DUPLICATE, 0.02},
+                      {CellEventType::PASSENGER_MUTATION, 20}});
 
     Tissue tissue("Liver", 1000,1000);
 
-    for (const auto& gen: genotypes) {
-        tissue.add_species(gen);
-    }
+    tissue.add_species(A);
+    tissue.add_species(B);
 
-    tissue.add_driver_epigenetic_mutation(genotypes[0].get_id(),genotypes[1].get_id(), 0.001);
-    tissue.add_driver_epigenetic_mutation(genotypes[1].get_id(),genotypes[0].get_id(), 0.001);
-    tissue.add_driver_epigenetic_mutation(genotypes[2].get_id(),genotypes[3].get_id(), 0.001);
-    tissue.add_driver_epigenetic_mutation(genotypes[3].get_id(),genotypes[2].get_id(), 0.001);
-
-    tissue.add_driver_somatic_mutation(genotypes[0].get_id(),genotypes[2].get_id(), 100);
-    tissue.add_driver_somatic_mutation(genotypes[1].get_id(),genotypes[3].get_id(), 100);
-
-    tissue.add(genotypes[0].get_id(), {250, 500});
-    tissue.add(genotypes[2].get_id(), {350, 500});
+    tissue.add(B["-"].get_id(), {250, 500});
 
     using namespace std::chrono_literals;
 
@@ -156,6 +144,10 @@ int main(int argc, char* argv[])
             simulator.disable_logging();
         }
 
+        simulator.death_activation_level = 100;
+
+        simulator.add_somatic_mutation(B,A,50);
+
         simulator.set_interval_between_snapshots(snapshot_interval);
 
         simulator.run_up_to(time_horizon);
@@ -168,6 +160,8 @@ int main(int argc, char* argv[])
         if (vm.count("no-logging")) {
             simulator.disable_logging();
         }
+
+        simulator.add_somatic_mutation(B,A,50);
 
         simulator.set_interval_between_snapshots(snapshot_interval);
 

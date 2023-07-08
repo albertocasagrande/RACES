@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.3
- * @date 2023-07-05
+ * @version 0.4
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,66 +33,244 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 
 #include "cell_event.hpp"
 
 namespace Races {
 
-#define NULL_MUTATION std::numeric_limits<DriverGenotypeId>::max() 
+/**
+ * @brief A class to represent promoter methylation/demethylation rates
+ */
+class EpigeneticRates : private std::pair<double,double>
+{
+public:
+    /**
+     * @brief A constructor
+     * 
+     * @param methylation_rate is the promoter methylation rate
+     * @param demethylation_rate is the promoter demethylation rate
+     */
+    EpigeneticRates(const double methylation_rate, const double demethylation_rate);
+
+    /**
+     * @brief A constructor
+     * 
+     * @param rate is the promoter methylation/demethylation rate
+     */
+    EpigeneticRates(const double rate);
+
+    /**
+     * @brief Get the methylation rate
+     * 
+     * @return a constant reference to the methylation rate
+     */
+    const double& methylation_rate() const;
+
+    /**
+     * @brief Get the methylation rate
+     * 
+     * @return a non-constant reference to the methylation rate
+     */
+    double& methylation_rate();
+
+    /**
+     * @brief Get the demethylation rate
+     * 
+     * @return a constant reference to the demethylation rate
+     */
+    const double& demethylation_rate() const;
+    /**
+     * @brief Get the demethylation rate
+     * 
+     * @return a non-constant reference to the demethylation rate
+     */
+    double& demethylation_rate();
+};
+
+/**
+ * @brief Write information about an epigenetic rates in an output stream
+ * 
+ * @param out is the output stream
+ * @param epigenetic_rates are the epigenetic rates to be streamed
+ * @return a reference to the output stream
+ */
+std::ostream& operator<<(std::ostream& out, const EpigeneticRates& epigenetic_rates);
+
+/**
+ * @brief The methylation signature type
+ * 
+ * The methylation signature represents the epigenetic status 
+ * of all the considered promoters. A promoter is set to be 
+ * `true` when is methylated and `false` when it is not.
+ */
+typedef std::vector<bool> MethylationSignature;
+
+class SomaticGenotype;
+
+/**
+ * @brief A class to represent driver epigenetic genotype
+ * 
+ * A driver genotype is characterized by specific somatic
+ * mutations. The same driver genotype is associated to 
+ * different rates depending on its methylation signature.
+ * An driver epigenetic genotype is a driver genotype 
+ * together with its methylation signature. 
+ */
+class EpigeneticGenotype {
+    static unsigned int counter;                          //!< Total number of driver epigenetic genotype along the computation
+
+    EpigeneticGenotypeId id;                              //!< Identifier
+    SomaticGenotypeId somatic_id;                         //!< Somatic genotype identifier
+
+    std::string name;                                     //!< Epigenetic genotype name
+    MethylationSignature methylation_signature;           //!< Methylation signature
+
+    std::map<CellEventType, double> event_rates;          //!< Event rates
+
+    std::map<EpigeneticGenotypeId, double> epigenetic_rates;  //!< Epigenetic mutation rates 
+
+    /**
+     * @brief A constructor
+     * 
+     * @param somatic_genotype is the somatic genotype of the new object
+     * @param num_of_promoters is the number of methylable promoters
+     */
+    EpigeneticGenotype(const SomaticGenotype& somatic_genotype,
+                       const size_t num_of_promoters);
+public:
+    /**
+     * @brief Get the driver epigenetic genotype identifier
+     * 
+     * @return a constant reference to the identifier
+     */
+    const EpigeneticGenotypeId& get_id() const;
+
+    /**
+     * @brief Get the driver somatic genotype identifier
+     * 
+     * @return a constant reference to the somatic genotype identifier
+     */
+    const SomaticGenotypeId& get_somatic_id() const;
+
+    /**
+     * @brief Get the driver epigenetic genotype name
+     * 
+     * @return a constant reference to the driver genotype name
+     */
+    const std::string& get_name() const;
+
+    /**
+     * @brief Get the rate of an event 
+     * 
+     * @param event is the event whose rate is required
+     * @return if the rate of `event` has been set, then 
+     *       the rate of `event`. The value 0 otherwise
+     */
+    double get_rate(const CellEventType& event) const;
+
+    /**
+     * @brief Set the rate of an event 
+     * 
+     * @param event is the event whose rate is set
+     * @param rate is the new rate for the event
+     */
+    void set_rate(const CellEventType& event, const double rate);
+
+    /**
+     * @brief Get event rates
+     * 
+     * @return a constant reference to event rates
+     */
+    const std::map<CellEventType, double>& get_rates() const;
+
+    /**
+     * @brief Set event rates
+     * 
+     * @param rates are the new event rates
+     */
+    void set_rates(const std::map<CellEventType, double>& rates);
+
+    /**
+     * @brief Get the epigenentic mutation rates
+     * 
+     * @return a constant reference to a map associating the identifier of 
+     *      the epigenetic genotype reachable with an epigenetic mutation and 
+     *      its rate
+     */
+    const std::map<EpigeneticGenotypeId, double>& get_epigenentic_mutation_rates() const;
+
+    /**
+     * @brief Get the methylation signature
+     * 
+     * @return the methylation signature
+     */
+    const MethylationSignature& get_methylation_signature() const;
+
+    friend class SomaticGenotype;
+};
+
+/**
+ * @brief Write information about an epigenetic genotype in an output stream
+ * 
+ * @param out is the output stream
+ * @param genotype is the epigenetic genotype to be streamed
+ * @return a reference to the output stream
+ */
+std::ostream& operator<<(std::ostream& out, const EpigeneticGenotype& genotype);
 
 /**
  * @brief Driver genotype class
  */
-class DriverGenotype {
-    static unsigned int counter;   //!< Total number of driver along the computation
-    DriverGenotypeId id;           //!< Driver identifier
+class SomaticGenotype {
+    static unsigned int counter;                        //!< Total number of driver genotype along the computation
 
-    std::string name;              //!< Driver genotype name
-    std::map<CellEventType, double> rates;    //!< Event rates
+    EpigeneticGenotypeId id;                                //!< Identifier
+    std::string name;                                   //!< Genotype name
 
-    bool methylated;               //!< Methylation flag
+    std::vector<EpigeneticGenotype> e_genotypes;        //!< Epigenetic genotypes
+
+    template<typename SIGNATURE_TYPE>
+    void validate_signature(const SIGNATURE_TYPE& signature) const;
+
 public:
 
     /**
-     * @brief Construct a new DriverGenotype
+     * @brief A constructor
+     * 
+     * This constructor builds a driver genotype and its epigenetic genotypes. 
+     * The number of epigenetic genotypes is determined by the size of the 
+     * epigenetic event rate vector. Each cell of the vector correspond to 
+     * a pair methylation/demethylation events for a specific target promoter.
+     * Since each target promoter can be either methylated ("+") or 
+     * non-methylated ("-"), the number of epigenetic genotypes associated to
+     * a driver genotype is exponential in the number of the promoters and, 
+     * as a consequence, in the number of elements in the epigenetic event 
+     * rate vector.
      * 
      * @param name is the name of the driver genotype
-     * @param rates is a map from the events to rates
-     * @param methylated is a methylation flag
+     * @param epigenetic_event_rates is the rates of the methylation/demethylation events 
+     *          on each target promoters
      */
-    DriverGenotype(const std::string& name,
-           const std::map<CellEventType, double>& rates,
-           const bool methylated=false);
+    SomaticGenotype(const std::string& name,
+                    const std::vector<EpigeneticRates> epigenetic_event_rates);
 
     /**
-     * @brief Copy constructor
+     * @brief A constructor
      * 
-     * @param orig is the original driver genotype
+     * This constructor builds a driver genotype having one epigenetic 
+     * genotypes.
+     * 
+     * @param name is the name of the driver genotype
      */
-    DriverGenotype(const DriverGenotype& orig);
+    SomaticGenotype(const std::string& name);
 
     /**
-     * @brief Copy operator
+     * @brief Get the driver epigenetic genotype identifier
      * 
-     * @param orig is the original driver genotype
-     * @return a reference to the updated object
+     * @return a constant reference to the identifier
      */
-    DriverGenotype& operator=(const DriverGenotype& orig);
-
-    /**
-     * @brief Move operator
-     * 
-     * @param orig is the original driver genotype
-     * @return a reference to the updated object
-     */
-    DriverGenotype& operator=(DriverGenotype&& orig);
-
-    /**
-     * @brief Get the driver genotype identifier
-     * 
-     * @return a constant reference to the driver identifier
-     */
-    const DriverGenotypeId& get_id() const;
+    const EpigeneticGenotypeId& get_id() const;
 
     /**
      * @brief Get the driver genotype name
@@ -102,75 +280,181 @@ public:
     const std::string& get_name() const;
 
     /**
-     * @brief Get the epigenetic driver genotype name
+     * @brief Get the epigenetic genotypes associated to this somatic genotype
      * 
-     * @return the epigenetic driver genotype name
+     * @return a constant reference to the epigenetic genotypes
      */
-    std::string get_epigenetic_name() const;
+    const std::vector<EpigeneticGenotype>& epigenetic_genotypes() const;
 
     /**
-     * @brief Get the driver genotype event rates
+     * @brief Get the number of methylable promoters in the genotype
      * 
-     * @return a constant reference to the genotype event rates
+     * @return the number of methylable promoters in the genotype
      */
-    const std::map<CellEventType, double>& get_rates() const;
+    size_t num_of_promoters() const;
 
     /**
-     * @brief Get the rate of an event 
+     * @brief Get the epigenetic genotype associated to a methylation signature
      * 
-     * @param event is the event whose rate is required
-     * @return a constant reference to event rate
+     * @param methylation_signature is the methylation signature of the aimed epigenetic genotype
+     * @return a non-constant reference to the epigenetic genotype associated 
+     *      to `methylation_signature`
      */
-    const double& get_rate(const CellEventType& event) const;
+    EpigeneticGenotype& operator[](const MethylationSignature& methylation_signature);
 
     /**
-     * @brief Test whether this is the methylated version of the genotype
+     * @brief Get the epigenetic genotype associated to a methylation signature
      * 
-     * @return true if and only if this object represent 
-     *        the methylated version of the driver
+     * @param methylation_signature is the methylation signature of the aimed epigenetic genotype
+     * @return a constant reference to the epigenetic genotype associated 
+     *      to `methylation_signature`
      */
-    const bool& is_methylated() const;
+    const EpigeneticGenotype& operator[](const MethylationSignature& methylation_signature) const;
+
+    /**
+     * @brief Get the epigenetic genotype associated to a methylation signature
+     * 
+     * @param methylation_signature is a string representing the signature of the aimed epigenetic genotype
+     * @return a non-constant reference to the epigenetic genotype associated 
+     *      to `methylation_signature`
+     */
+    EpigeneticGenotype& operator[](const std::string& methylation_signature);
+
+    /**
+     * @brief Get the epigenetic genotype associated to a methylation signature
+     * 
+     * @param methylation_signature is a string representing the signature of the aimed epigenetic genotype
+     * @return a constant reference to the epigenetic genotype associated 
+     *      to `methylation_signature`
+     */
+    const EpigeneticGenotype& operator[](const std::string& methylation_signature) const;
+
+    static size_t string_to_index(const std::string& methylation_signature);
+    static std::string index_to_string(const size_t& index, const size_t num_of_promoters);
+
+    static size_t signature_to_index(const MethylationSignature& methylation_signature);
+    static MethylationSignature index_to_signature(const size_t& index, const size_t num_of_promoters);
 };
 
 /**
- * @brief Write the information about a driver genotype in an output stream
+ * @brief Write information about a somatic genotype in an output stream
  * 
  * @param out is the output stream
- * @param driver is the driver genotype to be streamed
+ * @param genotype is the somatic genotype to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const DriverGenotype& driver);
+std::ostream& operator<<(std::ostream& out, const SomaticGenotype& genotype);
 
 /* Inline methods definitions */
 
-inline const DriverGenotypeId& DriverGenotype::get_id() const
+inline const double& EpigeneticRates::methylation_rate() const
+{
+    return first;
+}
+
+inline double& EpigeneticRates::methylation_rate()
+{
+    return first;
+}
+
+inline const double& EpigeneticRates::demethylation_rate() const
+{
+    return second;
+}
+
+inline double& EpigeneticRates::demethylation_rate()
+{
+    return second;
+}
+
+inline const EpigeneticGenotypeId& EpigeneticGenotype::get_id() const
 {
     return id;
 }
 
-inline const std::string& DriverGenotype::get_name() const
+inline const SomaticGenotypeId& EpigeneticGenotype::get_somatic_id() const
+{
+    return somatic_id;
+}
+
+inline const std::string& EpigeneticGenotype::get_name() const
 {
     return name;
 }
 
-inline std::string DriverGenotype::get_epigenetic_name() const
+inline double EpigeneticGenotype::get_rate(const CellEventType& event) const
 {
-    return get_name() + (is_methylated()?"+":"-");
+    if (event_rates.count(event)==0) {
+        return 0;
+    }
+    return event_rates.at(event);
 }
 
-inline const std::map<CellEventType, double>& DriverGenotype::get_rates() const
+inline void EpigeneticGenotype::set_rate(const CellEventType& event, const double rate)
 {
-    return rates;
+    event_rates[event] = rate;
 }
 
-inline const double& DriverGenotype::get_rate(const CellEventType& event) const
+inline const MethylationSignature& EpigeneticGenotype::get_methylation_signature() const
 {
-    return rates.at(event);
+    return methylation_signature;
 }
 
-inline const bool& DriverGenotype::is_methylated() const
+inline const std::map<CellEventType, double>& EpigeneticGenotype::get_rates() const
 {
-    return methylated;
+    return event_rates;
+}
+
+inline void EpigeneticGenotype::set_rates(const std::map<CellEventType, double>& rates)
+{
+    event_rates = rates;
+}
+
+inline
+const std::map<EpigeneticGenotypeId, double>& 
+EpigeneticGenotype::get_epigenentic_mutation_rates() const
+{
+    return epigenetic_rates;
+}
+
+inline const std::string& SomaticGenotype::get_name() const
+{
+    return name;
+}
+
+inline const SomaticGenotypeId& SomaticGenotype::get_id() const
+{
+    return id;
+}
+
+inline const std::vector<EpigeneticGenotype>& SomaticGenotype::epigenetic_genotypes() const
+{
+    return e_genotypes;
+}
+
+template<typename SIGNATURE_TYPE>
+void SomaticGenotype::validate_signature(const SIGNATURE_TYPE& signature) const
+{
+    const size_t promoters = num_of_promoters();
+    if (signature.size()!=promoters) {
+        std::stringstream oss;
+
+        oss << "Wrong signature size: " 
+            << get_name() << " has ";
+
+        switch (promoters) {
+            case 0:
+                oss << "no methylable promoters";
+                break;
+            case 1:
+                oss << "1 methylable promoter";
+                break;
+            default:
+                oss << promoters << " methylable promoters";
+        }
+
+        throw std::domain_error(oss.str());
+    }
 }
 
 };

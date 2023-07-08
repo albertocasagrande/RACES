@@ -2,8 +2,8 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.8
- * @date 2023-07-05
+ * @version 0.9
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,18 +33,20 @@
 
 #include <random>
 #include <list>
+#include <queue>
+#include <vector>
 
 #include "tissue.hpp"
 #include "logger.hpp"
 #include "plot_2D.hpp"
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
+#include "somatic_mutations.hpp"
 
 namespace Races {
 
 /**
  * @brief A tumor evolution simulator
- * 
  */
 template<typename LOGGER=BasicLogger, typename PLOT_WINDOW=UI::Plot2DWindow>
 class BasicSimulator 
@@ -55,25 +57,27 @@ class BasicSimulator
         std::list<Cell> lost_cells;
     };
 
-    Time time;  //!< simulation time
-    Tissue &tissue; //!< simulated tissue
-    std::mt19937_64 random_gen;  //!< pseudo-random generator
-    std::chrono::system_clock::time_point last_snapshot_time;    //!< time of the last snapshot
-    long secs_between_snapshots;     //!< the number of minutes between two snapshots
+    Time time;  //!< Simulation time
+    Tissue &tissue; //!< Simulated tissue
+    std::map<EpigeneticGenotypeId, bool> death_enabled;  //!< Death enabled flag
 
-    bool logging_enabled;           //!< a flag to pause logging
-    LOGGER *logger;                         //!< event logger
+    std::mt19937_64 random_gen;     //!< Pseudo-random generator
 
-    UI::TissuePlotter<PLOT_WINDOW> plotter; //!< tissue plotter UI
-    bool quitting;                          //!< quitting flag
+    std::priority_queue<TimedSomaticMutation> somatic_mutation_queue;   //!< The timed somatic mutation queue 
 
-    TissueStatistics statistics;    //!< the tissue simulation statistics
+    std::chrono::system_clock::time_point last_snapshot_time;    //!< Time of the last snapshot
+    long secs_between_snapshots;     //!< The number of minutes between two snapshots
 
-    DriverGenotypeId select_epigenetic_clone(const DriverEpigeneticGraph& epigenetic_graph,
-                                             const DriverGenotypeId& genotype);
+    bool logging_enabled;           //!< A flag to pause logging
+    LOGGER *logger;                         //!< Event logger
+
+    UI::TissuePlotter<PLOT_WINDOW> plotter; //!< Tissue plotter UI
+    bool quitting;                          //!< Quitting flag
+
+    TissueStatistics statistics;    //!< The tissue simulation statistics
 
     /**
-     * @brief Duplicate the cell in the specified position
+     * @brief Simulate a cell duplication
      * 
      * This method simulates the duplication of a cell in the 
      * tissue. The duplicating cell is identified by its position. 
@@ -94,10 +98,10 @@ class BasicSimulator
      *      list contains only the new cell in position `position`. 
      *      In the remaining case, the returned list contains two cells
      */
-    EventAffectedCells duplicate_cell(const Position& position);
+    EventAffectedCells simulate_duplication(const Position& position);
 
     /**
-     * @brief Kill the cell in the specified position
+     * @brief Simulate the death of a cell
      * 
      * This method simulates the death of a cell in tissue.
      * If the cell in the provided position has non-driver 
@@ -107,30 +111,30 @@ class BasicSimulator
      * @return list of the affected cells, i.e., a list containing 
      *      the former status of the killed cell at most
      */
-    EventAffectedCells kill_cell(const Position& position);
+    EventAffectedCells simulate_death(const Position& position);
 
     /**
-     * @brief Apply an epigenetic event on the cell in the specified position
+     * @brief Simulate a cell mutation
      * 
-     * This method simulates an epigenetic event on a cell in tissue.
+     * This method simulates a mutation on a cell in tissue.
      * If the cell in the provided position has non-driver genotype, 
      * then nothing is done.  
      * 
-     * @param position is the position of the cell to be methylated/demethylated
-     * @param destination_id is the resulting genotype identifier of the cell
+     * @param position is the position of the cell that will mutate
+     * @param final_id is the resulting genotype identifier of the cell
      * @return list of the affected cells, i.e., a list containing 
      *      the status of the mutated cell at most
      */
-    EventAffectedCells apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id);
+    EventAffectedCells simulate_mutation(const Position& position, const EpigeneticGenotypeId& final_id);
 
     /**
-     * @brief Duplicate the cell and apply an epigenetic event
+     * @brief Simulate a duplication and an epigenetic event
      * 
      * This method simulates the duplication of a cell in the 
      * tissue and applies an epigenetic event to one of the siblings.
      * 
      * @param position is the position of the cell to be duplicate
-     * @param destination_id is the resulting genotype identifier of the cell
+     * @param final_id is the resulting genotype identifier of the cell
      * @return list of the affected cells. Whenever the specified position 
      *      is not in the tissue or does not correspond to a driver 
      *      mutation, the returned list is empty. If one of the two 
@@ -138,9 +142,28 @@ class BasicSimulator
      *      list contains only the new cell in position `position`. 
      *      In the remaining case, the returned list contains two cells
      */
-    EventAffectedCells duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id);
+    EventAffectedCells simulate_duplication_epigenetic_event(const Position& position, const EpigeneticGenotypeId& final_id);
+
+    /**
+     * @brief Randomly select a cell among those having a specified somatic genotype
+     * 
+     * @tparam GENERATOR is the random number generator type
+     * @param generator is a random number generator
+     * @param tissue is the tissue in which cell must be choosen
+     * @param genotype_id is the identifier of the somatic genotype that must have the selected cell
+     * @return whenever the targeted somatic species contain at least 
+     *        one cell, a pointer to a randomly selected cell whose 
+     *        driver somatic genotype identifier is `genotype_id`. 
+     *        If otherwise there are no cells whose driver somatic 
+     *        genotype identifier is `genotype_id`, this method 
+     *        returns `nullptr`
+     * 
+     */
+    template<typename GENERATOR>
+    static const CellInTissue* choose_a_cell_in_somatic_species(const Tissue& tissue, const SomaticGenotypeId& genotype_id, GENERATOR& generator);
 
 public:
+    size_t death_activation_level;  //!< The minimum number of cells required to activate death
 
     /**
      * @brief The basic simulator constructor
@@ -188,6 +211,16 @@ public:
      * @return a cell event 
      */
     CellEvent select_next_event();
+
+    /**
+     * @brief Add a timed driver somatic mutation
+     * 
+     * @param src is the source driver somatic genotype
+     * @param dst is the destination driver somatic genotype
+     * @param time is the mutation timing
+     * @return a reference to the updated simulator
+     */
+    BasicSimulator<LOGGER,PLOT_WINDOW>& add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time);
 
     /**
      * @brief Simulate up to the next event
@@ -239,15 +272,84 @@ template<typename LOGGER, typename PLOT_WINDOW>
 BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, LOGGER *logger, int random_seed):
     time(0), tissue(tissue), random_gen(), last_snapshot_time(std::chrono::system_clock::now()), 
     secs_between_snapshots(0), logging_enabled(logger!=nullptr), logger(logger),
-    plotter(tissue), quitting(false), statistics(tissue)
+    plotter(tissue), quitting(false), statistics(tissue), death_activation_level(1)
 {
     random_gen.seed(random_seed);
+
+    for (const auto& species: tissue) {
+        death_enabled[species.get_id()] = false;
+    }
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
 BasicSimulator<LOGGER,PLOT_WINDOW>::BasicSimulator(Tissue &tissue, int random_seed):
     BasicSimulator(tissue, nullptr, random_seed)
 {
+}
+
+template<typename GENERATOR_TYPE>
+void select_liveness_event_in_species(CellEvent& event, Tissue& tissue, 
+                                      const std::map<EpigeneticGenotypeId, bool>& death_enabled, 
+                                      const Species& species,
+                                      std::uniform_real_distribution<double>& uni_dist,
+                                      GENERATOR_TYPE& random_gen)
+{
+    const auto& num_of_cells{species.num_of_cells()};
+
+    std::list<CellEventType> event_types{CellEventType::DUPLICATE};
+
+    if (death_enabled.at(species.get_id())) {
+        event_types.push_back(CellEventType::DIE);
+    }
+
+    // deal with exclusively somatic events
+    for (const auto& event_type: event_types) {
+        const Time event_rate = species.get_rate(event_type);
+        const Time r_value = uni_dist(random_gen);
+        const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
+        if (event.delay>candidate_delay) {
+            event.type = event_type;
+            event.delay = candidate_delay;
+            event.position = Position(tissue, species.choose_a_cell(random_gen));
+            event.initial_genotype = species.get_id();
+        }
+    }
+}
+
+template<typename GENERATOR_TYPE>
+void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const Species& species,
+                                        std::uniform_real_distribution<double>& uni_dist, GENERATOR_TYPE& random_gen)
+{
+    const auto& num_of_cells{species.num_of_cells()};
+
+    // Deal with possible epigenetic events whenever admitted
+    for (const auto& [dst_id, event_rate]: species.get_epigenentic_mutation_rates()) {
+        const Time r_value = uni_dist(random_gen);
+        const Time candidate_delay = -log(r_value) / (num_of_cells * event_rate);
+        
+        if (event.delay>candidate_delay) {
+            event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
+            event.delay = candidate_delay;
+            event.position = Position(tissue, species.choose_a_cell(random_gen));
+            event.initial_genotype = species.get_id();
+            event.final_genotype = dst_id;
+        }
+    }
+}
+
+template<typename GENERATOR_TYPE>
+void select_next_event_in_species(CellEvent& event, Tissue& tissue,
+                                  const std::map<EpigeneticGenotypeId, bool>& death_enabled, 
+                                  const Species& species, 
+                                  std::uniform_real_distribution<double>& uni_dist,
+                                  GENERATOR_TYPE& random_gen)
+{
+    if (species.num_of_cells()==0) {
+        return;
+    }
+
+    select_liveness_event_in_species(event, tissue, death_enabled, species, uni_dist, random_gen);
+    select_epigenetic_event_in_species(event, tissue, species, uni_dist, random_gen);
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -258,36 +360,37 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
     CellEvent event;
     event.delay = std::numeric_limits<Time>::max();
 
-    for (const auto& species: tissue) {
-        const auto num_of_cells{species.num_of_cells()};
+    for (const Species& species: tissue) {
+        select_next_event_in_species(event, tissue, death_enabled, species, uni_dist, random_gen);
+    }
 
-        // deal with exclusively somatic events
-        for (const auto& event_type: {CellEventType::DIE, CellEventType::DUPLICATE}) {
-            const Time r_value = uni_dist(random_gen);
-            const Time event_rate = species.get_rate(event_type);
-            const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
+    // update candidate event with somatic mutation is possible
+    while (!somatic_mutation_queue.empty()) {
+        const TimedSomaticMutation& somatic_mutation = somatic_mutation_queue.top();
 
-            if (event.delay>candidate_delay) {
-                event.type = event_type;
-                event.delay = candidate_delay;
-                event.position = Position(tissue, species.choose_a_cell(random_gen));
-                event.initial_genotype = species.get_id();
+        if (somatic_mutation.time < event.delay + time) {
+            const auto* cell = choose_a_cell_in_somatic_species(tissue, somatic_mutation.initial_id, random_gen);
+            if (cell != nullptr) {
+                event.delay = (somatic_mutation.time >= time? somatic_mutation.time - time:0);
+                event.type = CellEventType::DRIVER_SOMATIC_MUTATION;
+                event.position = Position(tissue, *cell);
+                event.initial_genotype = cell->get_genotype_id();
+
+                const Species& initial_species = tissue.get_species(event.initial_genotype);
+
+                const auto& somatic_species = tissue.get_somatic_genotype_species(somatic_mutation.final_id);
+                const size_t index = SomaticGenotype::signature_to_index(initial_species.get_methylation_signature());
+
+                event.final_genotype = somatic_species[index].get_id();
+
+                somatic_mutation_queue.pop();
+
+                return event;
             }
-        }
 
-        // Deal with possible epigenetic events whenever admitted
-        const auto& epigenetic_graph = tissue.get_epigenetic_graph();
-        for (const auto& [dst_id, event_rate]: epigenetic_graph.get_outgoing_edge_map(species.get_id())) {
-            const Time r_value = uni_dist(random_gen);
-            const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
-            
-            if (event.delay>candidate_delay) {
-                event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
-                event.delay = candidate_delay;
-                event.position = Position(tissue, species.choose_a_cell(random_gen));
-                event.epigenetic_genotype = static_cast<DriverGenotypeId>(dst_id);
-                event.initial_genotype = species.get_id();
-            }
+            somatic_mutation_queue.pop();
+        } else {
+            return event;
         }
     }
 
@@ -296,7 +399,7 @@ CellEvent BasicSimulator<LOGGER,PLOT_WINDOW>::select_next_event()
 
 template<typename LOGGER, typename PLOT_WINDOW>
 typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(const Position& position)
+BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_death(const Position& position)
 {
     auto cell = (*(position.tissue))(position);
 
@@ -305,22 +408,6 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::kill_cell(const Position& position)
     }
 
     return {{cell.copy_and_kill()},{}};
-}
-
-template<typename LOGGER, typename PLOT_WINDOW>
-DriverGenotypeId BasicSimulator<LOGGER,PLOT_WINDOW>::select_epigenetic_clone(const DriverEpigeneticGraph& epigenetic_graph, const DriverGenotypeId& genotype)
-{
-    const auto& dst_map = epigenetic_graph.get_outgoing_edge_map(genotype);
-
-    std::uniform_real_distribution<double> uni_dist(0,1);
-
-    for (const auto& [new_genotype, probability]: dst_map) {
-        if (uni_dist(random_gen)<probability) {
-            return new_genotype;
-        }
-    }
-
-    return genotype;
 }
 
 template<typename GENERATOR>
@@ -342,28 +429,11 @@ inline Direction select_2D_random_direction(GENERATOR& random_gen, const Positio
 
 template<typename LOGGER, typename PLOT_WINDOW>
 typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id)
+BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_mutation(const Position& position, const EpigeneticGenotypeId& final_id)
 {
     CellInTissue cell = tissue(position);
 
-    DriverGenotypeId genotype(cell.get_driver_genotype());
-
-    const auto& graph = tissue.get_epigenetic_graph();
-    const auto& dst_map = graph.get_outgoing_edge_map(genotype);
-
-    if (dst_map.find(destination_id)==dst_map.end()) {
-        std::ostringstream oss;
-
-        Species& species = tissue.get_species(genotype);
-
-        oss << "Unsupported epigenetic event from driver genotype " 
-            << static_cast<DriverGenotype>(species) << " to " 
-            << static_cast<DriverGenotype>(tissue.get_species(destination_id)) << std::endl;
-        
-        throw std::domain_error(oss.str());
-    }
-
-    cell.genotype = destination_id;
+    cell.genotype = final_id;
 
     tissue(position) = cell;
 
@@ -372,7 +442,7 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::apply_epigenetic_event(const Position& posit
 
 template<typename LOGGER, typename PLOT_WINDOW>
 typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position)
+BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_duplication(const Position& position)
 {
     Tissue& tissue = *(position.tissue);
     EventAffectedCells affected;
@@ -403,15 +473,15 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell(const Position& position)
 
 template<typename LOGGER, typename PLOT_WINDOW>
 typename BasicSimulator<LOGGER,PLOT_WINDOW>::EventAffectedCells 
-BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell_and_apply_epigenetic_event(const Position& position, const DriverGenotypeId& destination_id)
+BasicSimulator<LOGGER,PLOT_WINDOW>::simulate_duplication_epigenetic_event(const Position& position, const EpigeneticGenotypeId& final_id)
 {
-    auto affected = duplicate_cell(position);
+    auto affected = simulate_duplication(position);
 
     if (affected.new_cells.size()==0) {
         return affected;
     }
 
-    apply_epigenetic_event(position, destination_id);
+    simulate_mutation(position, final_id);
 
     const Tissue& tissue = *position.tissue;
 
@@ -420,6 +490,54 @@ BasicSimulator<LOGGER,PLOT_WINDOW>::duplicate_cell_and_apply_epigenetic_event(co
     }
 
     return affected;
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+template<typename GENERATOR>
+const CellInTissue*
+BasicSimulator<LOGGER,PLOT_WINDOW>::choose_a_cell_in_somatic_species(const Tissue& tissue, const SomaticGenotypeId& genotype_id, GENERATOR& generator)
+{
+    std::vector<size_t> num_of_cells;
+
+    size_t total = 0;
+
+    const auto& species = tissue.get_somatic_genotype_species(genotype_id);
+    for (const auto& S : species) {
+        total += S.num_of_cells();
+        num_of_cells.push_back(total);
+    }
+
+    if (total == 0) {
+        return nullptr;
+    }
+
+    std::uniform_int_distribution<size_t> distribution(1,total);
+    const size_t value = distribution(generator);
+
+    size_t i=0;
+    while (value > num_of_cells[i]) {
+        ++i;
+    }
+
+    return &(species[i].choose_a_cell(generator));
+}
+
+template<typename LOGGER, typename PLOT_WINDOW>
+BasicSimulator<LOGGER,PLOT_WINDOW>&
+BasicSimulator<LOGGER,PLOT_WINDOW>::add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time)
+{
+    if (src.num_of_promoters()>dst.num_of_promoters()) {
+        std::ostringstream oss;
+
+        oss << "Incompatible number of methylable promoters: \"" << src.get_name() 
+            << "\" must have at least as many methylable promoters as \"" << dst.get_name() 
+            << "\".";
+        throw std::domain_error(oss.str());
+    }
+
+    somatic_mutation_queue.emplace(src, dst, time);
+
+    return *this;
 }
 
 template<typename LOGGER, typename PLOT_WINDOW>
@@ -433,28 +551,37 @@ BasicSimulator<LOGGER,PLOT_WINDOW>& BasicSimulator<LOGGER,PLOT_WINDOW>::run_up_t
 
     switch(event.type) {
         case CellEventType::DIE:
-            affected = kill_cell(event.position);
+            affected = simulate_death(event.position);
             break;
         case CellEventType::DUPLICATE:
-            affected = duplicate_cell(event.position);
+            affected = simulate_duplication(event.position);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            affected = duplicate_cell_and_apply_epigenetic_event(event.position, event.epigenetic_genotype);
+            affected = simulate_duplication_epigenetic_event(event.position, event.final_genotype);
+            break;
+        case CellEventType::DRIVER_SOMATIC_MUTATION:
+            affected = simulate_mutation(event.position, event.final_genotype);
             break;
         default:
             throw std::runtime_error("Unhandled event type");
     }
 
-    if (logging_enabled) {
-        for (const auto& cell : affected.new_cells) {
+    for (const auto& cell : affected.new_cells) {
+        if (logging_enabled) {
             logger->record(event.type, cell, time);
+        }
+
+        bool& death_enabled_in_species = death_enabled[cell.get_genotype_id()];
+        if (!death_enabled_in_species) {
+            Species& species = tissue.get_species(cell.get_genotype_id());
+            
+            death_enabled_in_species = species.num_of_cells()>=death_activation_level;
         }
     }
 
     statistics.record_event(event, time);
-
     for (const auto& cell: affected.lost_cells) {
-        statistics.record_lost(cell.get_driver_genotype(), time);
+        statistics.record_lost(cell.get_genotype_id(), time);
     }
 
     if (!plotter.closed()) {

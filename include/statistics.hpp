@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.2
- * @date 2023-06-30
+ * @version 0.3
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -77,7 +77,7 @@ class TissueStatistics
 {
     using time_point = std::chrono::steady_clock::time_point;
 
-    std::map<DriverGenotypeId, SpeciesStatistics> s_statistics;  //!< a map from species id to statistics
+    std::map<EpigeneticGenotypeId, SpeciesStatistics> s_statistics;  //!< a map from species id to statistics
     
     std::list<Time> sim_times;             //!< the simulated times of the last recorded events
     std::list<time_point> real_times;      //!< the recording times of the last events 
@@ -109,7 +109,7 @@ public:
      * @return a non-constant reference to the statistics of species having 
      *      `species_id` as identifier 
      */
-    SpeciesStatistics& operator[](const DriverGenotypeId& species_id);
+    SpeciesStatistics& operator[](const EpigeneticGenotypeId& species_id);
 
     /**
      * @brief Get the statistics of a species
@@ -126,7 +126,7 @@ public:
      * @return a constant reference to the statistics of species having 
      *      `species_id` as identifier 
      */
-    const SpeciesStatistics& at(const DriverGenotypeId& species_id) const;
+    const SpeciesStatistics& at(const EpigeneticGenotypeId& species_id) const;
 
     /**
      * @brief Record a death
@@ -134,7 +134,7 @@ public:
      * @param genotype_id is the genotype id of the dying cell
      * @param time is the death time
      */
-    void record_death(const DriverGenotypeId& genotype_id, const Time &time);
+    void record_death(const EpigeneticGenotypeId& genotype_id, const Time &time);
 
     /**
      * @brief Record a lost cell
@@ -146,23 +146,23 @@ public:
      * @param time is the time in which the lost cell has been pushed 
      *       outside the tissue border
      */
-    void record_lost(const DriverGenotypeId& genotype_id, const Time &time);
+    void record_lost(const EpigeneticGenotypeId& genotype_id, const Time &time);
 
     /**
      * @brief Record a cell duplication
      * 
      * @param genotype_id is the driver genotype id of the duplicating cell
      */
-    void record_duplication(const DriverGenotypeId& genotype_id);
+    void record_duplication(const EpigeneticGenotypeId& genotype_id);
 
     /**
-     * @brief Record an epigenetic event
+     * @brief Record a driver mutation
      * 
-     * @param genotype_id is the original driver genotype id of the mutating cell 
-     * @param epigenetic_genotype is the driver genotype id of the mutated cell
+     * @param initial_id is the original driver genotype id of the mutating cell 
+     * @param final_id is the driver genotype id of the mutated cell
      * @param time is the epigenetic event time
      */
-    void record_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time);
+    void record_mutation(const EpigeneticGenotypeId& initial_id, const EpigeneticGenotypeId& final_id, const Time &time);
 
     /**
      * @brief Record a cell duplication and an epigenetic event
@@ -171,7 +171,7 @@ public:
      * @param epigenetic_genotype is the driver genotype id of the mutated cell
      * @param time is the epigenetic event time
      */
-    void record_duplication_and_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time);
+    void record_duplication_epigenetic_event(const EpigeneticGenotypeId& genotype_id, const EpigeneticGenotypeId& epigenetic_genotype, const Time &time);
 
     /**
      * @brief Record the last event
@@ -222,7 +222,7 @@ inline SpeciesStatistics& TissueStatistics::operator[](const Species& species)
     return s_statistics.at(species.get_id());
 }
 
-inline SpeciesStatistics& TissueStatistics::operator[](const DriverGenotypeId& species_id)
+inline SpeciesStatistics& TissueStatistics::operator[](const EpigeneticGenotypeId& species_id)
 {
     return s_statistics.at(species_id);
 }
@@ -232,7 +232,7 @@ inline const SpeciesStatistics& TissueStatistics::at(const Species& species) con
     return s_statistics.at(species.get_id());
 }
 
-inline const SpeciesStatistics& TissueStatistics::at(const DriverGenotypeId& species_id) const
+inline const SpeciesStatistics& TissueStatistics::at(const EpigeneticGenotypeId& species_id) const
 {
     return s_statistics.at(species_id);
 }

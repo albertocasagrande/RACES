@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.3
- * @date 2023-07-05
+ * @version 0.4
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,18 +34,8 @@
 
 namespace Races {
 
-Species::Species(const std::string& name,
-                 const std::map<CellEventType, double>& rates,
-                 const bool methylated):
-    DriverGenotype(name, rates, methylated)
-{}
-
-Species::Species(const Species& species):
-    DriverGenotype(species), cells(species.cells), pos_map(species.pos_map)
-{}
-
-Species::Species(const DriverGenotype& driver):
-    DriverGenotype(driver)
+Species::Species(const EpigeneticGenotype& genotype):
+    EpigeneticGenotype(genotype)
 {}
 
 void Species::remove(const CellId& cell_id)
@@ -131,7 +121,7 @@ Species::const_iterator Species::const_iterator::operator--(int)
 
 std::ostream& operator<<(std::ostream& out, const Species& species)
 {
-    out << "Species {genotype: " << static_cast<DriverGenotype>(species) 
+    out << "{genotype: " << static_cast<EpigeneticGenotype>(species) 
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {

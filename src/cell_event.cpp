@@ -1,9 +1,9 @@
 /**
- * @file mutation_graphs.hpp
+ * @file cell_event.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Represent admissible driver mutations
+ * @brief Cell events
  * @version 0.1
- * @date 2023-05-30
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,56 +28,23 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_MUTATION_GRAPHS__
-#define __RACES_MUTATION_GRAPHS__
+#include <string>
+#include <map>
 
-#include "digraph.hpp"
-#include "time.hpp"
+#include "cell_event.hpp"
 
 namespace Races {
 
-/**
- * @brief Driver somatic mutation graph
- * 
- * This graph represents the somatic mutations admitted for driver.
- */
-class DriverSomaticGraph : public DiGraph<Time>
-{
-public:
-    /**
-     * @brief The empty driver somatic graph constructor
-     */
-    DriverSomaticGraph();
-
-    /**
-     * @brief The copy constructor
-     * 
-     * @param orig is the template object
-     */
-    DriverSomaticGraph(const DriverSomaticGraph& orig);
+std::map<CellEventType, std::string> cell_event_names = {
+    {CellEventType::DIE, "death"},
+    {CellEventType::DUPLICATE, "duplication"},
+    {CellEventType::EPIGENETIC_EVENT, "epigenetic mutation"},
+    {CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT, 
+        "duplication and epigenetic mutation"},
+    {CellEventType::PASSENGER_MUTATION, 
+        "passenger mutation"},
+    {CellEventType::DRIVER_SOMATIC_MUTATION, 
+        "driver somatic mutation"}
 };
 
-/**
- * @brief Driver epigenetic mutation graph
- * 
- * This graph represents the epigenetic mutations admitted for drivers.
- */
-class DriverEpigeneticGraph : public DiGraph<double>
-{
-public:
-    /**
-     * @brief The empty driver mutation graph constructor
-     */
-    DriverEpigeneticGraph();
-
-    /**
-     * @brief The copy constructor
-     * 
-     * @param orig is the template object
-     */
-    DriverEpigeneticGraph(const DriverEpigeneticGraph& orig);
-};
-
-};
-
-#endif // __RACES_MUTATION_GRAPHS__
+}

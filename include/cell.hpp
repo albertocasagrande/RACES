@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.5
- * @date 2023-07-05
+ * @version 0.6
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 #include "position.hpp"
 #include "driver_genotype.hpp"
 
-#define NON_DRIVER_GENOTYPE std::numeric_limits<DriverGenotypeId>::max()
+#define NON_DRIVER_GENOTYPE std::numeric_limits<EpigeneticGenotypeId>::max()
 
 namespace Races {
 
@@ -50,7 +50,7 @@ protected:
     CellId id;                          //!< cell identifier
     CellId parent;                      //!< parent cell
 
-    DriverGenotypeId genotype;          //!< cell species reference
+    EpigeneticGenotypeId genotype;          //!< cell species reference
 
     unsigned int passenger_mutations;   //!< number of passenger mutations
 
@@ -65,7 +65,7 @@ public:
      * 
      * @param genotype is the driver genotype identifier
      */
-    Cell(const DriverGenotypeId genotype);
+    Cell(const EpigeneticGenotypeId genotype);
 
     /**
      * @brief Create a new cell
@@ -73,7 +73,7 @@ public:
      * @param genotype is the driver genotype identifier
      * @param passenger_mutations is the number of passenger mutations
      */
-    Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations);
+    Cell(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations);
 
     /**
      * @brief Create a new cell
@@ -82,7 +82,7 @@ public:
      * @param passenger_mutations is the number of passenger mutations
      * @param parent_id is the parent cell identifier
      */
-    Cell(const DriverGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id);
+    Cell(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id);
 
     /**
      * @brief Get the cell identifier
@@ -103,7 +103,7 @@ public:
      * 
      * @return a constant reference to the cell driver genotype
      */
-    const DriverGenotypeId& get_driver_genotype() const;
+    const EpigeneticGenotypeId& get_genotype_id() const;
 
     /**
      * @brief Get the number of passenger mutations
@@ -164,7 +164,7 @@ protected:
      * @param passenger_mutations is the number of passenger mutations
      * @param position is the cell position
      */
-    CellInTissue(const DriverGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position);
+    CellInTissue(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position);
 
     /**
      * @brief A cell in tissue constructor
@@ -245,8 +245,7 @@ inline const CellId& Cell::get_parent_id() const
     return parent;
 }
 
-
-inline const DriverGenotypeId& Cell::get_driver_genotype() const
+inline const EpigeneticGenotypeId& Cell::get_genotype_id() const
 {
     return genotype;
 }
@@ -258,11 +257,11 @@ inline const unsigned int& Cell::get_passenger_mutations() const
 
 inline Cell Cell::generate_descendent(const unsigned int new_passenger_mutations) const
 {
-    return Cell(get_driver_genotype(), passenger_mutations+new_passenger_mutations, get_id());
+    return Cell(get_genotype_id(), passenger_mutations+new_passenger_mutations, get_id());
 }
 
 inline bool CellInTissue::has_driver_mutations() const {
-    return get_driver_genotype() != NON_DRIVER_GENOTYPE;
+    return get_genotype_id() != NON_DRIVER_GENOTYPE;
 }
 
 }

@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.2
- * @date 2023-06-30
+ * @version 0.3
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,7 +53,7 @@ TissueStatistics::TissueStatistics(const Tissue& tissue):
     }
 }
 
-void TissueStatistics::record_death(const DriverGenotypeId& genotype_id, const Time &time)
+void TissueStatistics::record_death(const EpigeneticGenotypeId& genotype_id, const Time &time)
 {
     auto& s_stats = s_statistics.at(genotype_id);
 
@@ -64,7 +64,7 @@ void TissueStatistics::record_death(const DriverGenotypeId& genotype_id, const T
     }
 }
 
-void TissueStatistics::record_lost(const DriverGenotypeId& genotype_id, const Time &time)
+void TissueStatistics::record_lost(const EpigeneticGenotypeId& genotype_id, const Time &time)
 {
     auto& s_stats = s_statistics.at(genotype_id);
 
@@ -75,7 +75,7 @@ void TissueStatistics::record_lost(const DriverGenotypeId& genotype_id, const Ti
     }
 }
 
-void TissueStatistics::record_duplication(const DriverGenotypeId& genotype_id)
+void TissueStatistics::record_duplication(const EpigeneticGenotypeId& genotype_id)
 {
     auto& s_stats = s_statistics.at(genotype_id);
 
@@ -83,16 +83,16 @@ void TissueStatistics::record_duplication(const DriverGenotypeId& genotype_id)
     s_stats.curr_cells += 1;
 }
 
-void TissueStatistics::record_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time)
+void TissueStatistics::record_mutation(const EpigeneticGenotypeId& initial_id, const EpigeneticGenotypeId& final_id, const Time &time)
 {
-    auto& s_stats = s_statistics.at(genotype_id);
+    auto& s_stats = s_statistics.at(initial_id);
     s_stats.curr_cells -= 1;
     s_stats.total_cells -= 1;
     if (s_stats.curr_cells==0) {
         s_stats.extinction_time = time;
     }
 
-    auto& s_stats2 = s_statistics.at(epigenetic_genotype);
+    auto& s_stats2 = s_statistics.at(final_id);
     s_stats2.total_cells += 1;
     s_stats2.curr_cells += 1;
     if (s_stats2.total_cells==1) {
@@ -100,10 +100,10 @@ void TissueStatistics::record_epigenetic_event(const DriverGenotypeId& genotype_
     }
 }
 
-void TissueStatistics::record_duplication_and_epigenetic_event(const DriverGenotypeId& genotype_id, const DriverGenotypeId& epigenetic_genotype, const Time &time)
+void TissueStatistics::record_duplication_epigenetic_event(const EpigeneticGenotypeId& genotype_id, const EpigeneticGenotypeId& epigenetic_genotype, const Time &time)
 {
     record_duplication(genotype_id);
-    record_epigenetic_event(genotype_id,epigenetic_genotype,time);
+    record_mutation(genotype_id,epigenetic_genotype,time);
 }
 
 void TissueStatistics::record_event(const CellEvent& event, const Time &time)
@@ -131,8 +131,12 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
             record_duplication(event.initial_genotype);
-            record_epigenetic_event(event.initial_genotype, 
-                                    event.epigenetic_genotype, time);
+            record_mutation(event.initial_genotype, 
+                            event.final_genotype, time);
+            break;
+        case CellEventType::DRIVER_SOMATIC_MUTATION:
+            record_mutation(event.initial_genotype, 
+                            event.final_genotype, time);
             break;
         default:
             throw std::runtime_error("Unsupported event type");

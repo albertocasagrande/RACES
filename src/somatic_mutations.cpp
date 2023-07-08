@@ -1,9 +1,9 @@
 /**
- * @file mutation_graphs.cpp
+ * @file somatic_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Represent admissible driver mutations
+ * @brief Implementing timed somatic mutations
  * @version 0.1
- * @date 2023-05-30
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,24 +28,16 @@
  * SOFTWARE.
  */
 
-#include "mutation_graphs.hpp"
+#include "somatic_mutations.hpp"
 
 namespace Races {
 
-DriverSomaticGraph::DriverSomaticGraph():
-    DiGraph<Time>()
+TimedSomaticMutation::TimedSomaticMutation(const SomaticGenotypeId& initial_id, const SomaticGenotypeId& final_id, const Time& time):
+    initial_id(initial_id), final_id(final_id), time(time)
 {}
 
-DriverSomaticGraph::DriverSomaticGraph(const DriverSomaticGraph& orig):
-    DiGraph<Time>(orig)
+TimedSomaticMutation::TimedSomaticMutation(const SomaticGenotype& initial_genotype, const SomaticGenotype& final_genotype, const Time& time):
+    TimedSomaticMutation(initial_genotype.get_id(), final_genotype.get_id(), time)
 {}
 
-DriverEpigeneticGraph::DriverEpigeneticGraph():
-    DiGraph<double>()
-{}
-
-DriverEpigeneticGraph::DriverEpigeneticGraph(const DriverEpigeneticGraph& orig):
-    DiGraph<double>(orig)
-{}
-
-};
+}

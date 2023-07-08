@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.4
- * @date 2023-07-05
+ * @version 0.5
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,8 +51,8 @@ class Tissue;
  * 
  * This class represents the set of cells having the same driver genotype.
  */
-class Species: public DriverGenotype {
-    std::vector<CellInTissue *> cells;     //!< species cell
+class Species: public EpigeneticGenotype {
+    std::vector<CellInTissue *> cells;   //!< species cell
     std::map<CellId, size_t> pos_map;    //!< map from CellId to `cells` position
 
     /**
@@ -146,27 +146,9 @@ public:
     /**
      * @brief A constructor
      * 
-     * @param name is the name of the driver genotype
-     * @param rates is a map from the events to rates
-     * @param methylated is a methylation flag
+     * @param genotype is the epigenetic genotype of the species
      */
-    Species(const std::string& name,
-            const std::map<CellEventType, double>& rates,
-            const bool methylated=false);
-
-    /**
-     * @brief A constructor
-     * 
-     * @param driver is the driver genotype of the species
-     */
-    Species(const DriverGenotype& driver);
-
-    /**
-     * @brief Copy constructor
-     * 
-     * @param orig is the template for the new object
-     */
-    Species(const Species& orig);
+    Species(const EpigeneticGenotype& genotype);
 
     /**
      * @brief Get the initial iterator for the species cells

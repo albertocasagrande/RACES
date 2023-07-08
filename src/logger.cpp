@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.4
- * @date 2023-07-05
+ * @version 0.5
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -72,6 +72,9 @@ void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, con
         case CellEventType::EPIGENETIC_EVENT:
             event_symbol = 'E';
             break;
+        case CellEventType::DRIVER_SOMATIC_MUTATION:
+            event_symbol = 'M';
+            break;
         default:
             throw std::domain_error("Unhandled event");
     }
@@ -79,7 +82,7 @@ void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, con
     os << event_symbol << " " 
        << cell.get_id() << " " 
        << cell.get_parent_id() << " " 
-       << cell.get_driver_genotype() << " "
+       << cell.get_genotype_id() << " "
        << cell.get_passenger_mutations() << " " 
        << time << std::endl;
 }

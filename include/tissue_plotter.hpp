@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a UI window to plot a tissue
- * @version 0.3
- * @date 2023-06-30
+ * @version 0.4
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -221,7 +221,7 @@ class TissuePlotter {
 
 		std::ostringstream oss;
 
-		oss << species.get_name() << (species.is_methylated()?"+":"-")
+		oss << species.get_name() 
 			<< ": " << species.num_of_cells() << "/" << statistics.total_cells
 			<< "/" << statistics.killed_cells << "/" << statistics.lost_cells;
 

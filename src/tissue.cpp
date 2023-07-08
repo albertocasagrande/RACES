@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.5
- * @date 2023-07-05
+ * @version 0.6
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,32 @@
 
 namespace Races {
 
+Tissue::SpeciesView::SpeciesView(const std::vector<Species>& species, const std::vector<size_t>& species_pos):
+    species(species), species_pos(species_pos)
+{}
+
+Tissue::SpeciesView::const_iterator::const_iterator(const std::vector<Species>& species, const std::vector<size_t>::const_iterator it):
+    species(&species), it(std::make_shared<std::vector<size_t>::const_iterator>(it))
+{}
+
+Tissue::SpeciesView::const_iterator Tissue::SpeciesView::const_iterator::operator++(int)
+{
+    Tissue::SpeciesView::const_iterator copy(*this);
+
+    this->operator++();
+
+    return copy;
+}
+
+Tissue::SpeciesView::const_iterator Tissue::SpeciesView::const_iterator::operator--(int)
+{
+    Tissue::SpeciesView::const_iterator copy(*this);
+
+    this->operator--();
+
+    return copy;
+}
+
 Tissue::CellInTissueConstantProxy::CellInTissueConstantProxy(const Tissue &tissue, const PositionInTissue position):
     BaseCellInTissueProxy<const Tissue>(tissue, position)
 {
@@ -49,7 +75,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
     // kill the cell in the position
     kill();
 
-    Species& species = tissue.get_species(cell.get_driver_genotype());
+    Species& species = tissue.get_species(cell.get_genotype_id());
 
     // if the new cell is already in its species
     if (species.contains(cell.get_id())) {
@@ -76,7 +102,7 @@ void Tissue::CellInTissueProxy::kill()
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
         // remove the cell from its species
-        Species& former_species = tissue.get_species(space_ptr->get_driver_genotype());
+        Species& former_species = tissue.get_species(space_ptr->get_genotype_id());
         former_species.remove(space_ptr->get_id());
 
         space_ptr = nullptr;
@@ -102,7 +128,7 @@ Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_
     std::swap(x_vector, space);
 }
 
-Tissue::Tissue(const std::string name, const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue(name, x_size, y_size, z_size)
 {
     for (const auto& genotype: genotypes) {
@@ -115,7 +141,7 @@ Tissue::Tissue(const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z
 {
 }
 
-Tissue::Tissue(const std::vector<DriverGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
 {
 }
@@ -131,7 +157,7 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations)
+Tissue& Tissue::add(const EpigeneticGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations)
 {
     auto*& cell = space[position.x][position.y][position.z];
 
@@ -146,30 +172,29 @@ Tissue& Tissue::add(const DriverGenotypeId genotype, const PositionInTissue posi
     return *this;
 }
 
-Tissue& Tissue::add_species(const DriverGenotype& genotype)
+Tissue& Tissue::add_species(const SomaticGenotype& somatic_genotype)
 {
-    // check whether the genotype is already in the tissue
-    if (pos_map.count(genotype.get_id())>0) {
-        throw std::runtime_error("Driver mutation already in the tissue");
+    // check whether the somatic genotype is already in the tissue
+    if (somatic_genotope_pos.count(somatic_genotype.get_id())>0) {
+        throw std::runtime_error("Somatic genotype already in the tissue");
     }
 
-    // place the new species at the end of the species vector
-    pos_map[genotype.get_id()] = species.size();
-    species.push_back(genotype);
+    // check whether any of the epigenetic genotypes is already in the tissue
+    for (const auto& genotype: somatic_genotype.epigenetic_genotypes()) {
+        if (pos_map.count(genotype.get_id())>0) {
+            throw std::runtime_error("Epigenetic genotype already in the tissue");
+        }
+    }
 
-    return *this;
-}
+    // insert the genotypes in the tissue 
+    auto& pos = somatic_genotope_pos[somatic_genotype.get_id()];
+    for (const auto& genotype: somatic_genotype.epigenetic_genotypes()) {
+        // place the new species at the end of the species vector
+        pos.push_back(species.size());
 
-Tissue& Tissue::add_driver_somatic_mutation(const DriverGenotypeId& src, const DriverGenotypeId& dst, const Time delay)
-{
-    somatic_graph.add_edge(pos_map.at(src), pos_map.at(dst), delay);
-
-    return *this;
-}
-
-Tissue& Tissue::add_driver_epigenetic_mutation(const DriverGenotypeId& src, const DriverGenotypeId& dst, const double probability)
-{
-    epigenetic_graph.add_edge(pos_map.at(src), pos_map.at(dst), probability);
+        pos_map[genotype.get_id()] = species.size();
+        species.push_back(genotype);
+    }
 
     return *this;
 }
@@ -179,28 +204,9 @@ Tissue::CellInTissueProxy Tissue::operator()(const PositionInTissue& position)
     return CellInTissueProxy(*this, position);
 }
 
-
 const Tissue::CellInTissueConstantProxy Tissue::operator()(const PositionInTissue& position) const
 {
     return CellInTissueConstantProxy(*this, position);
-}
-
-PositionInTissue Tissue::get_non_driver_in_direction(PositionInTissue position, const Direction& direction) const
-{
-    if (!is_valid(position)) {
-        return position;
-    }
- 
-    PositionDelta delta(direction);
-    while ((*this)(position).has_driver_mutations()) {
-        position += delta;
-
-        if (!is_valid(position)) {
-            return position;
-        }
-    }
-
-    return position;
 }
 
 std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const Direction& direction)
@@ -223,7 +229,7 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
     if (to_be_moved!=nullptr) {
         lost_cell.push_back(*to_be_moved);
 
-        Species &species = get_species(to_be_moved->get_driver_genotype());
+        Species &species = get_species(to_be_moved->get_genotype_id());
 
         species.remove(to_be_moved->get_id());
     }

@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.3
- * @date 2023-06-30
+ * @version 0.4
+ * @date 2023-07-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -129,7 +129,7 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
     if (type==CellEventType::DUPLICATE || type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT) {
 
         cell_of.write((char*)(&(cell.get_parent_id())), sizeof(CellId));
-        cell_of.write((char*)(&(cell.get_driver_genotype())), sizeof(DriverGenotypeId));
+        cell_of.write((char*)(&(cell.get_genotype_id())), sizeof(EpigeneticGenotypeId));
         cell_of.write((char*)(&time), sizeof(Time));
 
         if (++cell_in_current_file>=cells_per_file) {
