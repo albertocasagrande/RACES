@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.7
- * @date 2023-07-08
+ * @version 0.8
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,6 +34,7 @@
 #include <limits>
 #include <cstdint>
 
+#include "archive.hpp"
 #include "time.hpp"
 #include "position.hpp"
 #include "driver_genotype.hpp"
@@ -120,6 +121,41 @@ public:
      */
     Cell generate_descendent(const unsigned int new_passenger_mutations=0) const;
 
+    /**
+     * @brief Save a cell in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & id 
+                & parent 
+                & genotype 
+                & passenger_mutations;
+    }
+
+    /**
+     * @brief Load a cell from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load cell
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    inline static Cell load(ARCHIVE& archive)
+    {
+        Cell cell;
+
+        archive & cell.id 
+                & cell.parent 
+                & cell.genotype 
+                & cell.passenger_mutations;
+
+        return cell;
+    }
+
     friend class Tissue;
     friend class Species;
 
@@ -157,6 +193,11 @@ class Species;
 class CellInTissue : public Cell, public PositionInTissue {
 
 protected:
+    /**
+     * @brief The empty constructor
+     */
+    CellInTissue();
+
     /**
      * @brief A cell in tissue constructor
      * 
@@ -219,7 +260,38 @@ public:
      */
     bool has_driver_mutations() const;
 
+    /**
+     * @brief Save a cell in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<const Cell &>(*this) & x & y & z;
+    }
+
+    /**
+     * @brief Load a cell from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded cell
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    static CellInTissue load(ARCHIVE& archive)
+    {
+        CellInTissue cell;
+
+        archive & static_cast<Cell &>(cell) 
+                & cell.x & cell.y & cell.z;
+
+        return cell;
+    }
+
     friend class Tissue;
+    friend class Species;
     friend class CellInTissueProxy;
 };
 

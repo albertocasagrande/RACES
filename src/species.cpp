@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.4
- * @date 2023-07-08
+ * @version 0.5
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,9 +34,44 @@
 
 namespace Races {
 
+Species::Species():
+    EpigeneticGenotype()
+{}
+
+void Species::reset()
+{
+    for (auto& cell: cells) {
+        delete cell;
+    }
+
+    cells.clear();
+    pos_map.clear();
+}
+
 Species::Species(const EpigeneticGenotype& genotype):
     EpigeneticGenotype(genotype)
 {}
+
+Species::Species(const Species& orig):
+    EpigeneticGenotype(orig)
+{
+    for (const auto& cell: orig.cells) {
+        this->add(*cell);
+    }
+}
+
+Species& Species::operator=(const Species& orig)
+{
+    reset();
+
+    static_cast<EpigeneticGenotype&>(*this) = static_cast<EpigeneticGenotype>(orig);
+
+    for (const auto& cell: orig.cells) {
+        this->add(*cell);
+    }
+
+    return *this;
+}
 
 void Species::remove(const CellId& cell_id)
 {
@@ -64,29 +99,38 @@ void Species::remove(const CellId& cell_id)
     cells.pop_back();
 }
 
-CellInTissue* Species::add(CellInTissue cell)
+CellInTissue* Species::add(CellInTissue* cell)
 {
     // find a position for the new cell
     const size_t new_pos = cells.size();
 
     // set it position in the position map
-    pos_map[cell.get_id()] = new_pos;
- 
-    cell.genotype = get_id();
+    pos_map[cell->get_id()] = new_pos;
     
-    cells.push_back(new CellInTissue(cell));
+    cell->genotype = get_id();
 
-    return cells[new_pos];
+    cells.push_back(cell);
+
+    return cell;
+}
+
+CellInTissue* Species::add(CellInTissue&& cell)
+{
+    cell.genotype = get_id();
+
+    return add(new CellInTissue(cell));
+}
+
+CellInTissue* Species::add(CellInTissue& cell)
+{
+    cell.genotype = get_id();
+
+    return add(new CellInTissue(cell));
 }
 
 Species::~Species()
 {
-    for (auto& cell: cells) {
-        delete cell;
-    }
-
-    cells.clear();
-    pos_map.clear();
+    reset();
 }
 
 Species::const_iterator Species::begin() const

@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.6
- * @date 2023-07-08
+ * @version 0.7
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,6 +38,7 @@
 #include <random>
 #include <cstddef> // std::ptrdiff_t
 
+#include "archive.hpp"
 #include "time.hpp"
 #include "cell.hpp"
 #include "driver_genotype.hpp"
@@ -141,14 +142,52 @@ class Species: public EpigeneticGenotype {
         friend class Species;
     };
 
-public:
+    /**
+     * @brief Add a cell to the species
+     * 
+     * This method add the cell pointer by the parameter to the 
+     * species. The species representation uses the memory pointed 
+     * by the parameter.
+     * 
+     * @param cell is a pointer to the cell to be added to the species
+     * @return pointer to the added cell
+     */
+    CellInTissue* add(CellInTissue* cell);
 
+    /**
+     * @brief An empty constructor
+     */
+    Species();
+
+    /**
+     * @brief Reset the species
+     * 
+     * This method resets the species and removes and deletes all 
+     * its cells.
+     */
+    void reset();
+public:
     /**
      * @brief A constructor
      * 
      * @param genotype is the epigenetic genotype of the species
      */
     Species(const EpigeneticGenotype& genotype);
+
+    /**
+     * @brief A copy constructor
+     * 
+     * @param orig is the template object
+     */
+    Species(const Species& orig);
+
+    /**
+     * @brief The copy operator
+     * 
+     * @param orig is the original object 
+     * @return a reference to the updated object
+     */
+    Species& operator=(const Species& orig);
 
     /**
      * @brief Get the initial iterator for the species cells
@@ -198,7 +237,6 @@ public:
      * @brief Remove a cell from the species
      * 
      * @param cell_id is the id of the cell to be removed
-     * @return a reference to the updated species
      */
     void remove(const CellId& cell_id);
 
@@ -206,9 +244,17 @@ public:
      * @brief Add a cell to the species
      * 
      * @param cell is the cell to be added to the species
-     * @return a reference to the updated species
+     * @return pointer to the added cell
      */
-    CellInTissue* add(CellInTissue cell);
+    CellInTissue* add(CellInTissue&& cell);
+
+    /**
+     * @brief Add a cell to the species
+     * 
+     * @param cell is the cell to be added to the species
+     * @return pointer to the added cell
+     */
+    CellInTissue* add(CellInTissue& cell);
 
     /**
      * @brief Get cell by identifier
@@ -238,6 +284,49 @@ public:
      * @brief The destroyer
      */
     ~Species();
+
+    /**
+     * @brief Save a species in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<const EpigeneticGenotype &>(*this);
+
+        archive & cells.size();
+        for (const auto& cell_ptr: cells) {
+            archive & *cell_ptr;
+        }
+    }
+
+    /**
+     * @brief Load a species from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded species
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    static Species load(ARCHIVE& archive)
+    {
+        auto genotype = EpigeneticGenotype::load(archive);
+        Species species(genotype);
+
+        size_t num_of_cells;
+        archive & num_of_cells;
+        for (size_t i=0; i<num_of_cells; ++i) {
+            CellInTissue *cell = new CellInTissue();
+
+            archive & *cell;
+
+            species.add(cell);
+        }
+
+        return species;
+    }
 
     template<typename LOGGER>
     friend class BasicSimulator;

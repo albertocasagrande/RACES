@@ -31,7 +31,8 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
+set(GENERIC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/somatic_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
@@ -44,21 +45,27 @@ set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_palette.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp)
 
+set(RACES_LIBRARIES ${Boost_LIBRARIES})
+
 if(${COMPILE_SDL2_CODE})
     add_compile_definitions(WITH_SDL2)
 
     include_directories(${SDL2_INCLUDE_DIRS} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
-    set(SIM_SOURCES ${SIM_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
+    set(SIM_SOURCES ${GENERIC_SOURCES}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
+
+    set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+else()
+    set(SIM_SOURCES ${GENERIC_SOURCES})
 endif()
 
 add_executable(races_sim ${SIM_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/simulator_main.cpp)
 
 target_include_directories( races_sim PRIVATE ${Boost_INCLUDE_DIR})
 
-if(${COMPILE_SDL2_CODE})
-    target_link_libraries(races_sim ${Boost_LIBRARIES} ${SDL2_LIBRARIES}  SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-else()
-    target_link_libraries(races_sim ${Boost_LIBRARIES})
-endif()
+target_link_libraries(races_sim ${RACES_LIBRARIES})
 
+enable_testing()
+
+add_subdirectory(tests)

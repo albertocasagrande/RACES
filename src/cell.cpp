@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.5
- * @date 2023-07-08
+ * @version 0.6
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -75,6 +75,10 @@ std::ostream& operator<<(std::ostream& os, const Cell& cell)
 
     return os;
 }
+
+CellInTissue::CellInTissue():
+    Cell(), PositionInTissue()
+{}
 
 CellInTissue::CellInTissue(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position):
     Cell(genotype, passenger_mutations), PositionInTissue(position)

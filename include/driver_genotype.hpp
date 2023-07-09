@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.4
- * @date 2023-07-08
+ * @version 0.5
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,7 @@
 #include <string>
 #include <sstream>
 
+#include "archive.hpp"
 #include "cell_event.hpp"
 
 namespace Races {
@@ -131,6 +132,11 @@ class EpigeneticGenotype {
     std::map<EpigeneticGenotypeId, double> epigenetic_rates;  //!< Epigenetic mutation rates 
 
     /**
+     * @brief The empty constructor
+     */
+    EpigeneticGenotype();
+
+    /**
      * @brief A constructor
      * 
      * @param somatic_genotype is the somatic genotype of the new object
@@ -207,7 +213,51 @@ public:
      */
     const MethylationSignature& get_methylation_signature() const;
 
+    /**
+     * @brief Save the epigenetic genotype in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    void save(ARCHIVE& archive) const
+    {
+        archive & id 
+                & somatic_id 
+                & name 
+                & methylation_signature 
+                & event_rates
+                & epigenetic_rates;
+    }
+
+    /**
+     * @brief Load a epigenetic genotype from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded epigenetic genotype 
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    static EpigeneticGenotype load(ARCHIVE& archive)
+    {
+        EpigeneticGenotype genotype;
+
+        archive & genotype.id 
+                & genotype.somatic_id 
+                & genotype.name 
+                & genotype.methylation_signature 
+                & genotype.event_rates
+                & genotype.epigenetic_rates;
+
+        if (EpigeneticGenotype::counter < genotype.id+1) {
+            EpigeneticGenotype::counter = genotype.id+1;
+        }
+
+        return genotype;
+    }
+
     friend class SomaticGenotype;
+    friend class Species;
 };
 
 /**

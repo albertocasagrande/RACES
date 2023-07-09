@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.6
- * @date 2023-07-08
+ * @version 0.7
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,6 +38,7 @@
 #include <string>
 #include <memory> // SpeciesView::const_iterator
 
+#include "archive.hpp"
 #include "time.hpp"
 #include "species.hpp"
 #include "cell.hpp"
@@ -531,6 +532,52 @@ public:
      * @return the tissue size for the 3 dimensions
      */
     std::vector<size_t> size() const;
+
+    /**
+     * @brief Save a tissue in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & size()
+                & name
+                & species
+                & somatic_genotope_pos;
+    }
+
+    /**
+     * @brief Load a tissue from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded tissue
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    static Tissue load(ARCHIVE& archive)
+    {
+        std::vector<size_t> size;
+
+        archive & size;
+
+        Tissue tissue(size[0],size[1],size[2]);
+
+        archive & tissue.name
+                & tissue.species
+                & tissue.somatic_genotope_pos;
+
+        size_t i=0;
+        for (auto& species : tissue.species) {
+            tissue.pos_map[species.get_id()] = ++i;
+            for (auto& cell : species) {
+                tissue.cell_pointer(cell) = const_cast<CellInTissue*>(&cell);
+            }
+        }
+
+        return tissue;
+    }
 
     template<typename TISSUE_TYPE>
     friend class BaseCellInTissueProxy;

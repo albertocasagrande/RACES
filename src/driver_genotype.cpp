@@ -2,8 +2,8 @@
  * @file driver.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.3
- * @date 2023-07-08
+ * @version 0.4
+ * @date 2023-07-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,6 +53,10 @@ std::ostream& operator<<(std::ostream& out, const EpigeneticRates& epigentic_rat
             << ",demethylation: " << epigentic_rates.demethylation_rate() << "}";
     return out;
 }
+
+EpigeneticGenotype::EpigeneticGenotype():
+    id(0), somatic_id(0)
+{}
 
 EpigeneticGenotype::EpigeneticGenotype(const SomaticGenotype& somatic_genotype,
                                        const size_t num_of_promoters):
