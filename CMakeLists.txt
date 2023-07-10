@@ -32,6 +32,7 @@ endif()
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(GENERIC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/somatic_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
