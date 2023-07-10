@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.5
- * @date 2023-07-09
+ * @version 0.6
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -69,6 +69,15 @@ Species& Species::operator=(const Species& orig)
     for (const auto& cell: orig.cells) {
         this->add(*cell);
     }
+
+    return *this;
+}
+
+Species& Species::operator=(Species&& orig)
+{
+    reset();
+
+    std::swap(*this, orig);
 
     return *this;
 }
@@ -177,4 +186,14 @@ std::ostream& operator<<(std::ostream& out, const Species& species)
     return out;
 }
 
-};
+}
+
+namespace std
+{
+void swap(Races::Species& a, Races::Species& b)
+{
+    std::swap(static_cast<Races::EpigeneticGenotype&>(a),static_cast<Races::EpigeneticGenotype&>(b));
+    std::swap(a.cells,b.cells);
+    std::swap(a.pos_map,b.pos_map);
+}
+}

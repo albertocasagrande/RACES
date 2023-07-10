@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.7
- * @date 2023-07-09
+ * @version 0.8
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,6 +42,24 @@
 #include "time.hpp"
 #include "cell.hpp"
 #include "driver_genotype.hpp"
+
+
+
+namespace Races {
+    class Species;
+}
+
+namespace std {
+
+/**
+ * @brief Swap two species
+ * 
+ * @param a is a species
+ * @param b is a species
+ */
+void swap(Races::Species& a, Races::Species& b);
+
+}
 
 namespace Races {
 
@@ -190,6 +208,14 @@ public:
     Species& operator=(const Species& orig);
 
     /**
+     * @brief The replace operator
+     * 
+     * @param orig is the original object 
+     * @return a reference to the updated object
+     */
+    Species& operator=(Species&& orig);
+
+    /**
      * @brief Get the initial iterator for the species cells
      * 
      * @return the initial iterator for the species cells
@@ -330,6 +356,8 @@ public:
 
     template<typename LOGGER>
     friend class BasicSimulator;
+
+    friend void std::swap(Species& a, Species& b);
 };
 
 /**
