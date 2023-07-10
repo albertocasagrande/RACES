@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.7
- * @date 2023-07-09
+ * @version 0.8
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -444,10 +444,9 @@ public:
      * 
      * @param genotype is the driver genotype of the cell
      * @param position is the initial position in the tissue
-     * @param passenger_mutation is the number of cell passenger mutations
      * @return a reference to the updated object
      */
-    Tissue& add(const EpigeneticGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations=0);
+    Tissue& add(const EpigeneticGenotypeId genotype, const PositionInTissue position);
 
     /**
      * @brief Add a new species to the tissue

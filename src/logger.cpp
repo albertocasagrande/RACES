@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.5
- * @date 2023-07-08
+ * @version 0.6
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -83,7 +83,6 @@ void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, con
        << cell.get_id() << " " 
        << cell.get_parent_id() << " " 
        << cell.get_genotype_id() << " "
-       << cell.get_passenger_mutations() << " " 
        << time << std::endl;
 }
 

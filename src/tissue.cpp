@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.6
- * @date 2023-07-08
+ * @version 0.7
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -157,7 +157,7 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-Tissue& Tissue::add(const EpigeneticGenotypeId genotype, const PositionInTissue position, const unsigned int passenger_mutations)
+Tissue& Tissue::add(const EpigeneticGenotypeId genotype, const PositionInTissue position)
 {
     auto*& cell = space[position.x][position.y][position.z];
 
@@ -167,7 +167,7 @@ Tissue& Tissue::add(const EpigeneticGenotypeId genotype, const PositionInTissue 
 
     Species& species = get_species(genotype);
 
-    cell = species.add(CellInTissue(genotype, passenger_mutations, position));
+    cell = species.add(CellInTissue(genotype, position));
 
     return *this;
 }

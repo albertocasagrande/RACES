@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.8
- * @date 2023-07-09
+ * @version 0.9
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,8 +53,6 @@ protected:
 
     EpigeneticGenotypeId genotype;          //!< cell species reference
 
-    unsigned int passenger_mutations;   //!< number of passenger mutations
-
     /**
      * @brief The empty constructor
      */
@@ -72,18 +70,9 @@ public:
      * @brief Create a new cell
      * 
      * @param genotype is the driver genotype identifier
-     * @param passenger_mutations is the number of passenger mutations
-     */
-    Cell(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations);
-
-    /**
-     * @brief Create a new cell
-     * 
-     * @param genotype is the driver genotype identifier
-     * @param passenger_mutations is the number of passenger mutations
      * @param parent_id is the parent cell identifier
      */
-    Cell(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const CellId parent_id);
+    Cell(const EpigeneticGenotypeId genotype, const CellId parent_id);
 
     /**
      * @brief Get the cell identifier
@@ -107,19 +96,11 @@ public:
     const EpigeneticGenotypeId& get_genotype_id() const;
 
     /**
-     * @brief Get the number of passenger mutations
-     * 
-     * @return a constant reference to the number of passenger mutations
-     */
-    const unsigned int& get_passenger_mutations() const;
-
-    /**
      * @brief Generate a descendent cell
      * 
-     * @param new_passenger_mutations is the number of new passenger mutations
      * @return the generated cell
      */
-    Cell generate_descendent(const unsigned int new_passenger_mutations=0) const;
+    Cell generate_descendent() const;
 
     /**
      * @brief Save a cell in an archive
@@ -132,8 +113,7 @@ public:
     {
         archive & id 
                 & parent 
-                & genotype 
-                & passenger_mutations;
+                & genotype;
     }
 
     /**
@@ -150,8 +130,7 @@ public:
 
         archive & cell.id 
                 & cell.parent 
-                & cell.genotype 
-                & cell.passenger_mutations;
+                & cell.genotype;
 
         return cell;
     }
@@ -202,10 +181,9 @@ protected:
      * @brief A cell in tissue constructor
      * 
      * @param genotype is the cell driver genotype id
-     * @param passenger_mutations is the number of passenger mutations
      * @param position is the cell position
      */
-    CellInTissue(const EpigeneticGenotypeId genotype, unsigned int passenger_mutations, const PositionInTissue& position);
+    CellInTissue(const EpigeneticGenotypeId genotype, const PositionInTissue& position);
 
     /**
      * @brief A cell in tissue constructor
@@ -322,14 +300,9 @@ inline const EpigeneticGenotypeId& Cell::get_genotype_id() const
     return genotype;
 }
 
-inline const unsigned int& Cell::get_passenger_mutations() const
+inline Cell Cell::generate_descendent() const
 {
-    return passenger_mutations;
-}
-
-inline Cell Cell::generate_descendent(const unsigned int new_passenger_mutations) const
-{
-    return Cell(get_genotype_id(), passenger_mutations+new_passenger_mutations, get_id());
+    return Cell(get_genotype_id(), get_id());
 }
 
 inline bool CellInTissue::has_driver_mutations() const {

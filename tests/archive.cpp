@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.1
- * @date 2023-07-09
+ * @version 0.2
+ * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -126,8 +126,7 @@ bool operator==(const Races::Cell& a, const Races::Cell& b)
 {
     return (a.get_id()==b.get_id() && 
             a.get_parent_id()==b.get_parent_id() &&
-            a.get_genotype_id()==b.get_genotype_id() &&
-            a.get_passenger_mutations()==b.get_passenger_mutations());
+            a.get_genotype_id()==b.get_genotype_id());
 }
 
 bool operator==(const Races::CellInTissue& a, const Races::CellInTissue& b)
@@ -258,7 +257,7 @@ BOOST_AUTO_TEST_CASE(binary_map)
 
 BOOST_AUTO_TEST_CASE(binary_cell)
 {
-    std::vector<Races::Cell> to_save{{0}, {1,300}, {2, 200, 1}};
+    std::vector<Races::Cell> to_save{{0}, {1,300}, {2, 200}};
 
     auto filename = get_a_temporary_path();
     {
@@ -278,7 +277,6 @@ BOOST_AUTO_TEST_CASE(binary_cell)
             BOOST_CHECK(read_value.get_id()==value.get_id());
             BOOST_CHECK(read_value.get_parent_id()==value.get_parent_id());
             BOOST_CHECK(read_value.get_genotype_id()==value.get_genotype_id());
-            BOOST_CHECK(read_value.get_passenger_mutations()==value.get_passenger_mutations());
         }
     }
 
