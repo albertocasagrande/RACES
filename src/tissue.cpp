@@ -2,7 +2,7 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.7
+ * @version 0.8
  * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
@@ -118,18 +118,50 @@ CellInTissue Tissue::CellInTissueProxy::copy_and_kill()
     return copy;
 }
 
-Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size):
-    name(name)
+Tissue::CellInTissueProxy::operator CellInTissue&()
 {
-    std::vector<CellInTissue *> z_vector(z_size, nullptr);
-    std::vector<std::vector<CellInTissue *>> y_vector(y_size, z_vector);
-    std::vector<std::vector<std::vector<CellInTissue *>>> x_vector(x_size, y_vector);
+    const auto ptr = tissue.cell_pointer(position);
 
-    std::swap(x_vector, space);
+    if (ptr!=nullptr) {
+        return *ptr;
+    }
+
+    throw std::runtime_error("Non-driver mutated cell");
+}
+
+Tissue::Tissue(const std::string name, const std::vector<AxisSize> sizes):
+    name(name), dimensions(sizes.size())
+{
+    AxisSize z_size{1};
+    if (dimensions==3) {
+        z_size = sizes[2];
+    }
+
+    std::vector<CellInTissue *> z_vector(z_size, nullptr);
+    std::vector<std::vector<CellInTissue *>> y_vector(sizes[1], z_vector);
+    space = std::vector<std::vector<std::vector<CellInTissue *>>>(sizes[0], y_vector);
+}
+
+Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size):
+    Tissue(name, {x_size, y_size, z_size})
+{
+}
+
+Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size):
+    Tissue(name, {x_size, y_size})
+{
 }
 
 Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
-    Tissue(name, x_size, y_size, z_size)
+    Tissue(name, {x_size, y_size, z_size})
+{
+    for (const auto& genotype: genotypes) {
+        add_species(genotype);
+    }
+}
+
+Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
+    Tissue(name, {x_size, y_size})
 {
     for (const auto& genotype: genotypes) {
         add_species(genotype);
@@ -137,12 +169,17 @@ Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genoty
 }
 
 Tissue::Tissue(const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
-    Tissue("", x_size, y_size, z_size)
+    Tissue("", {x_size, y_size, z_size})
 {
 }
 
 Tissue::Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
+{
+}
+
+Tissue::Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
+    Tissue("", genotypes, x_size, y_size)
 {
 }
 
@@ -237,6 +274,14 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
     cell_pointer(from_position) = nullptr;
 
     return lost_cell;
+}
+
+std::vector<size_t> Tissue::size() const
+{
+    if (dimensions==2) {
+        return std::vector<size_t>{space.size(), space[0].size()};
+    }
+    return std::vector<size_t>{space.size(), space[0].size(), space[0][0].size()};
 }
 
 };

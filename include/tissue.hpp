@@ -2,7 +2,7 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.8
+ * @version 0.9
  * @date 2023-07-10
  * 
  * @copyright Copyright (c) 2023
@@ -55,6 +55,8 @@ class Tissue {
     std::map<EpigeneticGenotypeId, size_t> pos_map; //!< The identifier to position map
     SomaticGenotypePosition somatic_genotope_pos;   //!< The positions of the species associated to the same somatic genotype 
     
+    uint8_t dimensions;                             //!< The number of space dimension for the tissue
+
     std::vector<std::vector<std::vector<CellInTissue *>>> space;     //!< Space in the tissue
 
     /**
@@ -249,7 +251,7 @@ public:
             }
 
             /**
-             * @brief Test whether two iterator are the same
+             * @brief Test whether two iterators are the same
              * 
              * @param a is the first iterator to compare
              * @param b is the second iterator to compare
@@ -259,19 +261,6 @@ public:
             friend inline bool operator==(const const_iterator& a, const const_iterator& b)
             { 
                 return (*a.it == *b.it) && (a.species == b.species); 
-            }
-
-            /**
-             * @brief Test whether two iterator differs
-             * 
-             * @param a is the first iterator to compare
-             * @param b is the second iterator to compare
-             * @return `true` if and only if the two iterators 
-             *      do not refer to the same object
-             */
-            friend inline bool operator!=(const const_iterator& a, const const_iterator& b)
-            { 
-                return !(a==b); 
             }
 
             friend class Tissue::SpeciesView;
@@ -338,7 +327,7 @@ public:
 
         bool has_driver_mutations() const;
 
-        operator CellInTissue() const;
+        operator const CellInTissue&() const;
 
         friend class Tissue;
     };
@@ -362,6 +351,8 @@ public:
     public:
         CellInTissueProxy& operator=(const Cell& cell);
 
+        operator CellInTissue&();
+
         void kill();
 
         CellInTissue copy_and_kill();
@@ -370,36 +361,69 @@ public:
     };
 
     /**
-     * @brief A constructor
+     * @brief A constructor for a 3D tissue
      * 
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size=1);
+    Tissue(const AxisSize x_size, const AxisSize  y_size, const AxisSize z_size);
 
     /**
-     * @brief A constructor
+     * @brief A constructor for a 2D tissue
+     * 
+     * @param x_size is the size of the tissue on the x axis
+     * @param y_size is the size of the tissue on the y axis
+     */
+    Tissue(const AxisSize x_size, const AxisSize y_size);
+
+    /**
+     * @brief A constructor for a 3D tissue
      * 
      * @param genotypes is the vector of driver genotypes
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
+    Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
+
+    /**
+     * @brief A constructor for a 2D tissue
+     * 
+     * @param genotypes is the vector of driver genotypes
+     * @param x_size is the size of the tissue on the x axis
+     * @param y_size is the size of the tissue on the y axis
+     */
+    Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
 
     /**
      * @brief A constructor
+     * 
+     * @param sizes are the sizes of the tissue
+     */
+    Tissue(const std::string name, const std::vector<AxisSize> sizes);
+
+    /**
+     * @brief A constructor for a 3D tissue
      * 
      * @param name is the tissue name
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size=1);
+    Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size);
 
     /**
-     * @brief A constructor
+     * @brief A constructor for a 2D tissue
+     * 
+     * @param name is the tissue name
+     * @param x_size is the size of the tissue on the x axis
+     * @param y_size is the size of the tissue on the y axis
+     */
+    Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size);
+
+    /**
+     * @brief A constructor for a 3D tissue
      * 
      * @param name is the tissue name
      * @param genotypes is the vector of driver genotypes
@@ -407,7 +431,17 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size=1);
+    Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
+
+    /**
+     * @brief A constructor for a 2D tissue
+     * 
+     * @param name is the tissue name
+     * @param genotypes is the vector of driver genotypes
+     * @param x_size is the size of the tissue on the x axis
+     * @param y_size is the size of the tissue on the y axis
+     */
+    Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
 
     /**
      * @brief Get the initial iterator for the tissue species
@@ -512,6 +546,13 @@ public:
     const std::string& get_name() const;
 
     /**
+     * @brief Get tissue name
+     * 
+     * @return a constant reference to the tissue name
+     */
+    const uint8_t& num_of_dimensions() const;
+
+    /**
      * @brief Push contiguous driver mutated cells in a direction
      * 
      * This method pushes the contiguous driver mutated cells from a
@@ -582,6 +623,19 @@ public:
     friend class BaseCellInTissueProxy;
 };
 
+/**
+ * @brief Test whether two iterators differs
+ * 
+ * @param a is the first iterator to compare
+ * @param b is the second iterator to compare
+ * @return `true` if and only if the two iterators 
+ *      do not refer to the same object
+ */
+inline bool operator!=(const Tissue::SpeciesView::const_iterator& a, const Tissue::SpeciesView::const_iterator& b)
+{ 
+    return !(a==b); 
+}
+
 /* Inline implementation */
 
 inline std::vector<Species>::const_iterator Tissue::begin() const
@@ -622,14 +676,14 @@ inline bool Tissue::is_valid(const PositionInTissue& position) const
             position.x>=0 && position.y>=0 && position.z>=0);
 }
 
-inline std::vector<size_t> Tissue::size() const
-{
-    return std::vector<size_t>{space.size(), space[0].size(), space[0][0].size()};
-}
-
 inline const std::string& Tissue::get_name() const
 {
     return name;
+}
+
+inline const uint8_t& Tissue::num_of_dimensions() const
+{
+    return dimensions;
 }
 
 inline CellInTissue*& Tissue::cell_pointer(const PositionInTissue& position)
@@ -659,7 +713,7 @@ inline bool Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::has_driver_mutations() c
 }
 
 template<typename TISSUE_TYPE>
-Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::operator CellInTissue() const
+Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::operator const CellInTissue&() const
 {
     const auto ptr = tissue.cell_pointer(position);
 
