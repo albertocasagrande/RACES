@@ -2,7 +2,7 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
@@ -105,6 +105,7 @@ public:
  */
 namespace Archive 
 {
+
 /**
  * @brief The namespace for basic classes
  */
@@ -278,170 +279,9 @@ struct In : public Basic
 
 }  // Basic
 
-/**
- * @brief The binary sub-module namespace
- */
-namespace Binary 
-{
+}  // Archive
 
-/**
- * @brief The binary output archive
- */
-struct Out : public Archive::Basic::Out
-{
-    /**
-     * @brief The empty constructor
-     */
-    Out();
-
-    /**
-     * @brief A constructor
-     * 
-     * This method creates an output archive and opens the corresponding 
-     * binary stream in output.
-     * 
-     * @param filename is the archive file name
-     */
-    Out(std::filesystem::path filename);
-
-    /**
-     * @brief A constructor
-     * 
-     * This method creates an output archive and opens the corresponding 
-     * binary stream in output.
-     * 
-     * @param filename is the archive file name
-     * @param mode is the archive mode 
-     */
-    Out(std::filesystem::path filename, std::ios_base::openmode mode);
-
-    /**
-     * @brief Open an archive file
-     * 
-     * This method opens the corresponding binary stream in output.
-     * 
-     * @param filename is the archive file name
-     */
-    inline void open(std::filesystem::path filename)
-    {
-        open(filename, std::fstream::binary);
-    }
-
-    /**
-     * @brief Open an archive file
-     * 
-     * This method opens the corresponding binary stream in output.
-     * 
-     * @param filename is the archive file name
-     * @param mode is the archive mode 
-     */
-    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
-    {
-        Archive::Basic::Out::open(filename, std::fstream::binary | mode);
-    }
-
-    /**
-     * @brief Save a string in the archive
-     * 
-     * @param text is the string to save
-     * @return a reference to the updated archive 
-     */
-    Out& operator&(const std::string& text);
-
-    /**
-     * @brief Save an arithmetic value in the archive
-     * 
-     * @tparam ARITHMETIC_TYPE is the type of the value to save
-     * @param value is the value to save
-     * @return a reference to the updated archive 
-     */
-    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
-    inline Out& operator&(const ARITHMETIC_TYPE& value)
-    {
-        fs.write((char const*)(&value), sizeof(ARITHMETIC_TYPE));
-
-        return *this;
-    }
-};
-
-struct In : public Archive::Basic::In 
-{
-    /**
-     * @brief A constructor
-     * 
-     * This method creates a input archive and opens the corresponding 
-     * binary stream in input.
-     * 
-     * @param filename is the archive file name
-     */
-    In(std::filesystem::path filename);
-
-    /**
-     * @brief A constructor
-     * 
-     * This method creates an input archive and opens the corresponding 
-     * binary stream in input.
-     * 
-     * @param filename is the archive file name
-     * @param mode is the archive mode 
-     */
-    In(std::filesystem::path filename, std::ios_base::openmode mode);
-        
-    /**
-     * @brief Open an input archive file
-     * 
-     * This method opens the corresponding binary stream in input.
-     * 
-     * @param filename is the archive file name
-     * @param mode is the archive mode 
-     */
-    inline void open(std::filesystem::path filename)
-    {
-        open(filename, std::fstream::binary );
-    }
-        
-    /**
-     * @brief Open an input archive file
-     * 
-     * This method opens the corresponding binary stream in input.
-     * 
-     * @param filename is the archive file name
-     */
-    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
-    {
-        Archive::Basic::In::open(filename, std::fstream::binary | mode);
-    }
-
-    /**
-     * @brief Load an arithmetic value from the archive
-     * 
-     * @tparam ARITHMETIC_TYPE is the type of the value to load
-     * @param value is the object in which the value is load
-     * @return a reference to the updated archive 
-     */
-    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
-    inline In& operator&(ARITHMETIC_TYPE& value)
-    {
-        fs.read((char *)(&value), sizeof(ARITHMETIC_TYPE));
-
-        return *this;
-    }
-
-    /**
-     * @brief Load a string from the archive
-     * 
-     * @param text is the object in which the string is load
-     * @return a reference to the updated archive 
-     */
-    In& operator&(std::string& text);
-};
-
-}   // Binary
-
-}   // Archive
-
-}   // Races
-
+}  // Races
 
 /**
  * @brief Load an object implementing the static method `load(ARCHIVE&)`
@@ -715,5 +555,229 @@ ARCHIVE& operator&(ARCHIVE& archive, const std::priority_queue<T,std::vector<T>,
 
     return archive;
 }
+
+namespace Races
+{
+
+/**
+ * @brief The Archive module namespace
+ */
+namespace Archive 
+{
+
+/**
+ * @brief The binary sub-module namespace
+ */
+namespace Binary 
+{
+
+/**
+ * @brief The binary output archive
+ */
+struct Out : public Archive::Basic::Out
+{
+    /**
+     * @brief The empty constructor
+     */
+    Out();
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an output archive and opens the corresponding 
+     * binary stream in output.
+     * 
+     * @param filename is the archive file name
+     */
+    Out(std::filesystem::path filename);
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an output archive and opens the corresponding 
+     * binary stream in output.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    Out(std::filesystem::path filename, std::ios_base::openmode mode);
+
+    /**
+     * @brief Open an archive file
+     * 
+     * This method opens the corresponding binary stream in output.
+     * 
+     * @param filename is the archive file name
+     */
+    inline void open(std::filesystem::path filename)
+    {
+        open(filename, std::fstream::binary);
+    }
+
+    /**
+     * @brief Open an archive file
+     * 
+     * This method opens the corresponding binary stream in output.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
+    {
+        Archive::Basic::Out::open(filename, std::fstream::binary | mode);
+    }
+
+    /**
+     * @brief Save a string in the archive
+     * 
+     * @param text is the string to save
+     * @return a reference to the updated archive 
+     */
+    Out& operator&(const std::string& text);
+
+    /**
+     * @brief Save an arithmetic value in the archive
+     * 
+     * @tparam ARITHMETIC_TYPE is the type of the value to save
+     * @param value is the value to save
+     * @return a reference to the updated archive 
+     */
+    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
+    inline Out& operator&(const ARITHMETIC_TYPE& value)
+    {
+        fs.write((char const*)(&value), sizeof(ARITHMETIC_TYPE));
+
+        return *this;
+    }
+};
+
+/**
+ * @brief A class to count the bytes required to store an object
+ */
+class ByteCounter : public Out
+{
+    std::streampos byte_counter;     //!< the byte counter 
+
+    /**
+     * @brief The constructor
+     * 
+     * This is the only constructor and it is meant to be 
+     * exclusively used by the static method `bytes_in_archive`.
+     */
+    ByteCounter();
+
+public:
+    /**
+     * @brief Measure the space required to store a string
+     * 
+     * @param text is the string whose archive space is required
+     * @return a reference to the updated archive 
+     */
+    ByteCounter& operator&(const std::string& text);
+
+    /**
+     * @brief Measure the space required by an arithmetic value
+     * 
+     * @tparam ARITHMETIC_TYPE is the type of the value
+     * @param value is the value whore archive required space is aimed
+     * @return a reference to the updated archive
+     */
+    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
+    inline ByteCounter& operator&(const ARITHMETIC_TYPE& value)
+    {
+        (void)value;
+
+        byte_counter += sizeof(ARITHMETIC_TYPE);
+
+        return *this;
+    }
+
+    template<typename T>
+    static std::streampos bytes_in_archive(const T& object) {
+        ByteCounter bc;
+
+        bc & object;
+
+        return bc.byte_counter;
+    }
+};
+
+struct In : public Archive::Basic::In 
+{
+    /**
+     * @brief A constructor
+     * 
+     * This method creates a input archive and opens the corresponding 
+     * binary stream in input.
+     * 
+     * @param filename is the archive file name
+     */
+    In(std::filesystem::path filename);
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an input archive and opens the corresponding 
+     * binary stream in input.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    In(std::filesystem::path filename, std::ios_base::openmode mode);
+        
+    /**
+     * @brief Open an input archive file
+     * 
+     * This method opens the corresponding binary stream in input.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename)
+    {
+        open(filename, std::fstream::binary );
+    }
+        
+    /**
+     * @brief Open an input archive file
+     * 
+     * This method opens the corresponding binary stream in input.
+     * 
+     * @param filename is the archive file name
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
+    {
+        Archive::Basic::In::open(filename, std::fstream::binary | mode);
+    }
+
+    /**
+     * @brief Load an arithmetic value from the archive
+     * 
+     * @tparam ARITHMETIC_TYPE is the type of the value to load
+     * @param value is the object in which the value is load
+     * @return a reference to the updated archive 
+     */
+    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
+    inline In& operator&(ARITHMETIC_TYPE& value)
+    {
+        fs.read((char *)(&value), sizeof(ARITHMETIC_TYPE));
+
+        return *this;
+    }
+
+    /**
+     * @brief Load a string from the archive
+     * 
+     * @param text is the object in which the string is load
+     * @return a reference to the updated archive 
+     */
+    In& operator&(std::string& text);
+};
+
+}   // Binary
+
+}   // Archive
+
+}   // Races
 
 #endif // __RACES_ARCHIVE__

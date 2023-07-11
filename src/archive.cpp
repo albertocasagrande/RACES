@@ -2,7 +2,7 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
@@ -109,6 +109,18 @@ Out& Out::operator&(const std::string& text)
     size_t size = text.size();
     fs.write((char const*)(&size), sizeof(size_t));
     fs.write(text.c_str(), text.size()*sizeof(char));
+
+    return *this;
+}
+
+ByteCounter::ByteCounter():
+    Out(), byte_counter(0)
+{}
+
+ByteCounter& ByteCounter::operator&(const std::string& text)
+{
+    byte_counter += sizeof(size_t);
+    byte_counter += text.size()*sizeof(char);
 
     return *this;
 }
