@@ -2,7 +2,7 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.10
+ * @version 0.11
  * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
@@ -51,7 +51,7 @@ protected:
     CellId id;                          //!< cell identifier
     CellId parent;                      //!< parent cell
 
-    EpigeneticGenotypeId genotype;          //!< cell species reference
+    EpigeneticGenotypeId genotype;      //!< cell species reference
 
     /**
      * @brief The empty constructor
@@ -160,6 +160,83 @@ void swap(Cell& a, Cell &b);
  * @return a reference to the updated stream
  */
 std::ostream& operator<<(std::ostream& os, const Cell& cell);
+
+/**
+ * @brief Labelled cell
+ * 
+ * This template represents cells labelled by information, e.g., 
+ * their birth time or a list of their passenger mutations. 
+ * 
+ * @tparam LABEL is the label type
+ */
+template<typename LABEL>
+class LabelledCell : public Cell
+{
+    /**
+     * @brief The empty constructor
+     */
+    LabelledCell():
+        Cell(), label()
+    {}
+public:
+    LABEL label;        //!< The cell label
+
+    /**
+     * @brief A constructor
+     * 
+     * @param cell is the unlabelled cell
+     * @param label is the label
+     */
+    LabelledCell(const Cell& cell, LABEL label):
+        Cell(cell), label(label)
+    {}
+
+    /**
+     * @brief Save a labelled cell in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        static_cast<const Cell *>(this)->save(archive);
+
+        archive & label;
+    }
+
+    /**
+     * @brief Load a labelled cell from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load labelled cell
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static LabelledCell<LABEL> load(ARCHIVE& archive)
+    {
+        LabelledCell<LABEL> cell;
+        archive & static_cast<Cell &>(cell) & cell.label;
+
+        return cell;
+    }
+
+    template<typename LABEL2>
+    friend void swap(LabelledCell<LABEL2>& a, LabelledCell<LABEL2> &b);
+};
+
+/**
+ * @brief Swap two labelled cells
+ * 
+ * @param a is a cell
+ * @param b is a cell
+ */
+template<typename LABEL>
+void swap(LabelledCell<LABEL>& a, LabelledCell<LABEL> &b)
+{
+    std::swap(static_cast<Cell&>(a),static_cast<Cell&>(b));
+    std::swap(a.label,b.label);
+}
 
 class Species;
 
