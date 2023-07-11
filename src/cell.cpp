@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.7
- * @date 2023-07-10
+ * @version 0.8
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,13 +43,15 @@ Cell::Cell():
 }
 
 Cell::Cell(const EpigeneticGenotypeId genotype):
-    id(++Cell::counter), parent(Cell::counter), genotype(genotype)
+    id(Cell::counter), parent(Cell::counter), genotype(genotype)
 {
+    ++Cell::counter;
 }
 
 Cell::Cell(const EpigeneticGenotypeId genotype, const CellId parent_id):
-    id(++Cell::counter), parent(parent_id), genotype(genotype)
+    id(Cell::counter), parent(parent_id), genotype(genotype)
 {
+    ++Cell::counter;
 }
 
 void swap(Cell& a, Cell &b)
