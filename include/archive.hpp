@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.1
- * @date 2023-07-09
+ * @version 0.2
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -100,242 +100,423 @@ public:
     static constexpr bool value = type::value;
 };
 
-namespace Archive {
-
-namespace Out {
-
-class Basic {};
-
-class Binary : public Basic 
+/**
+ * @brief The Archive module namespace
+ */
+namespace Archive 
 {
-    std::ofstream ofs;
-public:
-    Binary();
+/**
+ * @brief The namespace for basic classes
+ */
+namespace Basic
+{
 
-    Binary(std::filesystem::path position);
+/**
+ * @brief A basic archive class
+ */
+struct Basic
+{
+    std::fstream fs;  //!< The archive file stream
 
-    inline void open(std::filesystem::path position)
+    /**
+     * @brief The empty constructor
+     */
+    Basic();
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates a basic archive and opens the corresponding stream.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    Basic(std::filesystem::path filename, std::ios_base::openmode mode);
+
+    /**
+     * @brief Open an archive file
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
     {
-        ofs.open(position, std::fstream::binary | std::fstream::out);
+        fs.open(filename, mode);
     }
 
+    /**
+     * @brief Close the archive
+     * 
+     */
     inline void close()
     {
-        ofs.close();
+        fs.close();
     }
 
+    /**
+     * @brief Test whether the archive file is open
+     * 
+     * @return `true` if and only if the archive is open
+     */
     inline bool is_open() const
     {
-        return ofs.is_open();
+        return fs.is_open();
     }
 
-    Binary& operator&(const std::string& text);
-
-    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
-    Binary& operator&(const ARITHMETIC_TYPE& value)
-    {
-        ofs.write((char const*)(&value), sizeof(ARITHMETIC_TYPE));
-
-        return *this;
-    }
-
-    template<class T, class Alloc>
-    Binary& operator&(const std::vector<T,Alloc>& v)
-    {
-        *this & v.size();
-        for (const T& value : v) {
-            *this & value;
-        }
-
-        return *this;
-    }
-
-    template<class Key, class T, class Compare, class Allocator>
-    Binary& operator&(const std::map<Key,T,Compare,Allocator>& m)
-    {
-        *this & m.size();
-        for (const auto& [key,value] : m) {
-            *this & key & value;
-        }
-
-        return *this;
-    }
-
-    template<class T, class Compare>
-    Binary& operator&(const std::priority_queue<T,std::vector<T>,Compare>& queue)
-    {
-        *this & queue.size();
-        for (const T& value : queue) {
-            *this & value;
-        }
-
-        return *this;
-    }
-
-    ~Binary();
+    /**
+     * @brief The destructor
+     */
+    ~Basic();
 };
 
-}
-
-namespace In 
+/**
+ * @brief The basic output archive
+ */
+struct Out : public Basic
 {
+    /**
+     * @brief The empty constructor
+     */
+    Out();
 
-class Basic {};
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an output archive and opens the corresponding stream 
+     * in output.
+     * 
+     * @param filename is the archive file name
+     */
+    Out(std::filesystem::path filename);
 
-class Binary : public Basic 
-{
-    std::ifstream ifs;
-public:
-    Binary(std::filesystem::path position);
-
-    inline void close()
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an output archive and opens the corresponding stream 
+     * in output.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    Out(std::filesystem::path filename, std::ios_base::openmode mode);
+    
+    /**
+     * @brief Open an archive file
+     * 
+     * This method opens the corresponding stream in output.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
     {
-        ifs.close();
+        Basic::open(filename, mode | std::fstream::out);
     }
-
-    inline bool is_open() const
-    {
-        return ifs.is_open();
-    }
-
-    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
-    Binary& operator&(ARITHMETIC_TYPE& value)
-    {
-        ifs.read((char *)(&value), sizeof(ARITHMETIC_TYPE));
-
-        return *this;
-    }
-
-    Binary& operator&(std::string& text);
-
-    template<class T, class Alloc, std::enable_if_t<has_load<T, Races::Archive::In::Binary>::value, bool> = true>
-    Binary& operator&(std::vector<T,Alloc>& v)
-    {
-        size_t size;
-
-        *this & size;
-
-        v.clear();
-
-        for (size_t i=0; i<size; ++i) {
-            v.push_back(T::load(*this));
-        }
-
-        return *this;
-    }
-
-/*
-    template<class Key, class T, class Compare, class Allocator, 
-             std::enable_if_t<has_load<Key, Races::Archive::In::Binary>::value, bool> = true>
-    Binary& operator&(std::map<Key,T,Compare,Allocator>& m)
-    {
-        size_t size;
-
-        *this & size;
-
-        m.clear();
-
-        for (size_t i=0; i<size; ++i) {
-
-            m.emplace(key, value);
-        }
-
-        return *this;
-    }
-*/
-
-    template<class T, class Alloc, std::enable_if_t<!has_load<T, Races::Archive::In::Binary>::value, bool> = true>
-    Binary& operator&(std::vector<T,Alloc>& v)
-    {
-        size_t size;
-
-        *this & size;
-
-        v.clear();
-
-        for (size_t i=0; i<size; ++i) {
-            T value;
-
-            *this & value;
-
-            v.push_back(std::move(value));
-        }
-
-        return *this;
-    }
-
-    template<class Key, class T, class Compare, class Allocator, std::enable_if_t<!has_load<T, Races::Archive::In::Binary>::value, bool> = true>
-    Binary& operator&(std::map<Key,T,Compare,Allocator>& m)
-    {
-        size_t size;
-
-        *this & size;
-
-        m.clear();
-
-        for (size_t i=0; i<size; ++i) {
-            Key key;
-            T value;
-
-            *this & key & value;
-
-            m.emplace(key, value);
-        }
-
-        return *this;
-    }
-
-    template<class T, class Compare>
-    Binary& operator&(std::priority_queue<T,std::vector<T>,Compare>& queue)
-    {
-        std::vector<T> queue_v;
-
-        *this & queue_v;
-
-        Compare compare;
-
-        queue = std::priority_queue<T,std::vector<T>,Compare>(compare, std::move(queue_v));
-
-        return *this;
-    }
-
-    ~Binary();
 };
 
-}
-
-}
-
-template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<has_save<VALUE_TYPE, ARCHIVE>::value &&
-                                                           std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
+/**
+ * @brief The basic input archive
+ */
+struct In : public Basic
 {
-    value.save(archive);
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an input archive and opens the corresponding stream 
+     * in input.
+     * 
+     * @param filename is the archive file name
+     */
+    In(std::filesystem::path filename);
 
-    return archive;
-}
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an input archive and opens the corresponding stream 
+     * in input.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    In(std::filesystem::path filename, std::ios_base::openmode mode);
+        
+    /**
+     * @brief Open an archive file
+     * 
+     * This method opens the corresponding stream in input.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
+    {
+        Basic::open(filename, mode | std::fstream::in);
+    }
 
-template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<has_load<VALUE_TYPE, ARCHIVE>::value &&
-                                                           std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& value)
+    /**
+     * @brief Set the archive position
+     * 
+     * This method sets the position of the archive stream to the 
+     * specified position
+     * 
+     * @param pos is the aimed position in the archive stream
+     */
+    inline In& seekg(std::streampos pos)
+    {
+        fs.seekg(pos);
+
+        return *this;
+    }
+
+    /**
+     * @brief Get the archive file size
+     * 
+     * @return the archive file size
+     */
+    std::streampos size();
+};
+
+}  // Basic
+
+/**
+ * @brief The binary sub-module namespace
+ */
+namespace Binary 
+{
+
+/**
+ * @brief The binary output archive
+ */
+struct Out : public Archive::Basic::Out
+{
+    /**
+     * @brief The empty constructor
+     */
+    Out();
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an output archive and opens the corresponding 
+     * binary stream in output.
+     * 
+     * @param filename is the archive file name
+     */
+    Out(std::filesystem::path filename);
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an output archive and opens the corresponding 
+     * binary stream in output.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    Out(std::filesystem::path filename, std::ios_base::openmode mode);
+
+    /**
+     * @brief Open an archive file
+     * 
+     * This method opens the corresponding binary stream in output.
+     * 
+     * @param filename is the archive file name
+     */
+    inline void open(std::filesystem::path filename)
+    {
+        open(filename, std::fstream::binary);
+    }
+
+    /**
+     * @brief Open an archive file
+     * 
+     * This method opens the corresponding binary stream in output.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
+    {
+        Archive::Basic::Out::open(filename, std::fstream::binary | mode);
+    }
+
+    /**
+     * @brief Save a string in the archive
+     * 
+     * @param text is the string to save
+     * @return a reference to the updated archive 
+     */
+    Out& operator&(const std::string& text);
+
+    /**
+     * @brief Save an arithmetic value in the archive
+     * 
+     * @tparam ARITHMETIC_TYPE is the type of the value to save
+     * @param value is the value to save
+     * @return a reference to the updated archive 
+     */
+    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
+    inline Out& operator&(const ARITHMETIC_TYPE& value)
+    {
+        fs.write((char const*)(&value), sizeof(ARITHMETIC_TYPE));
+
+        return *this;
+    }
+};
+
+struct In : public Archive::Basic::In 
+{
+    /**
+     * @brief A constructor
+     * 
+     * This method creates a input archive and opens the corresponding 
+     * binary stream in input.
+     * 
+     * @param filename is the archive file name
+     */
+    In(std::filesystem::path filename);
+
+    /**
+     * @brief A constructor
+     * 
+     * This method creates an input archive and opens the corresponding 
+     * binary stream in input.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    In(std::filesystem::path filename, std::ios_base::openmode mode);
+        
+    /**
+     * @brief Open an input archive file
+     * 
+     * This method opens the corresponding binary stream in input.
+     * 
+     * @param filename is the archive file name
+     * @param mode is the archive mode 
+     */
+    inline void open(std::filesystem::path filename)
+    {
+        open(filename, std::fstream::binary );
+    }
+        
+    /**
+     * @brief Open an input archive file
+     * 
+     * This method opens the corresponding binary stream in input.
+     * 
+     * @param filename is the archive file name
+     */
+    inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
+    {
+        Archive::Basic::In::open(filename, std::fstream::binary | mode);
+    }
+
+    /**
+     * @brief Load an arithmetic value from the archive
+     * 
+     * @tparam ARITHMETIC_TYPE is the type of the value to load
+     * @param value is the object in which the value is load
+     * @return a reference to the updated archive 
+     */
+    template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
+    inline In& operator&(ARITHMETIC_TYPE& value)
+    {
+        fs.read((char *)(&value), sizeof(ARITHMETIC_TYPE));
+
+        return *this;
+    }
+
+    /**
+     * @brief Load a string from the archive
+     * 
+     * @param text is the object in which the string is load
+     * @return a reference to the updated archive 
+     */
+    In& operator&(std::string& text);
+};
+
+}   // Binary
+
+}   // Archive
+
+}   // Races
+
+
+/**
+ * @brief Load an object implementing the static method `load(ARCHIVE&)`
+ * 
+ * This method overloads `operator&` for the objects implementing 
+ * the static method `load(ARCHIVE&)` where `ARCHIVE` is derived 
+ * from `Archive::Basic::In`.
+ * 
+ * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::In`
+ * @tparam VALUE_TYPE is the type of the value to load
+ * @param archive is an output archive
+ * @param value is the object in which the value is loaded
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<Races::has_load<VALUE_TYPE, ARCHIVE>::value &&
+                                                           std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& value)
 {
     value = VALUE_TYPE::load(archive);
 
     return archive;
 }
 
+/**
+ * @brief Save an object implementing the method `save(ARCHIVE&)`
+ * 
+ * This method overloads `operator&` for the objects implementing 
+ * the method `save(ARCHIVE&)` where `ARCHIVE` is derived from 
+ * `Archive::Basic::Out`.
+ * 
+ * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::Out`
+ * @tparam VALUE_TYPE is the type of the value to save
+ * @param archive is an output archive
+ * @param value is the value to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<Races::has_save<VALUE_TYPE, ARCHIVE>::value &&
+                                                           std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
+{
+    value.save(archive);
+
+    return archive;
+}
+
+/**
+ * @brief Save an enum class object
+ * 
+ * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::Out`
+ * @tparam VALUE_TYPE is the enum class type of the value to save
+ * @param archive is an output archive
+ * @param value is the value to save
+ * @return a reference to the updated archive 
+ */
 template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<std::is_enum_v<VALUE_TYPE> && 
-                                                           std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& type)
+                                                           std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& type)
 {
     archive & static_cast<typename std::underlying_type<VALUE_TYPE>::type>(type);
 
     return archive;
 }
 
+/**
+ * @brief Load an enum class object
+ * 
+ * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::In`
+ * @tparam VALUE_TYPE is the enum class type of the value to load
+ * @param archive is an output archive
+ * @param value is the object in which the value is loaded
+ * @return a reference to the updated archive 
+ */
 template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<std::is_enum_v<VALUE_TYPE> && 
-                                                           std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& type)
+                                                           std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& type)
 {
     typename std::underlying_type<VALUE_TYPE>::type value;
     
@@ -346,6 +527,193 @@ ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& type)
     return archive;
 }
 
+/**
+ * @brief Load a vector from the archive 
+ * 
+ * This method is used only when `T` implements the 
+ * static method `load(Archive::Binary::In&)`. 
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam T is the type of the vector elements and it implements the static method `load`
+ * @tparam Alloc is the type of the vector allocator
+ * @param v is the object in which the vector is load
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Alloc, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> && 
+                                                               Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::vector<T,Alloc>& v)
+{
+    size_t size;
+
+    archive & size;
+
+    v.clear();
+
+    for (size_t i=0; i<size; ++i) {
+        v.push_back(T::load(archive));
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Load a vector from the archive
+ * 
+ * This method is used only when `T` does NOT implement the 
+ * static method `load(Archive::Binary::In&)`.
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam T is the type of the vector elements and it does not implement the static method `load`
+ * @tparam Alloc is the type of the vector allocator
+ * @param archive is the input archive
+ * @param v is the object in which the vector is load
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Alloc, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> && 
+                                                               !Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::vector<T,Alloc>& v)
+{
+    size_t size;
+
+    archive & size;
+
+    v.clear();
+
+    for (size_t i=0; i<size; ++i) {
+        T value;
+
+        archive & value;
+
+        v.push_back(std::move(value));
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Load a map from the archive
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam Key is the type of the map keys
+ * @tparam T is the type of the map values
+ * @tparam Compare is the type of the key comparator
+ * @tparam Allocator is the type of the map allocator
+ * @param archive is the input archive
+ * @param m is the object in which the map is load
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
+            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+                             !Races::has_load<Key, ARCHIVE>::value && 
+                             !Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
+{
+    size_t size;
+
+    archive & size;
+
+    m.clear();
+
+    for (size_t i=0; i<size; ++i) {
+        Key key;
+        T value;
+
+        archive & key & value;
+
+        m.emplace(key, value);
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Load a priority queue from an input archive
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam T is the type of values in the priority queue
+ * @tparam Compare is the type of the comparator
+ * @param archive is the output archive
+ * @param queue is the object in which the priority queue is load
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::priority_queue<T,std::vector<T>,Compare>& queue)
+{
+    std::vector<T> queue_v;
+
+    archive & queue_v;
+
+    Compare compare;
+
+    queue = std::priority_queue<T,std::vector<T>,Compare>(compare, std::move(queue_v));
+
+    return archive;
+}
+
+/**
+ * @brief Save a vector in an output archive
+ * 
+ * @tparam ARCHIVE is the output archive type
+ * @tparam T is the type of the vector elements
+ * @tparam Alloc is the type of the vector allocator
+ * @param archive is the output archive
+ * @param v is the vector to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Alloc, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, const std::vector<T,Alloc>& v)
+{
+    archive & v.size();
+    for (const T& value : v) {
+        archive & value;
+    }
+
+    return archive;
+}
+
+
+/**
+ * @brief Save a map in an output archive
+ * 
+ * @tparam ARCHIVE is the output archive type
+ * @tparam Key is the type of the map keys
+ * @tparam T is the type of the map values
+ * @tparam Compare is the type of the key comparator
+ * @tparam Allocator is the type of the map allocator
+ * @param archive is the output archive
+ * @param m is the map to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class Key, class T, class Compare, class Allocator, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, const std::map<Key,T,Compare,Allocator>& m)
+{
+    archive & m.size();
+    for (const auto& [key,value] : m) {
+        archive & key & value;
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Save a priority queue in an output archive
+ * 
+ * @tparam ARCHIVE is the output archive type
+ * @tparam T is the type of values in the priority queue
+ * @tparam Compare is the type of the comparator
+ * @param archive is the output archive
+ * @param queue is the priority queue to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, const std::priority_queue<T,std::vector<T>,Compare>& queue)
+{
+    archive & queue.size();
+    for (const T& value : queue) {
+        archive & value;
+    }
+
+    return archive;
 }
 
 #endif // __RACES_ARCHIVE__

@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.2
- * @date 2023-07-10
+ * @version 0.3
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -66,7 +66,7 @@ void basic_type_test(const std::vector<T>& to_save)
 {
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Out::Binary o_archive(filename);
+        Races::Archive::Binary::Out o_archive(filename);
 
         for (const auto& value : to_save) {
             o_archive & value;
@@ -74,7 +74,7 @@ void basic_type_test(const std::vector<T>& to_save)
     }
 
     {
-        Races::Archive::In::Binary i_archive(filename);
+        Races::Archive::Binary::In i_archive(filename);
 
         for (const auto& value : to_save) {
             T read_value;
@@ -237,13 +237,13 @@ BOOST_AUTO_TEST_CASE(binary_map)
                                                                     {"ult\0imo", {{-3/7},{}}}};
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Out::Binary o_archive(filename);
+        Races::Archive::Binary::Out o_archive(filename);
 
         o_archive & to_save;
     }
 
     {
-        Races::Archive::In::Binary i_archive(filename);
+        Races::Archive::Binary::In i_archive(filename);
 
         std::map<std::string, std::vector<std::vector<double>>> read_value;
 
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
 
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Out::Binary o_archive(filename);
+        Races::Archive::Binary::Out o_archive(filename);
 
         for (const auto& value : to_save) {
             o_archive & value;
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     }
 
     {
-        Races::Archive::In::Binary i_archive(filename);
+        Races::Archive::Binary::In i_archive(filename);
 
         for (auto& value : to_save) {
             Races::Cell read_value = Races::Cell::load(i_archive);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
 
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Out::Binary o_archive(filename);
+        Races::Archive::Binary::Out o_archive(filename);
 
         for (const auto& e_genotype : to_save.epigenetic_genotypes()) {
             o_archive & e_genotype;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
     }
 
     {
-        Races::Archive::In::Binary i_archive(filename);
+        Races::Archive::Binary::In i_archive(filename);
 
         for (const auto& e_genotype : to_save.epigenetic_genotypes()) {
             Races::EpigeneticGenotype in_genotype =  Races::EpigeneticGenotype::load(i_archive);
@@ -363,13 +363,13 @@ BOOST_AUTO_TEST_CASE(binary_tissue)
     auto filename = get_a_temporary_path();
 
     {
-        Races::Archive::Out::Binary o_archive(filename);
+        Races::Archive::Binary::Out o_archive(filename);
 
         o_archive & tissue;
     }
 
     {
-        Races::Archive::In::Binary i_archive(filename);
+        Races::Archive::Binary::In i_archive(filename);
 
         Tissue in_tissue = Tissue::load(i_archive);
 

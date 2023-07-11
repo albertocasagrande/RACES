@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.8
- * @date 2023-07-10
+ * @version 0.9
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -317,7 +317,7 @@ public:
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
         archive & static_cast<const EpigeneticGenotype &>(*this);
@@ -335,7 +335,7 @@ public:
      * @param archive is the input archive
      * @return the loaded species
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static Species load(ARCHIVE& archive)
     {
         auto genotype = EpigeneticGenotype::load(archive);

@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.5
- * @date 2023-07-09
+ * @version 0.6
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -219,7 +219,7 @@ public:
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
         archive & id 
@@ -237,7 +237,7 @@ public:
      * @param archive is the input archive
      * @return the loaded epigenetic genotype 
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static EpigeneticGenotype load(ARCHIVE& archive)
     {
         EpigeneticGenotype genotype;

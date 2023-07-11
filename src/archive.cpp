@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.1
- * @date 2023-07-09
+ * @version 0.2
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,50 +34,101 @@ namespace Races {
 
 namespace Archive {
 
-namespace Out {
+namespace Basic {
 
-Binary::Binary()
+Basic::Basic():
+    fs()
 {}
 
-Binary::Binary(std::filesystem::path position):
-    Binary()
-{
-    open(position);
-}
+Basic::Basic(std::filesystem::path position, std::ios_base::openmode mode):
+    fs(position, mode)
+{}
 
-Binary& Binary::operator&(const std::string& text)
-{
-    size_t size = text.size();
-    ofs.write((char const*)(&size), sizeof(size_t));
-    ofs.write(text.c_str(), text.size()*sizeof(char));
-
-    return *this;
-}
-
-Binary::~Binary()
+Basic::~Basic()
 {
     if (is_open()) {
         close();
     }
 }
 
-}
-
-namespace In 
-{
-
-Binary::Binary(std::filesystem::path position):
-    ifs(position, std::fstream::binary | std::fstream::in)
+Out::Out():
+    Basic()
 {}
 
-Binary& Binary::operator&(std::string& text)
+Out::Out(std::filesystem::path position):
+    Basic(position, std::fstream::out)
+{}
+
+Out::Out(std::filesystem::path position, std::ios_base::openmode mode):
+    Basic(position, mode | std::fstream::out)
+{}
+
+In::In(std::filesystem::path position):
+    Basic(position, std::fstream::in)
+{}
+
+In::In(std::filesystem::path position, std::ios_base::openmode mode):
+    Basic(position, mode | std::fstream::in)
+{}
+
+std::streampos In::size()
+{
+    // store current position
+    const auto pos = fs.tellg();
+
+    // seek the end
+    fs.seekg(0, std::ios::end);
+
+    // read the number of bytes from the beginning
+    const auto file_bytes = fs.tellg();
+
+    // move to the original position
+    fs.seekg(pos, std::ios::beg);
+
+    return file_bytes;
+}
+
+}  // Basic
+
+namespace Binary {
+
+Out::Out():
+    Archive::Basic::Out()
+{}
+
+Out::Out(std::filesystem::path position):
+    Archive::Basic::Out(position, std::fstream::binary)
+{}
+
+Out::Out(std::filesystem::path position, std::ios_base::openmode mode):
+    Archive::Basic::Out(position, mode | std::fstream::binary)
+{}
+
+Out& Out::operator&(const std::string& text)
+{
+    size_t size = text.size();
+    fs.write((char const*)(&size), sizeof(size_t));
+    fs.write(text.c_str(), text.size()*sizeof(char));
+
+    return *this;
+}
+
+In::In(std::filesystem::path position):
+    Archive::Basic::In(position, std::fstream::binary)
+{}
+
+In::In(std::filesystem::path position, std::ios_base::openmode mode):
+    Archive::Basic::In(position, std::fstream::binary | mode)
+{}
+
+In& In::operator&(std::string& text)
 {
     size_t size;
-    ifs.read((char *)(&size), sizeof(size_t));
+    fs.read((char *)(&size), sizeof(size_t));
 
     char* buffer = new char[size+1];
 
-    ifs.read(buffer, size*sizeof(char));
+    fs.read(buffer, size*sizeof(char));
 
     buffer[size] = '\0';
 
@@ -86,13 +137,6 @@ Binary& Binary::operator&(std::string& text)
     delete[] buffer;
 
     return *this;
-}
-
-Binary::~Binary()
-{
-    if (is_open()) {
-        close();
-    }
 }
 
 }

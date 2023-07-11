@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.9
- * @date 2023-07-10
+ * @version 0.10
+ * @date 2023-07-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -108,7 +108,7 @@ public:
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
         archive & id 
@@ -123,7 +123,7 @@ public:
      * @param archive is the input archive
      * @return the load cell
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static Cell load(ARCHIVE& archive)
     {
         Cell cell;
@@ -244,7 +244,7 @@ public:
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Out::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
         archive & static_cast<const Cell &>(*this) & x & y & z;
@@ -257,7 +257,7 @@ public:
      * @param archive is the input archive
      * @return the loaded cell
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::In::Basic, ARCHIVE>, bool> = true>
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static CellInTissue load(ARCHIVE& archive)
     {
         CellInTissue cell;
