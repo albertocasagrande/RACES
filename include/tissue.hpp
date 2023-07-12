@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.10
- * @date 2023-07-11
+ * @version 0.11
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -361,6 +361,13 @@ public:
     };
 
     /**
+     * @brief A constructor
+     * 
+     * @param sizes are the sizes of the tissue
+     */
+    Tissue(const std::vector<AxisSize> sizes);
+
+    /**
      * @brief A constructor for a 3D tissue
      * 
      * @param x_size is the size of the tissue on the x axis
@@ -399,6 +406,7 @@ public:
     /**
      * @brief A constructor
      * 
+     * @param name is the tissue name
      * @param sizes are the sizes of the tissue
      */
     Tissue(const std::string name, const std::vector<AxisSize> sizes);
@@ -571,7 +579,7 @@ public:
      * 
      * @return the tissue size for the 3 dimensions
      */
-    std::vector<size_t> size() const;
+    std::vector<AxisSize> size() const;
 
     /**
      * @brief Save a tissue in an archive
@@ -598,11 +606,11 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static Tissue load(ARCHIVE& archive)
     {
-        std::vector<size_t> size;
+        std::vector<AxisSize> sizes;
 
-        archive & size;
+        archive & sizes;
 
-        Tissue tissue(size[0],size[1],size[2]);
+        Tissue tissue(sizes);
 
         archive & tissue.name
                 & tissue.species

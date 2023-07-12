@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.8
- * @date 2023-07-10
+ * @version 0.9
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -135,6 +135,10 @@ Tissue::Tissue(const std::string name, const std::vector<AxisSize> sizes):
     AxisSize z_size{1};
     if (dimensions==3) {
         z_size = sizes[2];
+    } else {
+        if (dimensions!=2) {
+            throw std::domain_error("The tissue must be a either a 3D or 2D shape");
+        }
     }
 
     std::vector<CellInTissue *> z_vector(z_size, nullptr);
@@ -166,6 +170,11 @@ Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genoty
     for (const auto& genotype: genotypes) {
         add_species(genotype);
     }
+}
+
+Tissue::Tissue(const std::vector<AxisSize> sizes):
+    Tissue("", sizes)
+{
 }
 
 Tissue::Tissue(const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
@@ -276,12 +285,17 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
     return lost_cell;
 }
 
-std::vector<size_t> Tissue::size() const
+std::vector<AxisSize> Tissue::size() const
 {
-    if (dimensions==2) {
-        return std::vector<size_t>{space.size(), space[0].size()};
+    std::vector<AxisSize> sizes(dimensions);
+
+    sizes[0] = static_cast<AxisSize>(space.size());
+    sizes[1] = static_cast<AxisSize>(space[0].size());
+
+    if (dimensions==3) {
+        sizes[2] = static_cast<AxisSize>(space[0][0].size());
     }
-    return std::vector<size_t>{space.size(), space[0].size(), space[0][0].size()};
+    return sizes;
 }
 
 };
