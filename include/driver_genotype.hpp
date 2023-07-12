@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.6
- * @date 2023-07-11
+ * @version 0.7
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -249,7 +249,7 @@ public:
                 & genotype.event_rates
                 & genotype.epigenetic_rates;
 
-        if (EpigeneticGenotype::counter < genotype.id+1) {
+        if (EpigeneticGenotype::counter < static_cast<unsigned int>(genotype.id+1)) {
             EpigeneticGenotype::counter = genotype.id+1;
         }
 

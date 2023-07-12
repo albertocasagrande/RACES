@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.3
- * @date 2023-07-08
+ * @version 0.4
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -27,6 +27,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+#include <cassert>
 
 #include "statistics.hpp"
 #include "tissue.hpp"
