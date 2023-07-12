@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.3
- * @date 2023-07-11
+ * @version 0.4
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -213,6 +213,16 @@ struct Out : public Basic
     {
         Basic::open(filename, mode | std::fstream::out);
     }
+
+    /**
+     * @brief Flush the archive buffer
+     */
+    inline Out& flush()
+    {
+        fs.flush();
+
+        return *this;
+    }
 };
 
 /**
@@ -261,6 +271,7 @@ struct In : public Basic
      * specified position
      * 
      * @param pos is the aimed position in the archive stream
+     * @return a reference to the updated object
      */
     inline In& seekg(std::streampos pos)
     {

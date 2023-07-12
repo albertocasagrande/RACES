@@ -2,8 +2,8 @@
  * @file logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.2
- * @date 2023-06-30
+ * @version 0.3
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -57,11 +57,30 @@ struct BasicLogger
     void record(const CellEventType& type, const CellInTissue& cell, const Time& time);
 
     /**
+     * @brief Record an initial cell
+     * 
+     * @param cell is the initial cell to record 
+     */
+    void record_initial_cell(const CellInTissue& cell);
+
+    /**
      * @brief Save a tissue snapshot
      * 
      * @param tissue is the tissue whose snapshot is requested
      */
     void snapshot(const Tissue& tissue);
+
+    /**
+     * @brief Flush archive data
+     */
+    inline void flush_archives()
+    {}
+
+    /**
+     * @brief Close open archives
+     */
+    inline void close()
+    {}
 };
 
 struct JSONLogger : public BasicLogger
@@ -83,11 +102,26 @@ struct JSONLogger : public BasicLogger
     void record(const CellEventType& type, const CellInTissue& cell, const Time& time);
 
     /**
+     * @brief Record an initial cell
+     * 
+     * @param cell is the initial cell to record 
+     */
+    void record_initial_cell(const CellInTissue& cell);
+
+    /**
      * @brief Save a tissue snapshot
      * 
      * @param tissue is the tissue whose snapshot is requested
      */
     void snapshot(const Tissue& tissue);
+
+    /**
+     * @brief Flush archive data
+     */
+    inline void flush_archives()
+    {
+        os.flush();
+    }
 };
 
 

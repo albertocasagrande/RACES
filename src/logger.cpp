@@ -46,6 +46,15 @@ void BasicLogger::record(const CellEventType& type, const CellInTissue& cell, co
     (void)time;
 }
 
+void BasicLogger::record_initial_cell(const CellInTissue& cell)
+{
+    if (cell.get_id() != cell.get_parent_id()) {
+        throw std::domain_error("The provided cell is not an initial cell");
+    }
+
+    (void)cell;
+}
+
 void BasicLogger::snapshot(const Tissue& tissue)
 {
     (void)tissue;
@@ -84,6 +93,19 @@ void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, con
        << cell.get_parent_id() << " " 
        << cell.get_genotype_id() << " "
        << time << std::endl;
+}
+
+void JSONLogger::record_initial_cell(const CellInTissue& cell)
+{
+    if (cell.get_id() != cell.get_parent_id()) {
+        throw std::domain_error("The provided cell is not an initial cell");
+    }
+
+    os << "I " 
+       << cell.get_id() << " " 
+       << cell.get_parent_id() << " " 
+       << cell.get_genotype_id() << " 0"
+       << std::endl;
 }
 
 /*

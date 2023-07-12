@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.3
- * @date 2023-06-30
+ * @version 0.4
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,17 +47,10 @@ namespace Races {
 struct BinaryLogger : public BasicLogger
 {
     std::filesystem::path directory;   //!< the log directory 
-    std::ofstream cell_of;             //!< the current cell output file
+    Archive::Binary::Out cell_archive; //!< the current cell output file
     const size_t cells_per_file;       //!< the number of cells to be saved before changing file
     size_t cell_in_current_file;       //!< cells saved in current file
     uint16_t next_file_number;         //!< the next file number
-
-    /**
-     * @brief Get the next cell file full path
-     * 
-     * @return the next cell file full path
-     */
-    std::filesystem::path get_next_cell_path() const;
 
     /**
      * @brief Get a new snapshot file full path
@@ -72,7 +65,65 @@ struct BinaryLogger : public BasicLogger
      * This method close the last opened cell file and open a new one.
      */
     void rotate_cell_file();
+
+    /**
+     * @brief Record a cell
+     * 
+     * @param cell is the cell on which event has been occurred
+     * @param time it the event time
+     */
+    void record_cell(const CellInTissue& cell, const Time& time);
 public:
+    /**
+     * @brief A structure for cell recovering
+     */
+    class CellReader {
+        std::filesystem::path directory;    //!< cell file directory
+        size_t cells_per_archive;           //!< number of cells per archive
+        size_t bytes_per_cell;              //!< number of bytes per cell record
+
+        uint16_t last_file_number;          //!< last cell file number in the directory
+        uint64_t number_of_cells;           //!< total number of cells in the directory
+
+        uint16_t cell_archive_id;           //!< number of the currently open cell archive
+        Archive::Binary::In cell_archive;   //!< stream of the currently open cell archive
+
+        /**
+         * @brief Get the position in the archives
+         * 
+         * @param cell_id 
+         * @return std::streampos 
+         */
+        inline std::streampos get_cell_pos(const CellId& cell_id) const
+        {
+            return (cell_id % cells_per_archive)*bytes_per_cell;
+        }
+
+    public:
+        /**
+         * @brief The cell reader constructor
+         * 
+         * @param directory is the directory containing the cell files
+         */
+        CellReader(std::filesystem::path directory);
+
+        /**
+         * @brief Get a timed-labelled  cell from the directory
+         * 
+         * @param cell_id is the identifier of the aimed cell
+         * @return the time-labelled cell in the `cell_id`-th 
+         *      position of the cell archives
+         */
+        LabelledCell<Time> operator[](const CellId& cell_id);
+    };
+
+    /**
+     * @brief Get the next cell file full path
+     * 
+     * @return the next cell file full path
+     */
+    static std::filesystem::path get_cell_archive_path(const std::filesystem::path& directory, const uint16_t& file_number);
+
     /**
      * @brief The empty constructor
      */
@@ -92,7 +143,14 @@ public:
      * @param cells_per_file is the number of cells per file
      */
     BinaryLogger(const std::string prefix_name, const size_t cells_per_file);
-    
+
+    /**
+     * @brief Get the log directory
+     * 
+     * @return the directory containing all the logs
+     */
+    const std::filesystem::path& get_directory() const;
+
     /**
      * @brief Record an event
      * 
@@ -103,6 +161,13 @@ public:
     void record(const CellEventType& type, const CellInTissue& cell, const Time& time);
 
     /**
+     * @brief Record an initial cell
+     * 
+     * @param cell is the initial cell to record 
+     */
+    void record_initial_cell(const CellInTissue& cell);
+
+    /**
      * @brief Save a tissue snapshot
      * 
      * @param tissue is the tissue whose snapshot is requested
@@ -110,10 +175,35 @@ public:
     void snapshot(const Tissue& tissue);
 
     /**
+     * @brief Flush archive data
+     */
+    inline void flush_archives() {
+        if (cell_archive.is_open()) {
+            cell_archive.flush();
+        }
+    }
+
+    /**
+     * @brief Close open archives
+     */
+    inline void close() {
+        if (cell_archive.is_open()) {
+            cell_archive.close();
+        }
+    }
+
+    /**
      * @brief The destructor
      */
     ~BinaryLogger();
 };
+
+/* Inline implementations */
+
+inline const std::filesystem::path& BinaryLogger::get_directory() const
+{
+    return directory;
+}
 
 }
 
