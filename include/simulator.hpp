@@ -2,8 +2,8 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.10
- * @date 2023-07-08
+ * @version 0.11
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -93,7 +93,7 @@ class BasicSimulator
      * @return list of the affected cells. Whenever the specified position 
      *      is not in the tissue or does not correspond to a driver 
      *      mutation, the returned list is empty. If one of the two 
-     *      siblings is pushed outside the tissue borders, the returned 
+     *      children is pushed outside the tissue borders, the returned 
      *      list contains only the new cell in position `position`. 
      *      In the remaining case, the returned list contains two cells
      */
@@ -130,18 +130,23 @@ class BasicSimulator
      * @brief Simulate a duplication and an epigenetic event
      * 
      * This method simulates the duplication of a cell in the 
-     * tissue and applies an epigenetic event to one of the siblings.
+     * tissue and applies an epigenetic event to one of the children.
      * 
      * @param position is the position of the cell to be duplicate
      * @param final_id is the resulting genotype identifier of the cell
      * @return list of the affected cells. Whenever the specified position 
      *      is not in the tissue or does not correspond to a driver 
      *      mutation, the returned list is empty. If one of the two 
-     *      siblings is pushed outside the tissue borders, the returned 
+     *      children is pushed outside the tissue borders, the returned 
      *      list contains only the new cell in position `position`. 
      *      In the remaining case, the returned list contains two cells
      */
     EventAffectedCells simulate_duplication_epigenetic_event(const Position& position, const EpigeneticGenotypeId& final_id);
+
+    /**
+     * @brief Record tissue initial cells in log
+     */
+    void log_initial_cells();
 
     /**
      * @brief Randomly select a cell among those having a specified somatic genotype
@@ -500,11 +505,11 @@ template<typename LOGGER>
 typename BasicSimulator<LOGGER>::EventAffectedCells 
 BasicSimulator<LOGGER>::simulate_mutation(const Position& position, const EpigeneticGenotypeId& final_id)
 {
-    CellInTissue cell = tissue(position);
+    Cell parent_cell = tissue(position);
 
-    cell.genotype = final_id;
+    parent_cell.genotype = final_id;
 
-    tissue(position) = cell;
+    tissue(position) = parent_cell.generate_descendent();
 
     return {{tissue(position)},{}};
 }
@@ -550,7 +555,11 @@ BasicSimulator<LOGGER>::simulate_duplication_epigenetic_event(const Position& po
         return affected;
     }
 
-    simulate_mutation(position, final_id);
+    Cell cell = tissue(position);
+
+    cell.genotype = final_id;
+
+    tissue(position) = cell;
 
     const Tissue& tissue = *position.tissue;
 
@@ -664,6 +673,18 @@ BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to_next_event(UI::TissueP
 }
 
 template<typename LOGGER>
+void BasicSimulator<LOGGER>::log_initial_cells()
+{
+    if (logging_enabled) {
+        for (const auto& species: tissue) {
+            for (const auto& cell: species) {
+                logger->record_initial_cell(cell);
+            }
+        }
+    }
+}
+
+template<typename LOGGER>
 template<typename PLOT_WINDOW>
 BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter)
 {
@@ -671,6 +692,11 @@ BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time
 
     for (const auto& axis_size: tissue.size()) {
         total_cells *= axis_size;
+    }
+
+    // if we are at the beginning of the computation, log the initial cells
+    if (time == 0) {
+        log_initial_cells();
     }
 
     while (!quitting && tissue.num_of_mutated_cells()>0 && time < final_time) {
@@ -698,6 +724,7 @@ BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time
 
     if (logging_enabled) {
         logger->snapshot(tissue);
+        logger->flush_archives();
     }
 
     return *this;
