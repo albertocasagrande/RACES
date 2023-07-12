@@ -2,7 +2,7 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.4
+ * @version 0.5
  * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
@@ -46,9 +46,10 @@ namespace Races {
  */
 struct BinaryLogger : public BasicLogger
 {
+    std::string dir_prefix;            //!< the output directory prefix
     std::filesystem::path directory;   //!< the log directory 
     Archive::Binary::Out cell_archive; //!< the current cell output file
-    const size_t cells_per_file;       //!< the number of cells to be saved before changing file
+    size_t cells_per_file;             //!< the number of cells to be saved before changing file
     size_t cell_in_current_file;       //!< cells saved in current file
     uint16_t next_file_number;         //!< the next file number
 
@@ -108,7 +109,7 @@ public:
         CellReader(std::filesystem::path directory);
 
         /**
-         * @brief Get a timed-labelled  cell from the directory
+         * @brief Get a timed-labelled cell from the directory
          * 
          * @param cell_id is the identifier of the aimed cell
          * @return the time-labelled cell in the `cell_id`-th 
@@ -132,17 +133,10 @@ public:
     /**
      * @brief A constructor
      * 
-     * @param name is the prefix of the filename
-     */
-    BinaryLogger(const std::string prefix_name);
-
-    /**
-     * @brief A constructor
-     * 
-     * @param prefix_name is the prefix of the filename
+     * @param dir_prefix is the prefix of the filename
      * @param cells_per_file is the number of cells per file
      */
-    BinaryLogger(const std::string prefix_name, const size_t cells_per_file);
+    BinaryLogger(const std::string dir_prefix, const size_t cells_per_file=1<<27);
 
     /**
      * @brief Get the log directory
@@ -193,6 +187,19 @@ public:
     }
 
     /**
+     * @brief Reset the logger
+     * 
+     * @param directory_prefix is the output directory prefix
+     */
+    void reset(const std::string directory_prefix);
+
+    /**
+     * @brief Reset the logger
+     */
+    void reset();
+
+    
+    /**
      * @brief The destructor
      */
     ~BinaryLogger();
@@ -203,6 +210,11 @@ public:
 inline const std::filesystem::path& BinaryLogger::get_directory() const
 {
     return directory;
+}
+
+inline void BinaryLogger::reset()
+{
+    reset(dir_prefix);
 }
 
 }

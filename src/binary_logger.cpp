@@ -2,7 +2,7 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.5
+ * @version 0.6
  * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
@@ -43,11 +43,6 @@ BinaryLogger::BinaryLogger():
 {
 }
 
-BinaryLogger::BinaryLogger(const std::string prefix_name):
-    BinaryLogger(prefix_name, std::numeric_limits<size_t>::max())
-{
-}
-
 std::filesystem::path BinaryLogger::get_cell_archive_path(const std::filesystem::path& directory, const uint16_t& file_number)
 {
     using namespace std;
@@ -84,18 +79,19 @@ std::filesystem::path BinaryLogger::get_snapshot_path() const
     return directory / oss.str();
 }
 
-std::string get_directory_name(const std::string& prefix_name)
+std::string get_directory_name(const std::string& dir_prefix)
 {
     std::ostringstream oss;
 
-    oss << prefix_name << "_" << get_time_string();
+    oss << dir_prefix << "_" << get_time_string();
 
     return oss.str();
 }
 
-BinaryLogger::BinaryLogger(const std::string prefix_name, const size_t cells_per_file):
-    BasicLogger(), directory(get_directory_name(prefix_name)), cell_archive(), 
-    cells_per_file(cells_per_file), cell_in_current_file(0), next_file_number(0)
+BinaryLogger::BinaryLogger(const std::string dir_prefix, const size_t cells_per_file):
+    BasicLogger(), dir_prefix(dir_prefix), directory(get_directory_name(dir_prefix)),
+    cell_archive(), cells_per_file(cells_per_file), cell_in_current_file(0),
+    next_file_number(0)
 {
 }
 
@@ -238,6 +234,16 @@ void BinaryLogger::snapshot(const Tissue& tissue)
     }
 
     ofs.close();
+}
+
+void BinaryLogger::reset(const std::string directory_prefix)
+{
+    close();
+
+    dir_prefix = directory_prefix;
+    directory = get_directory_name(directory_prefix);
+    cell_in_current_file = 0;
+    next_file_number = 0;
 }
 
 BinaryLogger::~BinaryLogger()

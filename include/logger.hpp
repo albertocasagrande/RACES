@@ -2,7 +2,7 @@
  * @file logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.3
+ * @version 0.4
  * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
@@ -80,6 +80,12 @@ struct BasicLogger
      * @brief Close open archives
      */
     inline void close()
+    {}
+
+    /**
+     * @brief Reset the logger
+     */
+    inline void reset()
     {}
 };
 
