@@ -2,7 +2,7 @@
  * @file simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulator
- * @version 0.11
+ * @version 0.12
  * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
@@ -327,6 +327,13 @@ public:
     const Time& get_time() const;
 
     /**
+     * @brief Get the simulation statistics
+     * 
+     * @return the simulation statistics
+     */
+    const TissueStatistics& get_statistics() const;
+
+    /**
      * @brief Set the interval between snapshots
      * 
      * @param time_interval is the time interval between two snapshots
@@ -341,6 +348,12 @@ template<typename LOGGER>
 inline const Time& BasicSimulator<LOGGER>::get_time() const
 {
     return time;
+}
+
+template<typename LOGGER>
+const TissueStatistics& BasicSimulator<LOGGER>::get_statistics() const
+{
+    return statistics;
 }
 
 template<typename LOGGER>
@@ -712,13 +725,6 @@ BasicSimulator<LOGGER>& BasicSimulator<LOGGER>::run_up_to(const Time& final_time
             if (logging_enabled) {
                 logger->snapshot(tissue);
             }
-        }
-    }
-
-    if (plotter != nullptr) {
-        while (!quitting) {
-            plotter->plot(statistics);
-            quitting = !plotter->waiting_end();
         }
     }
 

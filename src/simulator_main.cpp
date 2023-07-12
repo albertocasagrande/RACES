@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.7
- * @date 2023-07-08
+ * @version 0.8
+ * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -104,8 +104,6 @@ int main(int argc, char* argv[])
 
     long double time_horizon = vm["time-horizon"].as<long double>();
 
-    std::vector<SomaticGenotype> genotypes;
-
     SomaticGenotype A("A",{{0.01,0.01}});
     A["-"].set_rates({{CellEventType::DIE, 0.1},
                       {CellEventType::DUPLICATE, 0.3},
@@ -151,12 +149,15 @@ int main(int argc, char* argv[])
         plotter.set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
 
         simulator.run_up_to(time_horizon, plotter);
-    } else {
-#endif
-        simulator.run_up_to(time_horizon);
 
-#ifdef WITH_SDL2
+        while (plotter.waiting_end()) {
+            plotter.plot(simulator.get_statistics());
+        }
+    } else {
+        simulator.run_up_to(time_horizon);
     }
+#else
+    simulator.run_up_to(time_horizon);
 #endif
 
     return 0;
