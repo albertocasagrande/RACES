@@ -230,6 +230,14 @@ BOOST_AUTO_TEST_CASE(binary_vector)
     basic_type_test<std::vector<std::string>>({{},{"string", ""}, {}, {"\n"}, {"\"ci\0ao\""}});
 }
 
+BOOST_AUTO_TEST_CASE(binary_list)
+{
+    basic_type_test<std::list<size_t>>({{},{3, 4}, {}, {0}, {5}});
+    basic_type_test<std::list<double>>({{-3.3}, {}, {1/4, -0},{}, {2/3}});
+    basic_type_test<std::list<char>>({{},{},{'a', '.'}, {}, {'\n', '\0'},{}});
+    basic_type_test<std::list<std::string>>({{},{"string", ""}, {}, {"\n"}, {"\"ci\0ao\""}});
+}
+
 BOOST_AUTO_TEST_CASE(binary_map)
 {
     std::map<std::string, std::vector<std::vector<double>>> to_save{{"ciao", {{}, {-0.3}, {5,6}}},

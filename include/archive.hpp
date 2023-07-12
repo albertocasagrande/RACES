@@ -2,7 +2,7 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.4
+ * @version 0.5
  * @date 2023-07-12
  * 
  * @copyright Copyright (c) 2023
@@ -32,6 +32,7 @@
 #define __RACES_ARCHIVE__
 
 #include <map>
+#include <list>
 #include <vector>
 #include <queue>
 #include <fstream>
@@ -379,63 +380,72 @@ inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& type)
 }
 
 /**
- * @brief Load a vector from the archive 
+ * @brief Load a vector or a list from the archive 
  * 
  * This method is used only when `T` implements the 
  * static method `load(Archive::Binary::In&)`. 
  * 
  * @tparam ARCHIVE is the input archive type
- * @tparam T is the type of the vector elements and it implements the static method `load`
- * @tparam Alloc is the type of the vector allocator
- * @param v is the object in which the vector is load
+ * @tparam CONTAINER is the container type, i.e., either `std::list` or `std::vector`
+ * @tparam T is the type of the container elements and it does not implement the static method `load`
+ * @tparam Alloc is the type of the container allocator
+ * @param archive is the input archive
+ * @param container is the object in which the container is load
  * @return a reference to the updated archive 
  */
-template<class ARCHIVE, class T, class Alloc, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> && 
-                                                               Races::has_load<T, ARCHIVE>::value, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, std::vector<T,Alloc>& v)
+template<class ARCHIVE, template<class,class> class CONTAINER, class T, class Alloc,
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+                            (std::is_same_v<CONTAINER<T,Alloc>, std::list<T,Alloc>> ||
+                             std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>) && 
+                          Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
 {
     size_t size;
 
     archive & size;
 
-    v.clear();
+    container.clear();
 
     for (size_t i=0; i<size; ++i) {
-        v.push_back(T::load(archive));
+        container.push_back(T::load(archive));
     }
 
     return archive;
 }
 
 /**
- * @brief Load a vector from the archive
+ * @brief Load a vector or a list from the archive
  * 
  * This method is used only when `T` does NOT implement the 
  * static method `load(Archive::Binary::In&)`.
  * 
  * @tparam ARCHIVE is the input archive type
- * @tparam T is the type of the vector elements and it does not implement the static method `load`
- * @tparam Alloc is the type of the vector allocator
+ * @tparam CONTAINER is the container type, i.e., either `std::list` or `std::vector`
+ * @tparam T is the type of the container elements and it does not implement the static method `load`
+ * @tparam Alloc is the type of the container allocator
  * @param archive is the input archive
- * @param v is the object in which the vector is load
+ * @param container is the object in which the container is load
  * @return a reference to the updated archive 
  */
-template<class ARCHIVE, class T, class Alloc, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> && 
-                                                               !Races::has_load<T, ARCHIVE>::value, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, std::vector<T,Alloc>& v)
+template<class ARCHIVE, template<typename,typename> class CONTAINER, class T, class Alloc, 
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+                            (std::is_same_v<CONTAINER<T,Alloc>, std::list<T,Alloc>> ||
+                             std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>) && 
+                          !Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
 {
     size_t size;
 
     archive & size;
 
-    v.clear();
+    container.clear();
 
     for (size_t i=0; i<size; ++i) {
         T value;
 
         archive & value;
 
-        v.push_back(std::move(value));
+        container.push_back(std::move(value));
     }
 
     return archive;
@@ -445,9 +455,9 @@ ARCHIVE& operator&(ARCHIVE& archive, std::vector<T,Alloc>& v)
  * @brief Load a map from the archive
  * 
  * @tparam ARCHIVE is the input archive type
- * @tparam Key is the type of the map keys
- * @tparam T is the type of the map values
- * @tparam Compare is the type of the key comparator
+ * @tparam Key is the type of the map keys and it does not implement the static method `load`
+ * @tparam T is the type of the map values and it does not implement the static method `load`
+ * @tparam Compare is the type of the key comparator 
  * @tparam Allocator is the type of the map allocator
  * @param archive is the input archive
  * @param m is the object in which the map is load
@@ -478,6 +488,42 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 }
 
 /**
+ * @brief Load a map from the archive
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam Key is the type of the map keys and it does not implement the static method `load`
+ * @tparam T is the type of the map values and it implements the static method `load`
+ * @tparam Compare is the type of the key comparator
+ * @tparam Allocator is the type of the map allocator
+ * @param archive is the input archive
+ * @param m is the object in which the map is load
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
+            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+                             !Races::has_load<Key, ARCHIVE>::value && 
+                             Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
+{
+    size_t size;
+
+    archive & size;
+
+    m.clear();
+
+    for (size_t i=0; i<size; ++i) {
+        Key key;
+        T value;
+
+        archive & key;
+
+        m.emplace(key, T::load(archive));
+    }
+
+    return archive;
+}
+
+/**
  * @brief Load a priority queue from an input archive
  * 
  * @tparam ARCHIVE is the input archive type
@@ -502,26 +548,29 @@ ARCHIVE& operator&(ARCHIVE& archive, std::priority_queue<T,std::vector<T>,Compar
 }
 
 /**
- * @brief Save a vector in an output archive
+ * @brief Save a vector or a list in an output archive
  * 
  * @tparam ARCHIVE is the output archive type
- * @tparam T is the type of the vector elements
- * @tparam Alloc is the type of the vector allocator
+ * @tparam CONTAINER is the container type, i.e., either `std::list` or `std::vector`
+ * @tparam T is the type of the container elements
+ * @tparam Alloc is the type of the container allocator
  * @param archive is the output archive
- * @param v is the vector to save
+ * @param container is the container to save
  * @return a reference to the updated archive 
  */
-template<class ARCHIVE, class T, class Alloc, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, const std::vector<T,Alloc>& v)
+template<class ARCHIVE, template<class,class> class CONTAINER, class T, class Alloc,
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE> && 
+                            (std::is_same_v<CONTAINER<T,Alloc>, std::list<T,Alloc>> ||
+                             std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>), bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, const CONTAINER<T,Alloc>& container)
 {
-    archive & v.size();
-    for (const T& value : v) {
+    archive & container.size();
+    for (const auto& value : container) {
         archive & value;
     }
 
     return archive;
 }
-
 
 /**
  * @brief Save a map in an output archive
@@ -535,7 +584,8 @@ ARCHIVE& operator&(ARCHIVE& archive, const std::vector<T,Alloc>& v)
  * @param m is the map to save
  * @return a reference to the updated archive 
  */
-template<class ARCHIVE, class Key, class T, class Compare, class Allocator, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, const std::map<Key,T,Compare,Allocator>& m)
 {
     archive & m.size();
