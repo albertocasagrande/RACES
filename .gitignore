@@ -11,4 +11,5 @@ Makefile
 .ninja_log
 build.ninja
 races_sim
+races_phylo
 tests/test_*

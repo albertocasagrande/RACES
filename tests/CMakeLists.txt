@@ -7,7 +7,7 @@ if(${Boost_unit_test_framework_FOUND})
 
     set(RACES_TESTS archive)
     foreach(TEST ${RACES_TESTS})
-        ADD_EXECUTABLE( test_${TEST} ${TEST}.cpp ${GENERIC_SOURCES})
+        ADD_EXECUTABLE( test_${TEST} ${TEST}.cpp ${RACES_SOURCES})
         target_link_libraries(test_${TEST} ${TEST_LIBRARIES})
         ADD_TEST(${TEST} test_${TEST})
     endforeach()
