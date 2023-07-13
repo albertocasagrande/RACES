@@ -32,6 +32,7 @@
 #define __RACES_ARCHIVE__
 
 #include <map>
+#include <set>
 #include <list>
 #include <vector>
 #include <queue>
@@ -387,10 +388,10 @@ inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& type)
  * 
  * @tparam ARCHIVE is the input archive type
  * @tparam CONTAINER is the container type, i.e., either `std::list` or `std::vector`
- * @tparam T is the type of the container elements and it does not implement the static method `load`
+ * @tparam T is the type of the container elements and it implements the static method `load`
  * @tparam Alloc is the type of the container allocator
  * @param archive is the input archive
- * @param container is the object in which the container is load
+ * @param container is the object in which the container is loaded
  * @return a reference to the updated archive 
  */
 template<class ARCHIVE, template<class,class> class CONTAINER, class T, class Alloc,
@@ -424,7 +425,7 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
  * @tparam T is the type of the container elements and it does not implement the static method `load`
  * @tparam Alloc is the type of the container allocator
  * @param archive is the input archive
- * @param container is the object in which the container is load
+ * @param container is the object in which the container is loaded
  * @return a reference to the updated archive 
  */
 template<class ARCHIVE, template<typename,typename> class CONTAINER, class T, class Alloc, 
@@ -452,6 +453,74 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
 }
 
 /**
+ * @brief Load a set from an input archive
+ * 
+ * This method is used only when `T` implements the 
+ * static method `load(Archive::Binary::In&)`.
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam T is the type of the set elements and it implements the static method `load`
+ * @tparam Compare is the comparator type for the set elements
+ * @tparam Alloc is the type of the set allocator
+ * @param archive is the input archive
+ * @param S is the object in which the set is loaded
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Compare, class Alloc, 
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> && 
+                          Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
+{
+    size_t size;
+
+    archive & size;
+
+    S = std::set<T,Compare,Alloc>();
+
+    for (size_t i=0; i<size; ++i) {
+        S.insert(T::load(archive));
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Load a set from an input archive
+ * 
+ * This method is used only when `T` does NOT implement the 
+ * static method `load(Archive::Binary::In&)`.
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam T is the type of the set elements and it does not implement the static method `load`
+ * @tparam Compare is the comparator type for the set elements
+ * @tparam Alloc is the type of the set allocator
+ * @param archive is the input archive
+ * @param S is the object in which the set is loaded
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Compare, class Alloc, 
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> && 
+                          !Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
+{
+    size_t size;
+
+    archive & size;
+
+    S = std::set<T,Compare,Alloc>();
+
+    for (size_t i=0; i<size; ++i) {
+        T value;
+
+        archive & value;
+
+        S.insert(std::move(value));
+    }
+
+    return archive;
+}
+
+/**
  * @brief Load a map from the archive
  * 
  * @tparam ARCHIVE is the input archive type
@@ -460,7 +529,7 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
  * @tparam Compare is the type of the key comparator 
  * @tparam Allocator is the type of the map allocator
  * @param archive is the input archive
- * @param m is the object in which the map is load
+ * @param m is the object in which the map is loaded
  * @return a reference to the updated archive 
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
@@ -496,7 +565,7 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
  * @tparam Compare is the type of the key comparator
  * @tparam Allocator is the type of the map allocator
  * @param archive is the input archive
- * @param m is the object in which the map is load
+ * @param m is the object in which the map is loaded
  * @return a reference to the updated archive 
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
@@ -530,7 +599,7 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
  * @tparam T is the type of values in the priority queue
  * @tparam Compare is the type of the comparator
  * @param archive is the output archive
- * @param queue is the object in which the priority queue is load
+ * @param queue is the object in which the priority queue is loaded
  * @return a reference to the updated archive 
  */
 template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
@@ -566,6 +635,30 @@ ARCHIVE& operator&(ARCHIVE& archive, const CONTAINER<T,Alloc>& container)
 {
     archive & container.size();
     for (const T& value : container) {
+        archive & value;
+    }
+
+    return archive;
+}
+
+
+/**
+ * @brief Save a set in an output archive
+ * 
+ * @tparam ARCHIVE is the output archive type
+ * @tparam T is the type of the set elements
+ * @tparam Compare is the comparator type for the set elements
+ * @tparam Alloc is the type of the set allocator
+ * @param archive is the output archive
+ * @param S is the set to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class T, class Compare, class Alloc,
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, const std::set<T,Compare,Alloc>& S)
+{
+    archive & S.size();
+    for (const T& value : S) {
         archive & value;
     }
 
@@ -609,9 +702,13 @@ ARCHIVE& operator&(ARCHIVE& archive, const std::map<Key,T,Compare,Allocator>& m)
 template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, const std::priority_queue<T,std::vector<T>,Compare>& queue)
 {
-    archive & queue.size();
-    for (const T& value : queue) {
-        archive & value;
+    std::priority_queue<T,std::vector<T>,Compare> queue_copy(queue);
+    
+    archive & queue_copy.size();
+    while (!queue_copy.empty()) {
+        archive & queue_copy.top();
+
+        queue_copy.pop();
     }
 
     return archive;
@@ -815,7 +912,7 @@ struct In : public Archive::Basic::In
      * @brief Load an arithmetic value from the archive
      * 
      * @tparam ARITHMETIC_TYPE is the type of the value to load
-     * @param value is the object in which the value is load
+     * @param value is the object in which the value is loaded
      * @return a reference to the updated archive 
      */
     template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
@@ -829,7 +926,7 @@ struct In : public Archive::Basic::In
     /**
      * @brief Load a string from the archive
      * 
-     * @param text is the object in which the string is load
+     * @param text is the object in which the string is loaded
      * @return a reference to the updated archive 
      */
     In& operator&(std::string& text);

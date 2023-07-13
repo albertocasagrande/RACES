@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.11
- * @date 2023-07-11
+ * @version 0.12
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -137,9 +137,7 @@ public:
 
     friend class Tissue;
     friend class Species;
-
-    template<typename LOGGER>
-    friend class BasicSimulator; 
+    friend class Simulation; 
 
     friend void swap(Cell& a, Cell &b);
 };

@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a UI window to plot a tissue
- * @version 0.4
- * @date 2023-07-08
+ * @version 0.5
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -246,8 +246,14 @@ class TissuePlotter {
 
 		size_t species_idx=0;
 		for (const auto& species: tissue) {
-			draw_species_legend(species, statistics.at(species.get_id()),
-								x, y, driver_palette[++species_idx]);
+			if (statistics.contains_data_for(species.get_id())) {
+				draw_species_legend(species, statistics.at(species.get_id()),
+									x, y, driver_palette[++species_idx]);
+			} else {
+				SpeciesStatistics s_statistics;
+				draw_species_legend(species, s_statistics,
+									x, y, driver_palette[++species_idx]);
+			}
 
 			y += legend_rectangle_height+frame_border;
 		}
@@ -260,7 +266,7 @@ public:
 	 * @param tissue is the tissue to plot
 	 */
 	TissuePlotter(const Tissue& tissue, const unsigned int frames_per_second=10):
-		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulator"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), frames_per_second)
+		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulation"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), frames_per_second)
 	{
 	}
 

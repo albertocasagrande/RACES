@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.8
- * @date 2023-07-12
+ * @version 0.9
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,8 +34,7 @@
 
 #include <boost/program_options.hpp>
 
-#include "binary_logger.hpp"
-#include "simulator.hpp"
+#include "simulation.hpp"
 
 #ifdef WITH_SDL2
 #include "SDL_plot.hpp"
@@ -65,6 +64,7 @@ int main(int argc, char* argv[])
         ("frames-per-second,f", po::value<unsigned int>()->default_value(5), 
          "the number of frames per second")
 #endif
+        ("seed,s", po::value<int>()->default_value(0), "random generator seed")
         ("no-logging,n", "avoid logging");
     
     po::options_description hidden("Hidden options");
@@ -120,27 +120,24 @@ int main(int argc, char* argv[])
                       {CellEventType::DUPLICATE, 0.02},
                       {CellEventType::PASSENGER_MUTATION, 20}});
 
-    Tissue tissue("Liver", 1000,1000);
+    Simulation simulation(vm.count("seed"));
 
-    tissue.add_species(A);
+    Tissue& tissue = simulation.set_tissue("Liver", {1000,1000});
+
+    tissue.add_species(A); 
     tissue.add_species(B);
 
-    tissue.add(B["-"].get_id(), {250, 500});
+    tissue.add(B["-"].get_id(), {500, 500});
 
-    BinaryLogger logger(tissue.get_name());
+    simulation.death_activation_level = 100;
 
-    BasicSimulator<BinaryLogger> simulator(tissue, logger);
-
-    simulator.death_activation_level = 100;
-
-    simulator.add_somatic_mutation(B,A,50);
+    simulation.add_somatic_mutation(B,A,75);
 
     using namespace std::chrono_literals;
-    simulator.set_interval_between_snapshots(5min);
+    simulation.set_interval_between_snapshots(5min);
 
-    if (vm.count("no-logging")) {
-        simulator.disable_logging();
-    }
+    const bool logging = (vm.count("no-logging")==0);
+
 #ifdef WITH_SDL2
     if (vm.count("plot")) {
 
@@ -148,16 +145,16 @@ int main(int argc, char* argv[])
 
         plotter.set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
 
-        simulator.run_up_to(time_horizon, plotter);
+        simulation.run_up_to(time_horizon, plotter);
 
         while (plotter.waiting_end()) {
-            plotter.plot(simulator.get_statistics());
+            plotter.plot(simulation.get_statistics());
         }
     } else {
-        simulator.run_up_to(time_horizon);
+        simulation.run_up_to(time_horizon, logging);
     }
 #else
-    simulator.run_up_to(time_horizon);
+    simulation.run_up_to(time_horizon, logging);
 #endif
 
     return 0;

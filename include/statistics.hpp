@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.3
- * @date 2023-07-08
+ * @version 0.4
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,17 +41,11 @@ namespace Races {
 class TissueStatistics;
 
 /**
- * @brief A class for simulation statistics about one species
+ * @brief A class for accounting simulation species statistics
  */
-class SpeciesStatistics 
+struct SpeciesStatistics 
 {
-    /**
-     * @brief The empty constructor
-     * 
-     * @param num_of_cells is the number of cells in the species
-     */
-    SpeciesStatistics();   
-public:
+
     Time rise_time;         //!< the time of the first appearance 
     Time extinction_time;   //!< the time of the last appearance
 
@@ -61,11 +55,57 @@ public:
     size_t lost_cells;      //!< the number of cells that have overcome the tissue border
 
     /**
+     * @brief The empty constructor
+     * 
+     * @param num_of_cells is the number of cells in the species
+     */
+    SpeciesStatistics();
+
+    /**
      * @brief A constructor
      * 
      * @param num_of_cells is the number of cells in the species
      */
     SpeciesStatistics(const size_t& num_of_cells);
+
+    /**
+     * @brief Save species statistics in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & rise_time
+                & extinction_time
+                & total_cells
+                & curr_cells
+                & killed_cells
+                & lost_cells;
+    }
+    
+    /**
+     * @brief Load species statistics from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded species statistics
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static SpeciesStatistics load(ARCHIVE& archive)
+    {
+        SpeciesStatistics stats;
+
+        archive & stats.rise_time
+                & stats.extinction_time
+                & stats.total_cells
+                & stats.curr_cells
+                & stats.killed_cells
+                & stats.lost_cells;
+
+        return stats;
+    }
 
     friend class TissueStatistics;
 };
@@ -82,17 +122,15 @@ class TissueStatistics
     std::list<Time> sim_times;             //!< the simulated times of the last recorded events
     std::list<time_point> real_times;      //!< the recording times of the last events 
 
-    const size_t max_stored_times;         //!< the maximum number of times to store
+    size_t max_stored_times;               //!< the maximum number of times to store
 
     size_t total_events;                   //!< number of recorded events
     time_point first_event_time;           //!< first recoded event time
 public:
     /**
-     * @brief A constructor
-     * 
-     * @param tissue is the tissue whose statistics are collected
+     * @brief An empty constructor
      */
-    TissueStatistics(const Tissue& tissue);
+    TissueStatistics();
 
     /**
      * @brief Get the statistics of a species
@@ -127,6 +165,24 @@ public:
      *      `species_id` as identifier 
      */
     const SpeciesStatistics& at(const EpigeneticGenotypeId& species_id) const;
+
+    /**
+     * @brief Test whether the object contains statistics for a species
+     * 
+     * @param species_id is the identifier of the species whose statistics are aimed
+     * @return `true` if and only if the object contains statistics for the 
+     *          specified species
+     */
+    bool contains_data_for(const EpigeneticGenotypeId& species_id) const;
+
+    /**
+     * @brief Test whether the object contains statistics for a species
+     * 
+     * @param species_id is the species whose statistics are aimed
+     * @return `true` if and only if the object contains statistics for the 
+     *          specified species
+     */
+    bool contains_data_for(const Species& species) const; 
 
     /**
      * @brief Record a death
@@ -213,6 +269,39 @@ public:
      */
     template<class toDuration>
     double get_last_recorded_events_over_time() const;
+    
+    /**
+     * @brief Save tissue statistics in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & s_statistics
+                & max_stored_times
+                & total_events;
+    }
+    
+    /**
+     * @brief Load tissue statistics from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded tissue statistics
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static TissueStatistics load(ARCHIVE& archive)
+    {
+        TissueStatistics stats;
+
+        archive & stats.s_statistics
+                & stats.max_stored_times
+                & stats.total_events;
+
+        return stats;
+    }
 };
 
 /* Inline implementations */
@@ -235,6 +324,16 @@ inline const SpeciesStatistics& TissueStatistics::at(const Species& species) con
 inline const SpeciesStatistics& TissueStatistics::at(const EpigeneticGenotypeId& species_id) const
 {
     return s_statistics.at(species_id);
+}
+
+inline bool TissueStatistics::contains_data_for(const EpigeneticGenotypeId& species_id) const
+{
+    return s_statistics.count(species_id)==1;
+}
+
+inline bool TissueStatistics::contains_data_for(const Species& species) const
+{
+    return contains_data_for(species.get_id());
 }
 
 inline std::chrono::steady_clock::duration TissueStatistics::get_elapsed_time() const

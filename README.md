@@ -1,2 +1,2 @@
 # RACES
-RACES is an Advanced Cancer Evolution Simulator
+RACES is an Advanced Cancer Evolution Simulation

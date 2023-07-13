@@ -10,6 +10,8 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 find_package( Boost COMPONENTS program_options REQUIRED )
 
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+
 find_package(SDL2)
 find_package(SDL2_image)
 find_package(SDL2_ttf)
@@ -37,6 +39,7 @@ set(GENERIC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/somatic_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp

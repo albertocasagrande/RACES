@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.6
- * @date 2023-07-12
+ * @version 0.7
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,8 @@
 
 #include "binary_logger.hpp"
 #include "tissue.hpp"
+
+#include "simulation.hpp"
 
 namespace Races {
 
@@ -217,23 +219,11 @@ void BinaryLogger::record_initial_cell(const CellInTissue& cell)
 }
 
 
-void BinaryLogger::snapshot(const Tissue& tissue)
+void BinaryLogger::snapshot(const Simulation& simulation)
 {
-    auto filename = get_snapshot_path();
+    Archive::Binary::Out archive(get_snapshot_path());
 
-    std::ofstream ofs(filename, std::ios::out | std::ios::binary);
-
-    for (const auto& species:tissue) {
-        for (const auto& cell:species) {
-            ofs.write((char*)(&(cell.get_id())), sizeof(CellId));
-            ofs.write((char*)(&(time)), sizeof(Time));
-            ofs.write((char*)(&(cell.x)), sizeof(int16_t));
-            ofs.write((char*)(&(cell.y)), sizeof(int16_t));
-            ofs.write((char*)(&(cell.z)), sizeof(int16_t));
-        }
-    }
-
-    ofs.close();
+    archive & simulation;
 }
 
 void BinaryLogger::reset(const std::string directory_prefix)

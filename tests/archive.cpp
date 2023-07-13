@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.3
- * @date 2023-07-11
+ * @version 0.4
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,53 @@
 #include <boost/mpl/list.hpp>
 
 #include "archive.hpp"
-#include "simulator.hpp"
+#include "simulation.hpp"
+#include "logger.hpp"
+
+
+struct ArchiveFixture {
+    long double time_horizon;
+
+    Races::Simulation simulation;
+
+    ArchiveFixture():
+        time_horizon(70), simulation()
+    {
+        using namespace Races;
+
+        Tissue& tissue = simulation.set_tissue("Liver", {1000,1000});
+        
+        SomaticGenotype A("A",{{0.01,0.01}});
+        A["-"].set_rates({{CellEventType::DIE, 0.1},
+                        {CellEventType::DUPLICATE, 0.3},
+                        {CellEventType::PASSENGER_MUTATION, 20}});
+        A["+"].set_rates({{CellEventType::DIE, 0.1},
+                        {CellEventType::DUPLICATE, 0.45},
+                        {CellEventType::PASSENGER_MUTATION, 2}});
+    
+        SomaticGenotype B("B",{{0.01,0.01}});
+        B["-"].set_rates({{CellEventType::DIE, 0.1},
+                        {CellEventType::DUPLICATE, 0.2},
+                        {CellEventType::PASSENGER_MUTATION, 1}});
+        B["+"].set_rates({{CellEventType::DIE, 0.01},
+                        {CellEventType::DUPLICATE, 0.02},
+                        {CellEventType::PASSENGER_MUTATION, 20}});
+
+        tissue.add_species(A);
+        tissue.add_species(B);
+
+        tissue.add(B["-"].get_id(), {250, 500});
+
+        simulation.death_activation_level = 100;
+
+        simulation.add_somatic_mutation(B,A,50);
+
+        simulation.run_up_to(time_horizon, false);
+    }
+
+    ~ArchiveFixture()
+    {}
+};
 
 std::filesystem::path get_a_temporary_path()
 {
@@ -149,7 +195,6 @@ inline bool operator!=(const Races::EpigeneticGenotype& a, const Races::Epigenet
     return !(a==b);
 }
 
-
 bool operator==(const Races::Species& a, const Races::Species& b)
 {
     if (static_cast<const Races::EpigeneticGenotype&>(a)!=static_cast<const Races::EpigeneticGenotype&>(b)) {
@@ -200,6 +245,20 @@ bool operator==(const Races::Tissue& a, const Races::Tissue& b)
     }
 
     return true;
+}
+
+bool operator==(const Races::Simulation& a, const Races::Simulation& b)
+{
+    return a.get_time()==b.get_time() &&
+           a.tissue()==b.tissue() &&
+           a.death_activation_level==b.death_activation_level;
+}
+
+bool operator==(const Races::TimedSomaticMutation& a, const Races::TimedSomaticMutation& b)
+{
+    return (a.initial_id==b.initial_id) &&
+           (a.final_id==b.final_id) &&
+           (a.time==b.time);
 }
 
 BOOST_AUTO_TEST_CASE(binary_size_t)
@@ -291,6 +350,70 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     std::filesystem::remove(filename);
 }
 
+BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation)
+{
+    std::vector<Races::TimedSomaticMutation> to_save{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+
+    auto filename = get_a_temporary_path();
+    {
+        Races::Archive::Binary::Out o_archive(filename);
+
+        for (const auto& value : to_save) {
+            o_archive & value;
+        }
+    }
+
+    {
+        Races::Archive::Binary::In i_archive(filename);
+
+        for (auto& value : to_save) {
+            Races::TimedSomaticMutation read_value = Races::TimedSomaticMutation::load(i_archive);
+
+            BOOST_CHECK(read_value==value);
+        }
+    }
+
+    std::filesystem::remove(filename);
+}
+
+
+BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation_queue)
+{
+    std::vector<Races::TimedSomaticMutation> vector{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+
+    using PriorityQueue = std::priority_queue<Races::TimedSomaticMutation>;
+
+    PriorityQueue queue(vector.begin(), vector.end());
+
+    auto filename = get_a_temporary_path();
+    {
+        Races::Archive::Binary::Out o_archive(filename);
+
+        o_archive & queue;
+    }
+
+    {
+        Races::Archive::Binary::In i_archive(filename);
+    
+        PriorityQueue i_queue;
+
+        i_archive & i_queue;
+    
+        BOOST_CHECK(i_queue.size()==queue.size());
+
+        while (!i_queue.empty() && !queue.empty()) {
+
+            BOOST_CHECK(i_queue.top()==queue.top());
+            i_queue.pop();
+            queue.pop();
+        }
+
+        BOOST_CHECK(i_queue.size()==queue.size());
+    }
+
+    std::filesystem::remove(filename);
+}
+
 BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
 {
     using namespace Races;
@@ -330,50 +453,18 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
     std::filesystem::remove(filename);
 }
 
+BOOST_FIXTURE_TEST_SUITE( simulatedData, ArchiveFixture )
+
 BOOST_AUTO_TEST_CASE(binary_tissue)
 {
     using namespace Races;
-    
-    long double time_horizon = 70;
-
-    SomaticGenotype A("A",{{0.01,0.01}});
-    A["-"].set_rates({{CellEventType::DIE, 0.1},
-                      {CellEventType::DUPLICATE, 0.3},
-                      {CellEventType::PASSENGER_MUTATION, 20}});
-    A["+"].set_rates({{CellEventType::DIE, 0.1},
-                      {CellEventType::DUPLICATE, 0.45},
-                      {CellEventType::PASSENGER_MUTATION, 2}});
-
-    SomaticGenotype B("B",{{0.01,0.01}});
-    B["-"].set_rates({{CellEventType::DIE, 0.1},
-                      {CellEventType::DUPLICATE, 0.2},
-                      {CellEventType::PASSENGER_MUTATION, 1}});
-    B["+"].set_rates({{CellEventType::DIE, 0.01},
-                      {CellEventType::DUPLICATE, 0.02},
-                      {CellEventType::PASSENGER_MUTATION, 20}});
-
-    Tissue tissue("Liver", 1000,1000);
-
-    tissue.add_species(A);
-    tissue.add_species(B);
-
-    tissue.add(B["-"].get_id(), {250, 500});
-    {
-        BasicSimulator<> simulator(tissue);
-
-        simulator.death_activation_level = 100;
-
-        simulator.add_somatic_mutation(B,A,50);
-
-        simulator.run_up_to(time_horizon);
-    }
 
     auto filename = get_a_temporary_path();
 
     {
         Races::Archive::Binary::Out o_archive(filename);
 
-        o_archive & tissue;
+        o_archive & simulation.tissue();
     }
 
     {
@@ -381,8 +472,54 @@ BOOST_AUTO_TEST_CASE(binary_tissue)
 
         Tissue in_tissue = Tissue::load(i_archive);
 
-        BOOST_CHECK(tissue==in_tissue);
+        BOOST_CHECK(simulation.tissue()==in_tissue);
     }
 
     std::filesystem::remove(filename);
 }
+
+BOOST_AUTO_TEST_CASE(simulation_statistics)
+{
+    using namespace Races;
+
+    auto filename = get_a_temporary_path();
+
+    {
+        Races::Archive::Binary::Out o_archive(filename);
+
+        o_archive & simulation.get_statistics();
+    }
+
+    {
+        Races::Archive::Binary::In i_archive(filename);
+
+        TissueStatistics statistics = TissueStatistics::load(i_archive);
+    }
+
+    std::filesystem::remove(filename);
+}
+
+BOOST_AUTO_TEST_CASE(simulation_tissue)
+{
+    using namespace Races;
+
+    auto filename = get_a_temporary_path();
+
+    {
+        Races::Archive::Binary::Out o_archive(filename);
+
+        o_archive & simulation;
+    }
+
+    {
+        Races::Archive::Binary::In i_archive(filename);
+
+        Simulation in_simulation = Simulation::load(i_archive);
+
+        BOOST_CHECK(simulation==in_simulation);
+    }
+
+    std::filesystem::remove(filename);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

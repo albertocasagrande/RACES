@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.9
- * @date 2023-07-11
+ * @version 0.10
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -354,8 +354,7 @@ public:
         return species;
     }
 
-    template<typename LOGGER>
-    friend class BasicSimulator;
+    friend class Simulation;
 
     friend void std::swap(Species& a, Species& b);
 };

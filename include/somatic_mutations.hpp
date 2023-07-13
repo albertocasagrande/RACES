@@ -2,8 +2,8 @@
  * @file somatic_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implementing timed somatic mutations
- * @version 0.1
- * @date 2023-07-08
+ * @version 0.2
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -64,6 +64,41 @@ struct TimedSomaticMutation {
      * @param time is the simulation time of the somatic mutation
      */
     TimedSomaticMutation(const SomaticGenotype& initial_genotype, const SomaticGenotype& final_genotype, const Time& time);
+
+    /**
+     * @brief Save a timed somatic mutation in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & initial_id
+                & final_id
+                & time;
+    }
+
+    /**
+     * @brief Load a timed somatic mutation from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded timed somatic mutation
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static TimedSomaticMutation load(ARCHIVE& archive)
+    {
+        SomaticGenotypeId initial_id;
+        SomaticGenotypeId final_id;
+        Time time;
+
+        archive & initial_id
+                & final_id
+                & time;
+
+        return TimedSomaticMutation(initial_id,final_id,time);
+    }
 };
 
 };

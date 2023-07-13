@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.4
- * @date 2023-07-12
+ * @version 0.5
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,19 +45,15 @@ SpeciesStatistics::SpeciesStatistics(const size_t& num_of_cells):
     curr_cells(num_of_cells), killed_cells(0), lost_cells(0)
 {}
 
-TissueStatistics::TissueStatistics(const Tissue& tissue):
+TissueStatistics::TissueStatistics():
     s_statistics(), sim_times(), max_stored_times(100), total_events(0)
 {
     assert(max_stored_times>0);
-
-    for (const auto& species: tissue) {
-        s_statistics.insert({species.get_id(), SpeciesStatistics(species.num_of_cells())});
-    }
 }
 
 void TissueStatistics::record_death(const EpigeneticGenotypeId& genotype_id, const Time &time)
 {
-    auto& s_stats = s_statistics.at(genotype_id);
+    auto& s_stats = s_statistics[genotype_id];
 
     s_stats.killed_cells += 1;
     s_stats.curr_cells -= 1;
@@ -68,7 +64,7 @@ void TissueStatistics::record_death(const EpigeneticGenotypeId& genotype_id, con
 
 void TissueStatistics::record_lost(const EpigeneticGenotypeId& genotype_id, const Time &time)
 {
-    auto& s_stats = s_statistics.at(genotype_id);
+    auto& s_stats = s_statistics[genotype_id];
 
     s_stats.lost_cells += 1;
     s_stats.curr_cells -= 1;
@@ -79,7 +75,7 @@ void TissueStatistics::record_lost(const EpigeneticGenotypeId& genotype_id, cons
 
 void TissueStatistics::record_duplication(const EpigeneticGenotypeId& genotype_id)
 {
-    auto& s_stats = s_statistics.at(genotype_id);
+    auto& s_stats = s_statistics[genotype_id];
 
     s_stats.total_cells += 2;
     s_stats.curr_cells += 1;
@@ -87,14 +83,14 @@ void TissueStatistics::record_duplication(const EpigeneticGenotypeId& genotype_i
 
 void TissueStatistics::record_mutation(const EpigeneticGenotypeId& initial_id, const EpigeneticGenotypeId& final_id, const Time &time)
 {
-    auto& s_stats = s_statistics.at(initial_id);
+    auto& s_stats = s_statistics[initial_id];
     s_stats.curr_cells -= 1;
     s_stats.total_cells -= 1;
     if (s_stats.curr_cells==0) {
         s_stats.extinction_time = time;
     }
 
-    auto& s_stats2 = s_statistics.at(final_id);
+    auto& s_stats2 = s_statistics[final_id];
     s_stats2.total_cells += 1;
     s_stats2.curr_cells += 1;
     if (s_stats2.total_cells==1) {

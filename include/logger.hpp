@@ -2,8 +2,8 @@
  * @file logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.4
- * @date 2023-07-12
+ * @version 0.5
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,8 @@
 
 namespace Races {
 
+class Simulation;
+
 /**
  * @brief The simulator logger concept
  */
@@ -64,11 +66,11 @@ struct BasicLogger
     void record_initial_cell(const CellInTissue& cell);
 
     /**
-     * @brief Save a tissue snapshot
+     * @brief Save a simulation snapshot
      * 
-     * @param tissue is the tissue whose snapshot is requested
+     * @param simulation is the simulation whose snapshot is requested
      */
-    void snapshot(const Tissue& tissue);
+    void snapshot(const Simulation& simulation);
 
     /**
      * @brief Flush archive data
@@ -115,11 +117,11 @@ struct JSONLogger : public BasicLogger
     void record_initial_cell(const CellInTissue& cell);
 
     /**
-     * @brief Save a tissue snapshot
+     * @brief Save a simulation snapshot
      * 
-     * @param tissue is the tissue whose snapshot is requested
+     * @param simulation is the simulation whose snapshot is requested
      */
-    void snapshot(const Tissue& tissue);
+    void snapshot(const Simulation& simulation);
 
     /**
      * @brief Flush archive data
