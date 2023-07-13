@@ -2,7 +2,7 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.7
+ * @version 0.8
  * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
@@ -112,8 +112,6 @@ BinaryLogger::CellReader::CellReader(std::filesystem::path directory):
 {
     std::ifstream cell_file(directory / "cell_file_info.txt", std::fstream::in);
     cell_file >> cells_per_archive >> last_file_number;
-
-    std::cout << get_cell_archive_path(directory, 0) << std::endl;
 
     // if no cell was saved 
     if (cell_archive.size()==0) {
