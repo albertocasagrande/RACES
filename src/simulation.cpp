@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
@@ -40,10 +40,15 @@ Simulation::Simulation(int random_seed):
     random_gen.seed(random_seed);
 }
 
-Simulation::Simulation(Simulation&& orig)
+Simulation::Simulation(Simulation&& orig):
+    Simulation()
 {
-    logger = orig.logger;
-    orig.logger = nullptr;
+    *this = std::move(orig);
+}
+
+Simulation& Simulation::operator=(Simulation&& orig)
+{
+    std::swap(logger, orig.logger);
     std::swap(tissues, orig.tissues);
     std::swap(valid_directions, orig.valid_directions);
     std::swap(last_snapshot_time, orig.last_snapshot_time);
@@ -54,6 +59,8 @@ Simulation::Simulation(Simulation&& orig)
     std::swap(somatic_mutation_queue, orig.somatic_mutation_queue);
     std::swap(death_enabled, orig.death_enabled);
     std::swap(death_activation_level, orig.death_activation_level);
+
+    return *this;
 }
 
 const Tissue& Simulation::tissue() const
