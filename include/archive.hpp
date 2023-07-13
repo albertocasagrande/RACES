@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.5
- * @date 2023-07-12
+ * @version 0.6
+ * @date 2023-07-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -565,7 +565,7 @@ template<class ARCHIVE, template<class,class> class CONTAINER, class T, class Al
 ARCHIVE& operator&(ARCHIVE& archive, const CONTAINER<T,Alloc>& container)
 {
     archive & container.size();
-    for (const auto& value : container) {
+    for (const T& value : container) {
         archive & value;
     }
 
