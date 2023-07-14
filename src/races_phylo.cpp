@@ -2,8 +2,8 @@
  * @file races_phylo.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.1
- * @date 2023-07-13
+ * @version 0.2
+ * @date 2023-07-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,6 +39,8 @@
 
 #include "sampler.hpp"
 #include "phylogenetic_forest.hpp"
+
+#include "phyloXML.hpp"
 
 std::ostream& print_help(std::ostream& os, const std::string& program_name, 
                          const boost::program_options::options_description& options)
@@ -157,14 +159,13 @@ int main(int argc, char* argv[])
         archive & simulation;
     }
 
-    RectangleSampler sampler(simulation.tissue(),{245,495},{255,505});
+    RectangleSampler sampler(simulation.tissue(),{496,495},{500,500});
 
     PhylogeneticForest forest = grow_forest_from(sampler, reader);
- 
-    auto roots = forest.get_roots();
-    for (const auto& root : roots) {
-        std::cout << root << std::endl;
-    }
+
+    IO::phyloXMLStream os;
+
+    os << forest;
 
     return 0;
 }
