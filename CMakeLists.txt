@@ -52,6 +52,7 @@ set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp
                 ${RACES_SOURCES})
 
 set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
                   ${RACES_SOURCES})
