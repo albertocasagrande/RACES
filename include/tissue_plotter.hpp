@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a UI window to plot a tissue
- * @version 0.5
- * @date 2023-07-13
+ * @version 0.6
+ * @date 2023-07-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,14 +38,13 @@
 #include "statistics.hpp"
 
 #include "tissue.hpp"
+#include "palette.hpp"
 
 namespace Races 
 {
 
 namespace UI 
 {
-
-extern std::vector<Color> driver_palette;
 
 template <class Rep, std::intmax_t num, std::intmax_t denom>
 std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, denom>> duration)
@@ -194,7 +193,7 @@ class TissuePlotter {
 	
 		size_t species_idx=0;
 		for (const auto& species: tissue) {
-			const auto& color = driver_palette[++species_idx];
+			const auto& color = palette[species_idx++];
 
 			window->set_color(color);
 
@@ -248,11 +247,11 @@ class TissuePlotter {
 		for (const auto& species: tissue) {
 			if (statistics.contains_data_for(species.get_id())) {
 				draw_species_legend(species, statistics.at(species.get_id()),
-									x, y, driver_palette[++species_idx]);
+									x, y, palette[species_idx++]);
 			} else {
 				SpeciesStatistics s_statistics;
 				draw_species_legend(species, s_statistics,
-									x, y, driver_palette[++species_idx]);
+									x, y, palette[species_idx++]);
 			}
 
 			y += legend_rectangle_height+frame_border;
@@ -281,7 +280,7 @@ public:
 		legend_rectangle_height(35), legend_label_height(16), redraw_interval(1000/frames_per_second), 
 		last_redraw_time(std::chrono::system_clock::from_time_t(0))
 	{
-		if (tissue.num_of_species()>driver_palette.size()) {
+		if (tissue.num_of_species()>palette.size()) {
 			throw std::domain_error("The color palette does not support so many species");
 		}
 

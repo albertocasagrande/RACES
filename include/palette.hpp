@@ -1,8 +1,8 @@
 /**
- * @file plot_2D.hpp
+ * @file palette.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement a 2D plot window
- * @version 0.2
+ * @brief Define colors and a palette
+ * @version 0.1
  * @date 2023-07-14
  * 
  * @copyright Copyright (c) 2023
@@ -28,7 +28,11 @@
  * SOFTWARE.
  */
 
-#include "plot_2D.hpp"
+#ifndef __RACES_PALETTE__
+#define __RACES_PALETTE__
+
+#include <vector>
+#include <cstdint>
 
 namespace Races 
 {
@@ -36,14 +40,22 @@ namespace Races
 namespace UI 
 {
 
-Plot2DWindow::Plot2DWindow(const unsigned int width, const unsigned int height, const std::string name):
-	background_color(), w_closed(false)
-{
-	(void)width;
-	(void)height;
-	(void)name;
-}
+struct Color {
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+	uint8_t alpha;
 
-}
+	Color();
 
-}
+	Color(const uint8_t red, const uint8_t green, const uint8_t blue);
+
+	Color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha);
+};
+
+extern std::vector<Color> palette;
+
+} // UI
+
+} // Races
+#endif // __RACES_PALETTE__

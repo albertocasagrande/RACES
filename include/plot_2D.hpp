@@ -2,8 +2,8 @@
  * @file plot_2D.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-07-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,27 +32,15 @@
 #define __RACES_PLOT_2D__
 
 #include <string>
-#include <vector>
 #include <cstdint>
+
+#include "palette.hpp"
 
 namespace Races 
 {
 
 namespace UI 
 {
-
-struct Color {
-	uint8_t red;
-	uint8_t green;
-	uint8_t blue;
-	uint8_t alpha;
-
-	Color();
-
-	Color(const uint8_t red, const uint8_t green, const uint8_t blue);
-
-	Color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha);
-};
 
 class Plot2DWindow {
 protected:

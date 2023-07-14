@@ -1,5 +1,5 @@
 /**
- * @file driver_palette.cpp
+ * @file palette.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define the TissuePlotter driver palette
  * @version 0.1
@@ -39,8 +39,19 @@ namespace UI
 {
 
 
-std::vector<Color> driver_palette{
-	{0x00,0xFF,0x00},
+Color::Color():
+	Color(0x00,0x00,0x00,0xFF)
+{}
+
+Color::Color(const uint8_t red, const uint8_t green, const uint8_t blue):
+	Color(red,green,blue,0xFF)
+{}
+
+Color::Color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha):
+	red(red), green(green), blue(blue), alpha(alpha)
+{}
+
+std::vector<Color> palette{
 	{0x00,0x00,0xFF},
 	{0xFF,0x00,0x00},
 	{0x01,0xFF,0xFE},

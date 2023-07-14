@@ -45,7 +45,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_palette.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp)
 
 set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp
@@ -69,15 +69,11 @@ if(${COMPILE_SDL2_CODE})
 endif()
 
 add_executable(races_sim ${SIM_SOURCES})
-
 target_include_directories(races_sim PRIVATE ${Boost_INCLUDE_DIR})
-
 target_link_libraries(races_sim ${SIM_LIBRARIES})
 
 add_executable(races_phylo ${PHYLO_SOURCES})
-
 target_include_directories(races_phylo PRIVATE ${Boost_INCLUDE_DIR})
-
 target_link_libraries(races_phylo ${RACES_LIBRARIES})
 
 enable_testing()
