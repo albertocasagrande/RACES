@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define classes and function for phylogenetic trees
- * @version 0.1
- * @date 2023-07-13
+ * @version 0.2
+ * @date 2023-07-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,8 +58,9 @@ public:
     /**
      * @brief A constant node of the forest
      */
-    class const_node {
-        PhylogeneticForest const* forest;   //!< A pointer to the forest
+    class const_node 
+    {
+        PhylogeneticForest* forest;         //!< A pointer to the forest
         CellId cell_id;                     //!< The cell id of a cell in the forest
 
         /**
@@ -96,25 +97,34 @@ public:
          */
         std::vector<const_node> children() const;
 
+        /**
+         * @brief Test whether this node is a leaf
+         * 
+         * @return `true` if and only if this node is a leaf
+         */
+        bool is_leaf() const;
+
+        /**
+         * @brief Test whether this node is a root
+         * 
+         * @return `true` if and only if this node is a root
+         */
+        bool is_root() const;
+
         friend class PhylogeneticForest;
     };
 
-    class node {
-        PhylogeneticForest* forest;   //!< A pointer to the forest
-        CellId cell_id;               //!< The cell id of a cell in the forest
+    class node : public const_node
+    {
 
         node(PhylogeneticForest* forest, const CellId cell_id);
     public:
         /**
          * @brief Cast to Cell
          * 
-         * This method returns a constant reference to a cell. 
-         * Notice that the cells in the forest should be modified 
-         * exclusively by using `PhylogeneticForest::node` methods
-         * 
-         * @return a constant reference to a cell
+         * @return a non-constant reference to a cell
          */
-        operator const PhylogeneticForest::CellDataType&() const;
+        operator PhylogeneticForest::CellDataType&();
 
         /**
          * @brief Get the parent node
@@ -130,21 +140,6 @@ public:
          *         this node
          */
         std::vector<node> children();
-
-        /**
-         * @brief Get the parent node
-         * 
-         * @return the parent node of this node
-         */
-        const_node parent() const;
-
-        /**
-         * @brief Get the node direct descendants
-         * 
-         * @return a vector containing the direct descendants of
-         *         this node
-         */
-        std::vector<const_node> children() const;
 
         friend class PhylogeneticForest;
     };
@@ -210,6 +205,9 @@ PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_stor
     std::set<CellId> parent_ids;
     for (const auto& cell: sample) {
         parent_ids.insert(cell.get_id());
+
+        // record leaves children, i.e., none
+        forest.branches[cell.get_id()] = std::set<CellId>();
     }
 
     std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());
@@ -230,13 +228,13 @@ PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_stor
                 queue.push(cell.get_parent_id());
                 parent_ids.insert(cell.get_parent_id());
             }
+            forest.branches[cell.get_parent_id()].insert(cell.get_id());
         } else {
             // it is a root
             forest.roots.insert(cell.get_id());
         }
 
         forest.cells.insert(std::make_pair(cell.get_id(),cell));
-        forest.branches[cell.get_parent_id()].insert(cell.get_id());
     }
 
     return forest;
@@ -248,7 +246,19 @@ inline PhylogeneticForest::const_node::operator const PhylogeneticForest::CellDa
     return forest->cells.at(cell_id);
 }
 
-inline PhylogeneticForest::node::operator const PhylogeneticForest::CellDataType&() const
+inline bool PhylogeneticForest::const_node::is_leaf() const
+{
+    return forest->branches.at(cell_id).size()==0;
+}
+
+inline bool PhylogeneticForest::const_node::is_root() const
+{
+    const auto& cell = forest->cells.at(cell_id);
+
+    return cell.get_id() == cell.get_parent_id();
+}
+
+inline PhylogeneticForest::node::operator PhylogeneticForest::CellDataType&()
 {
     return forest->cells.at(cell_id);
 }
