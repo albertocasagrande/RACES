@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.1
- * @date 2023-07-13
+ * @version 0.2
+ * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -327,6 +327,32 @@ public:
     const TissueStatistics& get_statistics() const;
 
     /**
+     * @brief Add a new species to the tissue
+     * 
+     * @param genotype is the driver genotype of the new species
+     * @return a reference to the updated object
+     */
+    Simulation& add_species(const SomaticGenotype& genotype);
+
+    /**
+     * @brief Add a cell to the simulated tissue
+     * 
+     * @param genotype_ is the driver genotype of the new cell
+     * @param position is the initial position in the tissue
+     * @return a reference to the updated object
+     */
+    Simulation& add_cell(const EpigeneticGenotype& genotype, const PositionInTissue position);
+
+    /**
+     * @brief Add a cell to the simulated tissue
+     * 
+     * @param genotype_id is the driver genotype identifier of the new cell
+     * @param position is the initial position in the tissue
+     * @return a reference to the updated object
+     */
+    Simulation& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position);
+
+    /**
      * @brief Set a new simulation tissue
      * 
      * This method resets the simulation and sets a 
@@ -334,9 +360,9 @@ public:
      * 
      * @param name is the tissue name
      * @param sizes are the sizes of the tissue
-     * @return a reference to the new tissue
+     * @return a reference to the updated object
      */
-    Tissue& set_tissue(const std::string name, const std::vector<AxisSize> sizes);
+    Simulation& set_tissue(const std::string name, const std::vector<AxisSize> sizes);
 
     /**
      * @brief Get the simulation tissue
@@ -431,6 +457,25 @@ inline const Time& Simulation::get_time() const
 inline const TissueStatistics& Simulation::get_statistics() const
 {
     return statistics;
+}
+
+inline Simulation& Simulation::add_species(const SomaticGenotype& genotype)
+{
+    tissue().add_species(genotype);
+
+    return *this;
+}
+
+inline Simulation& Simulation::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
+{
+    tissue().add_cell(genotype_id, position);
+
+    return *this;
+}
+
+inline Simulation& Simulation::add_cell(const EpigeneticGenotype& genotype, const PositionInTissue position)
+{
+    return add_cell(genotype.get_id(), position);
 }
 
 template<typename PLOT_WINDOW>

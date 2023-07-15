@@ -2,7 +2,7 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.5
+ * @version 0.6
  * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
@@ -51,8 +51,6 @@ struct ArchiveFixture {
         time_horizon(70), simulation()
     {
         using namespace Races;
-
-        Tissue& tissue = simulation.set_tissue("Liver", {1000,1000});
         
         SomaticGenotype A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DIE, 0.1},
@@ -70,14 +68,13 @@ struct ArchiveFixture {
                         {CellEventType::DUPLICATE, 0.02},
                         {CellEventType::PASSENGER_MUTATION, 20}});
 
-        tissue.add_species(A);
-        tissue.add_species(B);
-
-        tissue.add_cell(B["-"].get_id(), {250, 500});
+        simulation.set_tissue("Liver", {1000,1000})
+                  .add_species(A)
+                  .add_species(B)
+                  .add_cell(B["-"], {250, 500})
+                  .add_somatic_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
-
-        simulation.add_somatic_mutation(B,A,50);
 
         simulation.run_up_to(time_horizon, false);
     }

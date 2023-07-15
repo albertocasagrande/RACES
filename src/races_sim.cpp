@@ -2,7 +2,7 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.10
+ * @version 0.11
  * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
@@ -122,16 +122,13 @@ int main(int argc, char* argv[])
 
     Simulation simulation(vm.count("seed"));
 
-    Tissue& tissue = simulation.set_tissue("Liver", {1000,1000});
-
-    tissue.add_species(A); 
-    tissue.add_species(B);
-
-    tissue.add_cell(B["-"].get_id(), {500, 500});
+    simulation.set_tissue("Liver", {1000,1000})
+              .add_species(A)
+              .add_species(B)
+              .add_cell(B["-"], {500, 500})
+              .add_somatic_mutation(B,A,75);
 
     simulation.death_activation_level = 100;
-
-    simulation.add_somatic_mutation(B,A,75);
 
     using namespace std::chrono_literals;
     simulation.set_interval_between_snapshots(5min);
@@ -141,7 +138,7 @@ int main(int argc, char* argv[])
 #ifdef WITH_SDL2
     if (vm.count("plot")) {
 
-        UI::TissuePlotter<UI::SDLWindow> plotter(tissue);
+        UI::TissuePlotter<UI::SDLWindow> plotter(simulation.tissue());
 
         plotter.set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
 
