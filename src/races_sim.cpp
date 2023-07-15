@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.9
- * @date 2023-07-13
+ * @version 0.10
+ * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
     tissue.add_species(A); 
     tissue.add_species(B);
 
-    tissue.add(B["-"].get_id(), {500, 500});
+    tissue.add_cell(B["-"].get_id(), {500, 500});
 
     simulation.death_activation_level = 100;
 

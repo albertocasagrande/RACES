@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.11
- * @date 2023-07-12
+ * @version 0.12
+ * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -482,21 +482,21 @@ public:
     Species& get_species(const EpigeneticGenotypeId& genotype_id);
 
     /**
-     * @brief Add cell driver genotype
-     * 
-     * @param genotype is the driver genotype of the cell
-     * @param position is the initial position in the tissue
-     * @return a reference to the updated object
-     */
-    Tissue& add(const EpigeneticGenotypeId genotype, const PositionInTissue position);
-
-    /**
      * @brief Add a new species to the tissue
      * 
      * @param genotype is the driver genotype of the new species
      * @return a reference to the updated object
      */
     Tissue& add_species(const SomaticGenotype& genotype);
+
+    /**
+     * @brief Add driver genotype cell
+     * 
+     * @param genotype_id is the driver genotype identifier of the new cell
+     * @param position is the initial position in the tissue
+     * @return a reference to the updated object
+     */
+    Tissue& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position);
 
     /**
      * @brief Test whether a position is valid in a tissue
@@ -659,16 +659,6 @@ inline std::vector<Species>::const_iterator Tissue::end() const
 inline Tissue::SpeciesView Tissue::get_somatic_genotype_species(const SomaticGenotypeId& genotype_id) const
 {
     return Tissue::SpeciesView(species, somatic_genotope_pos.at(genotype_id));
-}
-
-inline const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype) const
-{
-    return species[pos_map.at(genotype)];
-}
-
-inline Species& Tissue::get_species(const EpigeneticGenotypeId& genotype)
-{
-    return species[pos_map.at(genotype)];
 }
 
 inline size_t Tissue::num_of_species() const

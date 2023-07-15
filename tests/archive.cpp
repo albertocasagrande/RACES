@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.4
- * @date 2023-07-13
+ * @version 0.5
+ * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,7 +73,7 @@ struct ArchiveFixture {
         tissue.add_species(A);
         tissue.add_species(B);
 
-        tissue.add(B["-"].get_id(), {250, 500});
+        tissue.add_cell(B["-"].get_id(), {250, 500});
 
         simulation.death_activation_level = 100;
 

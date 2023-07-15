@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.9
- * @date 2023-07-12
+ * @version 0.10
+ * @date 2023-07-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -203,7 +203,27 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-Tissue& Tissue::add(const EpigeneticGenotypeId genotype, const PositionInTissue position)
+const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id) const
+{
+    const auto pos_it = pos_map.find(genotype_id);
+    if (pos_it == pos_map.end()) {
+        throw std::out_of_range("the species has not been included in the tissue");
+    }
+
+    return species[pos_it->second];
+}
+
+Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id)
+{
+    const auto pos_it = pos_map.find(genotype_id);
+    if (pos_it == pos_map.end()) {
+        throw std::out_of_range("the species has not been included in the tissue");
+    }
+
+    return species[pos_it->second];
+}
+
+Tissue& Tissue::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
 {
     auto*& cell = space[position.x][position.y][position.z];
 
@@ -211,9 +231,9 @@ Tissue& Tissue::add(const EpigeneticGenotypeId genotype, const PositionInTissue 
         throw std::runtime_error("The position has been already taken");
     }
 
-    Species& species = get_species(genotype);
+    Species& species = get_species(genotype_id);
 
-    cell = species.add(CellInTissue(genotype, position));
+    cell = species.add(CellInTissue(genotype_id, position));
 
     return *this;
 }
