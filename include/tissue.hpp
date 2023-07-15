@@ -508,11 +508,22 @@ public:
     bool is_valid(const PositionInTissue& position) const;
 
     /**
-     * @brief Get the number of species in the tissue
+     * @brief Get the number of tissue dimensions
      * 
-     * @return the number of tissue species
+     * @return the number of tissue dimensions
      */
     size_t num_of_species() const;
+
+    /**
+     * @brief Get the number of cells in the simulated tissue
+     * 
+     * This method returns the total number of cells 
+     * in the simulated space. This number accounts for 
+     * both driver mutated cells and normal ones.
+     * 
+     * @return the number of cells in the simulated tissue
+     */
+    size_t num_of_cells() const;
 
     /**
      * @brief Get the number of driver mutated cells in the tissue
@@ -664,6 +675,11 @@ inline Tissue::SpeciesView Tissue::get_somatic_genotype_species(const SomaticGen
 inline size_t Tissue::num_of_species() const
 {
     return species.size();
+}
+
+inline size_t Tissue::num_of_cells() const
+{
+    return space.size() * space[0].size() * space[0][0].size();
 }
 
 inline bool Tissue::is_valid(const PositionInTissue& position) const
