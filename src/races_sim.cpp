@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     po::options_description visible("Options");
     visible.add_options()
         ("help,h", "get the help")
-        // ("bar,b", "show a bar for the elapsed simulation time")
+        ("no-progress-bar,b", "avoid progress bar")
 #ifdef WITH_SDL2
         ("plot,p", 
          "plot a graphical representation of the simulation")
@@ -122,6 +122,34 @@ int main(int argc, char* argv[])
 
     Simulation simulation(vm.count("seed"));
 
+#ifdef WITH_INDICATORS
+    using namespace indicators;
+
+    show_console_cursor(false);
+
+    indicators::ProgressBar* bar = nullptr;
+    
+    if (vm.count("no-progress-bar")==0) {
+        bar = new indicators::ProgressBar{
+            option::BarWidth{50},
+            option::Start{" ["},
+            option::Fill{"█"},
+            option::Lead{"█"},
+            option::Remainder{"-"},
+            option::End{"]"},
+            option::ForegroundColor{Color::yellow},
+            option::ShowElapsedTime{true},
+            option::ShowPercentage{true},
+            option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
+        };
+
+        bar->set_option(option::PostfixText{"Creating tissue"});
+        bar->set_progress(0);
+    }
+#else // WITH_INDICATORS
+    void* bar = nullptr;
+#endif // WITH_INDICATORS
+
     simulation.set_tissue("Liver", {1000,1000})
               .add_species(A)
               .add_species(B)
@@ -142,17 +170,34 @@ int main(int argc, char* argv[])
 
         plotter.set_frames_per_second(vm["frames-per-second"].as<unsigned int>());
 
-        simulation.run_up_to(time_horizon, plotter);
+        if (bar != nullptr) {
+            simulation.run_up_to(time_horizon, plotter, *bar);
+        } else {
+            simulation.run_up_to(time_horizon, plotter);
+        }
 
         while (plotter.waiting_end()) {
             plotter.plot(simulation.get_statistics());
         }
     } else {
+#endif // WITH_SDL2
+
+    if (bar != nullptr) {
+        simulation.run_up_to(time_horizon, *bar, logging);
+    } else {
         simulation.run_up_to(time_horizon, logging);
     }
-#else
-    simulation.run_up_to(time_horizon, logging);
-#endif
 
+#ifdef WITH_SDL2
+    }
+#endif // WITH_SDL2
+
+#ifdef WITH_INDICATORS
+    show_console_cursor(true);
+#endif // WITH_INDICATORS
+
+    if (bar != nullptr) {
+        delete bar;
+    }
     return 0;
 }

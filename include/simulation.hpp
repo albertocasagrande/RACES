@@ -36,6 +36,11 @@
 #include <queue>
 #include <vector>
 
+#ifdef WITH_INDICATORS
+#include <indicators/cursor_control.hpp>
+#include <indicators/progress_bar.hpp>
+#endif // WITH_INDICATORS
+
 #include "tissue.hpp"
 #include "binary_logger.hpp"
 #include "plot_2D.hpp"
@@ -65,7 +70,7 @@ class Simulation
     std::vector<Direction> valid_directions;   //!< valid simulation tissue directions
 
     system_clock::time_point last_snapshot_time;    //!< Time of the last snapshot
-    long secs_between_snapshots;    //!< The number of minutes between two snapshots
+    long secs_between_snapshots;    //!< The number of seconds between two snapshots
 
     TissueStatistics statistics;     //!< The tissue simulation statistics
 
@@ -158,6 +163,15 @@ class Simulation
     void init_valid_directions();
 
     /**
+     * @brief Performs a simulation snapshot
+     * 
+     * This method performs a simulation snapshot if the time 
+     * elapsed from the last snapshot is greater than that set 
+     * in `secs_between_snapshots`.
+     */
+    void snapshot_on_time();
+
+    /**
      * @brief Randomly select a cell among those having a specified somatic genotype
      * 
      * @param generator is a random number generator
@@ -238,6 +252,90 @@ public:
     Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging = true);
 
     /**
+     * @brief Simulate up to the next event
+     * 
+     * This method simulates a tissue up to the next 
+     * event. The simulation is also plotted in a 
+     * graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param plotter is a tissue plotter
+     * @param logging is a flag to enable/disable logging
+     * @return a reference to the updated simulation
+     */
+    template<typename PLOT_WINDOW>
+    Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true);
+
+    /**
+     * @brief Simulate up to the next event
+     * 
+     * This method simulates a tissue up to the next 
+     * event. If the user provide a pointer to a 
+     * plotter, then the simulation is also plotted
+     * in a graphical window.
+     * 
+     * @param logging is a flag to enable/disable logging
+     * @return a reference to the updated simulation
+     */
+    Simulation& run_up_to_next_event(const bool logging = true);
+
+#ifdef WITH_INDICATORS
+    /**
+     * @brief Simulate a tissue up to a given time
+     * 
+     * This method simulates a tissue up to a given 
+     * simulated time. If the user provide a pointer 
+     * to a plotter, then the simulation is also plotted
+     * in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param final_time is the final simulation time
+     * @param plotter is a tissue plotter pointer
+     * @param bar is the progress bar pointer
+     * @param logging is a flag to enable/disable logging
+     * @return a reference to the updated simulation
+     */
+    template<typename PLOT_WINDOW>
+    Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter,
+                          indicators::ProgressBar* bar, const bool logging = true);
+
+    /**
+     * @brief Simulate a tissue up to a given time
+     * 
+     * This method simulates a tissue up to a given 
+     * simulated time. The simulation is also plotted
+     * in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param final_time is the final simulation time
+     * @param plotter is a tissue plotter
+     * @param bar is the progress bar
+     * @param logging is a flag to enable/disable logging
+     * @return a reference to the updated simulation
+     */
+    template<typename PLOT_WINDOW>
+    Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
+                          indicators::ProgressBar& bar,
+                          const bool logging = true);
+
+    /**
+     * @brief Simulate a tissue up to a given time
+     * 
+     * This method simulates a tissue up to a given 
+     * simulated time. If the user provide a pointer 
+     * to a plotter, then the simulation is also plotted
+     * in a graphical window.
+     * 
+     * @param final_time is the final simulation time
+     * @param bar is the progress bar
+     * @param logging is a flag to enable/disable logging
+     * @return a reference to the updated simulation
+     */
+    Simulation& run_up_to(const Time& final_time,
+                          indicators::ProgressBar& bar,
+                          const bool logging = true);
+#else // WITH_INDICATORS
+    /**
      * @brief Simulate a tissue up to a given time
      * 
      * This method simulates a tissue up to a given 
@@ -253,21 +351,7 @@ public:
      */
     template<typename PLOT_WINDOW>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging = true);
-
-    /**
-     * @brief Simulate up to the next event
-     * 
-     * This method simulates a tissue up to the next 
-     * event. The simulation is also plotted in a 
-     * graphical window.
-     * 
-     * @tparam PLOT_WINDOW is the plotting window type
-     * @param plotter is a tissue plotter
-     * @param logging is a flag to enable/disable logging
-     * @return a reference to the updated simulation
-     */
-    template<typename PLOT_WINDOW>
-    Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true);
+#endif // WITH_INDICATORS
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -284,19 +368,6 @@ public:
      */
     template<typename PLOT_WINDOW>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true);
-
-    /**
-     * @brief Simulate up to the next event
-     * 
-     * This method simulates a tissue up to the next 
-     * event. If the user provide a pointer to a 
-     * plotter, then the simulation is also plotted
-     * in a graphical window.
-     * 
-     * @param logging is a flag to enable/disable logging
-     * @return a reference to the updated simulation
-     */
-    Simulation& run_up_to_next_event(const bool logging = true);
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -466,6 +537,19 @@ inline Simulation& Simulation::add_species(const SomaticGenotype& genotype)
     return *this;
 }
 
+inline void Simulation::snapshot_on_time()
+{
+    using namespace std::chrono;
+
+    const auto curr_time = system_clock::now();
+    const auto from_last_snapshot = duration_cast<seconds>(curr_time-last_snapshot_time);
+
+    if (secs_between_snapshots>0 && from_last_snapshot.count()>=secs_between_snapshots) {
+        last_snapshot_time = curr_time;
+        logger->snapshot(*this);
+    }
+}
+
 inline Simulation& Simulation::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
 {
     tissue().add_cell(genotype_id, position);
@@ -536,43 +620,84 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
 }
 
 template<typename PLOT_WINDOW>
-Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging)
+Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter, 
+#ifdef WITH_INDICATORS
+                                  indicators::ProgressBar* bar,
+#endif // WITH_INDICATORS
+                                  const bool logging)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
     // case, it throws an std::runtime_error 
     (void)tissue();
 
-    if (logger == nullptr) {
-        logger = new BinaryLogger();
-    }
+#ifdef WITH_INDICATORS
+    using namespace indicators;
+    
+    auto last_time = std::chrono::time_point<std::chrono::system_clock>{};
+#endif  // WITH_INDICATORS
 
-    // if we are at the beginning of the computation, log the initial cells
-    if (time == 0 && logging) {
-        log_initial_cells();
+    if (logging) {
+        if (logger == nullptr) {
+            logger = new BinaryLogger();
+        }
+
+        // if we are at the beginning of the computation, 
+        // log the initial cells
+        if (time == 0) {
+            log_initial_cells(); 
+        }
     }
 
     while ((plotter == nullptr || !plotter->closed()) && 
            tissue().num_of_mutated_cells()>0 && time < final_time) {
-        using namespace std::chrono;
 
         run_up_to_next_event(plotter, logging);
 
-        const auto curr_time = system_clock::now();
-        const auto from_last_snapshot = duration_cast<seconds>(curr_time-last_snapshot_time);
+        if (logging) {
+            if (bar != nullptr) {
+                bar->set_option(option::PostfixText{"Saving snapshot"});
+                bar->set_progress(static_cast<size_t>(100*time/(final_time*1.1)));
+            }
+            snapshot_on_time();
+        }
+#ifdef WITH_INDICATORS
+        if (bar != nullptr) {
+            using namespace std::chrono;
 
-        if (secs_between_snapshots>0 &&from_last_snapshot.count()>=secs_between_snapshots) {
-            last_snapshot_time = curr_time;
-            if (logging) {
-                logger->snapshot(*this);
+            const auto curr_time = system_clock::now();
+            if (duration_cast<seconds>(curr_time-last_time).count()>=1) {
+
+                bar->set_option(option::PostfixText{
+                    "Cells in tissue: " + std::to_string(tissue().num_of_mutated_cells())
+                });
+                bar->set_progress(static_cast<size_t>(100*time/(final_time*1.1)));
+                last_time = curr_time;
             }
         }
+#endif // WITH_INDICATORS
     }
 
     if (logging) {
+#ifdef WITH_INDICATORS
+        if (bar != nullptr) {
+            bar->set_option(option::PostfixText{"Saving snapshot"});
+        }
+#endif // WITH_INDICATORS
         logger->snapshot(*this);
         logger->flush_archives();
     }
+
+#ifdef WITH_INDICATORS
+    if (bar != nullptr) {
+        bar->set_option(option::PostfixText{
+            "Cells in tissue: " + std::to_string(tissue().num_of_mutated_cells())
+        });
+        bar->set_progress(100);
+
+        show_console_cursor(true);
+    }
+#endif // WITH_INDICATORS
 
     return *this;
 }
@@ -583,20 +708,45 @@ inline Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDO
     return run_up_to_next_event(&plotter, logging);
 }
 
+#ifdef WITH_INDICATORS
+
+template<typename PLOT_WINDOW>
+inline Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, 
+                                         indicators::ProgressBar& bar, const bool logging)
+{
+    return run_up_to(final_time, &plotter, &bar, logging);
+}
+
+inline Simulation& Simulation::run_up_to(const Time& final_time, indicators::ProgressBar& bar,
+                                         const bool logging)
+{
+    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, &bar, logging);
+}
+
+#endif // WITH_INDICATORS
+
 template<typename PLOT_WINDOW>
 inline Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging)
 {
+#ifdef WITH_INDICATORS
+    return run_up_to(final_time, &plotter, nullptr, logging);
+#else // WITH_INDICATORS
     return run_up_to(final_time, &plotter, logging);
+#endif // WITH_INDICATORS
+}
+
+inline Simulation& Simulation::run_up_to(const Time& final_time,const bool logging)
+{
+#ifdef WITH_INDICATORS
+    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, nullptr, logging);
+#else // WITH_INDICATORS
+    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, logging);
+#endif // WITH_INDICATORS
 }
 
 inline Simulation& Simulation::run_up_to_next_event(const bool logging)
 {
     return run_up_to_next_event<UI::Plot2DWindow>(nullptr, logging);
-}
-
-inline Simulation& Simulation::run_up_to(const Time& final_time,const bool logging)
-{
-    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, logging);
 }
 
 template<class Rep, class Period>

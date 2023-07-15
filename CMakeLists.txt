@@ -31,6 +31,13 @@ elseif()
     set(COMPILE_SDL2_CODE FALSE)
 endif()
 
+find_package(indicators QUIET)
+
+if(${indicators_FOUND})
+message("Indicators found")
+add_compile_definitions(WITH_INDICATORS)
+endif()
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
