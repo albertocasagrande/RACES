@@ -53,7 +53,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp)
 
 set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp
                 ${RACES_SOURCES})

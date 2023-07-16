@@ -2,8 +2,8 @@
  * @file simulator_main.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.11
- * @date 2023-07-15
+ * @version 0.12
+ * @date 2023-07-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,10 +31,12 @@
 #include <iostream> 
 #include <vector>
 #include <chrono>
+#include <csignal>
 
 #include <boost/program_options.hpp>
 
 #include "simulation.hpp"
+#include "progress_bar.hpp"
 
 #ifdef WITH_SDL2
 #include "SDL_plot.hpp"
@@ -49,6 +51,25 @@ std::ostream& print_help(std::ostream& os, const std::string& program_name,
    return os;   
 }
 
+
+Races::Simulation simulation;
+Races::UI::ProgressBar *bar;
+
+void termination_handling(int signal_num)
+{
+    if (bar != nullptr) {
+        simulation.make_snapshot(bar);
+    }
+
+    if (bar != nullptr) {
+        bar->set_message("Aborted");
+
+        delete bar;
+    }
+
+    exit(signal_num);
+}
+
 int main(int argc, char* argv[])
 {
     using namespace Races;
@@ -57,7 +78,9 @@ int main(int argc, char* argv[])
     po::options_description visible("Options");
     visible.add_options()
         ("help,h", "get the help")
-        ("no-progress-bar,b", "avoid progress bar")
+#ifdef WITH_INDICATORS
+        ("quit,q", "disable progress bar")
+#endif // WITH_INDICATORS
 #ifdef WITH_SDL2
         ("plot,p", 
          "plot a graphical representation of the simulation")
@@ -65,14 +88,13 @@ int main(int argc, char* argv[])
          "the number of frames per second")
 #endif
         ("seed,s", po::value<int>()->default_value(0), "random generator seed")
-        ("no-logging,n", "avoid logging");
+        ("no-logging,n", "disable logging");
     
     po::options_description hidden("Hidden options");
     hidden.add_options()
         ("time-horizon", po::value<long double>(), 
          "the simulation time horizon")
     ;
-
 
     po::options_description generic;
     generic.add(visible).add(hidden);
@@ -120,46 +142,26 @@ int main(int argc, char* argv[])
                       {CellEventType::DUPLICATE, 0.02},
                       {CellEventType::PASSENGER_MUTATION, 20}});
 
-    Simulation simulation(vm.count("seed"));
+    std::signal(SIGINT, termination_handling);
 
-#ifdef WITH_INDICATORS
-    using namespace indicators;
+    if (vm.count("quiet")==0) {
+        UI::ProgressBar::hide_console_cursor();
 
-    show_console_cursor(false);
-
-    indicators::ProgressBar* bar = nullptr;
-    
-    if (vm.count("no-progress-bar")==0) {
-        bar = new indicators::ProgressBar{
-            option::BarWidth{50},
-            option::Start{" ["},
-            option::Fill{"█"},
-            option::Lead{"█"},
-            option::Remainder{"-"},
-            option::End{"]"},
-            option::ForegroundColor{Color::yellow},
-            option::ShowElapsedTime{true},
-            option::ShowPercentage{true},
-            option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
-        };
-
-        bar->set_option(option::PostfixText{"Creating tissue"});
-        bar->set_progress(0);
+        bar = new UI::ProgressBar();
+        bar->set_message("Creating tissue");
     }
-#else // WITH_INDICATORS
-    void* bar = nullptr;
-#endif // WITH_INDICATORS
+
+    using namespace std::chrono_literals;
 
     simulation.set_tissue("Liver", {1000,1000})
               .add_species(A)
               .add_species(B)
               .add_cell(B["-"], {500, 500})
-              .add_somatic_mutation(B,A,75);
+              .add_somatic_mutation(B,A,75)
+              .random_generator_seed(vm.count("seed"))
+              .set_interval_between_snapshots(5min);
 
     simulation.death_activation_level = 100;
-
-    using namespace std::chrono_literals;
-    simulation.set_interval_between_snapshots(5min);
 
     const bool logging = (vm.count("no-logging")==0);
 
@@ -192,12 +194,11 @@ int main(int argc, char* argv[])
     }
 #endif // WITH_SDL2
 
-#ifdef WITH_INDICATORS
-    show_console_cursor(true);
-#endif // WITH_INDICATORS
+    UI::ProgressBar::show_console_cursor();
 
     if (bar != nullptr) {
         delete bar;
     }
+    
     return 0;
 }

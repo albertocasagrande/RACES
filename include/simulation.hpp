@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.2
- * @date 2023-07-15
+ * @version 0.3
+ * @date 2023-07-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,11 +35,7 @@
 #include <list>
 #include <queue>
 #include <vector>
-
-#ifdef WITH_INDICATORS
-#include <indicators/cursor_control.hpp>
-#include <indicators/progress_bar.hpp>
-#endif // WITH_INDICATORS
+#include <chrono>
 
 #include "tissue.hpp"
 #include "binary_logger.hpp"
@@ -47,6 +43,8 @@
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
 #include "somatic_mutations.hpp"
+
+#include "progress_bar.hpp"
 
 namespace Races {
 
@@ -163,15 +161,6 @@ class Simulation
     void init_valid_directions();
 
     /**
-     * @brief Performs a simulation snapshot
-     * 
-     * This method performs a simulation snapshot if the time 
-     * elapsed from the last snapshot is greater than that set 
-     * in `secs_between_snapshots`.
-     */
-    void snapshot_on_time();
-
-    /**
      * @brief Randomly select a cell among those having a specified somatic genotype
      * 
      * @param generator is a random number generator
@@ -279,7 +268,6 @@ public:
      */
     Simulation& run_up_to_next_event(const bool logging = true);
 
-#ifdef WITH_INDICATORS
     /**
      * @brief Simulate a tissue up to a given time
      * 
@@ -289,15 +277,16 @@ public:
      * in a graphical window.
      * 
      * @tparam PLOT_WINDOW is the plotting window type
+     * @tparam INDICATOR_TYPE is the progress indicator type
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter pointer
-     * @param bar is the progress bar pointer
+     * @param indicator is the progress indicator pointer
      * @param logging is a flag to enable/disable logging
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW>
+    template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter,
-                          indicators::ProgressBar* bar, const bool logging = true);
+                          INDICATOR_TYPE* indicator, const bool logging = true);
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -307,16 +296,16 @@ public:
      * in a graphical window.
      * 
      * @tparam PLOT_WINDOW is the plotting window type
+     * @tparam INDICATOR_TYPE is the progress indicator type
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter
-     * @param bar is the progress bar
+     * @param indicator is the progress indicator pointer
      * @param logging is a flag to enable/disable logging
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW>
+    template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
-                          indicators::ProgressBar& bar,
-                          const bool logging = true);
+                          INDICATOR_TYPE& indicator, const bool logging = true);
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -327,31 +316,12 @@ public:
      * in a graphical window.
      * 
      * @param final_time is the final simulation time
-     * @param bar is the progress bar
+     * @param indicator is the progress indicator
      * @param logging is a flag to enable/disable logging
      * @return a reference to the updated simulation
      */
-    Simulation& run_up_to(const Time& final_time,
-                          indicators::ProgressBar& bar,
-                          const bool logging = true);
-#else // WITH_INDICATORS
-    /**
-     * @brief Simulate a tissue up to a given time
-     * 
-     * This method simulates a tissue up to a given 
-     * simulated time. If the user provide a pointer 
-     * to a plotter, then the simulation is also plotted
-     * in a graphical window.
-     * 
-     * @tparam PLOT_WINDOW is the plotting window type
-     * @param final_time is the final simulation time
-     * @param plotter is a tissue plotter pointer
-     * @param logging is a flag to enable/disable logging
-     * @return a reference to the updated simulation
-     */
-    template<typename PLOT_WINDOW>
-    Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging = true);
-#endif // WITH_INDICATORS
+    template<typename INDICATOR_TYPE>
+    Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, const bool logging = true);
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -471,6 +441,37 @@ public:
     void reset();
 
     /**
+     * @brief Inject random generator seed
+     * 
+     * @param random_seed is the simulation random seed
+     */
+    Simulation& random_generator_seed(int random_seed);
+    
+    /**
+     * @brief Performs a simulation snapshot
+     * 
+     * This method performs a simulation snapshot.
+     * 
+     * @tparam INDICATOR is the type of progress bar
+     * @param indicator is the progress bar
+     */
+    template<typename INDICATOR>
+    void make_snapshot(INDICATOR *indicator);
+
+    /**
+     * @brief Performs a simulation snapshot
+     * 
+     * This method performs a simulation snapshot if the time 
+     * elapsed from the last snapshot is greater than that set 
+     * in `secs_between_snapshots`.
+     * 
+     * @tparam INDICATOR is the type of progress bar
+     * @param indicator is the progress bar
+     */
+    template<typename INDICATOR>
+    void snapshot_on_time(INDICATOR *indicator);
+
+    /**
      * @brief Save a simulation in an archive
      * 
      * @tparam ARCHIVE is the output archive type
@@ -537,15 +538,33 @@ inline Simulation& Simulation::add_species(const SomaticGenotype& genotype)
     return *this;
 }
 
-inline void Simulation::snapshot_on_time()
+inline Simulation& Simulation::random_generator_seed(int random_seed)
+{
+    random_gen.seed(random_seed);
+
+    return *this;
+}
+
+template<typename INDICATOR>
+void Simulation::snapshot_on_time(INDICATOR *indicator)
 {
     using namespace std::chrono;
 
-    const auto curr_time = system_clock::now();
-    const auto from_last_snapshot = duration_cast<seconds>(curr_time-last_snapshot_time);
+    const auto from_last_snapshot = duration_cast<seconds>(system_clock::now()-last_snapshot_time);
 
     if (secs_between_snapshots>0 && from_last_snapshot.count()>=secs_between_snapshots) {
-        last_snapshot_time = curr_time;
+        make_snapshot(indicator);
+    }
+}
+
+template<typename INDICATOR>
+void Simulation::make_snapshot(INDICATOR *indicator)
+{
+    last_snapshot_time = system_clock::now();
+    if (indicator != nullptr) {
+        indicator->set_message("Saving snapshot");
+    }
+    if (logger != nullptr) {
         logger->snapshot(*this);
     }
 }
@@ -619,23 +638,14 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
     return *this;
 }
 
-template<typename PLOT_WINDOW>
+template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
 Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter, 
-#ifdef WITH_INDICATORS
-                                  indicators::ProgressBar* bar,
-#endif // WITH_INDICATORS
-                                  const bool logging)
+                                  INDICATOR_TYPE* indicator, const bool logging)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
     // case, it throws an std::runtime_error 
     (void)tissue();
-
-#ifdef WITH_INDICATORS
-    using namespace indicators;
-    
-    auto last_time = std::chrono::time_point<std::chrono::system_clock>{};
-#endif  // WITH_INDICATORS
 
     if (logging) {
         if (logger == nullptr) {
@@ -655,49 +665,27 @@ Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT
         run_up_to_next_event(plotter, logging);
 
         if (logging) {
-            if (bar != nullptr) {
-                bar->set_option(option::PostfixText{"Saving snapshot"});
-                bar->set_progress(static_cast<size_t>(100*time/(final_time*1.1)));
-            }
-            snapshot_on_time();
+            snapshot_on_time(indicator);
         }
-#ifdef WITH_INDICATORS
-        if (bar != nullptr) {
-            using namespace std::chrono;
 
-            const auto curr_time = system_clock::now();
-            if (duration_cast<seconds>(curr_time-last_time).count()>=1) {
 
-                bar->set_option(option::PostfixText{
-                    "Cells in tissue: " + std::to_string(tissue().num_of_mutated_cells())
-                });
-                bar->set_progress(static_cast<size_t>(100*time/(final_time*1.1)));
-                last_time = curr_time;
-            }
+        if (indicator != nullptr) {
+            indicator->set_progress(static_cast<size_t>(100*time/(1.01*final_time)),
+                                    "Cells: " + std::to_string(tissue().num_of_mutated_cells()));
         }
-#endif // WITH_INDICATORS
     }
 
     if (logging) {
-#ifdef WITH_INDICATORS
-        if (bar != nullptr) {
-            bar->set_option(option::PostfixText{"Saving snapshot"});
+        if (indicator != nullptr) {
+            indicator->set_message("Saving snapshot");
         }
-#endif // WITH_INDICATORS
         logger->snapshot(*this);
         logger->flush_archives();
     }
 
-#ifdef WITH_INDICATORS
-    if (bar != nullptr) {
-        bar->set_option(option::PostfixText{
-            "Cells in tissue: " + std::to_string(tissue().num_of_mutated_cells())
-        });
-        bar->set_progress(100);
-
-        show_console_cursor(true);
+    if (indicator != nullptr) {
+        indicator->set_message("Cells: " + std::to_string(tissue().num_of_mutated_cells()));
     }
-#endif // WITH_INDICATORS
 
     return *this;
 }
@@ -708,40 +696,29 @@ inline Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDO
     return run_up_to_next_event(&plotter, logging);
 }
 
-#ifdef WITH_INDICATORS
-
-template<typename PLOT_WINDOW>
+template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
 inline Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, 
-                                         indicators::ProgressBar& bar, const bool logging)
+                                         INDICATOR_TYPE& indicator, const bool logging)
 {
-    return run_up_to(final_time, &plotter, &bar, logging);
+    return run_up_to(final_time, &plotter, &indicator, logging);
 }
 
-inline Simulation& Simulation::run_up_to(const Time& final_time, indicators::ProgressBar& bar,
+template<typename INDICATOR_TYPE>
+inline Simulation& Simulation::run_up_to(const Time& final_time, INDICATOR_TYPE& indicator,
                                          const bool logging)
 {
-    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, &bar, logging);
+    return run_up_to<UI::Plot2DWindow, INDICATOR_TYPE>(final_time, nullptr, &indicator, logging);
 }
-
-#endif // WITH_INDICATORS
 
 template<typename PLOT_WINDOW>
 inline Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging)
 {
-#ifdef WITH_INDICATORS
-    return run_up_to(final_time, &plotter, nullptr, logging);
-#else // WITH_INDICATORS
-    return run_up_to(final_time, &plotter, logging);
-#endif // WITH_INDICATORS
+    return run_up_to<PLOT_WINDOW,UI::ProgressBar>(final_time, &plotter, nullptr, logging);
 }
 
 inline Simulation& Simulation::run_up_to(const Time& final_time,const bool logging)
 {
-#ifdef WITH_INDICATORS
-    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, nullptr, logging);
-#else // WITH_INDICATORS
-    return run_up_to<UI::Plot2DWindow>(final_time, nullptr, logging);
-#endif // WITH_INDICATORS
+    return run_up_to<UI::Plot2DWindow,UI::ProgressBar>(final_time, nullptr, nullptr, logging);
 }
 
 inline Simulation& Simulation::run_up_to_next_event(const bool logging)
