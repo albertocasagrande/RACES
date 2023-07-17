@@ -2,8 +2,8 @@
  * @file driver.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.4
- * @date 2023-07-09
+ * @version 0.5
+ * @date 2023-07-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,8 +40,16 @@ unsigned int Races::EpigeneticGenotype::counter = 0;
 unsigned int Races::SomaticGenotype::counter = 0;
 
 EpigeneticRates::EpigeneticRates(const double methylation_rate, const double demethylation_rate):
-        std::pair<double,double>(methylation_rate, demethylation_rate)
-{}
+        methylation(methylation_rate), demethylation(demethylation_rate)
+{
+    if (methylation_rate<0 || methylation_rate>1) {
+        throw std::domain_error("the methylation rate does not belong to the interval [0,1]");
+    }
+
+    if (demethylation_rate<0 || demethylation_rate>1) {
+        throw std::domain_error("the demethylation rate does not belong to the interval [0,1]");
+    }
+}
 
 EpigeneticRates::EpigeneticRates(const double rate):
         EpigeneticRates(rate, rate)
@@ -49,8 +57,8 @@ EpigeneticRates::EpigeneticRates(const double rate):
 
 std::ostream& operator<<(std::ostream& out, const EpigeneticRates& epigentic_rates)
 {
-    out << "{methylation: " << epigentic_rates.methylation_rate() 
-            << ",demethylation: " << epigentic_rates.demethylation_rate() << "}";
+    out << "{methylation: " << epigentic_rates.get_methylation_rate() 
+            << ",demethylation: " << epigentic_rates.get_demethylation_rate() << "}";
     return out;
 }
 
@@ -125,10 +133,10 @@ SomaticGenotype::SomaticGenotype(const std::string& name,
 
             if (e_signature[i]) {  // if the promoter is methylated
                 // a methylation event must occur
-                e_rates[dst_id] = epigenetic_event_rates[i].methylation_rate();
+                e_rates[dst_id] = epigenetic_event_rates[i].get_methylation_rate();
             } else {
                 // a demethylation event must occur
-                e_rates[dst_id] = epigenetic_event_rates[i].demethylation_rate();
+                e_rates[dst_id] = epigenetic_event_rates[i].get_demethylation_rate();
             }
 
             // revert to the original signature

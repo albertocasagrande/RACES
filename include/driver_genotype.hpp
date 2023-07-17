@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.7
- * @date 2023-07-12
+ * @version 0.8
+ * @date 2023-07-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,8 +43,11 @@ namespace Races {
 /**
  * @brief A class to represent promoter methylation/demethylation rates
  */
-class EpigeneticRates : private std::pair<double,double>
+class EpigeneticRates
 {
+    double methylation;         //!< the methylation rate
+    double demethylation;       //!< the demethylation rate
+    
 public:
     /**
      * @brief A constructor
@@ -66,27 +69,30 @@ public:
      * 
      * @return a constant reference to the methylation rate
      */
-    const double& methylation_rate() const;
+    const double& get_methylation_rate() const;
 
     /**
      * @brief Get the methylation rate
      * 
-     * @return a non-constant reference to the methylation rate
+     * @param rate is the new methylation rate
+     * @return a reference to updated object
      */
-    double& methylation_rate();
+    EpigeneticRates& set_methylation_rate(const double& rate);
 
     /**
      * @brief Get the demethylation rate
      * 
      * @return a constant reference to the demethylation rate
      */
-    const double& demethylation_rate() const;
+    const double& get_demethylation_rate() const;
+
     /**
      * @brief Get the demethylation rate
      * 
-     * @return a non-constant reference to the demethylation rate
+     * @param rate is the new demethylation rate
+     * @return a reference to updated object
      */
-    double& demethylation_rate();
+    EpigeneticRates& set_demethylation_rate(const double& rate);
 };
 
 /**
@@ -397,24 +403,36 @@ std::ostream& operator<<(std::ostream& out, const SomaticGenotype& genotype);
 
 /* Inline methods definitions */
 
-inline const double& EpigeneticRates::methylation_rate() const
+inline const double& EpigeneticRates::get_methylation_rate() const
 {
-    return first;
+    return methylation;
 }
 
-inline double& EpigeneticRates::methylation_rate()
+inline EpigeneticRates& EpigeneticRates::set_methylation_rate(const double& rate)
 {
-    return first;
+    if (rate<0 || rate>1) {
+        throw std::domain_error("the rate does not belong to the interval [0,1]");
+    }
+
+    methylation = rate;
+
+    return *this;
 }
 
-inline const double& EpigeneticRates::demethylation_rate() const
+inline const double& EpigeneticRates::get_demethylation_rate() const
 {
-    return second;
+    return demethylation;
 }
 
-inline double& EpigeneticRates::demethylation_rate()
+inline EpigeneticRates& EpigeneticRates::set_demethylation_rate(const double& rate)
 {
-    return second;
+    if (rate<0 || rate>1) {
+        throw std::domain_error("the rate does not belong to the interval [0,1]");
+    }
+
+    demethylation = rate;
+
+    return *this;
 }
 
 inline const EpigeneticGenotypeId& EpigeneticGenotype::get_id() const
