@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.12
- * @date 2023-07-15
+ * @version 0.13
+ * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -565,9 +565,9 @@ public:
     const std::string& get_name() const;
 
     /**
-     * @brief Get tissue name
+     * @brief Get number of dimensions
      * 
-     * @return a constant reference to the tissue name
+     * @return a constant reference to the number of dimensions
      */
     const uint8_t& num_of_dimensions() const;
 
