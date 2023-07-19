@@ -2,8 +2,8 @@
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window by using SDL2
- * @version 0.2
- * @date 2023-06-30
+ * @version 0.3
+ * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,6 +31,8 @@
 #include <iostream>
 
 #include "SDL_plot.hpp"
+#include "roboto_regular.hpp"
+#include "races_icon.hpp"
 
 namespace Races 
 {
@@ -49,7 +51,12 @@ SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const 
 		throw std::runtime_error("SDL_ttf initialization error");
 	}
 
-	font = TTF_OpenFont("assets/Roboto-Regular.ttf", 24);
+	SDL_RWops* fontMem = SDL_RWFromConstMem(roboto_regular_ttf, sizeof(roboto_regular_ttf));
+	if ( !fontMem ) {
+		throw std::runtime_error("Failed to load font.");
+	}
+
+	font = TTF_OpenFontRW(fontMem, 1, 24);
 	if ( !font ) {
 		throw std::runtime_error("Failed to load font.");
 	}
@@ -63,7 +70,9 @@ SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const 
 		throw std::runtime_error( "Window could not be created" );
 	}
 
-	SDL_Surface* icon = IMG_Load("assets/RACES.png");
+    SDL_RWops *iconMem = SDL_RWFromMem(RACES_icon, sizeof(RACES_icon));
+	SDL_Surface* icon = IMG_Load_RW(iconMem, 1);
+
 	SDL_SetWindowIcon(window, icon);
 
 	//Create renderer for window
@@ -178,13 +187,13 @@ void SDLWindow::update()
 
 SDLWindow::~SDLWindow()
 {
-	//Destroy window	
+	TTF_CloseFont(font);
+	
 	SDL_DestroyRenderer( renderer );
 	SDL_DestroyWindow( window );
 
-	//Quit SDL subsystems
+	TTF_Quit();
 	IMG_Quit();
-	TTF_CloseFont(font);
 	SDL_Quit();
 }
 
