@@ -1,6 +1,9 @@
 find_package(Boost COMPONENTS unit_test_framework)
 
 if(${Boost_unit_test_framework_FOUND})
+
+    message("C++ code will tested")
+
     include_directories(${Boost_INCLUDE_DIRS})
     link_directories(${Boost_LIBRARY_DIRS})
     set(TEST_LIBRARIES ${Boost_LIBRARIES} ${RACES_LIBRARIES})
