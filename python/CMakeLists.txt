@@ -1,4 +1,4 @@
-find_package(PythonLibs ${PY_VERSION})
+find_package(Python COMPONENTS Interpreter Development)
 find_package(Boost COMPONENTS system python)
 
 set(COMPILE_PYTHON_BINDINGS TRUE)
@@ -23,29 +23,22 @@ if(${COMPILE_PYTHON_BINDINGS})
 
     # include directories
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-    include_directories(${PYTHON_INCLUDE_DIRS})
+    include_directories(Python::Module)
     include_directories(${Boost_INCLUDE_DIRS})
 
     # create the lib
-    PYTHON_ADD_MODULE(RACES 
+    add_library(pyRACES MODULE
                       ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings.cpp
                       ${CMAKE_CURRENT_SOURCE_DIR}/src/somatic_genotype.cpp  
                       ${CMAKE_CURRENT_SOURCE_DIR}/src/epigenetic_rates.cpp  
-                      ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_wrapper.cpp  
-                      ${SIM_SOURCES})
+                      ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_wrapper.cpp)
+
+    set_target_properties(pyRACES PROPERTIES OUTPUT_NAME RACES PREFIX "")
 
     # link
-    target_link_libraries(RACES ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${SIM_LIBRARIES})
+    target_link_libraries(pyRACES ${Boost_LIBRARIES} Python::Module libRACES)
 
-    string( REGEX MATCH "\.([0-9])+$" PYTHON_EXECUTABLE 
-    ${PYTHONLIBS_VERSION_STRING})
-
-    string( REGEX REPLACE ${PYTHON_EXECUTABLE} "" PYTHON_EXECUTABLE 
-        ${PYTHONLIBS_VERSION_STRING})
-
-    set(PYTHON_EXECUTABLE "python${PYTHON_EXECUTABLE}")
-
-    find_program(PYTHON_FULL_PATH ${PYTHON_EXECUTABLE})
+    find_program(PYTHON_FULL_PATH Python::Interpreter)
 
     if(EXISTS ${PYTHON_FULL_PATH})
         message("Python bindings will tested")

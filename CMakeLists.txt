@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.11)
 
-project (races CXX)
+project(races VERSION 0.1.0
+              DESCRIPTION "RACES is an Advanced Cancer Evolution Simulation"
+              HOMEPAGE_URL https://github.com/albertocasagrande/RACES
+              LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,8 +12,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 find_package( Boost COMPONENTS program_options REQUIRED )
-
-file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
 find_package(SDL2)
 find_package(SDL2_image)
@@ -31,11 +32,19 @@ elseif()
     set(COMPILE_SDL2_CODE FALSE)
 endif()
 
-find_package(indicators QUIET)
-
-if(${indicators_FOUND})
-message("Indicators found")
-add_compile_definitions(WITH_INDICATORS)
+message("Downloading \"p-ranav/indicators\" library...")
+file(DOWNLOAD
+    https://raw.githubusercontent.com/p-ranav/indicators/master/single_include/indicators/indicators.hpp
+    ${CMAKE_SOURCE_DIR}/include/indicators.hpp
+    STATUS DOWNLOAD_RESULT)
+list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
+if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
+    add_compile_definitions(WITH_INDICATORS)
+    message("done")
+    message("Using p-ranav/indicators")
+else()
+    message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
+    message("Avoiding p-ranav/indicators")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -56,15 +65,6 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp)
 
-set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp
-                ${RACES_SOURCES})
-
-set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
-                  ${RACES_SOURCES})
-
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
 if(${COMPILE_SDL2_CODE})
@@ -72,21 +72,30 @@ if(${COMPILE_SDL2_CODE})
 
     include_directories(${SDL2_INCLUDE_DIRS} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
-    set(SIM_SOURCES ${SIM_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
+    set(RACES_SOURCES ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
 
-    set(SIM_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-else()
-    set(SIM_SOURCES ${SIM_SOURCES})
-    set(SIM_LIBRARIES ${RACES_LIBRARIES})
+    set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 endif()
+
+add_library(libRACES SHARED ${RACES_SOURCES})
+target_link_libraries(libRACES ${RACES_LIBRARIES})
+set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+
+set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp)
+
+set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
+
 
 add_executable(races_sim ${SIM_SOURCES})
 target_include_directories(races_sim PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(races_sim ${SIM_LIBRARIES})
+target_link_libraries(races_sim libRACES)
 
 add_executable(races_phylo ${PHYLO_SOURCES})
 target_include_directories(races_phylo PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(races_phylo ${RACES_LIBRARIES})
+target_link_libraries(races_phylo libRACES)
 
 add_subdirectory(python)
 

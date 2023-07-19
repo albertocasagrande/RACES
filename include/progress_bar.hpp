@@ -2,7 +2,7 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a progress bar
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
@@ -32,10 +32,10 @@
 #define __RACES_PROGRESS_BAR__
 
 #include <chrono>
+#include <string>
 
 #ifdef WITH_INDICATORS
-#include <indicators/cursor_control.hpp>
-#include <indicators/progress_bar.hpp>
+#include "indicators.hpp"
 #endif // WITH_INDICATORS
 
 namespace Races

@@ -2,7 +2,7 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a progress bar
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
@@ -37,7 +37,10 @@ namespace UI
 {
 
 ProgressBar::ProgressBar():
-    last_update(std::chrono::system_clock::now()), percentage(0), updated(false), indicator()
+    last_update(std::chrono::system_clock::now()), percentage(0), updated(false)
+#ifdef WITH_INDICATORS
+    , indicator()
+#endif // WITH_INDICATORS
 {
     using namespace std::chrono_literals;
 

@@ -14,5 +14,7 @@ races_sim
 races_phylo
 RACES.so
 RACES.dll
+libRACES.*
+include/indicators.hpp
 *.cpython*.pyc
 tests/test_*
