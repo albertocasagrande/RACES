@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.10
- * @date 2023-07-15
+ * @version 0.11
+ * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -225,6 +225,10 @@ Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id)
 
 Tissue& Tissue::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
 {
+    if (!is_valid(position)) {
+        throw std::runtime_error("The position is not in the tissue");
+    }
+ 
     auto*& cell = space[position.x][position.y][position.z];
 
     if (cell!=nullptr) {
