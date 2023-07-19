@@ -2,8 +2,8 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a progress bar
- * @version 0.1
- * @date 2023-07-16
+ * @version 0.2
+ * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@ namespace UI
 {
 
 ProgressBar::ProgressBar():
-    last_update(std::chrono::system_clock::now()), percentage(0), indicator()
+    last_update(std::chrono::system_clock::now()), percentage(0), updated(false), indicator()
 {
     using namespace std::chrono_literals;
 
@@ -67,11 +67,15 @@ ProgressBar& ProgressBar::set_message(const std::string message)
 #ifdef WITH_INDICATORS
     using namespace indicators;
 
-    indicator->set_option(option::PostfixText{message});
-    indicator->set_progress(percentage);
+    if (percentage != 100 || !updated) {
+        indicator->set_option(option::PostfixText{message});
+        indicator->set_progress(percentage);
+    }
 #else  // WITH_INDICATORS
     (void)message;
 #endif  // WITH_INDICATORS
+
+    updated = true;
 
     return *this;
 }
@@ -80,7 +84,8 @@ ProgressBar& ProgressBar::set_progress(const unsigned int percentage, const std:
 {
     using namespace std::chrono;
 
-    this->percentage = percentage;
+    this->percentage = std::min(percentage, static_cast<unsigned int>(100));
+    updated = false;
 
     const auto curr_time = system_clock::now();
     if (duration_cast<seconds>(curr_time-last_update).count()>=1) {
@@ -99,9 +104,13 @@ ProgressBar& ProgressBar::set_progress(const unsigned int percentage)
 
     this->percentage = percentage;
 
+    updated = false;
+
     const auto curr_time = system_clock::now();
     if (duration_cast<seconds>(curr_time-last_update).count()>=1) {
         last_update = curr_time;
+
+        updated = true;
 
 #ifdef WITH_INDICATORS
         indicator->set_progress(percentage);
@@ -133,7 +142,11 @@ void ProgressBar::hide_console_cursor()
 ProgressBar::~ProgressBar()
 {
 #ifdef WITH_INDICATORS
-    indicator->mark_as_completed();
+    if (percentage != 100 || !updated) {
+        indicator->set_progress(percentage);
+    }
+
+    show_console_cursor();
 
     delete indicator;
 #endif  // WITH_INDICATORS

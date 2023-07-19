@@ -2,8 +2,8 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a progress bar
- * @version 0.1
- * @date 2023-07-16
+ * @version 0.2
+ * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,6 +58,8 @@ class ProgressBar
     std::chrono::system_clock::time_point last_update;  //!< the last update time
 
     unsigned int percentage;  //!< the percentage level
+
+    bool updated;             //!< the last percentage has been shown
 
 #ifdef WITH_INDICATORS
     indicators::ProgressBar* indicator;  //!< the progress bar implementation
