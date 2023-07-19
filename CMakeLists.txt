@@ -75,6 +75,9 @@ if(${COMPILE_SDL2_CODE})
     set(SIM_SOURCES ${SIM_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
 
     set(SIM_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+else()
+    set(SIM_SOURCES ${SIM_SOURCES})
+    set(SIM_LIBRARIES ${RACES_LIBRARIES})
 endif()
 
 add_executable(races_sim ${SIM_SOURCES})
@@ -84,6 +87,8 @@ target_link_libraries(races_sim ${SIM_LIBRARIES})
 add_executable(races_phylo ${PHYLO_SOURCES})
 target_include_directories(races_phylo PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(races_phylo ${RACES_LIBRARIES})
+
+add_subdirectory(python)
 
 enable_testing()
 

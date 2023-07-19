@@ -12,4 +12,7 @@ Makefile
 build.ninja
 races_sim
 races_phylo
+RACES.so
+RACES.dll
+*.cpython*.pyc
 tests/test_*
