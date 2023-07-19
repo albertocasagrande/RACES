@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.3
- * @date 2023-07-16
+ * @version 0.4
+ * @date 2023-07-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,6 +47,28 @@
 #include "progress_bar.hpp"
 
 namespace Races {
+
+/**
+ * @brief A structure to establish if the simulation must end
+ */
+struct Closer
+{
+    /**
+     * @brief The empty constructor
+     */
+    Closer()
+    {}
+
+    /**
+     * @brief Establish whether the simulation must end
+     * 
+     * @return `false`
+     */
+    inline constexpr bool closing() const
+    {
+        return false;
+    }
+};
 
 /**
  * @brief A tumor evolution simulation
@@ -259,9 +281,7 @@ public:
      * @brief Simulate up to the next event
      * 
      * This method simulates a tissue up to the next 
-     * event. If the user provide a pointer to a 
-     * plotter, then the simulation is also plotted
-     * in a graphical window.
+     * event.
      * 
      * @param logging is a flag to enable/disable logging
      * @return a reference to the updated simulation
@@ -278,15 +298,69 @@ public:
      * 
      * @tparam PLOT_WINDOW is the plotting window type
      * @tparam INDICATOR_TYPE is the progress indicator type
+     * @tparam CLOSER is a structure that establishes if the evaluation
+     *              must be stopped
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter pointer
      * @param indicator is the progress indicator pointer
      * @param logging is a flag to enable/disable logging
+     * @param closer is an object inherited from `Races::Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
+    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, class CLOSER = Races::Closer,
+             std::enable_if_t<std::is_base_of_v<Races::UI::Plot2DWindow, PLOT_WINDOW> && 
+                              std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter,
-                          INDICATOR_TYPE* indicator, const bool logging = true);
+                          INDICATOR_TYPE* indicator, const bool logging = true,
+                          const CLOSER& closer=CLOSER())
+    {
+        // the tissue() call checks whether a tissue has been 
+        // associated to the simulation and, if this is not the 
+        // case, it throws an std::runtime_error 
+        (void)tissue();
+
+        if (logging) {
+            if (logger == nullptr) {
+                logger = new BinaryLogger();
+            }
+
+            // if we are at the beginning of the computation, 
+            // log the initial cells
+            if (time == 0) {
+                log_initial_cells(); 
+            }
+        }
+
+        while ((plotter == nullptr || !plotter->closed()) && !closer.closing() 
+            && tissue().num_of_mutated_cells()>0 && time < final_time) {
+
+            run_up_to_next_event(plotter, logging);
+
+            if (logging) {
+                snapshot_on_time(indicator);
+            }
+
+
+            if (indicator != nullptr) {
+                indicator->set_progress(static_cast<size_t>(100*time/final_time),
+                                        "Cells: " + std::to_string(tissue().num_of_mutated_cells()));
+            }
+        }
+
+        if (logging) {
+            if (indicator != nullptr) {
+                indicator->set_message("Saving snapshot");
+            }
+            logger->snapshot(*this);
+            logger->flush_archives();
+        }
+
+        if (indicator != nullptr) {
+            indicator->set_message("Cells: " + std::to_string(tissue().num_of_mutated_cells()));
+        }
+
+        return *this;
+    }
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -297,31 +371,47 @@ public:
      * 
      * @tparam PLOT_WINDOW is the plotting window type
      * @tparam INDICATOR_TYPE is the progress indicator type
+     * @tparam CLOSER is a structure that establishes if the evaluation
+     *              must be stopped
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter
      * @param indicator is the progress indicator pointer
      * @param logging is a flag to enable/disable logging
+     * @param closer is an object inherited from `Races::Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
-    Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
-                          INDICATOR_TYPE& indicator, const bool logging = true);
+    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, typename CLOSER = Races::Closer,
+             std::enable_if_t<std::is_base_of_v<Races::UI::Plot2DWindow, PLOT_WINDOW> && 
+                              std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
+                                 INDICATOR_TYPE& indicator, const bool logging = true,
+                                 const CLOSER& closer=CLOSER())
+    {
+        return run_up_to(final_time, &plotter, &indicator, logging, closer);
+    }
 
     /**
      * @brief Simulate a tissue up to a given time
      * 
      * This method simulates a tissue up to a given 
-     * simulated time. If the user provide a pointer 
-     * to a plotter, then the simulation is also plotted
-     * in a graphical window.
+     * simulated time.
      * 
+     * @tparam INDICATOR_TYPE is the progress indicator type
+     * @tparam CLOSER is a structure that establishes if the evaluation
+     *              must be stopped
      * @param final_time is the final simulation time
      * @param indicator is the progress indicator
      * @param logging is a flag to enable/disable logging
+     * @param closer is an object inherited from `Races::Closer`
      * @return a reference to the updated simulation
      */
-    template<typename INDICATOR_TYPE>
-    Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, const bool logging = true);
+    template<typename INDICATOR_TYPE, class CLOSER = Races::Closer,
+             std::enable_if_t<std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    inline Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, const bool logging = true,
+                                 const CLOSER& closer=CLOSER())
+    {
+        return run_up_to<UI::Plot2DWindow, INDICATOR_TYPE, CLOSER>(final_time, nullptr, &indicator, logging, closer);
+    }
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -331,27 +421,41 @@ public:
      * in a graphical window.
      * 
      * @tparam PLOT_WINDOW is the plotting window type
+     * @tparam CLOSER is a structure that establishes if the evaluation
+     *              must be stopped
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter
      * @param logging is a flag to enable/disable logging
+     * @param closer is an object inherited from `Races::Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW>
-    Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true);
+    template<typename PLOT_WINDOW, class CLOSER = Races::Closer,
+             std::enable_if_t<std::is_base_of_v<Races::UI::Plot2DWindow, PLOT_WINDOW> && 
+                              std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true,
+                                 const CLOSER& closer=CLOSER())
+    {
+        return run_up_to<PLOT_WINDOW, UI::ProgressBar, CLOSER>(final_time, &plotter, nullptr, logging, closer);
+    }
 
     /**
      * @brief Simulate a tissue up to a given time
      * 
      * This method simulates a tissue up to a given 
-     * simulated time. If the user provide a pointer 
-     * to a plotter, then the simulation is also plotted
-     * in a graphical window.
+     * simulated time.
      * 
+     * @tparam CLOSER is a structure that establishes if the evaluation
+     *              must be stopped
      * @param final_time is the final simulation time
      * @param logging is a flag to enable/disable logging
+     * @param closer is an object inherited from `Races::Closer`
      * @return a reference to the updated simulation
      */
-    Simulation& run_up_to(const Time& final_time, const bool logging = true);
+    template<class CLOSER = Races::Closer, std::enable_if_t<std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    Simulation& run_up_to(const Time& final_time, const bool logging = true, const CLOSER& closer=CLOSER())
+    {
+        return run_up_to<UI::Plot2DWindow, UI::ProgressBar, CLOSER>(final_time, nullptr, nullptr, logging, closer);
+    }
 
     /**
      * @brief Get the current simulation time
@@ -637,88 +741,12 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
 
     return *this;
 }
-
-template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
-Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter, 
-                                  INDICATOR_TYPE* indicator, const bool logging)
-{
-    // the tissue() call checks whether a tissue has been 
-    // associated to the simulation and, if this is not the 
-    // case, it throws an std::runtime_error 
-    (void)tissue();
-
-    if (logging) {
-        if (logger == nullptr) {
-            logger = new BinaryLogger();
-        }
-
-        // if we are at the beginning of the computation, 
-        // log the initial cells
-        if (time == 0) {
-            log_initial_cells(); 
-        }
-    }
-
-    while ((plotter == nullptr || !plotter->closed()) && 
-           tissue().num_of_mutated_cells()>0 && time < final_time) {
-
-        run_up_to_next_event(plotter, logging);
-
-        if (logging) {
-            snapshot_on_time(indicator);
-        }
-
-
-        if (indicator != nullptr) {
-            indicator->set_progress(static_cast<size_t>(100*time/(1.01*final_time)),
-                                    "Cells: " + std::to_string(tissue().num_of_mutated_cells()));
-        }
-    }
-
-    if (logging) {
-        if (indicator != nullptr) {
-            indicator->set_message("Saving snapshot");
-        }
-        logger->snapshot(*this);
-        logger->flush_archives();
-    }
-
-    if (indicator != nullptr) {
-        indicator->set_message("Cells: " + std::to_string(tissue().num_of_mutated_cells()));
-    }
-
-    return *this;
-}
+    
 
 template<typename PLOT_WINDOW>
 inline Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging)
 {
     return run_up_to_next_event(&plotter, logging);
-}
-
-template<typename PLOT_WINDOW, typename INDICATOR_TYPE>
-inline Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, 
-                                         INDICATOR_TYPE& indicator, const bool logging)
-{
-    return run_up_to(final_time, &plotter, &indicator, logging);
-}
-
-template<typename INDICATOR_TYPE>
-inline Simulation& Simulation::run_up_to(const Time& final_time, INDICATOR_TYPE& indicator,
-                                         const bool logging)
-{
-    return run_up_to<UI::Plot2DWindow, INDICATOR_TYPE>(final_time, nullptr, &indicator, logging);
-}
-
-template<typename PLOT_WINDOW>
-inline Simulation& Simulation::run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging)
-{
-    return run_up_to<PLOT_WINDOW,UI::ProgressBar>(final_time, &plotter, nullptr, logging);
-}
-
-inline Simulation& Simulation::run_up_to(const Time& final_time,const bool logging)
-{
-    return run_up_to<UI::Plot2DWindow,UI::ProgressBar>(final_time, nullptr, nullptr, logging);
 }
 
 inline Simulation& Simulation::run_up_to_next_event(const bool logging)
