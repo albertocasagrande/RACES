@@ -32,19 +32,24 @@ elseif()
     set(COMPILE_SDL2_CODE FALSE)
 endif()
 
-message("Downloading \"p-ranav/indicators\" library...")
-file(DOWNLOAD
-    https://raw.githubusercontent.com/p-ranav/indicators/master/single_include/indicators/indicators.hpp
-    ${CMAKE_SOURCE_DIR}/include/indicators.hpp
-    STATUS DOWNLOAD_RESULT)
-list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
-if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
-    add_compile_definitions(WITH_INDICATORS)
-    message("done")
-    message("Using p-ranav/indicators")
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
+    message("Downloading \"p-ranav/indicators\" library...")
+    file(DOWNLOAD
+        https://raw.githubusercontent.com/p-ranav/indicators/master/single_include/indicators/indicators.hpp
+        ${CMAKE_SOURCE_DIR}/include/indicators.hpp
+        STATUS DOWNLOAD_RESULT)
+    list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
+    if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
+        add_compile_definitions(WITH_INDICATORS)
+        message("done")
+        message("Using \"p-ranav/indicators\"")
+    else()
+        message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
+        message("Avoiding \"p-ranav/indicators\"")
+    endif()
 else()
-    message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
-    message("Avoiding p-ranav/indicators")
+    add_compile_definitions(WITH_INDICATORS)
+    message("Using \"p-ranav/indicators\"")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -65,6 +70,30 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp)
 
+set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/position.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_mutations.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/plot_2D.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/progress_bar.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sampler.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp)
+
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
 if(${COMPILE_SDL2_CODE})
@@ -73,13 +102,21 @@ if(${COMPILE_SDL2_CODE})
     include_directories(${SDL2_INCLUDE_DIRS} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
     set(RACES_SOURCES ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
+    set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/SDL_plot.hpp)
 
     set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 endif()
 
 add_library(libRACES SHARED ${RACES_SOURCES})
+        
 target_link_libraries(libRACES ${RACES_LIBRARIES})
 set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+target_sources(libRACES PRIVATE ${RACES_SOURCES}
+                        PUBLIC FILE_SET HEADERS
+                        BASE_DIRS ${PROJECT_SOURCE_DIR}
+                        FILES ${RACES_HEADER})
+
+install(TARGETS libRACES FILE_SET HEADERS)
 
 set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp)
 
