@@ -2,7 +2,7 @@
  * @file genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define the Python wrapper class and functions for `Races::Genotype`
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_PYTHON_SOMATIC_GENOTYPE__
-#define __RACES_PYTHON_SOMATIC_GENOTYPE__
+#ifndef __RACES_PYTHON_GENOMIC_GENOTYPE__
+#define __RACES_PYTHON_GENOMIC_GENOTYPE__
 
 #include <memory>
 
@@ -103,4 +103,4 @@ struct GenotypeWrapper
 
 };
 
-#endif // __RACES_PYTHON_SOMATIC_GENOTYPE__
+#endif // __RACES_PYTHON_GENOMIC_GENOTYPE__
