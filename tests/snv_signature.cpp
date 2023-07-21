@@ -2,7 +2,7 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some SNV example
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(mutational_signature_expression)
 
     double alpha = 1.0/signatures.size();
 
-    MutationalSignatureExprValue expr_result;    
+    MutationalSignatureExprResult expr_result;    
     for (const auto& [key, signature]: signatures) {
         expr_result = expr_result + alpha * signature;
     }

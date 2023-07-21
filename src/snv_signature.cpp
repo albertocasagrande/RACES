@@ -2,7 +2,7 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Single Variation Mutation mutational signature
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -321,20 +321,20 @@ MutationalType::MutationalType(const std::string& type)
     iss >> *this;
 }
 
-MutationalSignatureExprValue::MutationalSignatureExprValue():
+MutationalSignatureExprResult::MutationalSignatureExprResult():
     value_map()
 {}
 
-MutationalSignatureExprValue::MutationalSignatureExprValue(const std::map<MutationalType, double>& dist_map):
+MutationalSignatureExprResult::MutationalSignatureExprResult(const std::map<MutationalType, double>& dist_map):
     value_map(dist_map)
 {}
 
-MutationalSignatureExprValue::operator MutationalSignature()
+MutationalSignatureExprResult::operator MutationalSignature()
 {
     return MutationalSignature(value_map);
 }
 
-MutationalSignatureExprValue& MutationalSignatureExprValue::operator+(MutationalSignatureExprValue&& expression_value)
+MutationalSignatureExprResult& MutationalSignatureExprResult::operator+(MutationalSignatureExprResult&& expression_value)
 {
     for (auto& [type, prob]: value_map) {
         auto it = expression_value.value_map.find(type);
@@ -352,7 +352,7 @@ MutationalSignatureExprValue& MutationalSignatureExprValue::operator+(Mutational
     return *this;
 }
 
-MutationalSignatureExprValue& MutationalSignatureExprValue::operator+(const MutationalSignature& signature)
+MutationalSignatureExprResult& MutationalSignatureExprResult::operator+(const MutationalSignature& signature)
 {
     for (auto& [type, prob]: value_map) {
         prob += signature(type);

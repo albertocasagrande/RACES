@@ -2,7 +2,7 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define Single Variation Mutation mutational signature
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -354,7 +354,7 @@ class MutationalSignature;
  * partial results may be different from a probability distribution and that 
  * is why this class is needed.
  */
-class MutationalSignatureExprValue
+class MutationalSignatureExprResult
 {
     std::map<MutationalType, double> value_map; //!< the mutational type-value map
 
@@ -366,12 +366,12 @@ class MutationalSignatureExprValue
      * 
      * @param value_map is a mutational type-value map
      */
-    MutationalSignatureExprValue(const std::map<MutationalType, double>& value_map);
+    MutationalSignatureExprResult(const std::map<MutationalType, double>& value_map);
 public:
     /**
      * @brief The empty constructor
      */
-    MutationalSignatureExprValue();
+    MutationalSignatureExprResult();
 
     /**
      * @brief Cast to `MutationalSignature`
@@ -392,7 +392,7 @@ public:
      * @return a reference to the updated object
      */
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    MutationalSignatureExprValue& operator*(const T& value)
+    MutationalSignatureExprResult& operator*(const T& value)
     {
         if (value>1 || value<0) {
             std::ostringstream oss;
@@ -416,7 +416,7 @@ public:
      * @param expression_value is a mutational signature expression value
      * @return a reference to the updated object
      */
-    MutationalSignatureExprValue& operator+(MutationalSignatureExprValue&& expression_value);
+    MutationalSignatureExprResult& operator+(MutationalSignatureExprResult&& expression_value);
 
     /**
      * @brief Inplace add a signature
@@ -424,7 +424,7 @@ public:
      * @param signature is a mutational signature
      * @return a reference to the updated object
      */
-    MutationalSignatureExprValue& operator+(const MutationalSignature& signature);
+    MutationalSignatureExprResult& operator+(const MutationalSignature& signature);
 
     friend class MutationalSignature;
 };
@@ -497,9 +497,9 @@ public:
      * @return the resulting mutational signature expression value
      */
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    inline MutationalSignatureExprValue operator*(const T& value) const
+    inline MutationalSignatureExprResult operator*(const T& value) const
     {
-        return MutationalSignatureExprValue(dist_map) * value;
+        return MutationalSignatureExprResult(dist_map) * value;
     }
 
     /**
@@ -508,9 +508,9 @@ public:
      * @param signature is a mutational signature
      * @return the resulting mutational signature expression value
      */
-    inline MutationalSignatureExprValue operator+(const MutationalSignature& signature) const
+    inline MutationalSignatureExprResult operator+(const MutationalSignature& signature) const
     {
-        return MutationalSignatureExprValue(dist_map) + signature;
+        return MutationalSignatureExprResult(dist_map) + signature;
     }
 
     /**
@@ -539,11 +539,11 @@ public:
  * @tparam T is the type of the arithmetic value
  * @param value is the arithmetic value
  * @param signature 
- * @return a `MutationalSignatureExprValue` object representing the
+ * @return a `MutationalSignatureExprResult` object representing the
  *         the multiplication result 
  */
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-inline MutationalSignatureExprValue operator*(const T& value, const MutationalSignature& signature)
+inline MutationalSignatureExprResult operator*(const T& value, const MutationalSignature& signature)
 {
     return signature * value;
 }
