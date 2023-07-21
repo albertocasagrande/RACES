@@ -9,6 +9,23 @@ if(${Boost_unit_test_framework_FOUND})
     set(TEST_LIBRARIES ${Boost_LIBRARIES} libRACES)
 
     set(RACES_TESTS archive)
+
+    set(SBS_EXAMPLE ${CMAKE_CURRENT_SOURCE_DIR}/v3.3_SBS3_PROFILE.txt)
+    if(NOT EXISTS ${SBS_EXAMPLE})
+        message("Downloading SBS profile example from sanger...")
+        file(DOWNLOAD
+            https://cancer.sanger.ac.uk/signatures/documents/1944/v3.3_SBS3_PROFILE.txt
+            ${SBS_EXAMPLE}
+            STATUS DOWNLOAD_RESULT)
+
+        list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
+        if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
+            set(RACES_TESTS snv_signature ${RACES_TESTS})
+        endif()
+    else()
+        set(RACES_TESTS snv_signature ${RACES_TESTS})
+    endif()
+
     foreach(TEST ${RACES_TESTS})
         ADD_EXECUTABLE( test_${TEST} ${TEST}.cpp)
         target_link_libraries(test_${TEST} ${TEST_LIBRARIES})
