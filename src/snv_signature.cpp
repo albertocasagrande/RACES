@@ -2,7 +2,7 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Single Variation Mutation mutational signature
- * @version 0.3
+ * @version 0.4
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -473,6 +473,23 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
             oss << "Column \"" << name << "\" is not a mutational signature: "
                 << ex.what();
             throw std::runtime_error(oss.str());
+        }
+    }
+
+    return result;
+}
+
+std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream(std::istream& in, const std::set<std::string>& signature_names)
+{
+    auto result = MutationalSignature::read_from_stream(in);
+
+    auto it = result.begin();
+
+    while (it != result.end()) {
+        if (signature_names.count(it->first)==0) {
+            result.erase(it++);
+        } else {
+            ++it;
         }
     }
 

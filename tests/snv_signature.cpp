@@ -2,7 +2,7 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some SNV example
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -386,6 +386,25 @@ BOOST_AUTO_TEST_CASE(mutational_signature_load)
 
     std::set<std::string> example_set;
 
+    std::transform(example.begin(), example.end(),  std::inserter(example_set, example_set.end()), 
+                   [](auto pair){ return pair.first; });
+    
+    BOOST_CHECK_EQUAL(signature_names,example_set);
+}
+
+BOOST_AUTO_TEST_CASE(selective_mutational_signature_load)
+{
+    using namespace Races::Passengers::SNV;
+
+    std::set<std::string> signature_names{"SBS3_GRCh38","SBS3_mm10","SBS3_rn6"};
+
+    std::map<std::string, MutationalSignature> example;
+    {
+        std::ifstream in(SBS_EXAMPLE, std::ios_base::in);
+        BOOST_CHECK_NO_THROW(example = MutationalSignature::read_from_stream(in, signature_names));
+    }
+
+    std::set<std::string> example_set;
     std::transform(example.begin(), example.end(),  std::inserter(example_set, example_set.end()), 
                    [](auto pair){ return pair.first; });
     

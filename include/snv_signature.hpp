@@ -2,7 +2,7 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define Single Variation Mutation mutational signature
- * @version 0.3
+ * @version 0.4
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -34,6 +34,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include <set>
 #include <functional> // std::less
 #include <iostream>
 #include <sstream>
@@ -530,7 +531,7 @@ public:
      * @return a map that associates the name of the signatures in the file that
      *         match `signature_names` and the corresponding signature.
      */
-    //static std::map<std::string, MutationalSignature> read_from_stream(istream& in, const std::set<std::string> signature_names);
+    static std::map<std::string, MutationalSignature> read_from_stream(std::istream& in, const std::set<std::string>& signature_names);
 };
 
 /**
