@@ -2,8 +2,8 @@
  * @file plot_2D.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window
- * @version 0.3
- * @date 2023-07-14
+ * @version 0.4
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -267,8 +267,8 @@ inline bool Plot2DWindow::waiting_end() const
 	return false;
 }
 
-}
+}  // UI
 
-}
+}  // Races
 
 #endif // __RACES_PLOT_2D__

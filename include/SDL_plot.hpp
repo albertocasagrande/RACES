@@ -71,21 +71,35 @@ public:
 	/**
 	 * @brief Clear the window
 	 */
-	void clear();
+	inline void clear()
+	{
+		set_color(this->background_color);
+		SDL_RenderClear( renderer );
+	}
 
 	/**
 	 * @brief Get the selected color
 	 * 
 	 * @return the selected color
 	 */
-	Color get_color() const;
+	inline Color get_color() const
+	{
+		Color color;
+		SDL_GetRenderDrawColor( renderer, &color.red, &color.green, 
+										&color.blue, &color.alpha );
+
+		return color;
+	}
 
 	/**
 	 * @brief Set a color
 	 * 
 	 * @param color is the color to be set
 	 */
-	void set_color(const Color& color);
+	inline void set_color(const Color& color)
+	{
+		SDL_SetRenderDrawColor( renderer, color.red, color.green, color.blue, color.alpha );
+	}
 
 	/**
 	 * @brief Draw a point
@@ -93,7 +107,10 @@ public:
 	 * @param x is the x-axis position of the point
 	 * @param y is the y-axis position of the point 
 	 */
-	void draw_point(const unsigned int x, const unsigned int y);
+	inline void draw_point(const unsigned int x, const unsigned int y)
+	{
+		SDL_RenderDrawPoint( renderer, x, y );
+	}
 
 	/**
 	 * @brief Draw a rectangle
@@ -157,7 +174,10 @@ public:
 	 * 
 	 * @return `true` if and only if the plotting window has not been closed
 	 */
-	bool waiting_end() const;
+	inline bool waiting_end() const
+	{
+		return !this->closed();
+	}
 
 	/**
 	 * @brief The SDLWindow destroyer
@@ -165,42 +185,8 @@ public:
 	~SDLWindow();
 };
 
-/* Inline implementations */
+}	// UI
 
-inline Color SDLWindow::get_color() const
-{
-	Color color;
-	SDL_GetRenderDrawColor( renderer, &color.red, &color.green, 
-		      						  &color.blue, &color.alpha );
-
-	return color;
-}
-
-
-inline void SDLWindow::set_color(const Color& color)
-{
-	SDL_SetRenderDrawColor( renderer, color.red, color.green, color.blue, color.alpha );
-}
-
-inline void SDLWindow::draw_point(const unsigned int x, const unsigned int y)
-{
-	SDL_RenderDrawPoint( renderer, x, y );
-}
-
-inline void SDLWindow::clear()
-{
-	set_color(this->background_color);
-	SDL_RenderClear( renderer );
-}
-
-
-inline bool SDLWindow::waiting_end() const
-{
-	return !this->closed();
-}
-
-}
-
-}
+}	// Races
 
 #endif // __RACES_SDL_PLOT__

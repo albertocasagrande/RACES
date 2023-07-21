@@ -57,7 +57,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/somatic_mutations.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp

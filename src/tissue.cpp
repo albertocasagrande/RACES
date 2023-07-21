@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.11
- * @date 2023-07-19
+ * @version 0.12
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,14 @@
 #include "tissue.hpp"
 #include "driver_genotype.hpp"
 
-namespace Races {
+namespace Races
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 Tissue::SpeciesView::SpeciesView(const std::vector<Species>& species, const std::vector<size_t>& species_pos):
     species(species), species_pos(species_pos)
@@ -156,7 +163,7 @@ Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_
 {
 }
 
-Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue(name, {x_size, y_size, z_size})
 {
     for (const auto& genotype: genotypes) {
@@ -164,7 +171,7 @@ Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genoty
     }
 }
 
-Tissue::Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
+Tissue::Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
     Tissue(name, {x_size, y_size})
 {
     for (const auto& genotype: genotypes) {
@@ -182,12 +189,12 @@ Tissue::Tissue(const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z
 {
 }
 
-Tissue::Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
+Tissue::Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
     Tissue("", genotypes, x_size, y_size)
 {
 }
@@ -242,28 +249,28 @@ Tissue& Tissue::add_cell(const EpigeneticGenotypeId& genotype_id, const Position
     return *this;
 }
 
-Tissue& Tissue::add_species(const SomaticGenotype& somatic_genotype)
+Tissue& Tissue::add_species(const Genotype& genotype)
 {
-    // check whether the somatic genotype is already in the tissue
-    if (somatic_genotope_pos.count(somatic_genotype.get_id())>0) {
-        throw std::runtime_error("Somatic genotype already in the tissue");
+    // check whether the genotype is already in the tissue
+    if (genotope_pos.count(genotype.get_id())>0) {
+        throw std::runtime_error("Genomic genotype already in the tissue");
     }
 
     // check whether any of the epigenetic genotypes is already in the tissue
-    for (const auto& genotype: somatic_genotype.epigenetic_genotypes()) {
-        if (pos_map.count(genotype.get_id())>0) {
+    for (const auto& e_genotype: genotype.epigenetic_genotypes()) {
+        if (pos_map.count(e_genotype.get_id())>0) {
             throw std::runtime_error("Epigenetic genotype already in the tissue");
         }
     }
 
     // insert the genotypes in the tissue 
-    auto& pos = somatic_genotope_pos[somatic_genotype.get_id()];
-    for (const auto& genotype: somatic_genotype.epigenetic_genotypes()) {
+    auto& pos = genotope_pos[genotype.get_id()];
+    for (const auto& e_genotype: genotype.epigenetic_genotypes()) {
         // place the new species at the end of the species vector
         pos.push_back(species.size());
 
-        pos_map[genotype.get_id()] = species.size();
-        species.push_back(genotype);
+        pos_map[e_genotype.get_id()] = species.size();
+        species.push_back(e_genotype);
     }
 
     return *this;
@@ -322,4 +329,8 @@ std::vector<AxisSize> Tissue::size() const
     return sizes;
 }
 
-};
+}   // Simulation
+
+}   // Drivers
+
+}   // Races

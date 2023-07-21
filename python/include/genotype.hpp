@@ -1,9 +1,9 @@
 /**
- * @file somatic_genotype.hpp
+ * @file genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define the Python wrapper class and functions for `Races::SomaticGenotype`
+ * @brief Define the Python wrapper class and functions for `Races::Genotype`
  * @version 0.1
- * @date 2023-07-19
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,16 +41,16 @@
 using namespace boost::python;
 
 /**
- * @brief A wrapper structure for `Races::SomaticGenotype`
+ * @brief A wrapper structure for `Races::Genotype`
  * 
  * This structure defines all the static methods required by 
- * the Python wrapping of `Races::SomaticGenotype`.
+ * the Python wrapping of `Races::Genotype`.
  */
-struct SomaticGenotypeWrapper 
+struct GenotypeWrapper 
 {
 
     /**
-     * @brief Create a new `SomaticGenotype` object
+     * @brief Create a new `Genotype` object
      * 
      * @param name is the name of the new object
      * @param epigenetic_rates is the Python list of epigenetic rates
@@ -58,47 +58,47 @@ struct SomaticGenotypeWrapper
      *         `EpigeneticRates`
      * @return a shared pointer of the newly created object
      */
-    static std::shared_ptr<Races::SomaticGenotype>
+    static std::shared_ptr<Races::Drivers::Genotype>
     create(std::string const& name, boost::python::list const& epigenetic_rates);
 
     /**
      * @brief Set the rates of the epigenetic genotype
      * 
-     * Every somatic genotype is associated to many different epigenetic genotype.
-     * The epigenetic genotype is a somatic genotype equipped with a epigenetic status
+     * Every genomic genotype is associated to many different epigenetic genotype.
+     * The epigenetic genotype is a genomic genotype equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
      * signature (i.e., "+"/"-"). This method set the rates of an epigenetic genotype 
-     * by specifying its somatic genotype, its methylation signature, and the new 
+     * by specifying its genomic genotype, its methylation signature, and the new 
      * rates. 
      * 
-     * @param somatic_genotype is the somatic genotype whose rate should be set
+     * @param genotype is the genomic genotype whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param rates are the new rates 
      */
     static
-    void set_rates(Races::SomaticGenotype *somatic_genotype, const std::string& methylation_signature, 
+    void set_rates(Races::Drivers::Genotype *genotype, const std::string& methylation_signature, 
                 boost::python::dict const& rates);
 
     /**
      * @brief Get the rates of the epigenetic genotype
      * 
-     * Every somatic genotype is associated to many different epigenetic genotype.
-     * The epigenetic genotype is a somatic genotype equipped with a epigenetic status
+     * Every genomic genotype is associated to many different epigenetic genotype.
+     * The epigenetic genotype is a genomic genotype equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
      * signature (i.e., "+"/"-"). This method get the rates of an epigenetic genotype 
-     * by specifying its somatic genotype, its methylation signature, and the 
+     * by specifying its genomic genotype, its methylation signature, and the 
      * event type.
      * 
-     * @param somatic_genotype is the somatic genotype whose rate should be set
+     * @param genotype is the genomic genotype whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param 
      */
     inline static
-    double get_rate(const Races::SomaticGenotype *somatic_genotype, 
+    double get_rate(const Races::Drivers::Genotype *genotype, 
                     const std::string& methylation_signature,
-                    const Races::CellEventType event_type)
+                    const Races::Drivers::CellEventType event_type)
     {
-        return (*somatic_genotype)[methylation_signature].get_rate(event_type);
+        return (*genotype)[methylation_signature].get_rate(event_type);
     }
 
 };

@@ -1,9 +1,9 @@
 /**
- * @file simulator_main.cpp
+ * @file races_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.12
- * @date 2023-07-16
+ * @version 0.13
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,7 +52,7 @@ std::ostream& print_help(std::ostream& os, const std::string& program_name,
 }
 
 
-Races::Simulation simulation;
+Races::Drivers::Simulation::Simulation simulation;
 Races::UI::ProgressBar *bar;
 
 void termination_handling(int signal_num)
@@ -72,8 +72,9 @@ void termination_handling(int signal_num)
 
 int main(int argc, char* argv[])
 {
-    using namespace Races;
+    using namespace Races::Drivers;
     namespace po = boost::program_options;
+    namespace UI = Races::UI;
 
     po::options_description visible("Options");
     visible.add_options()
@@ -126,21 +127,17 @@ int main(int argc, char* argv[])
 
     long double time_horizon = vm["time-horizon"].as<long double>();
 
-    SomaticGenotype A("A",{{0.01,0.01}});
+    Genotype A("A",{{0.01,0.01}});
     A["-"].set_rates({{CellEventType::DIE, 0.1},
-                      {CellEventType::DUPLICATE, 0.3},
-                      {CellEventType::PASSENGER_MUTATION, 20}});
+                      {CellEventType::DUPLICATE, 0.3}});
     A["+"].set_rates({{CellEventType::DIE, 0.1},
-                      {CellEventType::DUPLICATE, 0.45},
-                      {CellEventType::PASSENGER_MUTATION, 2}});
+                      {CellEventType::DUPLICATE, 0.45}});
 
-    SomaticGenotype B("B",{{0.01,0.01}});
+    Genotype B("B",{{0.01,0.01}});
     B["-"].set_rates({{CellEventType::DIE, 0.1},
-                      {CellEventType::DUPLICATE, 0.2},
-                      {CellEventType::PASSENGER_MUTATION, 1}});
+                      {CellEventType::DUPLICATE, 0.2}});
     B["+"].set_rates({{CellEventType::DIE, 0.01},
-                      {CellEventType::DUPLICATE, 0.02},
-                      {CellEventType::PASSENGER_MUTATION, 20}});
+                      {CellEventType::DUPLICATE, 0.02}});
 
     std::signal(SIGINT, termination_handling);
 
@@ -157,7 +154,7 @@ int main(int argc, char* argv[])
               .add_species(A)
               .add_species(B)
               .add_cell(B["-"], {500, 500})
-              .add_somatic_mutation(B,A,75)
+              .add_genomic_mutation(B,A,75)
               .random_generator_seed(vm.count("seed"))
               .set_interval_between_snapshots(5min);
 

@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.13
- * @date 2023-07-19
+ * @version 0.14
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,17 +43,24 @@
 #include "species.hpp"
 #include "cell.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 using AxisSize = uint16_t;
 
 class Tissue {
-    using SomaticGenotypePosition = std::map<SomaticGenotypeId, std::vector<size_t>>;
+    using GenotypePosition = std::map<GenotypeId, std::vector<size_t>>;
 
     std::string name;                               //!< The tissue name
     std::vector<Species> species;                   //!< The species in the tissue
     std::map<EpigeneticGenotypeId, size_t> pos_map; //!< The identifier to position map
-    SomaticGenotypePosition somatic_genotope_pos;   //!< The positions of the species associated to the same somatic genotype 
+    GenotypePosition genotope_pos;          //!< The positions of the species associated to the same genomic genotype 
     
     uint8_t dimensions;                             //!< The number of space dimension for the tissue
 
@@ -70,7 +77,10 @@ class Tissue {
      * @return a non-constant reference to a pointer to the cell 
      *          in `position`
      */
-    CellInTissue*& cell_pointer(const PositionInTissue& position);
+    inline CellInTissue*& cell_pointer(const PositionInTissue& position)
+    {
+        return this->space[position.x][position.y][position.z];
+    }
 
     /**
      * @brief Get the pointer to the cell in a position
@@ -83,7 +93,10 @@ class Tissue {
      * @return a constant reference to a pointer to the cell 
      *          in `position`
      */
-    const CellInTissue* cell_pointer(const PositionInTissue& position) const;
+    inline const CellInTissue* cell_pointer(const PositionInTissue& position) const
+    {
+        return this->space[position.x][position.y][position.z];
+    }
 
 public:
 
@@ -92,7 +105,7 @@ public:
      * 
      * This class allows to have a partial view of the 
      * tissue's species. For instance, it allows to 
-     * list all the species having the same somatic 
+     * list all the species having the same genomic 
      * genotype.
      */
     class SpeciesView {
@@ -322,12 +335,30 @@ public:
         TISSUE_TYPE &tissue;                //!< tissue
         const PositionInTissue position;    //!< position of the cell
 
-        BaseCellInTissueProxy(TISSUE_TYPE &tissue, const PositionInTissue position);
+        BaseCellInTissueProxy(TISSUE_TYPE &tissue, const PositionInTissue position):
+            tissue(tissue), position(position)
+        {
+            if (!tissue.is_valid(position)) {
+                throw std::out_of_range("The position does not belong to the tissue");
+            }
+        }
     public:
 
-        bool has_driver_mutations() const;
+        inline bool has_driver_mutations() const
+        {
+            return tissue.cell_pointer(position)!=nullptr;
+        }
 
-        operator const CellInTissue&() const;
+        operator const CellInTissue&() const
+        {
+            const auto ptr = tissue.cell_pointer(position);
+
+            if (ptr!=nullptr) {
+                return *ptr;
+            }
+
+            throw std::runtime_error("Non-driver mutated cell");
+        }
 
         friend class Tissue;
     };
@@ -392,7 +423,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
+    Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
@@ -401,7 +432,7 @@ public:
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
+    Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
 
     /**
      * @brief A constructor
@@ -439,7 +470,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
+    Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
@@ -449,21 +480,27 @@ public:
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::string name, const std::vector<SomaticGenotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
+    Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
 
     /**
      * @brief Get the initial iterator for the tissue species
      * 
      * @return the initial iterator for the tissue species
      */
-    std::vector<Species>::const_iterator begin() const;
+    inline std::vector<Species>::const_iterator begin() const
+    {
+        return std::begin(species);
+    }
 
     /**
      * @brief Get the final iterator for the tissue species
      * 
      * @return the final iterator for the tissue species
      */
-    std::vector<Species>::const_iterator end() const;
+    inline std::vector<Species>::const_iterator end() const
+    {
+        return std::end(species);
+    }
 
     /**
      * @brief Get a tissue species by driver identifier
@@ -487,7 +524,7 @@ public:
      * @param genotype is the driver genotype of the new species
      * @return a reference to the updated object
      */
-    Tissue& add_species(const SomaticGenotype& genotype);
+    Tissue& add_species(const Genotype& genotype);
 
     /**
      * @brief Add driver genotype cell
@@ -502,17 +539,26 @@ public:
      * @brief Test whether a position is valid in a tissue
      * 
      * @param position is the position to be tested
-     * @return true if and only if `position` is a valid 
+     * @return `true` if and only if `position` is a valid 
      *      position for the tissue
      */
-    bool is_valid(const PositionInTissue& position) const;
+    inline bool is_valid(const PositionInTissue& position) const
+    {
+        return (static_cast<size_t>(position.x)<space.size() && 
+                static_cast<size_t>(position.y)<space[0].size() && 
+                static_cast<size_t>(position.z)<space[0][0].size() &&
+                position.x>=0 && position.y>=0 && position.z>=0);
+    }
 
     /**
      * @brief Get the number of tissue dimensions
      * 
      * @return the number of tissue dimensions
      */
-    size_t num_of_species() const;
+    inline size_t num_of_species() const
+    {
+        return species.size();
+    }
 
     /**
      * @brief Get the number of cells in the simulated tissue
@@ -523,7 +569,10 @@ public:
      * 
      * @return the number of cells in the simulated tissue
      */
-    size_t num_of_cells() const;
+    inline size_t num_of_cells() const
+    {
+        return space.size() * space[0].size() * space[0][0].size();
+    }
 
     /**
      * @brief Get the number of driver mutated cells in the tissue
@@ -533,13 +582,16 @@ public:
     size_t num_of_mutated_cells() const;
 
     /**
-     * @brief Get an iterator over the species having the same somatic genotype
+     * @brief Get an iterator over the species having the same genomic genotype
      * 
-     * @param genotype_id is the identifier of the somatic genotype whose species are aimed 
-     * @return an interator over the tissue's species having `genotype_id` as somatic
+     * @param genotype_id is the identifier of the genomic genotype whose species are aimed 
+     * @return an interator over the tissue's species having `genotype_id` as genomic
      *       genotype identifier
      */
-    SpeciesView get_somatic_genotype_species(const SomaticGenotypeId& genotype_id) const;
+    inline SpeciesView get_genotype_species(const GenotypeId& genotype_id) const
+    {
+        return SpeciesView(species, genotope_pos.at(genotype_id));
+    }
 
     /**
      * @brief Get the cell in a position
@@ -562,14 +614,20 @@ public:
      * 
      * @return a constant reference to the tissue name
      */
-    const std::string& get_name() const;
+    inline const std::string& get_name() const
+    {
+        return name;
+    }
 
     /**
      * @brief Get number of dimensions
      * 
      * @return a constant reference to the number of dimensions
      */
-    const uint8_t& num_of_dimensions() const;
+    inline const uint8_t& num_of_dimensions() const
+    {
+        return dimensions;
+    }
 
     /**
      * @brief Push contiguous driver mutated cells in a direction
@@ -604,7 +662,7 @@ public:
         archive & size()
                 & name
                 & species
-                & somatic_genotope_pos;
+                & genotope_pos;
     }
 
     /**
@@ -625,7 +683,7 @@ public:
 
         archive & tissue.name
                 & tissue.species
-                & tissue.somatic_genotope_pos;
+                & tissue.genotope_pos;
 
         size_t i=0;
         for (auto& species : tissue.species) {
@@ -655,88 +713,10 @@ inline bool operator!=(const Tissue::SpeciesView::const_iterator& a, const Tissu
     return !(a==b); 
 }
 
-/* Inline implementation */
+}   // Simulation
 
-inline std::vector<Species>::const_iterator Tissue::begin() const
-{
-    return std::begin(species);
-}
+}   // Drivers
 
-inline std::vector<Species>::const_iterator Tissue::end() const
-{
-    return std::end(species);
-}
+}   // Races
 
-inline Tissue::SpeciesView Tissue::get_somatic_genotype_species(const SomaticGenotypeId& genotype_id) const
-{
-    return Tissue::SpeciesView(species, somatic_genotope_pos.at(genotype_id));
-}
-
-inline size_t Tissue::num_of_species() const
-{
-    return species.size();
-}
-
-inline size_t Tissue::num_of_cells() const
-{
-    return space.size() * space[0].size() * space[0][0].size();
-}
-
-inline bool Tissue::is_valid(const PositionInTissue& position) const
-{
-    return (static_cast<size_t>(position.x)<space.size() && 
-            static_cast<size_t>(position.y)<space[0].size() && 
-            static_cast<size_t>(position.z)<space[0][0].size() &&
-            position.x>=0 && position.y>=0 && position.z>=0);
-}
-
-inline const std::string& Tissue::get_name() const
-{
-    return name;
-}
-
-inline const uint8_t& Tissue::num_of_dimensions() const
-{
-    return dimensions;
-}
-
-inline CellInTissue*& Tissue::cell_pointer(const PositionInTissue& position)
-{
-    return this->space[position.x][position.y][position.z];
-}
-
-
-inline const CellInTissue* Tissue::cell_pointer(const PositionInTissue& position) const
-{
-    return this->space[position.x][position.y][position.z];
-}
-
-template<typename TISSUE_TYPE>
-Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::BaseCellInTissueProxy(TISSUE_TYPE &tissue, const PositionInTissue position):
-    tissue(tissue), position(position)
-{
-    if (!tissue.is_valid(position)) {
-        throw std::out_of_range("The position does not belong to the tissue");
-    }
-}
-
-template<typename TISSUE_TYPE>
-inline bool Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::has_driver_mutations() const
-{
-    return tissue.cell_pointer(position)!=nullptr;
-}
-
-template<typename TISSUE_TYPE>
-Tissue::BaseCellInTissueProxy<TISSUE_TYPE>::operator const CellInTissue&() const
-{
-    const auto ptr = tissue.cell_pointer(position);
-
-    if (ptr!=nullptr) {
-        return *ptr;
-    }
-
-    throw std::runtime_error("Non-driver mutated cell");
-}
-
-};
 #endif // __RACES_TISSUE__

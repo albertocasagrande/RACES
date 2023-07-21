@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.4
- * @date 2023-07-13
+ * @version 0.5
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,15 @@
 #include "species.hpp"
 #include "cell_event.hpp"
 
-namespace Races {
+
+namespace Races 
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 class TissueStatistics;
 
@@ -138,7 +146,10 @@ public:
      * @param species is the species whose statistics are aimed
      * @return a non-constant reference to the statistics of `species` 
      */
-    SpeciesStatistics& operator[](const Species& species);
+    inline SpeciesStatistics& operator[](const Species& species)
+    {
+        return s_statistics.at(species.get_id());
+    }
 
     /**
      * @brief Get the statistics of a species
@@ -147,7 +158,10 @@ public:
      * @return a non-constant reference to the statistics of species having 
      *      `species_id` as identifier 
      */
-    SpeciesStatistics& operator[](const EpigeneticGenotypeId& species_id);
+    inline SpeciesStatistics& operator[](const EpigeneticGenotypeId& species_id)
+    {
+        return s_statistics.at(species_id);
+    }
 
     /**
      * @brief Get the statistics of a species
@@ -155,7 +169,10 @@ public:
      * @param species is the species whose statistics are aimed
      * @return a non-constant reference to the statistics of `species` 
      */
-    const SpeciesStatistics& at(const Species& species) const;
+    inline const SpeciesStatistics& at(const Species& species) const
+    {
+        return s_statistics.at(species.get_id());
+    }
 
     /**
      * @brief Get the statistics of a species
@@ -164,7 +181,10 @@ public:
      * @return a constant reference to the statistics of species having 
      *      `species_id` as identifier 
      */
-    const SpeciesStatistics& at(const EpigeneticGenotypeId& species_id) const;
+    inline const SpeciesStatistics& at(const EpigeneticGenotypeId& species_id) const
+    {
+        return s_statistics.at(species_id);
+    }
 
     /**
      * @brief Test whether the object contains statistics for a species
@@ -173,8 +193,10 @@ public:
      * @return `true` if and only if the object contains statistics for the 
      *          specified species
      */
-    bool contains_data_for(const EpigeneticGenotypeId& species_id) const;
-
+    inline bool contains_data_for(const EpigeneticGenotypeId& species_id) const
+    {
+        return s_statistics.count(species_id)==1;
+    }
     /**
      * @brief Test whether the object contains statistics for a species
      * 
@@ -253,22 +275,35 @@ public:
      * 
      * @return the elapsed time
      */
-    std::chrono::steady_clock::duration get_elapsed_time() const;
+    inline std::chrono::steady_clock::duration get_elapsed_time() const
+    {
+        return std::chrono::steady_clock::now()-first_event_time;
+    }
 
     /**
      * @brief Get the simulated time
      * 
      * @return the simulated time
      */
-    Time get_simulated_time() const;
+    inline Time get_simulated_time() const
+    {
+        return sim_times.back();
+    }
 
     /**
      * @brief Get the number of the last recorded events over time
      * 
      * @return the number of the last recorded events over time
      */
-    template<class toDuration>
-    double get_last_recorded_events_over_time() const;
+    template<class ToDuration> 
+    double get_last_recorded_events_over_time() const
+    {
+        using namespace std::chrono;
+
+        auto time = duration_cast<ToDuration>(real_times.back()-real_times.front()).count();
+
+        return static_cast<double>(real_times.size())/time;
+    }
     
     /**
      * @brief Save tissue statistics in an archive
@@ -304,74 +339,11 @@ public:
     }
 };
 
-/* Inline implementations */
+}   // Simulation
 
-inline SpeciesStatistics& TissueStatistics::operator[](const Species& species)
-{
-    return s_statistics.at(species.get_id());
-}
+}   // Drivers
 
-inline SpeciesStatistics& TissueStatistics::operator[](const EpigeneticGenotypeId& species_id)
-{
-    return s_statistics.at(species_id);
-}
+}   // Races
 
-inline const SpeciesStatistics& TissueStatistics::at(const Species& species) const
-{
-    return s_statistics.at(species.get_id());
-}
-
-inline const SpeciesStatistics& TissueStatistics::at(const EpigeneticGenotypeId& species_id) const
-{
-    return s_statistics.at(species_id);
-}
-
-inline bool TissueStatistics::contains_data_for(const EpigeneticGenotypeId& species_id) const
-{
-    return s_statistics.count(species_id)==1;
-}
-
-inline bool TissueStatistics::contains_data_for(const Species& species) const
-{
-    return contains_data_for(species.get_id());
-}
-
-inline std::chrono::steady_clock::duration TissueStatistics::get_elapsed_time() const
-{
-    return std::chrono::steady_clock::now()-first_event_time;
-}
-
-inline Time TissueStatistics::get_simulated_time() const
-{
-    return sim_times.back();
-}
-
-template <class Rep, std::intmax_t num, std::intmax_t denom>
-auto extract_time_units(std::chrono::duration<Rep, std::ratio<num, denom>> duration)
-{
-    using namespace std::chrono;
-
-    const auto hrs = duration_cast<hours>(duration);
-    duration -= hrs;
-
-    const auto mins = duration_cast<minutes>(duration);
-    duration -= mins;
-
-    const auto secs = duration_cast<seconds>(duration);
-
-    return std::make_tuple(hrs, mins, secs);
-}
-
-template<class ToDuration> 
-double TissueStatistics::get_last_recorded_events_over_time() const
-{
-    using namespace std::chrono;
-
-    auto time = duration_cast<ToDuration>(real_times.back()-real_times.front()).count();
-
-    return static_cast<double>(real_times.size())/time;
-}
-
-}
 
 #endif // __RACES_STATISTICS__

@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.1
- * @date 2023-07-19
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -55,7 +55,9 @@ class SimulationWrapper
 {
     struct _SimulationWrapper
     {
-        Races::Simulation simulation;  //!< the c++ simulation object
+        using Simulation = Races::Drivers::Simulation::Simulation;
+
+        Simulation simulation;         //!< the c++ simulation object
 
         std::shared_mutex s_mutex;     //!< the simulation mutex
 
@@ -97,14 +99,15 @@ public:
     const Races::Time& get_time() const;
 
     /**
-     * @brief Add a timed driver somatic mutation
+     * @brief Add a timed driver genomic mutation
      * 
-     * @param src is the source driver somatic genotype
-     * @param dst is the destination driver somatic genotype
+     * @param src is the source driver genomic genotype
+     * @param dst is the destination driver genomic genotype
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void add_somatic_mutation(const Races::SomaticGenotype& src, const Races::SomaticGenotype& dst, const Races::Time time);
+    void add_genomic_mutation(const Races::Drivers::Genotype& src, const Races::Drivers::Genotype& dst,
+                              const Races::Time time);
 
     /**
      * @brief Add a new species to the tissue
@@ -112,7 +115,7 @@ public:
      * @param genotype is the driver genotype of the new species
      * @return a reference to the updated object
      */
-    void add_species(const Races::SomaticGenotype& genotype);
+    void add_species(const Races::Drivers::Genotype& genotype);
 
     /**
      * @brief Add a cell to the simulated tissue
@@ -122,7 +125,7 @@ public:
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    void add_cell(const Races::SomaticGenotype& genotype, const std::string& methylation_signature, 
+    void add_cell(const Races::Drivers::Genotype& genotype, const std::string& methylation_signature, 
                   boost::python::list const& position);
 
     /**

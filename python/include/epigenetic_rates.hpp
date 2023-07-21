@@ -2,8 +2,8 @@
  * @file epigenetic_rates.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define the Python wrapper class and functions for `Races::EpigeneticRates`
- * @version 0.1
- * @date 2023-07-19
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,7 +58,7 @@ struct EpigeneticRatesWrapper
      * @return a shared pointer to the newly created 
      *        `Races::EpigeneticRates` object
      */
-    static std::shared_ptr<Races::EpigeneticRates>
+    static std::shared_ptr<Races::Drivers::EpigeneticRates>
     create(boost::python::list const& rates_list);
 
     /**
@@ -68,7 +68,7 @@ struct EpigeneticRatesWrapper
      * @param value is the methylation rate value to be set
      */
     inline static
-    void set_methylation_rate(Races::EpigeneticRates *epigenetic_rates, const double& value)
+    void set_methylation_rate(Races::Drivers::EpigeneticRates *epigenetic_rates, const double& value)
     {
         epigenetic_rates->set_methylation_rate(value);
     }
@@ -80,7 +80,7 @@ struct EpigeneticRatesWrapper
      * @param value is the demethylation rate value to be set
      */
     inline static
-    void set_demethylation_rate(Races::EpigeneticRates *epigenetic_rates, const double& value)
+    void set_demethylation_rate(Races::Drivers::EpigeneticRates *epigenetic_rates, const double& value)
     {
         epigenetic_rates->set_demethylation_rate(value);
     }

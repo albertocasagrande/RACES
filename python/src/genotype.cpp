@@ -1,9 +1,9 @@
 /**
- * @file somatic_genotype.cpp
+ * @file genotype.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement the Python wrapper class and functions for `Races::SomaticGenotype`
+ * @brief Implement the Python wrapper class and functions for `Races::Genotype`
  * @version 0.1
- * @date 2023-07-19
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -30,15 +30,15 @@
 
 #include "cell_event.hpp"
 
-#include "somatic_genotype.hpp"
+#include "genotype.hpp"
 #include "epigenetic_rates.hpp"
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-std::shared_ptr<Races::SomaticGenotype>
-SomaticGenotypeWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
+std::shared_ptr<Races::Drivers::Genotype>
+GenotypeWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
 {
-    using namespace Races;
+    using namespace Races::Drivers;
 
     namespace bp = boost::python;
 
@@ -60,12 +60,12 @@ SomaticGenotypeWrapper::create(std::string const& name, boost::python::list cons
         }
     }
 
-    return std::make_shared<SomaticGenotype>(name, c_epigenetic_rates);
+    return std::make_shared<Genotype>(name, c_epigenetic_rates);
 }
 
-void SomaticGenotypeWrapper::set_rates(Races::SomaticGenotype *somatic_genotype, const std::string& methylation_signature, boost::python::dict const& rates)
+void GenotypeWrapper::set_rates(Races::Drivers::Genotype *genotype, const std::string& methylation_signature, boost::python::dict const& rates)
 {
-    using namespace Races;
+    using namespace Races::Drivers;
 
     namespace bp = boost::python;
 
@@ -78,5 +78,5 @@ void SomaticGenotypeWrapper::set_rates(Races::SomaticGenotype *somatic_genotype,
         c_rates[event_type_id] = bp::extract<double>(rates_list[i][1]);
     }
     
-    (*somatic_genotype)[methylation_signature].set_rates(c_rates);
+    (*genotype)[methylation_signature].set_rates(c_rates);
 }

@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.10
- * @date 2023-07-13
+ * @version 0.11
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,23 +45,14 @@
 
 
 
-namespace Races {
-    class Species;
-}
+namespace Races 
+{
 
-namespace std {
+namespace Drivers
+{
 
-/**
- * @brief Swap two species
- * 
- * @param a is a species
- * @param b is a species
- */
-void swap(Races::Species& a, Races::Species& b);
-
-}
-
-namespace Races {
+namespace Simulation
+{
 
 class Tissue;
 
@@ -234,7 +225,10 @@ public:
      * 
      * @return the number of cells in the species
      */
-    size_t num_of_cells() const;
+    inline size_t num_of_cells() const
+    {
+        return cells.size();
+    }
 
     /**
      * @brief Randomly select a cell in the species
@@ -288,7 +282,10 @@ public:
      * @param cell_id is the identifier of the aimed cell
      * @return a non-constant reference to the aimed cell
      */
-    CellInTissue& operator()(const CellId& cell_id);
+    inline CellInTissue& operator()(const CellId& cell_id)
+    {
+        return *(cells[pos_map.at(cell_id)]);
+    }
 
     /**
      * @brief Get cell by identifier
@@ -296,7 +293,10 @@ public:
      * @param cell_id is the identifier of the aimed cell
      * @return a constant reference to the aimed cell
      */
-    const CellInTissue& operator()(const CellId& cell_id) const;
+    inline const CellInTissue& operator()(const CellId& cell_id) const
+    {
+        return *(cells[pos_map.at(cell_id)]);
+    }
 
     /**
      * @brief Test whether a cell is already contained in a species
@@ -304,7 +304,11 @@ public:
      * @param cell_id is the identifier of the cell to be tested
      * @return `true` is an only if the cell is already in the species
      */
-    bool contains(const CellId& cell_id) const;
+    inline bool contains(const CellId& cell_id) const
+    {
+        return pos_map.find(cell_id) != pos_map.end();
+    }
+
 
     /**
      * @brief The destroyer
@@ -356,8 +360,26 @@ public:
 
     friend class Simulation;
 
-    friend void std::swap(Species& a, Species& b);
+    friend void swap(Species& a, Species& b);
 };
+
+
+/**
+ * @brief Swap two species
+ * 
+ * @param a is a species
+ * @param b is a species
+ */
+void swap(Species& a, Species& b);
+
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+namespace std
+{
 
 /**
  * @brief Write the information about a species in an output stream
@@ -366,30 +388,8 @@ public:
  * @param species is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Species& species);
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::Species& species);
 
-/* Inline Implementation */
-
-inline bool Species::contains(const CellId& cell_id) const
-{
-    return pos_map.find(cell_id) != pos_map.end();
-}
-
-inline CellInTissue& Species::operator()(const CellId& cell_id)
-{
-    return *(cells[pos_map.at(cell_id)]);
-}
-
-inline const CellInTissue& Species::operator()(const CellId& cell_id) const
-{
-    return *(cells[pos_map.at(cell_id)]);
-}
-
-inline size_t Species::num_of_cells() const
-{
-    return cells.size();
-}
-
-};
+}   // std
 
 #endif // __RACES_SPECIES__

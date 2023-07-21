@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a UI window to plot a tissue
- * @version 0.6
- * @date 2023-07-14
+ * @version 0.7
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,6 +47,22 @@ namespace UI
 {
 
 template <class Rep, std::intmax_t num, std::intmax_t denom>
+auto extract_time_units(std::chrono::duration<Rep, std::ratio<num, denom>> duration)
+{
+    using namespace std::chrono;
+
+    const auto hrs = duration_cast<hours>(duration);
+    duration -= hrs;
+
+    const auto mins = duration_cast<minutes>(duration);
+    duration -= mins;
+
+    const auto secs = duration_cast<seconds>(duration);
+
+    return std::make_tuple(hrs, mins, secs);
+}
+
+template <class Rep, std::intmax_t num, std::intmax_t denom>
 std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, denom>> duration)
 {
     const auto [hrs, mins, secs] = extract_time_units(duration);
@@ -62,6 +78,8 @@ std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, den
 
 template<typename PLOT_WINDOW>
 class TissuePlotter {
+	using Tissue = Drivers::Simulation::Tissue;
+
 	const Tissue& tissue;					//!< the tissue to plot
 
 	std::unique_ptr<PLOT_WINDOW> window;	//!< the plotting window
@@ -118,7 +136,7 @@ class TissuePlotter {
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-	void draw_time(const TissueStatistics& statistics)
+	void draw_time(const Drivers::Simulation::TissueStatistics& statistics)
 	{
 		unsigned int label_width, label_height;
 
@@ -138,7 +156,7 @@ class TissuePlotter {
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-	void draw_elapsed_time(const TissueStatistics& statistics)
+	void draw_elapsed_time(const Drivers::Simulation::TissueStatistics& statistics)
 	{
 		unsigned int label_width, label_height;
 
@@ -158,7 +176,7 @@ class TissuePlotter {
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-	void draw_events_per_second(const TissueStatistics& statistics)
+	void draw_events_per_second(const Drivers::Simulation::TissueStatistics& statistics)
 	{
 		using namespace std::chrono;
 		unsigned int label_width, label_height;
@@ -177,7 +195,7 @@ class TissuePlotter {
 		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
-	void draw_time_statistics(const TissueStatistics& statistics)
+	void draw_time_statistics(const Drivers::Simulation::TissueStatistics& statistics)
 	{
 		draw_time(statistics);
 		draw_elapsed_time(statistics);
@@ -210,7 +228,8 @@ class TissuePlotter {
 		}
 	}
 
-	void draw_species_legend(const Species& species, const SpeciesStatistics& statistics, 
+	void draw_species_legend(const Drivers::Simulation::Species& species,
+							 const Drivers::Simulation::SpeciesStatistics& statistics, 
 							 const unsigned int& x, const unsigned int& y, const Color& color)
 	{
 		window->set_color(color);
@@ -237,7 +256,7 @@ class TissuePlotter {
 	/**
 	 * @brief Draw the legend
 	 */
-	void draw_legend(const TissueStatistics& statistics)
+	void draw_legend(const Drivers::Simulation::TissueStatistics& statistics)
 	{
 		auto sizes(tissue.size());
 		const unsigned int x = 2*frame_border + static_cast<unsigned int>(sizes[0]);
@@ -249,7 +268,7 @@ class TissuePlotter {
 				draw_species_legend(species, statistics.at(species.get_id()),
 									x, y, palette[species_idx++]);
 			} else {
-				SpeciesStatistics s_statistics;
+				Drivers::Simulation::SpeciesStatistics s_statistics;
 				draw_species_legend(species, s_statistics,
 									x, y, palette[species_idx++]);
 			}
@@ -264,7 +283,7 @@ public:
 	 * 
 	 * @param tissue is the tissue to plot
 	 */
-	TissuePlotter(const Tissue& tissue, const unsigned int frames_per_second=10):
+	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const unsigned int frames_per_second=10):
 		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulation"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), frames_per_second)
 	{
 	}
@@ -275,7 +294,8 @@ public:
 	 * @param tissue is the tissue to plot
 	 * @param name is the name of the plotting window
 	 */
-	TissuePlotter(const Tissue& tissue, const std::string name, const unsigned int frames_per_second=10):
+	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const std::string name,
+				  const unsigned int frames_per_second=10):
 		tissue(tissue), frame_border(20), frame_thickness(5), legend_rectangle_width(400),
 		legend_rectangle_height(35), legend_label_height(16), redraw_interval(1000/frames_per_second), 
 		last_redraw_time(std::chrono::system_clock::from_time_t(0))
@@ -299,7 +319,7 @@ public:
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-    void plot(const TissueStatistics& statistics)
+    void plot(const Drivers::Simulation::TissueStatistics& statistics)
 	{
 		using namespace std::chrono;
 
@@ -356,8 +376,8 @@ public:
 	{}
 };
 
-}
+}	// UI
 
-}
+}	// Races
 
 #endif // __RACES_TISSUE_PLOTTER__

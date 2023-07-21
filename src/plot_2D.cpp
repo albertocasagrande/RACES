@@ -2,8 +2,8 @@
  * @file plot_2D.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window
- * @version 0.2
- * @date 2023-07-14
+ * @version 0.3
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,6 +44,6 @@ Plot2DWindow::Plot2DWindow(const unsigned int width, const unsigned int height, 
 	(void)name;
 }
 
-}
+}  // UI
 
-}
+}  // Races

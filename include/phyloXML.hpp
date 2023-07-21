@@ -2,8 +2,8 @@
  * @file phyloXML.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define phyloXML stream
- * @version 0.1
- * @date 2023-07-14
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,9 @@
 #include "palette.hpp"
 
 namespace Races
+{
+
+namespace Drivers
 {
 
 namespace IO
@@ -117,8 +120,10 @@ public:
     ~phyloXMLStream();
 };
 
-}  // IO
+}   // IO
 
-}  // Race
+}   // Drivers
+
+}   // Race
 
 #endif // __RACES_PHYLOXML__

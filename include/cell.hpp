@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.12
- * @date 2023-07-13
+ * @version 0.13
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,18 @@
 
 #define NON_DRIVER_GENOTYPE std::numeric_limits<EpigeneticGenotypeId>::max()
 
-namespace Races {
+namespace Races
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
+
+class Simulation;
+
+}
 
 using CellId = uint64_t;
 
@@ -79,28 +90,40 @@ public:
      * 
      * @return a constant reference to the cell identifier
      */
-    const CellId& get_id() const;
+    inline const CellId& get_id() const
+    {
+        return id;
+    }
 
     /**
      * @brief Get the cell parent identifier
      * 
      * @return a constant reference to the cell parent identifier
      */
-    const CellId& get_parent_id() const;
+    inline const CellId& get_parent_id() const
+    {
+        return parent;
+    }
 
     /**
      * @brief Get the cell driver genotype
      * 
      * @return a constant reference to the cell driver genotype
      */
-    const EpigeneticGenotypeId& get_genotype_id() const;
+    inline const EpigeneticGenotypeId& get_genotype_id() const
+    {
+        return genotype;
+    }
 
     /**
      * @brief Generate a descendent cell
      * 
      * @return the generated cell
      */
-    Cell generate_descendent() const;
+    inline Cell generate_descendent() const
+    {
+        return Cell(get_genotype_id(), get_id());
+    }
 
     /**
      * @brief Save a cell in an archive
@@ -137,7 +160,7 @@ public:
 
     friend class Tissue;
     friend class Species;
-    friend class Simulation; 
+    friend class Simulation::Simulation; 
 
     friend void swap(Cell& a, Cell &b);
 };
@@ -149,15 +172,6 @@ public:
  * @param b is a cell
  */
 void swap(Cell& a, Cell &b);
-
-/**
- * @brief Write a cell in an output stream
- * 
- * @param os is the output stream
- * @param cell is the cell to be streamed
- * @return a reference to the updated stream
- */
-std::ostream& operator<<(std::ostream& os, const Cell& cell);
 
 /**
  * @brief Labelled cell
@@ -238,6 +252,9 @@ void swap(LabelledCell<LABEL>& a, LabelledCell<LABEL> &b)
 
 class Species;
 
+namespace Simulation
+{
+
 /**
  * @brief A class to represent a cell in a tissue
  * 
@@ -311,7 +328,10 @@ public:
      * 
      * @return true if and only if the cell has a driver genotype
      */
-    bool has_driver_mutations() const;
+    inline bool has_driver_mutations() const
+    {
+        return get_genotype_id() != NON_DRIVER_GENOTYPE;
+    }
 
     /**
      * @brief Save a cell in an archive
@@ -348,6 +368,23 @@ public:
     friend class CellInTissueProxy;
 };
 
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+namespace std
+{
+
+/**
+ * @brief Write a cell in an output stream
+ * 
+ * @param os is the output stream
+ * @param cell is the cell to be streamed
+ * @return a reference to the updated stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell);
 
 /**
  * @brief Write a cell in a tissue in an output stream
@@ -356,34 +393,8 @@ public:
  * @param cell is the cell in the tissue to be streamed
  * @return a reference to the updated stream
  */
-std::ostream& operator<<(std::ostream& os, const CellInTissue& cell);
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::CellInTissue& cell);
 
-/* Inline Implementation */
-
-inline const CellId& Cell::get_id() const
-{
-    return id;
-}
-
-inline const CellId& Cell::get_parent_id() const
-{
-    return parent;
-}
-
-inline const EpigeneticGenotypeId& Cell::get_genotype_id() const
-{
-    return genotype;
-}
-
-inline Cell Cell::generate_descendent() const
-{
-    return Cell(get_genotype_id(), get_id());
-}
-
-inline bool CellInTissue::has_driver_mutations() const {
-    return get_genotype_id() != NON_DRIVER_GENOTYPE;
-}
-
-}
+} // std
 
 #endif // __RACES_CELL__

@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.5
- * @date 2023-07-13
+ * @version 0.6
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,14 @@
 #include "statistics.hpp"
 #include "tissue.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 SpeciesStatistics::SpeciesStatistics():
     rise_time(0), extinction_time(0), total_cells(0),
@@ -132,7 +139,7 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
             record_mutation(event.initial_genotype, 
                             event.final_genotype, time);
             break;
-        case CellEventType::DRIVER_SOMATIC_MUTATION:
+        case CellEventType::DRIVER_GENETIC_MUTATION:
             record_mutation(event.initial_genotype, 
                             event.final_genotype, time);
             break;
@@ -141,4 +148,8 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
     }
 }
 
-}
+}   // Simulation
+
+}   // Drivers
+
+}   // Races

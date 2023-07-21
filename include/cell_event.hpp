@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell events
- * @version 0.4
- * @date 2023-07-08
+ * @version 0.5
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,11 @@
 #include "position.hpp"
 #include "time.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
 
 /**
  * @brief Supported event type
@@ -49,14 +53,16 @@ enum class CellEventType {
     DUPLICATE,
     EPIGENETIC_EVENT,
     DUPLICATION_AND_EPIGENETIC_EVENT,
-    PASSENGER_MUTATION,
-    DRIVER_SOMATIC_MUTATION
+    DRIVER_GENETIC_MUTATION
 };
 
 /**
  * @brief A map associating a name to each cell event
  */
 extern std::map<CellEventType, std::string> cell_event_names;
+
+namespace Simulation 
+{
 
 /**
  * @brief A description of a simulation event
@@ -70,6 +76,10 @@ struct CellEvent
     Time delay;                             //!< event delay
 };
 
-};
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
 
 #endif // __RACES_CELL_EVENT__

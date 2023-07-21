@@ -1,9 +1,9 @@
 /**
- * @file somatic_mutations.cpp
+ * @file genomic_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implementing timed somatic mutations
+ * @brief Implementing timed genomic mutations
  * @version 0.1
- * @date 2023-07-08
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,16 +28,27 @@
  * SOFTWARE.
  */
 
-#include "somatic_mutations.hpp"
+#include "genomic_mutations.hpp"
 
-namespace Races {
+namespace Races 
+{
 
-TimedSomaticMutation::TimedSomaticMutation(const SomaticGenotypeId& initial_id, const SomaticGenotypeId& final_id, const Time& time):
+namespace Drivers
+{
+
+namespace Simulation
+{
+
+TimedGenomicMutation::TimedGenomicMutation(const GenotypeId& initial_id, const GenotypeId& final_id, const Time& time):
     initial_id(initial_id), final_id(final_id), time(time)
 {}
 
-TimedSomaticMutation::TimedSomaticMutation(const SomaticGenotype& initial_genotype, const SomaticGenotype& final_genotype, const Time& time):
-    TimedSomaticMutation(initial_genotype.get_id(), final_genotype.get_id(), time)
+TimedGenomicMutation::TimedGenomicMutation(const Genotype& initial_genotype, const Genotype& final_genotype, const Time& time):
+    TimedGenomicMutation(initial_genotype.get_id(), final_genotype.get_id(), time)
 {}
 
-}
+}   // Simulation
+
+}   // Drivers
+
+}   // Races

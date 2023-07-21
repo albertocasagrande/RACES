@@ -2,8 +2,8 @@
  * @file sampler.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define classes to sample cells in a tissue
- * @version 0.1
- * @date 2023-07-10
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,9 @@
 #include "tissue.hpp"
 
 namespace Races
+{
+
+namespace Drivers
 {
 
 /**
@@ -73,17 +76,17 @@ struct BasicSampler
  */
 class RectangleSampler : public BasicSampler
 {
-    Tissue const& tissue;           
+    Simulation::Tissue const& tissue;           //!< The tissue          
 
-    PositionInTissue lower_corner;  //!< The lower corner in the sampler hyper-rectangle
-    PositionInTissue upper_corner;  //!< The upper corner in the sampler hyper-rectangle
+    Simulation::PositionInTissue lower_corner;  //!< The lower corner in the sampler hyper-rectangle
+    Simulation::PositionInTissue upper_corner;  //!< The upper corner in the sampler hyper-rectangle
 
 public:
     class const_iterator
     {
         const RectangleSampler* sampler;
 
-        PositionInTissue pos;
+        Simulation::PositionInTissue pos;
 
         /**
          * @brief A constructor
@@ -91,7 +94,7 @@ public:
          * @param sampler is the sampler whose cells are traversed by the iterator
          * @param position is the position in the tissue of the new iterator
          */
-        const_iterator(const RectangleSampler* sampler, const PositionInTissue& position);
+        const_iterator(const RectangleSampler* sampler, const Simulation::PositionInTissue& position);
     public:
         using difference_type   =   std::ptrdiff_t;
         using value_type        =   Cell;
@@ -121,7 +124,7 @@ public:
          */
         inline pointer operator->() 
         {
-            return &(static_cast<const CellInTissue&>(sampler->tissue(pos)));
+            return &(static_cast<const Simulation::CellInTissue&>(sampler->tissue(pos)));
         }
 
         /**
@@ -189,7 +192,9 @@ public:
      * @param lower_corner is the hyper-rectangle lower corner
      * @param upper_corner is the hyper-rectangle upper corner
      */
-    RectangleSampler(const Tissue& tissue, const PositionInTissue& lower_corner, const PositionInTissue& upper_corner);
+    RectangleSampler(const Simulation::Tissue& tissue, 
+                     const Simulation::PositionInTissue& lower_corner, 
+                     const Simulation::PositionInTissue& upper_corner);
 
     /**
      * @brief A cuboid sampler constructor
@@ -200,8 +205,9 @@ public:
      * @param y_size is the hyper-rectangle size along the y-axis
      * @param z_size is the hyper-rectangle size along the z-axis
      */
-    RectangleSampler(const Tissue& tissue, const PositionInTissue& lower_corner, 
-                     const AxisSize& x_size, const AxisSize& y_size, const AxisSize& z_size);
+    RectangleSampler(const Simulation::Tissue& tissue, const Simulation::PositionInTissue& lower_corner, 
+                     const Simulation::AxisSize& x_size, const Simulation::AxisSize& y_size, 
+                     const Simulation::AxisSize& z_size);
 
     /**
      * @brief A rectangle sampler constructor
@@ -211,8 +217,8 @@ public:
      * @param x_size is the hyper-rectangle size along the x-axis
      * @param y_size is the hyper-rectangle size along the y-axis
      */
-    RectangleSampler(const Tissue& tissue, const PositionInTissue& lower_corner, 
-                     const AxisSize& x_size, const AxisSize& y_size);
+    RectangleSampler(const Simulation::Tissue& tissue, const Simulation::PositionInTissue& lower_corner, 
+                     const Simulation::AxisSize& x_size, const Simulation::AxisSize& y_size);
 
     /**
      * @brief Get the initial sampled cell iterator
@@ -260,6 +266,8 @@ inline bool operator!=(const RectangleSampler::const_iterator& a, const Rectangl
     return !(a==b); 
 }
 
-}
+}   // Drivers
+
+}   // Races
 
 #endif // __RACES_SAMPLER__

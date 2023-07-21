@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.7
- * @date 2023-07-13
+ * @version 0.8
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,7 +34,14 @@
 #include "logger.hpp"
 #include "tissue.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
 
 BasicLogger::BasicLogger()
 {}
@@ -80,7 +87,7 @@ void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, con
         case CellEventType::EPIGENETIC_EVENT:
             event_symbol = 'E';
             break;
-        case CellEventType::DRIVER_SOMATIC_MUTATION:
+        case CellEventType::DRIVER_GENETIC_MUTATION:
             event_symbol = 'M';
             break;
         default:
@@ -156,4 +163,8 @@ void JSONLogger::snapshot(const Simulation& simulation)
 */
 }
 
-}
+}   // Simulation
+
+}   // Drivers
+
+}   // Races

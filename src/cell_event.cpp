@@ -2,8 +2,8 @@
  * @file cell_event.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell events
- * @version 0.1
- * @date 2023-07-08
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,12 @@
 
 #include "cell_event.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
 
 std::map<CellEventType, std::string> cell_event_names = {
     {CellEventType::DIE, "death"},
@@ -41,10 +46,10 @@ std::map<CellEventType, std::string> cell_event_names = {
     {CellEventType::EPIGENETIC_EVENT, "epigenetic mutation"},
     {CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT, 
         "duplication and epigenetic mutation"},
-    {CellEventType::PASSENGER_MUTATION, 
-        "passenger mutation"},
-    {CellEventType::DRIVER_SOMATIC_MUTATION, 
-        "driver somatic mutation"}
+    {CellEventType::DRIVER_GENETIC_MUTATION, 
+        "driver genomic mutation"}
 };
 
-}
+}   // Drivers
+
+}   // Races

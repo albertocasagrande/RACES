@@ -2,8 +2,8 @@
  * @file position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a position class in a tissue
- * @version 0.2
- * @date 2023-06-23
+ * @version 0.3
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,7 +34,14 @@
 #include <iostream>
 #include <type_traits>
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
 
 class Tissue;
 
@@ -69,8 +76,6 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Direction& direction);
 };
-
-std::ostream& operator<<(std::ostream& os, const Direction& direction);
 
 inline
 int Direction::get_delta_x() const
@@ -118,8 +123,6 @@ struct PositionDelta {
     PositionDelta operator-() const;
 };
 
-std::ostream& operator<<(std::ostream& os, const PositionDelta& delta);
-
 using AxisValue = uint16_t;
 
 /**
@@ -161,15 +164,6 @@ struct PositionInTissue {
      */
     PositionInTissue& operator-=(const PositionDelta delta);
 };
-
-/**
- * @brief Stream the position in output
- * 
- * @param os is the output stream
- * @param position is the position to be streamed
- * @return a reference to the output stream
- */
-std::ostream& operator<<(std::ostream& os, const PositionInTissue& position);
 
 /**
  * @brief Add a delta to a position 
@@ -247,6 +241,21 @@ struct Position : public PositionInTissue
     Position(Tissue& tissue, const PositionInTissue& position);
 };
 
+
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Direction& direction);
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionDelta& delta);
+
 /**
  * @brief Stream the position in output
  * 
@@ -254,8 +263,17 @@ struct Position : public PositionInTissue
  * @param position is the position to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Position& position);
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionInTissue& position);
 
-};
+/**
+ * @brief Stream the position in output
+ * 
+ * @param os is the output stream
+ * @param position is the position to be streamed
+ * @return a reference to the output stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Position& position);
+
+}   // std
 
 #endif // __RACES_POSITION__

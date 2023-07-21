@@ -2,8 +2,8 @@
  * @file logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation logger
- * @version 0.5
- * @date 2023-07-13
+ * @version 0.6
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,14 @@
 #include "cell_event.hpp"
 #include "time.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
 
 class Simulation;
 
@@ -132,7 +139,10 @@ struct JSONLogger : public BasicLogger
     }
 };
 
+}   // Simulation
 
-}
+}   // Drivers
+
+}   // Races
 
 #endif // __RACES_LOGGER__

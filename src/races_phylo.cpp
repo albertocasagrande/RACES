@@ -2,8 +2,8 @@
  * @file races_phylo.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.2
- * @date 2023-07-14
+ * @version 0.3
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -97,7 +97,7 @@ std::filesystem::path find_last_snapshot(const std::filesystem::path directory)
 
 int main(int argc, char* argv[])
 {
-    using namespace Races;
+    using namespace Races::Drivers;
     namespace po = boost::program_options;
 
     po::options_description visible("Options");
@@ -150,11 +150,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    Races::BinaryLogger::CellReader reader(directory);
+    Simulation::BinaryLogger::CellReader reader(directory);
     
-    Simulation simulation;
+    Simulation::Simulation simulation;
     {
-        Archive::Binary::In archive(last_snapshot_path);
+        Races::Archive::Binary::In archive(last_snapshot_path);
 
         archive & simulation;
     }

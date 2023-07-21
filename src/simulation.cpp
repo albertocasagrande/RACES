@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.3
- * @date 2023-07-15
+ * @version 0.4
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,6 +33,13 @@
 namespace Races 
 {
 
+namespace Drivers
+{
+
+namespace Simulation
+{
+
+
 Simulation::Simulation(int random_seed):
     logger(nullptr), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
     time(0), death_activation_level(1)
@@ -56,7 +63,7 @@ Simulation& Simulation::operator=(Simulation&& orig)
     std::swap(statistics, orig.statistics);
     std::swap(time, orig.time);
     std::swap(random_gen, orig.random_gen);
-    std::swap(somatic_mutation_queue, orig.somatic_mutation_queue);
+    std::swap(genomic_mutation_queue, orig.genomic_mutation_queue);
     std::swap(death_enabled, orig.death_enabled);
     std::swap(death_activation_level, orig.death_activation_level);
 
@@ -94,7 +101,7 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
         event_types.push_back(CellEventType::DIE);
     }
 
-    // deal with exclusively somatic events
+    // deal with exclusively genomic events
     for (const auto& event_type: event_types) {
         const Time event_rate = species.get_rate(event_type);
         const Time r_value = uni_dist(random_gen);
@@ -115,7 +122,7 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
     const auto& num_of_cells{species.num_of_cells()};
 
     // Deal with possible epigenetic events whenever admitted
-    for (const auto& [dst_id, event_rate]: species.get_epigenentic_mutation_rates()) {
+    for (const auto& [dst_id, event_rate]: species.get_epigenetic_mutation_rates()) {
         const Time r_value = uni_dist(random_gen);
         const Time candidate_delay = -log(r_value) / (num_of_cells * event_rate);
         
@@ -160,31 +167,31 @@ CellEvent Simulation::select_next_event()
         select_next_event_in_species(event, tissue(), death_enabled, species, uni_dist, random_gen);
     }
 
-    // update candidate event with somatic mutation is possible
-    while (!somatic_mutation_queue.empty()) {
-        const TimedSomaticMutation& somatic_mutation = somatic_mutation_queue.top();
+    // update candidate event with genomic mutation is possible
+    while (!genomic_mutation_queue.empty()) {
+        const TimedGenomicMutation& genomic_mutation = genomic_mutation_queue.top();
 
-        if (somatic_mutation.time < event.delay + time) {
-            const auto* cell = choose_a_cell_in_somatic_species(tissue(), somatic_mutation.initial_id, random_gen);
+        if (genomic_mutation.time < event.delay + time) {
+            const auto* cell = choose_a_cell_in_genomic_species(tissue(), genomic_mutation.initial_id, random_gen);
             if (cell != nullptr) {
-                event.delay = (somatic_mutation.time >= time? somatic_mutation.time - time:0);
-                event.type = CellEventType::DRIVER_SOMATIC_MUTATION;
+                event.delay = (genomic_mutation.time >= time? genomic_mutation.time - time:0);
+                event.type = CellEventType::DRIVER_GENETIC_MUTATION;
                 event.position = Position(tissue(), *cell);
                 event.initial_genotype = cell->get_genotype_id();
 
                 const Species& initial_species = tissue().get_species(event.initial_genotype);
 
-                const auto& somatic_species = tissue().get_somatic_genotype_species(somatic_mutation.final_id);
-                const size_t index = SomaticGenotype::signature_to_index(initial_species.get_methylation_signature());
+                const auto& genomic_species = tissue().get_genotype_species(genomic_mutation.final_id);
+                const size_t index = Genotype::signature_to_index(initial_species.get_methylation_signature());
 
-                event.final_genotype = somatic_species[index].get_id();
+                event.final_genotype = genomic_species[index].get_id();
 
-                somatic_mutation_queue.pop();
+                genomic_mutation_queue.pop();
 
                 return event;
             }
 
-            somatic_mutation_queue.pop();
+            genomic_mutation_queue.pop();
         } else {
             return event;
         }
@@ -282,13 +289,13 @@ Simulation::simulate_duplication_epigenetic_event(const Position& position, cons
 }
 
 const CellInTissue*
-Simulation::choose_a_cell_in_somatic_species(const Tissue& tissue, const SomaticGenotypeId& genotype_id, std::mt19937_64& generator)
+Simulation::choose_a_cell_in_genomic_species(const Tissue& tissue, const GenotypeId& genotype_id, std::mt19937_64& generator)
 {
     std::vector<size_t> num_of_cells;
 
     size_t total = 0;
 
-    const auto& species = tissue.get_somatic_genotype_species(genotype_id);
+    const auto& species = tissue.get_genotype_species(genotype_id);
     for (const auto& S : species) {
         total += S.num_of_cells();
         num_of_cells.push_back(total);
@@ -310,7 +317,7 @@ Simulation::choose_a_cell_in_somatic_species(const Tissue& tissue, const Somatic
 }
 
 Simulation&
-Simulation::add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time)
+Simulation::add_genomic_mutation(const Genotype& src, const Genotype& dst, const Time time)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
@@ -326,7 +333,7 @@ Simulation::add_somatic_mutation(const SomaticGenotype& src, const SomaticGenoty
         throw std::domain_error(oss.str());
     }
 
-    somatic_mutation_queue.emplace(src, dst, time);
+    genomic_mutation_queue.emplace(src, dst, time);
 
     return *this;
 }
@@ -404,4 +411,8 @@ Simulation::~Simulation()
     }
 }
 
-} // Races
+}   // Simulation
+
+}   // Drivers
+
+}   // Races

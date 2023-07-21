@@ -2,8 +2,8 @@
  * @file position.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a position class in a tissue
- * @version 0.2
- * @date 2023-06-23
+ * @version 0.3
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,7 +31,14 @@
 #include "position.hpp"
 #include "tissue.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
 
 Direction::Direction(const uint8_t value):
     bit_vector(value)
@@ -61,26 +68,6 @@ int Direction::get_delta(const size_t& axis_index) const
     return -1;
 }
 
-std::ostream& operator<<(std::ostream& os, const Direction& direction)
-{
-    for (size_t i=0; i<3; ++i) {
-        switch(direction.get_delta(i)) {
-            case 1:
-                os << "U";
-                break;
-            case -1:
-                os << "D";
-                break;
-            case 0:
-                os << "N";
-                break;
-            default:
-                throw std::runtime_error("Unknown direction");
-        }
-    }
-
-    return os;
-}
 
 PositionDelta::PositionDelta(const int x, const int y, const int z):
     x(x), y(y), z(z)
@@ -90,13 +77,6 @@ PositionDelta::PositionDelta(const int x, const int y, const int z):
 PositionDelta::PositionDelta(const Direction& direction):
     PositionDelta(direction.get_delta_x(),direction.get_delta_y(),direction.get_delta_z())
 {
-}
-
-std::ostream& operator<<(std::ostream& os, const PositionDelta& delta)
-{
-    os << "(" << delta.x << "," << delta.y << "," << delta.z << ")";
-
-    return os;
 }
 
 PositionDelta PositionDelta::operator-() const
@@ -172,13 +152,6 @@ size_t Manhattan_distance(const PositionInTissue& p1, const PositionInTissue& p2
     return distance;
 }
 
-std::ostream& operator<<(std::ostream& os, const PositionInTissue& position)
-{
-    os << "(" << position.x <<","<< position.y <<","<< position.z <<")";
-
-    return os;
-}
-
 Position::Position():
     PositionInTissue(), tissue(nullptr)
 {}
@@ -191,12 +164,56 @@ Position::Position(Tissue& tissue, const PositionInTissue& pos):
     PositionInTissue(pos), tissue(&tissue)
 {}
 
-std::ostream& operator<<(std::ostream& os, const Position& position)
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+namespace std 
 {
-    os << "\""<< position.tissue->get_name() << "\""
-       << static_cast<PositionInTissue>(position);
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Direction& direction)
+{
+    for (size_t i=0; i<3; ++i) {
+        switch(direction.get_delta(i)) {
+            case 1:
+                os << "U";
+                break;
+            case -1:
+                os << "D";
+                break;
+            case 0:
+                os << "N";
+                break;
+            default:
+                throw std::runtime_error("Unknown direction");
+        }
+    }
 
     return os;
 }
 
-};
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionDelta& delta)
+{
+    os << "(" << delta.x << "," << delta.y << "," << delta.z << ")";
+
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionInTissue& position)
+{
+    os << "(" << position.x <<","<< position.y <<","<< position.z <<")";
+
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Position& position)
+{
+    os << "\""<< position.tissue->get_name() << "\""
+       << static_cast<Races::Drivers::Simulation::PositionInTissue>(position);
+
+    return os;
+}
+
+}  // std

@@ -1,9 +1,9 @@
 /**
- * @file somatic_mutations.hpp
+ * @file genomic_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implementing timed somatic mutations
- * @version 0.2
- * @date 2023-07-13
+ * @brief Implementing timed genomic mutations
+ * @version 0.1
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,37 +36,44 @@
 #include "driver_genotype.hpp"
 #include "time.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 /**
- * @brief A structure to represent timed somatic mutation
+ * @brief A structure to represent timed driver genomic mutation
  */
-struct TimedSomaticMutation {
-    SomaticGenotypeId initial_id;   //!< The initial somatic genotype identifier
-    SomaticGenotypeId final_id;     //!< The final somatic genotype identifier
+struct TimedGenomicMutation {
+    GenotypeId initial_id;   //!< The initial genomic genotype identifier
+    GenotypeId final_id;     //!< The final genomic genotype identifier
 
     Time time;                      //!< The mutation time
 
     /**
      * @brief A constructor
      * 
-     * @param initial_id is the identifier of the initial somatic genotype
-     * @param final_id is the identifier of the final somatic genotype
-     * @param time is the simulation time of the somatic mutation
+     * @param initial_id is the identifier of the initial genomic genotype
+     * @param final_id is the identifier of the final genomic genotype
+     * @param time is the simulation time of the genomic mutation
      */
-    TimedSomaticMutation(const SomaticGenotypeId& initial_id, const SomaticGenotypeId& final_id, const Time& time);
+    TimedGenomicMutation(const GenotypeId& initial_id, const GenotypeId& final_id, const Time& time);
 
     /**
      * @brief A constructor
      * 
-     * @param initial_id is the initial somatic genotype
-     * @param final_id is the final somatic genotype
-     * @param time is the simulation time of the somatic mutation
+     * @param initial_id is the initial genomic genotype
+     * @param final_id is the final genomic genotype
+     * @param time is the simulation time of the genomic mutation
      */
-    TimedSomaticMutation(const SomaticGenotype& initial_genotype, const SomaticGenotype& final_genotype, const Time& time);
+    TimedGenomicMutation(const Genotype& initial_genotype, const Genotype& final_genotype, const Time& time);
 
     /**
-     * @brief Save a timed somatic mutation in an archive
+     * @brief Save a timed genomic mutation in an archive
      * 
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
@@ -80,32 +87,38 @@ struct TimedSomaticMutation {
     }
 
     /**
-     * @brief Load a timed somatic mutation from an archive
+     * @brief Load a timed genomic mutation from an archive
      * 
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the loaded timed somatic mutation
+     * @return the loaded timed genomic mutation
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static TimedSomaticMutation load(ARCHIVE& archive)
+    static TimedGenomicMutation load(ARCHIVE& archive)
     {
-        SomaticGenotypeId initial_id;
-        SomaticGenotypeId final_id;
+        GenotypeId initial_id;
+        GenotypeId final_id;
         Time time;
 
         archive & initial_id
                 & final_id
                 & time;
 
-        return TimedSomaticMutation(initial_id,final_id,time);
+        return TimedGenomicMutation(initial_id,final_id,time);
     }
 };
 
-};
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
 
 template<>
-struct std::less<Races::TimedSomaticMutation> {
-    inline constexpr bool operator()(const Races::TimedSomaticMutation &lhs, const Races::TimedSomaticMutation &rhs) const 
+struct std::less<Races::Drivers::Simulation::TimedGenomicMutation> {
+    inline constexpr bool operator()(const Races::Drivers::Simulation::TimedGenomicMutation &lhs, 
+                                     const Races::Drivers::Simulation::TimedGenomicMutation &rhs) const 
     {
         return lhs.time < rhs.time;
     }

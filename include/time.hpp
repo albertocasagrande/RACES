@@ -1,9 +1,9 @@
 /**
  * @file time.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define time tipe
- * @version 0.1
- * @date 2023-06-09
+ * @brief Define time type
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,11 @@
 
 #include <string>
 
-namespace Races {
+namespace Races 
+{
 
 using Time = long double;
 
-};
+}  // Races
 
 #endif // __RACES_TIME__

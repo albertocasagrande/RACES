@@ -35,8 +35,7 @@ class TestCellEventType(unittest.TestCase):
             1: RACES.CellEventType.DUPLICATE,
             2: RACES.CellEventType.EPIGENETIC_EVENT,
             3: RACES.CellEventType.DUPLICATION_AND_EPIGENETIC_EVENT,
-            4: RACES.CellEventType.PASSENGER_MUTATION,
-            5: RACES.CellEventType.DRIVER_SOMATIC_MUTATION
+            4: RACES.CellEventType.DRIVER_GENETIC_MUTATION
         })
 
 
@@ -91,49 +90,49 @@ class TestEpigeneticRates(unittest.TestCase):
             e_rates.set_demethylation_rate(-0.3)
 
 
-class TestSomaticGenotype(unittest.TestCase):
+class TestDriverGenotype(unittest.TestCase):
     def test_init(self):
         try:
-            RACES.SomaticGenotype("A", [RACES.EpigeneticRates(0.01, 0.01)])
+            RACES.DriverGenotype("A", [RACES.EpigeneticRates(0.01, 0.01)])
         except BaseException:
-            self.fail('RACES.SomaticGenotype("A", '
+            self.fail('RACES.DriverGenotype("A", '
                       + '[RACES.EpigeneticRates(0.01, 0.01)]) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.SomaticGenotype("A", [[0.01, 0.01]])
+            RACES.DriverGenotype("A", [[0.01, 0.01]])
         except BaseException:
-            self.fail('RACES.SomaticGenotype("A", [[0.01, 0.01]]) '
+            self.fail('RACES.DriverGenotype("A", [[0.01, 0.01]]) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.SomaticGenotype("A", [])
+            RACES.DriverGenotype("A", [])
         except BaseException:
-            self.fail('RACES.SomaticGenotype("A", []) '
+            self.fail('RACES.DriverGenotype("A", []) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.SomaticGenotype("A", [[0.01, 0.01], [0.01, 0.01]])
+            RACES.DriverGenotype("A", [[0.01, 0.01], [0.01, 0.01]])
         except BaseException:
-            self.fail('RACES.SomaticGenotype("A", [[0.01, 0.01], '
+            self.fail('RACES.DriverGenotype("A", [[0.01, 0.01], '
                       + '[0.01, 0.01]]) raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            RACES.SomaticGenotype("A", 2)
+            RACES.DriverGenotype("A", 2)
 
         with self.assertRaises(Exception):
-            RACES.SomaticGenotype("A", ['a'])
+            RACES.DriverGenotype("A", ['a'])
 
         with self.assertRaises(Exception):
-            RACES.SomaticGenotype("A", [[0.01, 0.01, 2]])
+            RACES.DriverGenotype("A", [[0.01, 0.01, 2]])
 
     def test_properties(self):
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
 
         self.assertEqual(A.name, "A")
         self.assertEqual(A.num_of_promoters, 1)
 
-        B = RACES.SomaticGenotype("B", [])
+        B = RACES.DriverGenotype("B", [])
 
         self.assertEqual(B.name, "B")
         self.assertEqual(B.id, A.id+1)
@@ -149,7 +148,7 @@ class TestSomaticGenotype(unittest.TestCase):
             A.num_of_promoters = 7
 
     def test_set_rates(self):
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
         try:
             A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                               RACES.CellEventType.DUPLICATE: 0.2})
@@ -162,7 +161,7 @@ class TestSomaticGenotype(unittest.TestCase):
             A.set_rates("", {RACES.CellEventType.DIE: 0.1,
                              RACES.CellEventType.DUPLICATE: 0.2})
 
-        B = RACES.SomaticGenotype("B", [])
+        B = RACES.DriverGenotype("B", [])
 
         try:
             B.set_rates("", {RACES.CellEventType.DIE: 0.1,
@@ -177,7 +176,7 @@ class TestSomaticGenotype(unittest.TestCase):
                               RACES.CellEventType.DUPLICATE: 0.2})
 
     def test_get_rate(self):
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         try:
@@ -188,13 +187,13 @@ class TestSomaticGenotype(unittest.TestCase):
                                         RACES.CellEventType.EPIGENETIC_EVENT),
                              0.0)
         except BaseException:
-            self.fail('RACES.SomaticGenotype.set_rate() '
+            self.fail('RACES.DriverGenotype.set_rate() '
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
             self.assertEqual(A.get_rate("", RACES.CellEventType.DIE), 0.01)
 
-        B = RACES.SomaticGenotype("B", [])
+        B = RACES.DriverGenotype("B", [])
         B.set_rates("", {RACES.CellEventType.DIE: 0.1,
                          RACES.CellEventType.DUPLICATE: 0.2})
         try:
@@ -205,7 +204,7 @@ class TestSomaticGenotype(unittest.TestCase):
                                         RACES.CellEventType.EPIGENETIC_EVENT),
                              0.0)
         except BaseException:
-            self.fail('RACES.SomaticGenotype.set_rate() '
+            self.fail('RACES.DriverGenotype.set_rate() '
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
@@ -268,7 +267,7 @@ class TestSimulation(unittest.TestCase):
     def test_add_species(self):
         sim = RACES.Simulation()
 
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
@@ -293,7 +292,7 @@ class TestSimulation(unittest.TestCase):
     def test_add_species(self):
         sim = RACES.Simulation()
 
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
@@ -312,45 +311,45 @@ class TestSimulation(unittest.TestCase):
         with self.assertRaises(Exception):
             sim.add_cell(A, "-", [50, 150])
 
-    def test_add_somatic_mutation(self):
+    def test_add_genomic_mutation(self):
         sim = RACES.Simulation()
 
         sim.set_tissue("Liver", [100, 100])
 
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
                           RACES.CellEventType.DUPLICATE: 0.02})
         sim.add_species(A)
 
-        B = RACES.SomaticGenotype("B", [[0.01, 0.01]])
+        B = RACES.DriverGenotype("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.3})
         B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.45})
         sim.add_species(B)
 
-        C = RACES.SomaticGenotype("C", [])
+        C = RACES.DriverGenotype("C", [])
         C.set_rates("", {RACES.CellEventType.DIE: 0.1,
                          RACES.CellEventType.DUPLICATE: 0.3})
         sim.add_species(C)
 
         try:
-            sim.add_somatic_mutation(A, B, 70)
+            sim.add_genomic_mutation(A, B, 70)
         except BaseException:
-            self.fail('sim.add_somatic_mutation(A, B, 70) raised'
+            self.fail('sim.add_genomic_mutation(A, B, 70) raised'
                       + ' an unexpected exeception!')
 
         with self.assertRaises(Exception):
             # methylation signature incompatible
-            sim.add_somatic_mutation(A, C, 70)
+            sim.add_genomic_mutation(A, C, 70)
 
         try:
             # methylation signature compatible
-            sim.add_somatic_mutation(C, B, 70)
+            sim.add_genomic_mutation(C, B, 70)
         except BaseException:
-            self.fail('sim.add_somatic_mutation(C, B, 70) raised'
+            self.fail('sim.add_genomic_mutation(C, B, 70) raised'
                       + ' an unexpected exeception!')
 
     def test_run_up_to(self):
@@ -358,20 +357,20 @@ class TestSimulation(unittest.TestCase):
 
         sim.set_tissue("Liver", [100, 100])
 
-        A = RACES.SomaticGenotype("A", [[0.01, 0.01]])
+        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
                           RACES.CellEventType.DUPLICATE: 0.02})
         sim.add_species(A)
 
-        B = RACES.SomaticGenotype("B", [[0.01, 0.01]])
+        B = RACES.DriverGenotype("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.3})
         B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.45})
         sim.add_species(B)
-        sim.add_somatic_mutation(A, B, 70)
+        sim.add_genomic_mutation(A, B, 70)
 
         sim.run_up_to(100, logging=False, quiet=True)
 

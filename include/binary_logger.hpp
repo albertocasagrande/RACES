@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.6
- * @date 2023-07-13
+ * @version 0.7
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,14 @@
 
 #include "logger.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
 
 /**
  * @brief A binary logger
@@ -143,7 +150,10 @@ public:
      * 
      * @return the directory containing all the logs
      */
-    const std::filesystem::path& get_directory() const;
+    inline const std::filesystem::path& get_directory() const
+    {
+        return directory;
+    }
 
     /**
      * @brief Record an event
@@ -196,7 +206,10 @@ public:
     /**
      * @brief Reset the logger
      */
-    void reset();
+    inline void reset()
+    {
+        reset(dir_prefix);
+    }
 
     /**
      * @brief The destructor
@@ -204,18 +217,10 @@ public:
     ~BinaryLogger();
 };
 
-/* Inline implementations */
+}   // Simulation
 
-inline const std::filesystem::path& BinaryLogger::get_directory() const
-{
-    return directory;
-}
+}   // Drivers
 
-inline void BinaryLogger::reset()
-{
-    reset(dir_prefix);
-}
-
-}
+}   // Races
 
 #endif // __RACES_BINARY_LOGGER__

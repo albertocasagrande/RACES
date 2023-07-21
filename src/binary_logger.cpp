@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.8
- * @date 2023-07-13
+ * @version 0.9
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,14 @@
 
 #include "simulation.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
 
 BinaryLogger::BinaryLogger():
     BinaryLogger("races")
@@ -201,7 +208,7 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
 {
     if (type==CellEventType::DUPLICATE || 
             type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT ||
-            type==CellEventType::DRIVER_SOMATIC_MUTATION) {
+            type==CellEventType::DRIVER_GENETIC_MUTATION) {
 
         record_cell(cell, time);
     }
@@ -239,4 +246,8 @@ BinaryLogger::~BinaryLogger()
     close();
 }
 
-}
+}   // Simulation
+
+}   // Drivers
+
+}   // Races

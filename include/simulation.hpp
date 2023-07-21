@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.4
- * @date 2023-07-19
+ * @version 0.5
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,11 +42,18 @@
 #include "plot_2D.hpp"
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
-#include "somatic_mutations.hpp"
+#include "genomic_mutations.hpp"
 
 #include "progress_bar.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 /**
  * @brief A structure to establish if the simulation must end
@@ -81,7 +88,7 @@ class Simulation
         std::list<Cell> lost_cells;
     };
 
-    using SomaticQueue = std::priority_queue<TimedSomaticMutation>;
+    using GenomicQueue = std::priority_queue<TimedGenomicMutation>;
     using system_clock = std::chrono::system_clock;
 
     std::vector<Tissue> tissues;     //!< Simulated tissues
@@ -97,7 +104,7 @@ class Simulation
     Time time;                       //!< Simulation time
     std::mt19937_64 random_gen;      //!< Pseudo-random generator
 
-    SomaticQueue somatic_mutation_queue;   //!< The timed somatic mutation queue 
+    GenomicQueue genomic_mutation_queue;   //!< The timed genomic mutation queue 
 
     std::set<EpigeneticGenotypeId> death_enabled;  //!< Species having reached the death activation level
 
@@ -183,20 +190,20 @@ class Simulation
     void init_valid_directions();
 
     /**
-     * @brief Randomly select a cell among those having a specified somatic genotype
+     * @brief Randomly select a cell among those having a specified genomic genotype
      * 
      * @param generator is a random number generator
      * @param tissue is the tissue in which cell must be choosen
-     * @param genotype_id is the identifier of the somatic genotype that must have the selected cell
-     * @return whenever the targeted somatic species contain at least 
+     * @param genotype_id is the identifier of the genomic genotype that must have the selected cell
+     * @return whenever the targeted genomic species contain at least 
      *        one cell, a pointer to a randomly selected cell whose 
-     *        driver somatic genotype identifier is `genotype_id`. 
-     *        If otherwise there are no cells whose driver somatic 
+     *        driver genomic genotype identifier is `genotype_id`. 
+     *        If otherwise there are no cells whose driver genomic 
      *        genotype identifier is `genotype_id`, this method 
      *        returns `nullptr`
      * 
      */
-    static const CellInTissue* choose_a_cell_in_somatic_species(const Tissue& tissue, const SomaticGenotypeId& genotype_id, std::mt19937_64& generator);
+    static const CellInTissue* choose_a_cell_in_genomic_species(const Tissue& tissue, const GenotypeId& genotype_id, std::mt19937_64& generator);
 
 public:
     size_t death_activation_level;  //!< The minimum number of cells required to activate death
@@ -224,14 +231,14 @@ public:
     Simulation& operator=(Simulation&& orig);
 
     /**
-     * @brief Add a timed driver somatic mutation
+     * @brief Add a timed driver genomic mutation
      * 
-     * @param src is the source driver somatic genotype
-     * @param dst is the destination driver somatic genotype
+     * @param src is the source driver genomic genotype
+     * @param dst is the destination driver genomic genotype
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& add_somatic_mutation(const SomaticGenotype& src, const SomaticGenotype& dst, const Time time);
+    Simulation& add_genomic_mutation(const Genotype& src, const Genotype& dst, const Time time);
 
     /**
      * @brief Select the next event
@@ -275,7 +282,10 @@ public:
      * @return a reference to the updated simulation
      */
     template<typename PLOT_WINDOW>
-    Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true);
+    inline Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true)
+    {
+        return run_up_to_next_event(&plotter, logging);
+    }
 
     /**
      * @brief Simulate up to the next event
@@ -286,7 +296,10 @@ public:
      * @param logging is a flag to enable/disable logging
      * @return a reference to the updated simulation
      */
-    Simulation& run_up_to_next_event(const bool logging = true);
+    inline Simulation& run_up_to_next_event(const bool logging = true)
+    {
+        return run_up_to_next_event<UI::Plot2DWindow>(nullptr, logging);
+    }
 
     /**
      * @brief Simulate a tissue up to a given time
@@ -304,12 +317,12 @@ public:
      * @param plotter is a tissue plotter pointer
      * @param indicator is the progress indicator pointer
      * @param logging is a flag to enable/disable logging
-     * @param closer is an object inherited from `Races::Closer`
+     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, class CLOSER = Races::Closer,
-             std::enable_if_t<std::is_base_of_v<Races::UI::Plot2DWindow, PLOT_WINDOW> && 
-                              std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, class CLOSER = Closer,
+             std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
+                              std::is_base_of_v<Closer, CLOSER>, bool> = true>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter,
                           INDICATOR_TYPE* indicator, const bool logging = true,
                           const CLOSER& closer=CLOSER())
@@ -377,12 +390,12 @@ public:
      * @param plotter is a tissue plotter
      * @param indicator is the progress indicator pointer
      * @param logging is a flag to enable/disable logging
-     * @param closer is an object inherited from `Races::Closer`
+     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, typename CLOSER = Races::Closer,
-             std::enable_if_t<std::is_base_of_v<Races::UI::Plot2DWindow, PLOT_WINDOW> && 
-                              std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, typename CLOSER = Closer,
+             std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
+                              std::is_base_of_v<Closer, CLOSER>, bool> = true>
     inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
                                  INDICATOR_TYPE& indicator, const bool logging = true,
                                  const CLOSER& closer=CLOSER())
@@ -402,11 +415,11 @@ public:
      * @param final_time is the final simulation time
      * @param indicator is the progress indicator
      * @param logging is a flag to enable/disable logging
-     * @param closer is an object inherited from `Races::Closer`
+     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename INDICATOR_TYPE, class CLOSER = Races::Closer,
-             std::enable_if_t<std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    template<typename INDICATOR_TYPE, class CLOSER = Closer,
+             std::enable_if_t<std::is_base_of_v<Closer, CLOSER>, bool> = true>
     inline Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, const bool logging = true,
                                  const CLOSER& closer=CLOSER())
     {
@@ -426,12 +439,12 @@ public:
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter
      * @param logging is a flag to enable/disable logging
-     * @param closer is an object inherited from `Races::Closer`
+     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, class CLOSER = Races::Closer,
-             std::enable_if_t<std::is_base_of_v<Races::UI::Plot2DWindow, PLOT_WINDOW> && 
-                              std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
+    template<typename PLOT_WINDOW, class CLOSER = Closer,
+             std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
+                              std::is_base_of_v<Closer, CLOSER>, bool> = true>
     inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true,
                                  const CLOSER& closer=CLOSER())
     {
@@ -448,11 +461,11 @@ public:
      *              must be stopped
      * @param final_time is the final simulation time
      * @param logging is a flag to enable/disable logging
-     * @param closer is an object inherited from `Races::Closer`
+     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<class CLOSER = Races::Closer, std::enable_if_t<std::is_base_of_v<Races::Closer, CLOSER>, bool> = true>
-    Simulation& run_up_to(const Time& final_time, const bool logging = true, const CLOSER& closer=CLOSER())
+    template<class CLOSER = Closer, std::enable_if_t<std::is_base_of_v<Closer, CLOSER>, bool> = true>
+    inline Simulation& run_up_to(const Time& final_time, const bool logging = true, const CLOSER& closer=CLOSER())
     {
         return run_up_to<UI::Plot2DWindow, UI::ProgressBar, CLOSER>(final_time, nullptr, nullptr, logging, closer);
     }
@@ -462,14 +475,20 @@ public:
      * 
      * @return a constant reference to the simulation time
      */
-    const Time& get_time() const;
+    inline const Time& get_time() const
+    {
+        return time;
+    }
 
     /**
      * @brief Get the simulation statistics
      * 
      * @return the simulation statistics
      */
-    const TissueStatistics& get_statistics() const;
+    inline const TissueStatistics& get_statistics() const
+    {
+        return statistics;
+    }
 
     /**
      * @brief Add a new species to the tissue
@@ -477,7 +496,12 @@ public:
      * @param genotype is the driver genotype of the new species
      * @return a reference to the updated object
      */
-    Simulation& add_species(const SomaticGenotype& genotype);
+    inline Simulation& add_species(const Genotype& genotype)
+    {
+        tissue().add_species(genotype);
+
+        return *this;
+    }
 
     /**
      * @brief Add a cell to the simulated tissue
@@ -486,7 +510,10 @@ public:
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    Simulation& add_cell(const EpigeneticGenotype& genotype, const PositionInTissue position);
+    inline Simulation& add_cell(const EpigeneticGenotype& genotype, const PositionInTissue position)
+    {
+        return add_cell(genotype.get_id(), position);
+    }
 
     /**
      * @brief Add a cell to the simulated tissue
@@ -495,7 +522,12 @@ public:
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    Simulation& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position);
+    inline Simulation& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
+    {
+        tissue().add_cell(genotype_id, position);
+
+        return *this;
+    }
 
     /**
      * @brief Set a new simulation tissue
@@ -537,7 +569,12 @@ public:
      * @param time_interval is the time interval between two snapshots
      */
     template<class Rep, class Period>
-    void set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval);
+    inline void set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval)
+    {
+        using namespace std::chrono;
+
+        secs_between_snapshots = duration_cast<seconds>(time_interval).count();
+    }
 
     /**
      * @brief Reset a simulation
@@ -549,7 +586,12 @@ public:
      * 
      * @param random_seed is the simulation random seed
      */
-    Simulation& random_generator_seed(int random_seed);
+    inline Simulation& random_generator_seed(int random_seed)
+    {
+        random_gen.seed(random_seed);
+
+        return *this;
+    }
     
     /**
      * @brief Performs a simulation snapshot
@@ -588,7 +630,7 @@ public:
                 & secs_between_snapshots
                 & statistics
                 & time
-                & somatic_mutation_queue
+                & genomic_mutation_queue
                 & death_enabled
                 & death_activation_level;
     }
@@ -609,7 +651,7 @@ public:
                 & simulation.secs_between_snapshots
                 & simulation.statistics
                 & simulation.time
-                & simulation.somatic_mutation_queue
+                & simulation.genomic_mutation_queue
                 & simulation.death_enabled
                 & simulation.death_activation_level;
 
@@ -623,31 +665,7 @@ public:
     ~Simulation();
 };
 
-/* Inline and template implementations */
-
-inline const Time& Simulation::get_time() const
-{
-    return time;
-}
-
-inline const TissueStatistics& Simulation::get_statistics() const
-{
-    return statistics;
-}
-
-inline Simulation& Simulation::add_species(const SomaticGenotype& genotype)
-{
-    tissue().add_species(genotype);
-
-    return *this;
-}
-
-inline Simulation& Simulation::random_generator_seed(int random_seed)
-{
-    random_gen.seed(random_seed);
-
-    return *this;
-}
+/* Template implementations */
 
 template<typename INDICATOR>
 void Simulation::snapshot_on_time(INDICATOR *indicator)
@@ -673,18 +691,6 @@ void Simulation::make_snapshot(INDICATOR *indicator)
     }
 }
 
-inline Simulation& Simulation::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
-{
-    tissue().add_cell(genotype_id, position);
-
-    return *this;
-}
-
-inline Simulation& Simulation::add_cell(const EpigeneticGenotype& genotype, const PositionInTissue position)
-{
-    return add_cell(genotype.get_id(), position);
-}
-
 template<typename PLOT_WINDOW>
 Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging)
 {
@@ -704,7 +710,7 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
             affected = simulate_duplication_epigenetic_event(event.position, event.final_genotype);
             break;
-        case CellEventType::DRIVER_SOMATIC_MUTATION:
+        case CellEventType::DRIVER_GENETIC_MUTATION:
             affected = simulate_mutation(event.position, event.final_genotype);
             break;
         default:
@@ -741,26 +747,10 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
 
     return *this;
 }
-    
 
-template<typename PLOT_WINDOW>
-inline Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging)
-{
-    return run_up_to_next_event(&plotter, logging);
-}
+}   // Simulation
 
-inline Simulation& Simulation::run_up_to_next_event(const bool logging)
-{
-    return run_up_to_next_event<UI::Plot2DWindow>(nullptr, logging);
-}
-
-template<class Rep, class Period>
-inline void Simulation::set_interval_between_snapshots(const std::chrono::duration<Rep,Period> time_interval)
-{
-    using namespace std::chrono;
-
-    secs_between_snapshots = duration_cast<seconds>(time_interval).count();
-}
+}   // Drivers
 
 }   // Races
 

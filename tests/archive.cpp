@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.6
- * @date 2023-07-15
+ * @version 0.7
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,34 +45,30 @@
 struct ArchiveFixture {
     long double time_horizon;
 
-    Races::Simulation simulation;
+    Races::Drivers::Simulation::Simulation simulation;
 
     ArchiveFixture():
         time_horizon(70), simulation()
     {
-        using namespace Races;
+        using namespace Races::Drivers;
         
-        SomaticGenotype A("A",{{0.01,0.01}});
+        Genotype A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DIE, 0.1},
-                        {CellEventType::DUPLICATE, 0.3},
-                        {CellEventType::PASSENGER_MUTATION, 20}});
+                          {CellEventType::DUPLICATE, 0.3}});
         A["+"].set_rates({{CellEventType::DIE, 0.1},
-                        {CellEventType::DUPLICATE, 0.45},
-                        {CellEventType::PASSENGER_MUTATION, 2}});
+                          {CellEventType::DUPLICATE, 0.45}});
     
-        SomaticGenotype B("B",{{0.01,0.01}});
+        Genotype B("B",{{0.01,0.01}});
         B["-"].set_rates({{CellEventType::DIE, 0.1},
-                        {CellEventType::DUPLICATE, 0.2},
-                        {CellEventType::PASSENGER_MUTATION, 1}});
+                          {CellEventType::DUPLICATE, 0.2}});
         B["+"].set_rates({{CellEventType::DIE, 0.01},
-                        {CellEventType::DUPLICATE, 0.02},
-                        {CellEventType::PASSENGER_MUTATION, 20}});
+                          {CellEventType::DUPLICATE, 0.02}});
 
         simulation.set_tissue("Liver", {1000,1000})
                   .add_species(A)
                   .add_species(B)
                   .add_cell(B["-"], {250, 500})
-                  .add_somatic_mutation(B,A,50);
+                  .add_genomic_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
 
@@ -165,36 +161,40 @@ bool operator==(const std::map<KEY,T>& a, const std::map<KEY,T>& b)
     return true;
 }
 
-bool operator==(const Races::Cell& a, const Races::Cell& b)
+bool operator==(const Races::Drivers::Cell& a, const Races::Drivers::Cell& b)
 {
     return (a.get_id()==b.get_id() && 
             a.get_parent_id()==b.get_parent_id() &&
             a.get_genotype_id()==b.get_genotype_id());
 }
 
-bool operator==(const Races::CellInTissue& a, const Races::CellInTissue& b)
+bool operator==(const Races::Drivers::Simulation::CellInTissue& a, const Races::Drivers::Simulation::CellInTissue& b)
 {
-    return (static_cast<const Races::Cell&>(a)==static_cast<const Races::Cell&>(b) &&
-            static_cast<const Races::PositionInTissue&>(a)==static_cast<const Races::PositionInTissue&>(b));
+    using namespace  Races::Drivers;
+
+    return (static_cast<const Cell&>(a)==static_cast<const Cell&>(b) &&
+            static_cast<const Simulation::PositionInTissue&>(a)==static_cast<const Simulation::PositionInTissue&>(b));
 }
 
-bool operator==(const Races::EpigeneticGenotype& a, const Races::EpigeneticGenotype& b)
+bool operator==(const Races::Drivers::EpigeneticGenotype& a, const Races::Drivers::EpigeneticGenotype& b)
 {
     return (a.get_name()==b.get_name() &&
             a.get_id()==b.get_id() &&
-            a.get_somatic_id()==b.get_somatic_id() &&
+            a.get_genomic_id()==b.get_genomic_id() &&
             a.get_rates()==b.get_rates() &&
-            a.get_epigenentic_mutation_rates()==b.get_epigenentic_mutation_rates());
+            a.get_epigenetic_mutation_rates()==b.get_epigenetic_mutation_rates());
 }
 
-inline bool operator!=(const Races::EpigeneticGenotype& a, const Races::EpigeneticGenotype& b)
+inline bool operator!=(const Races::Drivers::EpigeneticGenotype& a, const Races::Drivers::EpigeneticGenotype& b)
 {
     return !(a==b);
 }
 
-bool operator==(const Races::Species& a, const Races::Species& b)
+bool operator==(const Races::Drivers::Simulation::Species& a, const Races::Drivers::Simulation::Species& b)
 {
-    if (static_cast<const Races::EpigeneticGenotype&>(a)!=static_cast<const Races::EpigeneticGenotype&>(b)) {
+    using namespace Races::Drivers;
+
+    if (static_cast<const EpigeneticGenotype&>(a)!=static_cast<const EpigeneticGenotype&>(b)) {
         return false;
     }
 
@@ -209,13 +209,15 @@ bool operator==(const Races::Species& a, const Races::Species& b)
     return true;
 }
 
-bool operator==(const Races::Tissue& a, const Races::Tissue& b)
+bool operator==(const Races::Drivers::Simulation::Tissue& a, const Races::Drivers::Simulation::Tissue& b)
 {
+    using namespace Races::Drivers;
+
     if (a.get_name()!=b.get_name()) {
         return false;
     }
 
-    std::set<Races::SomaticGenotypeId> somatic_ids;
+    std::set<GenotypeId> genomic_ids;
 
     auto a_it = a.begin(), b_it = b.begin();
 
@@ -224,12 +226,12 @@ bool operator==(const Races::Tissue& a, const Races::Tissue& b)
         if (*a_it != *b_it) {
             return false;
         }
-        somatic_ids.insert(a_it->get_somatic_id());
+        genomic_ids.insert(a_it->get_genomic_id());
     }
 
-    for (const auto& somatic_id : somatic_ids) {
-        auto a_view = a.get_somatic_genotype_species(somatic_id);
-        auto b_view = b.get_somatic_genotype_species(somatic_id);
+    for (const auto& genomic_id : genomic_ids) {
+        auto a_view = a.get_genotype_species(genomic_id);
+        auto b_view = b.get_genotype_species(genomic_id);
 
         auto a_it = a_view.begin(), b_it = b_view.begin();
 
@@ -244,14 +246,14 @@ bool operator==(const Races::Tissue& a, const Races::Tissue& b)
     return true;
 }
 
-bool operator==(const Races::Simulation& a, const Races::Simulation& b)
+bool operator==(const Races::Drivers::Simulation::Simulation& a, const Races::Drivers::Simulation::Simulation& b)
 {
     return a.get_time()==b.get_time() &&
            a.tissue()==b.tissue() &&
            a.death_activation_level==b.death_activation_level;
 }
 
-bool operator==(const Races::TimedSomaticMutation& a, const Races::TimedSomaticMutation& b)
+bool operator==(const Races::Drivers::Simulation::TimedGenomicMutation& a, const Races::Drivers::Simulation::TimedGenomicMutation& b)
 {
     return (a.initial_id==b.initial_id) &&
            (a.final_id==b.final_id) &&
@@ -321,7 +323,9 @@ BOOST_AUTO_TEST_CASE(binary_map)
 
 BOOST_AUTO_TEST_CASE(binary_cell)
 {
-    std::vector<Races::Cell> to_save{{0}, {1,300}, {2, 200}};
+    using namespace Races::Drivers;
+
+    std::vector<Cell> to_save{{0}, {1,300}, {2, 200}};
 
     auto filename = get_a_temporary_path();
     {
@@ -336,7 +340,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
         Races::Archive::Binary::In i_archive(filename);
 
         for (auto& value : to_save) {
-            Races::Cell read_value = Races::Cell::load(i_archive);
+            Cell read_value = Cell::load(i_archive);
 
             BOOST_CHECK(read_value.get_id()==value.get_id());
             BOOST_CHECK(read_value.get_parent_id()==value.get_parent_id());
@@ -347,9 +351,11 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation)
+BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation)
 {
-    std::vector<Races::TimedSomaticMutation> to_save{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+    using namespace Races::Drivers::Simulation;
+
+    std::vector<TimedGenomicMutation> to_save{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
 
     auto filename = get_a_temporary_path();
     {
@@ -364,7 +370,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation)
         Races::Archive::Binary::In i_archive(filename);
 
         for (auto& value : to_save) {
-            Races::TimedSomaticMutation read_value = Races::TimedSomaticMutation::load(i_archive);
+            TimedGenomicMutation read_value = TimedGenomicMutation::load(i_archive);
 
             BOOST_CHECK(read_value==value);
         }
@@ -374,11 +380,13 @@ BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation)
 }
 
 
-BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation_queue)
+BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation_queue)
 {
-    std::vector<Races::TimedSomaticMutation> vector{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+    using namespace Races::Drivers::Simulation;
 
-    using PriorityQueue = std::priority_queue<Races::TimedSomaticMutation>;
+    std::vector<TimedGenomicMutation> vector{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+
+    using PriorityQueue = std::priority_queue<TimedGenomicMutation>;
 
     PriorityQueue queue(vector.begin(), vector.end());
 
@@ -413,21 +421,17 @@ BOOST_AUTO_TEST_CASE(binary_timed_somatic_mutation_queue)
 
 BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
 {
-    using namespace Races;
+    using namespace Races::Drivers;
     
-    SomaticGenotype to_save("A",{{0.01,0.01},{0.01,0.01}});
+    Genotype to_save("A",{{0.01,0.01},{0.01,0.01}});
     to_save["--"].set_rates({{CellEventType::DIE, 0.1},
-                             {CellEventType::DUPLICATE, 0.3},
-                             {CellEventType::PASSENGER_MUTATION, 20}});
+                             {CellEventType::DUPLICATE, 0.3}});
     to_save["+-"].set_rates({{CellEventType::DIE, 0.1},
-                             {CellEventType::DUPLICATE, 0.45},
-                             {CellEventType::PASSENGER_MUTATION, 2}});
+                             {CellEventType::DUPLICATE, 0.45}});
     to_save["-+"].set_rates({{CellEventType::DIE, 0.1},
-                             {CellEventType::DUPLICATE, 0.2},
-                             {CellEventType::PASSENGER_MUTATION, 1}});
+                             {CellEventType::DUPLICATE, 0.2}});
     to_save["+-"].set_rates({{CellEventType::DIE, 0.01},
-                             {CellEventType::DUPLICATE, 0.02},
-                             {CellEventType::PASSENGER_MUTATION, 20}});
+                             {CellEventType::DUPLICATE, 0.02}});
 
     auto filename = get_a_temporary_path();
     {
@@ -442,7 +446,7 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
         Races::Archive::Binary::In i_archive(filename);
 
         for (const auto& e_genotype : to_save.epigenetic_genotypes()) {
-            Races::EpigeneticGenotype in_genotype =  Races::EpigeneticGenotype::load(i_archive);
+            EpigeneticGenotype in_genotype =  EpigeneticGenotype::load(i_archive);
 
             BOOST_CHECK(e_genotype==in_genotype);
         }
@@ -454,7 +458,7 @@ BOOST_FIXTURE_TEST_SUITE( simulatedData, ArchiveFixture )
 
 BOOST_AUTO_TEST_CASE(binary_tissue)
 {
-    using namespace Races;
+    using namespace Races::Drivers::Simulation;
 
     auto filename = get_a_temporary_path();
 
@@ -477,7 +481,7 @@ BOOST_AUTO_TEST_CASE(binary_tissue)
 
 BOOST_AUTO_TEST_CASE(simulation_statistics)
 {
-    using namespace Races;
+    using namespace Races::Drivers::Simulation;
 
     auto filename = get_a_temporary_path();
 
@@ -498,7 +502,7 @@ BOOST_AUTO_TEST_CASE(simulation_statistics)
 
 BOOST_AUTO_TEST_CASE(simulation_tissue)
 {
-    using namespace Races;
+    using namespace Races::Drivers::Simulation;
 
     auto filename = get_a_temporary_path();
 

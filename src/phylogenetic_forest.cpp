@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement classes and function for phylogenetic trees
- * @version 0.2
- * @date 2023-07-14
+ * @version 0.3
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,13 +33,37 @@
 namespace Races
 {
 
+namespace Drivers 
+{
+
+
 PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, const CellId cell_id):
     forest(const_cast<PhylogeneticForest*>(forest)), cell_id(cell_id)
 {}
 
+PhylogeneticForest::const_node PhylogeneticForest::get_node(const CellId& cell_id) const
+{
+    if (cells.count(cell_id)==0) {
+        throw std::runtime_error("The forest does not contain the cell "
+                                 "having the specified identifier");
+    }
+        
+    return PhylogeneticForest::const_node(this, cell_id);
+}
+
 PhylogeneticForest::node::node(PhylogeneticForest* forest, const CellId cell_id):
     const_node(forest, cell_id)
 {}
+
+PhylogeneticForest::node PhylogeneticForest::get_node(const CellId& cell_id)
+{
+    if (cells.count(cell_id)==0) {
+        throw std::runtime_error("The forest does not contain the cell "
+                                 "having the specified identifier");
+    }
+
+    return PhylogeneticForest::node(this, cell_id);
+}
 
 PhylogeneticForest::PhylogeneticForest()
 {}
@@ -115,4 +139,6 @@ std::vector<PhylogeneticForest::node> PhylogeneticForest::get_roots()
     return nodes;
 }
 
-}
+}   // Drivers
+
+}   // Races

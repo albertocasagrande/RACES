@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.8
- * @date 2023-07-11
+ * @version 0.9
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,11 @@
 #include "tissue.hpp"
 #include "driver_genotype.hpp"
 
-namespace Races {
+namespace Races
+{
+
+namespace Drivers
+{
 
 uint64_t Cell::counter = 0;
 
@@ -61,15 +65,9 @@ void swap(Cell& a, Cell &b)
     std::swap(a.genotype, b.genotype);
 }
 
-std::ostream& operator<<(std::ostream& os, const Cell& cell)
+namespace Simulation
 {
-    os << "Cell{id: "<< cell.get_id()
-       << ", parent_id: "<< cell.get_parent_id()
-       << ", driver_genotype: " << cell.get_genotype_id()
-       << "}";
 
-    return os;
-}
 
 CellInTissue::CellInTissue():
     Cell(), PositionInTissue()
@@ -112,15 +110,34 @@ CellInTissue& CellInTissue::operator=(const PositionInTissue& position)
     return *this;
 }
 
-std::ostream& operator<<(std::ostream& os, const CellInTissue& cell)
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
        << ", driver_genotype: " << cell.get_genotype_id()
-       << ", position: " << static_cast<PositionInTissue>(cell)
        << "}";
 
     return os;
 }
 
-};
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::CellInTissue& cell)
+{
+    os << "Cell{id: "<< cell.get_id()
+       << ", parent_id: "<< cell.get_parent_id()
+       << ", driver_genotype: " << cell.get_genotype_id()
+       << ", position: " << static_cast<Races::Drivers::Simulation::PositionInTissue>(cell)
+       << "}";
+
+    return os;
+}
+
+}  // std

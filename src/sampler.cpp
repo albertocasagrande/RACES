@@ -2,8 +2,8 @@
  * @file sampler.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Tissue sampler class implementation
- * @version 0.1
- * @date 2023-07-10
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,6 +33,9 @@
 namespace Races
 {
 
+namespace Drivers
+{
+
 BasicSampler::const_iterator BasicSampler::begin() const
 {
     throw std::runtime_error("The BasicSampler class must be inherited");
@@ -43,7 +46,8 @@ BasicSampler::const_iterator BasicSampler::end() const
     throw std::runtime_error("The BasicSampler class must be inherited");
 }
 
-RectangleSampler::const_iterator::const_iterator(const RectangleSampler* sampler, const PositionInTissue& position):
+RectangleSampler::const_iterator::const_iterator(const RectangleSampler* sampler,
+                                                 const Simulation::PositionInTissue& position):
     sampler(sampler), pos(position)
 {
     if (!sampler->tissue(pos).has_driver_mutations()) {
@@ -69,7 +73,7 @@ bool increase_and_update(T& value, const T& min, const T& max)
     return false;
 }
 
-void set_to_invalid_position(PositionInTissue& pos, const Tissue& tissue)
+void set_to_invalid_position(Simulation::PositionInTissue& pos, const Simulation::Tissue& tissue)
 {
     auto sizes = tissue.size();
     pos.x = sizes[0];
@@ -142,8 +146,9 @@ RectangleSampler::const_iterator& RectangleSampler::const_iterator::operator--()
     return *this;
 }
 
-RectangleSampler::RectangleSampler(const Tissue& tissue, const PositionInTissue& lower_corner, 
-                                   const PositionInTissue& upper_corner):
+RectangleSampler::RectangleSampler(const Simulation::Tissue& tissue, 
+                                   const Simulation::PositionInTissue& lower_corner, 
+                                   const Simulation::PositionInTissue& upper_corner):
     tissue(tissue), lower_corner(lower_corner), upper_corner(upper_corner)
 {
     if (tissue.num_of_dimensions()==2 && lower_corner.z!=0) { 
@@ -162,8 +167,11 @@ RectangleSampler::RectangleSampler(const Tissue& tissue, const PositionInTissue&
     }
 }
 
-RectangleSampler::RectangleSampler(const Tissue& tissue, const PositionInTissue& lower_corner, 
-                                   const AxisSize& x_size, const AxisSize& y_size, const AxisSize& z_size):
+RectangleSampler::RectangleSampler(const Simulation::Tissue& tissue,
+                                   const Simulation::PositionInTissue& lower_corner,
+                                   const Simulation::AxisSize& x_size,
+                                   const Simulation::AxisSize& y_size,
+                                   const Simulation::AxisSize& z_size):
     tissue(tissue), lower_corner(lower_corner), 
     upper_corner(lower_corner.x+x_size-1,lower_corner.y+y_size-1,lower_corner.z+z_size-1)
 {
@@ -181,8 +189,10 @@ RectangleSampler::RectangleSampler(const Tissue& tissue, const PositionInTissue&
     }
 }
 
-RectangleSampler::RectangleSampler(const Tissue& tissue, const PositionInTissue& lower_corner, 
-                                   const AxisSize& x_size, const AxisSize& y_size):
+RectangleSampler::RectangleSampler(const Simulation::Tissue& tissue,
+                                   const Simulation::PositionInTissue& lower_corner,
+                                   const Simulation::AxisSize& x_size,
+                                   const Simulation::AxisSize& y_size):
     tissue(tissue), lower_corner(lower_corner), 
     upper_corner(lower_corner.x+x_size-1,lower_corner.y+y_size-1)
 {
@@ -215,4 +225,6 @@ RectangleSampler::const_iterator RectangleSampler::end() const
     return ++it;
 }
 
-}
+}   // Drivers
+
+}   // Races

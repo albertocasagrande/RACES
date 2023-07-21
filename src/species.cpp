@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.6
- * @date 2023-07-10
+ * @version 0.7
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,7 +32,14 @@
 
 #include "species.hpp"
 
-namespace Races {
+namespace Races 
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
 
 Species::Species():
     EpigeneticGenotype()
@@ -172,9 +179,27 @@ Species::const_iterator Species::const_iterator::operator--(int)
     return copy;
 }
 
-std::ostream& operator<<(std::ostream& out, const Species& species)
+
+void swap(Species& a, Species& b)
 {
-    out << "{genotype: " << static_cast<EpigeneticGenotype>(species) 
+    std::swap(static_cast<EpigeneticGenotype&>(a),
+              static_cast<EpigeneticGenotype&>(b));
+    std::swap(a.cells,b.cells);
+    std::swap(a.pos_map,b.pos_map);
+}
+
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::Simulation::Species& species)
+{
+    out << "{genotype: " << static_cast<Races::Drivers::EpigeneticGenotype>(species) 
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {
@@ -186,14 +211,4 @@ std::ostream& operator<<(std::ostream& out, const Species& species)
     return out;
 }
 
-}
-
-namespace std
-{
-void swap(Races::Species& a, Races::Species& b)
-{
-    std::swap(static_cast<Races::EpigeneticGenotype&>(a),static_cast<Races::EpigeneticGenotype&>(b));
-    std::swap(a.cells,b.cells);
-    std::swap(a.pos_map,b.pos_map);
-}
-}
+}   // std

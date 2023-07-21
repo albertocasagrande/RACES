@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement the Python wrapper class and functions for `Races::Simulation`
- * @version 0.1
- * @date 2023-07-19
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,20 +46,20 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::add_somatic_mutation(const Races::SomaticGenotype& src, const Races::SomaticGenotype& dst, const Races::Time time)
+void SimulationWrapper::add_genomic_mutation(const Races::Drivers::Genotype& src, const Races::Drivers::Genotype& dst, const Races::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.add_somatic_mutation(src, dst, time);
+    obj_ptr->simulation.add_genomic_mutation(src, dst, time);
 }
 
-struct PythonCloser : public Races::Closer
+struct PythonCloser : public Races::Drivers::Simulation::Closer
 {
     /**
      * @brief The empty constructor
      */
     PythonCloser():
-        Races::Closer()
+        Races::Drivers::Simulation::Closer()
     {}
 
     /**
@@ -76,29 +76,29 @@ struct PythonCloser : public Races::Closer
 void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool logging,
                                   const bool quiet, const bool plot)
 {
-    using namespace Races;
+    using namespace Races::UI;
 
     std::unique_lock lock(obj_ptr->s_mutex);
 
 #ifdef WITH_SDL2
 
-    UI::TissuePlotter<UI::SDLWindow>* plotter{nullptr};
+    TissuePlotter<SDLWindow>* plotter{nullptr};
     
     if (plot) {
-        plotter = new UI::TissuePlotter<UI::SDLWindow>(obj_ptr->simulation.tissue());
+        plotter = new TissuePlotter<SDLWindow>(obj_ptr->simulation.tissue());
         plotter->set_frames_per_second(1);
     }
 #else
-    UI::TissuePlotter<UI::Plot2DWindow>* plotter{nullptr}; 
+    TissuePlotter<Plot2DWindow>* plotter{nullptr}; 
 #endif
 
-    Races::UI::ProgressBar* bar{nullptr};
+    ProgressBar* bar{nullptr};
 
     PythonCloser closer;
     if (quiet) {
         obj_ptr->simulation.run_up_to(final_time, plotter, bar, logging, closer);
     } else {
-        bar = new Races::UI::ProgressBar();
+        bar = new ProgressBar();
         obj_ptr->simulation.run_up_to(final_time, plotter, bar, logging, closer);
 
         delete bar;
@@ -122,23 +122,24 @@ const Races::Time& SimulationWrapper::get_time() const
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_species(const Races::SomaticGenotype& genotype)
+void SimulationWrapper::add_species(const Races::Drivers::Genotype& genotype)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
     obj_ptr->simulation.add_species(genotype);
 }
 
-Races::PositionInTissue from_Python_list_to_position(boost::python::list const& position,
-                                                     const uint8_t num_of_dimensions)
+Races::Drivers::Simulation::PositionInTissue 
+from_Python_list_to_position(boost::python::list const& position, const uint8_t num_of_dimensions)
 {
     namespace bp = boost::python;
+    using namespace Races::Drivers::Simulation;
 
-    std::vector<Races::AxisValue> c_position;
+    std::vector<AxisValue> c_position;
     try {
-        c_position = std::vector<Races::AxisValue>{
-            bp::stl_input_iterator<Races::AxisValue>(position),
-            bp::stl_input_iterator<Races::AxisValue>()
+        c_position = std::vector<AxisValue>{
+            bp::stl_input_iterator<AxisValue>(position),
+            bp::stl_input_iterator<AxisValue>()
         };
     } catch (...) {
         throw std::domain_error("Expected a list of integer numbers");
@@ -150,22 +151,22 @@ Races::PositionInTissue from_Python_list_to_position(boost::python::list const& 
                                 + "i.e., a list having " + dim_text+ " elements");
     }
 
-    Races::PositionInTissue pos;
+    PositionInTissue pos;
     
     if (num_of_dimensions==2) {
-        return Races::PositionInTissue(c_position[0], c_position[1]);
+        return PositionInTissue(c_position[0], c_position[1]);
     }
 
-    return Races::PositionInTissue(c_position[0], c_position[1], c_position[2]);
+    return PositionInTissue(c_position[0], c_position[1], c_position[2]);
 }
 
 
-void SimulationWrapper::add_cell(const Races::SomaticGenotype& genotype, 
+void SimulationWrapper::add_cell(const Races::Drivers::Genotype& genotype, 
                                  const std::string& methylation_signature,
                                  boost::python::list const& position)
 {
     const auto num_of_dimensions = obj_ptr->simulation.tissue().num_of_dimensions();
-    Races::PositionInTissue c_position = from_Python_list_to_position(position, num_of_dimensions);
+    auto c_position = from_Python_list_to_position(position, num_of_dimensions);
 
     {
         std::unique_lock lock(obj_ptr->s_mutex);
@@ -177,12 +178,13 @@ void SimulationWrapper::add_cell(const Races::SomaticGenotype& genotype,
 void SimulationWrapper::set_tissue(const std::string& name, boost::python::list const& sizes_list)
 {
     namespace bp = boost::python;
+    using namespace Races::Drivers::Simulation;
 
-    std::vector<Races::AxisSize> c_sizes;
+    std::vector<AxisSize> c_sizes;
     try {
-        c_sizes = std::vector<Races::AxisSize>{
-            bp::stl_input_iterator<Races::AxisSize>(sizes_list),
-            bp::stl_input_iterator<Races::AxisSize>()
+        c_sizes = std::vector<AxisSize>{
+            bp::stl_input_iterator<AxisSize>(sizes_list),
+            bp::stl_input_iterator<AxisSize>()
         };
     } catch (...) {
         throw std::domain_error("Expected a list of sizes");

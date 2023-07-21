@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define classes and function for phylogenetic trees
- * @version 0.2
- * @date 2023-07-14
+ * @version 0.3
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,6 +40,9 @@
 #include "binary_logger.hpp"
 
 namespace Races
+{
+
+namespace Drivers 
 {
 
 class PhylogeneticForest
@@ -80,7 +83,10 @@ public:
          * 
          * @return a constant reference to a cell
          */
-        operator const PhylogeneticForest::CellDataType&() const;
+        inline operator const PhylogeneticForest::CellDataType&() const
+        {
+            return forest->cells.at(cell_id);
+        }
 
         /**
          * @brief Get the parent node
@@ -102,14 +108,22 @@ public:
          * 
          * @return `true` if and only if this node is a leaf
          */
-        bool is_leaf() const;
+        inline bool is_leaf() const
+        {
+            return forest->branches.at(cell_id).size()==0;
+        }
 
         /**
          * @brief Test whether this node is a root
          * 
          * @return `true` if and only if this node is a root
          */
-        bool is_root() const;
+        inline bool is_root() const
+        {
+            const auto& cell = forest->cells.at(cell_id);
+
+            return cell.get_id() == cell.get_parent_id();
+        }
 
         friend class PhylogeneticForest;
     };
@@ -124,7 +138,10 @@ public:
          * 
          * @return a non-constant reference to a cell
          */
-        operator PhylogeneticForest::CellDataType&();
+        inline operator PhylogeneticForest::CellDataType&()
+        {
+            return forest->cells.at(cell_id);
+        }
 
         /**
          * @brief Get the parent node
@@ -240,49 +257,8 @@ PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_stor
     return forest;
 }
 
-/* Inline implementations */
-inline PhylogeneticForest::const_node::operator const PhylogeneticForest::CellDataType&() const
-{
-    return forest->cells.at(cell_id);
-}
+}   // Drivers
 
-inline bool PhylogeneticForest::const_node::is_leaf() const
-{
-    return forest->branches.at(cell_id).size()==0;
-}
-
-inline bool PhylogeneticForest::const_node::is_root() const
-{
-    const auto& cell = forest->cells.at(cell_id);
-
-    return cell.get_id() == cell.get_parent_id();
-}
-
-inline PhylogeneticForest::node::operator PhylogeneticForest::CellDataType&()
-{
-    return forest->cells.at(cell_id);
-}
-
-inline PhylogeneticForest::const_node PhylogeneticForest::get_node(const CellId& cell_id) const
-{
-    if (cells.count(cell_id)==0) {
-        throw std::runtime_error("The forest does not contain the cell "
-                                 "having the specified identifier");
-    }
-        
-    return PhylogeneticForest::const_node(this, cell_id);
-}
-
-inline PhylogeneticForest::node PhylogeneticForest::get_node(const CellId& cell_id)
-{
-    if (cells.count(cell_id)==0) {
-        throw std::runtime_error("The forest does not contain the cell "
-                                 "having the specified identifier");
-    }
-
-    return PhylogeneticForest::node(this, cell_id);
-}
-
-}
+}   // Races
 
 #endif // __RACES_PHYLOGENETIC_TREE__

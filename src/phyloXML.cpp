@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement phyloXML stream
- * @version 0.1
- * @date 2023-07-14
+ * @version 0.2
+ * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,6 +38,8 @@
 namespace Races
 {
 
+namespace Drivers
+{
 namespace IO
 {
 
@@ -166,5 +168,7 @@ phyloXMLStream::~phyloXMLStream()
 }
 
 }  // IO
+
+}  // Drivers
 
 }  // Race
