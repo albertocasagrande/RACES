@@ -10,7 +10,7 @@ if(${Boost_unit_test_framework_FOUND})
 
     set(RACES_TESTS archive)
 
-    set(SBS_EXAMPLE ${CMAKE_CURRENT_SOURCE_DIR}/v3.3_SBS3_PROFILE.txt)
+    set(SBS_EXAMPLE "${CMAKE_CURRENT_SOURCE_DIR}/v3.3_SBS3_PROFILE.txt")
     if(NOT EXISTS ${SBS_EXAMPLE})
         message("Downloading SBS profile example from sanger...")
         file(DOWNLOAD
@@ -21,9 +21,11 @@ if(${Boost_unit_test_framework_FOUND})
         list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
         if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
             set(RACES_TESTS snv_signature ${RACES_TESTS})
+            add_compile_definitions(SBS_EXAMPLE=${SBS_EXAMPLE})
         endif()
     else()
         set(RACES_TESTS snv_signature ${RACES_TESTS})
+        add_compile_definitions(SBS_EXAMPLE="${SBS_EXAMPLE}")
     endif()
 
     foreach(TEST ${RACES_TESTS})

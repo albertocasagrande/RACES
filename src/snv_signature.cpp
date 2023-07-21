@@ -2,7 +2,7 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Single Variation Mutation mutational signature
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -321,6 +321,10 @@ MutationalType::MutationalType(const std::string& type)
     iss >> *this;
 }
 
+MutationalSignatureExprValue::MutationalSignatureExprValue():
+    value_map()
+{}
+
 MutationalSignatureExprValue::MutationalSignatureExprValue(const std::map<MutationalType, double>& dist_map):
     value_map(dist_map)
 {}
@@ -333,7 +337,16 @@ MutationalSignatureExprValue::operator MutationalSignature()
 MutationalSignatureExprValue& MutationalSignatureExprValue::operator+(MutationalSignatureExprValue&& expression_value)
 {
     for (auto& [type, prob]: value_map) {
-        prob += expression_value.value_map[type];
+        auto it = expression_value.value_map.find(type);
+        if (it != expression_value.value_map.end()) {
+            prob += expression_value.value_map[type];
+        }
+    }
+
+    for (const auto& [type, prob]: expression_value.value_map) {
+        if (value_map.count(type)==0) {
+            value_map[type] = prob;
+        }
     }
 
     return *this;
@@ -343,6 +356,12 @@ MutationalSignatureExprValue& MutationalSignatureExprValue::operator+(const Muta
 {
     for (auto& [type, prob]: value_map) {
         prob += signature(type);
+    }
+
+    for (const auto& [type, prob]: signature) {
+        if (value_map.count(type)==0) {
+            value_map[type] = prob;
+        }
     }
 
     return *this;

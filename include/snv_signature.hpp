@@ -2,7 +2,7 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define Single Variation Mutation mutational signature
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-21
  * 
  * @copyright Copyright (c) 2023
@@ -368,6 +368,10 @@ class MutationalSignatureExprValue
      */
     MutationalSignatureExprValue(const std::map<MutationalType, double>& value_map);
 public:
+    /**
+     * @brief The empty constructor
+     */
+    MutationalSignatureExprValue();
 
     /**
      * @brief Cast to `MutationalSignature`
@@ -477,7 +481,12 @@ public:
      */
     inline double operator()(const MutationalType& type) const
     {
-        return dist_map.at(type);
+        auto it = dist_map.find(type);
+        if (it != dist_map.end()) {
+            return it->second;
+        } 
+    
+        return 0;
     }
 
     /**
@@ -530,7 +539,8 @@ public:
  * @tparam T is the type of the arithmetic value
  * @param value is the arithmetic value
  * @param signature 
- * @return MutationalSignatureExprValue 
+ * @return a `MutationalSignatureExprValue` object representing the
+ *         the multiplication result 
  */
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
 inline MutationalSignatureExprValue operator*(const T& value, const MutationalSignature& signature)
