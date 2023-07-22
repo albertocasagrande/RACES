@@ -1,15 +1,10 @@
 find_package(Python COMPONENTS Interpreter Development)
-find_package(Boost COMPONENTS system python)
+find_package(Boost COMPONENTS python)
 
 set(COMPILE_PYTHON_BINDINGS TRUE)
 
 if(NOT ${Boost_python_FOUND})
 message("Boost.Python is missing: Python bindings will NOT be compiled")
-set(COMPILE_PYTHON_BINDINGS FALSE)
-endif()
-
-if(NOT ${Boost_system_FOUND})
-message("Boost.System is missing: Python bindings will NOT be compiled")
 set(COMPILE_PYTHON_BINDINGS FALSE)
 endif()
 
@@ -38,19 +33,11 @@ if(${COMPILE_PYTHON_BINDINGS})
     # link
     target_link_libraries(pyRACES ${Boost_LIBRARIES} Python::Module libRACES)
 
-    find_program(PYTHON_FULL_PATH Python::Interpreter)
-
-    message(${PYTHON_FULL_PATH}) 
-
-    if(EXISTS ${PYTHON_FULL_PATH})
-        message("Python bindings will tested")
-
-        enable_testing()
-        add_test (NAME python-tests
-            COMMAND ${PYTHON_FULL_PATH} -m pytest # Or just COMMAND pytest
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/
-            )
-        set_tests_properties(python-tests
-            PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:$ENV{PYTHONPATH}")
-    endif()
+    enable_testing()
+    add_test (NAME python-tests
+        COMMAND Python::Interpreter -m pytest # Or just COMMAND pytest
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/
+        )
+    set_tests_properties(python-tests
+        PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:$ENV{PYTHONPATH}")
 endif()
