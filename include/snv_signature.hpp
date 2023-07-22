@@ -2,8 +2,8 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define Single Variation Mutation mutational signature
- * @version 0.4
- * @date 2023-07-21
+ * @version 0.5
+ * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,9 +44,6 @@ namespace Races
 {
 
 namespace Passengers
-{
-
-namespace SNV
 {
 
 /**
@@ -179,18 +176,16 @@ public:
     static bool is_a_base(const char& symbol);
 };
 
-}   // SNV
-
 }   // Passengers
 
 }   // Races
 
 
 template<>
-struct std::less<Races::Passengers::SNV::MutationalContext>
+struct std::less<Races::Passengers::MutationalContext>
 {
-    inline constexpr bool operator()(const Races::Passengers::SNV::MutationalContext &lhs,
-                                     const Races::Passengers::SNV::MutationalContext &rhs) const
+    inline constexpr bool operator()(const Races::Passengers::MutationalContext &lhs,
+                                     const Races::Passengers::MutationalContext &rhs) const
     {
         return lhs.get_code() < rhs.get_code();
     }
@@ -202,8 +197,6 @@ namespace Races
 namespace Passengers
 {
 
-namespace SNV
-{
 /**
  * @brief A class to represent mutational type
  * 
@@ -309,17 +302,15 @@ public:
     }
 };
 
-}   // SNV
-
 }   // Passengers
 
 }   // Races
 
 template<>
-struct std::less<Races::Passengers::SNV::MutationalType>
+struct std::less<Races::Passengers::MutationalType>
 {
-    bool operator()(const Races::Passengers::SNV::MutationalType &lhs,
-                    const Races::Passengers::SNV::MutationalType &rhs) const
+    bool operator()(const Races::Passengers::MutationalType &lhs,
+                    const Races::Passengers::MutationalType &rhs) const
     {
         const auto& lhs_code = lhs.get_context().get_code();
         const auto& rhs_code = rhs.get_context().get_code();
@@ -335,8 +326,6 @@ namespace Races
 namespace Passengers
 {
 
-namespace SNV
-{
 
 class MutationalSignature;
 
@@ -549,8 +538,6 @@ inline MutationalSignatureExprResult operator*(const T& value, const MutationalS
     return signature * value;
 }
 
-}   // SNV
-
 }   // Passengers
 
 }   // Races
@@ -565,7 +552,7 @@ namespace std
  * @param context is the mutational context to stream
  * @return a reference to the output stream
  */
-inline std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV::MutationalContext& context)
+inline std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalContext& context)
 {
     return (out << context.get_sequence());
 }
@@ -577,7 +564,7 @@ inline std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV:
  * @param type is the mutational type to stream
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV::MutationalType& type);
+std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalType& type);
 
 /**
  * @brief Stream the mutational type from a stream
@@ -586,7 +573,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV::Mutati
  * @param type is the object where the streamed mutational type will be placed
  * @return a reference to the input stream
  */
-std::istream& operator>>(std::istream& in, Races::Passengers::SNV::MutationalType& type);
+std::istream& operator>>(std::istream& in, Races::Passengers::MutationalType& type);
 
 }  // std
 

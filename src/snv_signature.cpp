@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Single Variation Mutation mutational signature
- * @version 0.4
- * @date 2023-07-21
+ * @version 0.5
+ * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,9 +41,6 @@ namespace Races
 {
 
 namespace Passengers
-{
-
-namespace SNV
 {
 
 
@@ -496,8 +493,6 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
     return result;
 }
 
-}  // SNV
-
 }  // Passengers
 
 }  // Races
@@ -505,7 +500,7 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV::MutationalType& type)
+std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalType& type)
 {
     std::string type_sequence = type.get_context().get_sequence();
 
@@ -516,9 +511,9 @@ std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV::Mutati
     return out;
 }
 
-std::istream& operator>>(std::istream& in, Races::Passengers::SNV::MutationalType& type)
+std::istream& operator>>(std::istream& in, Races::Passengers::MutationalType& type)
 {
-    using namespace Races::Passengers::SNV;
+    using namespace Races::Passengers;
 
     std::string seq;
     char replace_base;
