@@ -33,11 +33,19 @@ if(${COMPILE_PYTHON_BINDINGS})
     # link
     target_link_libraries(pyRACES ${Boost_LIBRARIES} Python::Module libRACES)
 
-    enable_testing()
-    add_test (NAME python-tests
-        COMMAND Python::Interpreter -m pytest # Or just COMMAND pytest
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/
-        )
-    set_tests_properties(python-tests
-        PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:$ENV{PYTHONPATH}")
+    execute_process(COMMAND python3 -m pytest --version
+        OUTPUT_VARIABLE PYTEST_output
+        ERROR_VARIABLE  PYTEST_error
+        RESULT_VARIABLE PYTEST_result)
+    if(NOT ${PYTEST_result} EQUAL 0)
+        message("python-test will not be executed: pytest package not available")
+    else()
+        enable_testing()
+        add_test (NAME python-tests
+            COMMAND Python::Interpreter -m pytest # Or just COMMAND pytest
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/
+            )
+        set_tests_properties(python-tests
+            PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:$ENV{PYTHONPATH}")
+    endif()
 endif()
