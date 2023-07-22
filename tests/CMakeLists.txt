@@ -8,7 +8,7 @@ if(${Boost_unit_test_framework_FOUND})
     link_directories(${Boost_LIBRARY_DIRS})
     set(TEST_LIBRARIES ${Boost_LIBRARIES} libRACES)
 
-    set(RACES_TESTS archive)
+    set(RACES_TESTS archive fragment)
 
     set(SBS_EXAMPLE "${CMAKE_CURRENT_SOURCE_DIR}/v3.3_SBS3_PROFILE.txt")
     if(NOT EXISTS ${SBS_EXAMPLE})

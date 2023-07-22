@@ -69,7 +69,10 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/fragment.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp)
 
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
@@ -94,7 +97,10 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/fragment.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
