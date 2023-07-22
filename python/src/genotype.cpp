@@ -2,8 +2,8 @@
  * @file genotype.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement the Python wrapper class and functions for `Races::Genotype`
- * @version 0.1
- * @date 2023-07-21
+ * @version 0.2
+ * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -74,7 +74,7 @@ void GenotypeWrapper::set_rates(Races::Drivers::Genotype *genotype, const std::s
     auto rates_list = bp::list(rates.items());
     for (auto i=0; i<len(rates_list); ++i) {
         const unsigned int event_type_num = bp::extract<unsigned int>(rates_list[i][0]);
-        const CellEventType event_type_id = static_cast<const CellEventType>(event_type_num);
+        const CellEventType event_type_id = static_cast<CellEventType>(event_type_num);
         c_rates[event_type_id] = bp::extract<double>(rates_list[i][1]);
     }
     

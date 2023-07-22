@@ -2,7 +2,7 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define Single Variation Mutation mutational signature
- * @version 0.5
+ * @version 0.6
  * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
@@ -184,8 +184,8 @@ public:
 template<>
 struct std::less<Races::Passengers::MutationalContext>
 {
-    inline constexpr bool operator()(const Races::Passengers::MutationalContext &lhs,
-                                     const Races::Passengers::MutationalContext &rhs) const
+    inline bool operator()(const Races::Passengers::MutationalContext &lhs,
+                           const Races::Passengers::MutationalContext &rhs) const
     {
         return lhs.get_code() < rhs.get_code();
     }

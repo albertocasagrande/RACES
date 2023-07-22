@@ -2,7 +2,7 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic position and related functions
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
@@ -115,7 +115,7 @@ namespace std
 
 
 template<>
-struct std::less<Races::Passengers::GenomicPosition>
+struct less<Races::Passengers::GenomicPosition>
 {
     inline bool operator()(const Races::Passengers::GenomicPosition &lhs,
                            const Races::Passengers::GenomicPosition &rhs) const

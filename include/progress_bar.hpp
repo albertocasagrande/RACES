@@ -2,8 +2,8 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a progress bar
- * @version 0.3
- * @date 2023-07-19
+ * @version 0.4
+ * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,12 @@
 #include <string>
 
 #ifdef WITH_INDICATORS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 #include "indicators.hpp"
+
+#pragma GCC diagnostic pop
 #endif // WITH_INDICATORS
 
 namespace Races

@@ -40,6 +40,8 @@ if(${COMPILE_PYTHON_BINDINGS})
 
     find_program(PYTHON_FULL_PATH Python::Interpreter)
 
+    message(${PYTHON_FULL_PATH}) 
+
     if(EXISTS ${PYTHON_FULL_PATH})
         message("Python bindings will tested")
 

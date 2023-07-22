@@ -2,7 +2,7 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some tests for Races::Passengers::Fragment
- * @version 0.1
+ * @version 0.2
  * @date 2023-07-22
  * 
  * @copyright Copyright (c) 2023
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(fragment_contains)
     BOOST_CHECK(fragment.contains(gen_pos));
 
     // wrong chromosome
-    BOOST_CHECK(!fragment.contains({gen_pos.chr_id+1, gen_pos.position}));
+    BOOST_CHECK(!fragment.contains({static_cast<uint8_t>(gen_pos.chr_id+1), gen_pos.position}));
 
     // after fragment
     BOOST_CHECK(!fragment.contains({gen_pos.chr_id, f_pos.position+length+10}));
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(fragment_follows)
     BOOST_CHECK(!fragment_a.follows(fragment_b));
     
     // changing chromosome
-    fragment_b = Fragment({f_pos_a.chr_id+1, f_end_a+1}, 1000);
+    fragment_b = Fragment({static_cast<uint8_t>(f_pos_a.chr_id+1), f_end_a+1}, 1000);
 
     BOOST_CHECK(!fragment_b.follows(fragment_a));
     BOOST_CHECK(!fragment_a.follows(fragment_b));
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(fragment_split)
     Fragment fragment_a(fragment), fragment_b;
 
     // wrong chromosome
-    BOOST_CHECK_THROW(fragment_a.split({fragment_a.get_chromosome_id()+1, 
+    BOOST_CHECK_THROW(fragment_a.split({static_cast<uint8_t>(fragment_a.get_chromosome_id()+1), 
                                         fragment_a.get_begin().position}), std::domain_error);
 
     // before fragment
@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE(fragment_join)
     
     auto f_a_begin = fragment_a.get_begin();
 
-    auto fragment_err = Fragment({f_a_begin.chr_id+1, f_a_begin.position}, fragment_a.size(),
-                                 fragment_a.get_alleles());
+    auto fragment_err = Fragment({static_cast<uint8_t>(f_a_begin.chr_id+1), f_a_begin.position},
+                                 fragment_a.size(), fragment_a.get_alleles());
 
     // not contiguous
     BOOST_CHECK_THROW(fragment_a.join(fragment_a), std::domain_error);
