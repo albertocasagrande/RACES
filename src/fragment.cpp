@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic fragment
- * @version 0.1
- * @date 2023-07-22
+ * @version 0.2
+ * @date 2023-07-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -57,8 +57,55 @@ void validate_fragment(const Fragment& fragment)
     }   
 }
 
-Fragment::Fragment():
+GenomicRegion::GenomicRegion():
     initial_pos(0), length(0)
+{}
+
+GenomicRegion::GenomicRegion(const ChromosomeId chromosome_id, const Length length):
+    initial_pos(chromosome_id, 0), length(length)
+{}
+
+GenomicRegion::GenomicRegion(const GenomicPosition initial_pos, const Length length):
+    initial_pos(initial_pos), length(length)
+{}
+
+GenomicRegion GenomicRegion::split(const GenomicPosition& split_point)
+{
+    if (!contains(split_point)) {
+        throw std::domain_error("the fragment does not contain the split point");
+    }
+
+    if (split_point==initial_pos) {
+        throw std::domain_error("the fragment initial position and the split point are the same");
+    } 
+
+    GenomicRegion new_region(split_point, length-(split_point.position-initial_pos.position));
+
+    length = split_point.position - initial_pos.position;
+
+    return new_region;
+}
+
+GenomicRegion& GenomicRegion::join(GenomicRegion& contiguous_region)
+{
+    if (follows(contiguous_region)) {
+        std::swap(contiguous_region, *this);
+    }
+
+    if (!precedes(contiguous_region)) {
+        throw std::domain_error("the two genomicregions are not contiguous");
+    }
+
+    length += contiguous_region.length;
+
+    // reset contiguous_region length
+    contiguous_region.length = 0;
+
+    return *this;
+}
+
+Fragment::Fragment():
+    GenomicRegion()
 {}
 
 Fragment::Fragment(const ChromosomeId chromosome_id, const Length length):
@@ -66,7 +113,7 @@ Fragment::Fragment(const ChromosomeId chromosome_id, const Length length):
 {}
 
 Fragment::Fragment(const ChromosomeId chromosome_id, const Length length, const std::vector<Allele>& alleles):
-    initial_pos(chromosome_id), length(length), alleles(alleles)
+    GenomicRegion(chromosome_id, length), alleles(alleles)
 {
     validate_fragment(*this);
 }
@@ -76,7 +123,7 @@ Fragment::Fragment(const GenomicPosition initial_pos, const Length length):
 {}
 
 Fragment::Fragment(const GenomicPosition initial_pos, const Length length, const std::vector<Allele>& alleles):
-    initial_pos(initial_pos), length(length), alleles(alleles)
+    GenomicRegion(initial_pos, length), alleles(alleles)
 {
     validate_fragment(*this);
 }
@@ -256,6 +303,17 @@ bool Fragment::remove_SNV(const GenomicPosition& genomic_position)
 
 namespace std
 {
+
+std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicRegion& genomic_region)
+{
+    auto begin_pos = genomic_region.get_begin();
+
+    out << "GenomicRegion(chr: " << static_cast<int>(begin_pos.chr_id)
+        << ", begin: " << begin_pos.position
+        << ", length: " << genomic_region.size() << ")";
+
+    return out;
+}
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::Fragment& fragment)
 {

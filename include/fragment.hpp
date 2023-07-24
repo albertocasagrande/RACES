@@ -2,8 +2,8 @@
  * @file fragment.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic fragment
- * @version 0.1
- * @date 2023-07-22
+ * @version 0.2
+ * @date 2023-07-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,12 +44,243 @@ namespace Passengers
 {
 
 /**
+ * @brief A genomic region is a interval of genomic positions
+ * 
+ */
+struct GenomicRegion
+{
+    using Length = ChrPosition;
+protected:
+    GenomicPosition initial_pos;    //!< the genomic region initial position
+    Length length;                  //!< the genomic region length
+public:
+    /**
+     * @brief The empty constructor
+     */
+    GenomicRegion();
+
+    /**
+     * @brief A constructor
+     * 
+     * @param chromosome_id is the identifier of the chromosome on which the region lays
+     * @param length is the length of the genomic region
+     * @throw std::domain_error `length` is 0
+     */
+    GenomicRegion(const ChromosomeId chromosome_id, const Length length);
+
+    /**
+     * @brief A constructor
+     * 
+     * @param initial_pos is the genomic region initial position
+     * @param length is the genomic region length
+     * @throw std::domain_error `length` is 0
+     */
+    GenomicRegion(const GenomicPosition initial_pos, const Length length);
+
+    /**
+     * @brief Get the identifier of the chromosome containing the genomic region
+     * 
+     * @return a constant reference to the identifier of the chromosome 
+     *          containing the genomic region
+     */
+    inline const ChromosomeId& get_chromosome_id() const
+    {
+        return initial_pos.chr_id;
+    }
+
+    /**
+     * @brief Get the genomic region initial position
+     * 
+     * @return a constant reference to the genomic region initial position
+     */
+    inline const GenomicPosition& get_begin() const
+    {
+        return initial_pos;
+    }
+
+    /**
+     * @brief Get the genomic region final position
+     * 
+     * @return the genomic region final position
+     */
+    inline GenomicPosition get_end() const
+    {
+        return GenomicPosition(initial_pos.chr_id, initial_pos.position+length-1);
+    }
+
+    /**
+     * @brief Get the genomic region length
+     * 
+     * @return a constant reference to the genomic region length
+     */
+    inline const Length& size() const
+    {
+        return length;
+    }
+
+    /**
+     * @brief Test whether a genomic region follows another one
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current genomic region begins just 
+     *          after the end of `genomic_region`
+     */
+    inline bool follows(const GenomicRegion& genomic_region) const
+    {
+        return ((initial_pos.chr_id == genomic_region.initial_pos.chr_id)
+                && (genomic_region.initial_pos.position + genomic_region.length == initial_pos.position));
+    }
+
+    /**
+     * @brief Test whether a genomic region follows another one
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current genomic region begins just 
+     *          after the end of `genomic_region`
+     */
+    inline bool follows(GenomicRegion&& genomic_region) const
+    {
+        return follows(genomic_region);
+    }
+
+    /**
+     * @brief Test whether a genomic region precedes another one
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current `genomic_region` ends just 
+     *          before the beginning of the current genomic region
+     */
+    inline bool precedes(const GenomicRegion& genomic_region) const
+    {
+        return genomic_region.follows(*this);
+    }
+
+    /**
+     * @brief Test whether a genomic region precedes another one
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current `genomic_region` ends just 
+     *          before the beginning of the current genomic region
+     */
+    inline bool precedes(GenomicRegion&& genomic_region) const
+    {
+        return genomic_region.follows(*this);
+    }
+
+    /**
+     * @brief Check whether a position is contained in the genomic region
+     * 
+     * @param genomic_position is the genomic position to check
+     * @return `true` if and only if `position` is contained in the
+     *      genomic region
+     */
+    inline bool contains(const GenomicPosition& genomic_position) const
+    {
+        return ((genomic_position.chr_id==initial_pos.chr_id)
+                && (initial_pos.position <= genomic_position.position)
+                && (genomic_position.position+1 <= initial_pos.position+length));
+    }
+
+    /**
+     * @brief Check whether a position is contained in the genomic region
+     * 
+     * @param genomic_position is the genomic position to check
+     * @return `true` if and only if `position` is contained in the
+     *      genomic region
+     */
+    inline bool contains(GenomicPosition&& genomic_position) const
+    {
+        return contains(genomic_position);
+    }
+
+    /**
+     * @brief Check whether a position is strictly contained in the genomic region
+     * 
+     * @param genomic_position is the genomic position to check
+     * @return `true` if and only if `position` is strictly contained in the
+     *      genomic region
+     */
+    inline bool strictly_contains(const GenomicPosition& genomic_position) const
+    {
+        return ((genomic_position.chr_id==initial_pos.chr_id)
+                && (initial_pos.position < genomic_position.position)
+                && (genomic_position.position+1 < initial_pos.position+length));
+    }
+
+    /**
+     * @brief Check whether a position is strictly contained in the genomic region
+     * 
+     * @param genomic_position is the genomic position to check
+     * @return `true` if and only if `position` is strictly contained in the
+     *      genomic region
+     */
+    inline bool strictly_contains(GenomicPosition&& genomic_position) const
+    {
+        return strictly_contains(genomic_position);
+    }
+
+    /**
+     * @brief Split a genomic region
+     * 
+     * This method cuts a genomic region in a position, generates a 
+     * new genomic region beginning at the specified position, and 
+     * updates the length of the considered genomic region so that 
+     * the two fragments are contiguous, i.e., one of the two
+     * follows the other one.
+     * 
+     * @param split_point is the position of the new genomic region
+     * @return the fragment originated by the split
+     * @throw std::domain_error the genomic region does not contain 
+     *          `split_point` or `split_point` and the genomic region
+     *          initial point are the same
+     */
+    GenomicRegion split(const GenomicPosition& split_point);
+
+    /**
+     * @brief Split a genomic region
+     * 
+     * This method cuts a genomic region in a position, generates a 
+     * new genomic region beginning at the specified position, and 
+     * updates the length of the considered genomic region so that 
+     * the two fragments are contiguous, i.e., one of the two
+     * follows the other one.
+     * 
+     * @param split_point is the position of the new genomic region
+     * @return the fragment originated by the split
+     * @throw std::domain_error the genomic region does not contain 
+     *          `split_point` or `split_point` and the genomic region
+     *          initial point are the same
+     */
+    inline GenomicRegion split(GenomicPosition&& split_point)
+    {
+        return split(split_point);
+    }
+
+    /**
+     * @brief Join two contiguous genomic regions
+     * 
+     * Two genomic regions are contiguous when the inital position 
+     * of one of the two is the initial position of the other 
+     * one plus the latter's length plus one. 
+     * This method joins the current genomic region and a contiguous 
+     * one. It sets the initial position of the current object 
+     * to the first of the two initial positions, and the its 
+     * length to the sum of the two lengths.
+     * 
+     * @param contiguous_region is a genomic region contiguous to 
+     *          the current one
+     * @return a reference to the updated genomic region
+     */
+    GenomicRegion& join(GenomicRegion& contiguous_region);
+};
+
+/**
  * @brief A genomic fragment
  * 
  * This class represents a genomic fragment, its 
  * alleles, and all the SNV that occur on it.
  */
-struct Fragment
+struct Fragment : public GenomicRegion
 {
     using Length = ChrPosition;
 
@@ -62,9 +293,6 @@ struct Fragment
     typedef std::map<GenomicPosition, SNV> Allele;
 
 protected:
-    GenomicPosition initial_pos;    //!< the fragment initial position
-    Length length;                  //!< the fragment length
-
     std::vector<Allele> alleles;    //!< the fragment alleles
 public:
     /**
@@ -112,47 +340,6 @@ public:
     Fragment(const GenomicPosition initial_pos, const Length length, const std::vector<Allele>& alleles);
 
     /**
-     * @brief Get the identifier of the chromosome containing the fragment
-     * 
-     * @return a constant reference to the identifier of the chromosome 
-     *          containing the fragment
-     */
-    inline const ChromosomeId& get_chromosome_id() const
-    {
-        return initial_pos.chr_id;
-    }
-
-    /**
-     * @brief Get the fragment initial position
-     * 
-     * @return a constant reference to the fragment initial position
-     */
-    inline const GenomicPosition& get_begin() const
-    {
-        return initial_pos;
-    }
-
-    /**
-     * @brief Get the fragment final position
-     * 
-     * @return the fragment final position
-     */
-    inline GenomicPosition get_end() const
-    {
-        return GenomicPosition(initial_pos.chr_id, initial_pos.position+length-1);
-    }
-
-    /**
-     * @brief Get the fragment length
-     * 
-     * @return a constant reference to the fragment length
-     */
-    inline const Length& size() const
-    {
-        return length;
-    }
-
-    /**
      * @brief Get the fragment allele vector
      * 
      * @return a constant reference to the allele vector
@@ -182,107 +369,6 @@ public:
     inline const Allele& operator[](const size_t index) const
     {
         return alleles.at(index);
-    }
-
-    /**
-     * @brief Test whether a fragment follows another one
-     * 
-     * @param fragment is a fragment
-     * @return `true` if and only if the current fragment begins just 
-     *          after the end of `fragment`
-     */
-    inline bool follows(const Fragment& fragment) const
-    {
-        return ((initial_pos.chr_id == fragment.initial_pos.chr_id)
-                && (fragment.initial_pos.position + fragment.length == initial_pos.position));
-    }
-
-    /**
-     * @brief Test whether a fragment follows another one
-     * 
-     * @param fragment is a fragment
-     * @return `true` if and only if the current fragment begins just 
-     *          after the end of `fragment`
-     */
-    inline bool follows(Fragment&& fragment) const
-    {
-        return follows(fragment);
-    }
-
-    /**
-     * @brief Test whether a fragment precedes another one
-     * 
-     * @param fragment is a fragment
-     * @return `true` if and only if the current `fragment` begins just 
-     *          after the end of the current fragment
-     */
-    inline bool precedes(const Fragment& fragment) const
-    {
-        return fragment.follows(*this);
-    }
-
-    /**
-     * @brief Test whether a fragment precedes another one
-     * 
-     * @param fragment is a fragment
-     * @return `true` if and only if the current `fragment` begins just 
-     *          after the end of the current fragment
-     */
-    inline bool precedes(Fragment&& fragment) const
-    {
-        return fragment.follows(*this);
-    }
-
-    /**
-     * @brief Check whether a position is contained by the fragment
-     * 
-     * @param genomic_position is the genomic position to check
-     * @return `true` if and only if `position` is contained by the
-     *      fragment
-     */
-    inline bool contains(const GenomicPosition& genomic_position) const
-    {
-        return ((genomic_position.chr_id==initial_pos.chr_id)
-                && (initial_pos.position <= genomic_position.position)
-                && (genomic_position.position+1 <= initial_pos.position+length));
-    }
-
-    /**
-     * @brief Check whether a position is contained by the fragment
-     * 
-     * @param genomic_position is the genomic position to check
-     * @return `true` if and only if `position` is contained by the
-     *      fragment
-     */
-    inline bool contains(GenomicPosition&& genomic_position) const
-    {
-        return contains(genomic_position);
-    }
-
-    /**
-     * @brief Check whether a position is strictly contained by the fragment
-     * 
-     * @param genomic_position is the genomic position to check
-     * @return `true` if and only if `position` is strictly contained by the
-     *      fragment
-     */
-    inline bool strictly_contains(const GenomicPosition& genomic_position) const
-    {
-        return ((genomic_position.chr_id==initial_pos.chr_id)
-                && (initial_pos.position < genomic_position.position)
-                && (genomic_position.position+1 < initial_pos.position+length));
-    }
-
-    /**
-     * @brief Check whether a position is strictly contained by the fragment
-     * 
-     * @param genomic_position is the genomic position to check
-     * @return `true` if and only if `position` is strictly contained by the
-     *      fragment
-     */
-    inline bool strictly_contains(GenomicPosition&& genomic_position) const
-    {
-        return strictly_contains(genomic_position);
     }
 
     /**
@@ -439,8 +525,9 @@ public:
      * This method tries to remove a SNV from the fragment.
      * 
      * @param genomic_position is the position of the SNV to be removed
-     * @return `true` if and only if a SNV occurred at `position`
-     * @throw std::domain_error `position` does not lays in the fragment
+     * @return `true` if and only if a SNV occurred at `genomic_position`
+     * @throw std::domain_error `genomic_position` does not lays in the
+     *      fragment
      */
     bool remove_SNV(const GenomicPosition& genomic_position);
 
@@ -450,8 +537,9 @@ public:
      * This method tries to remove a SNV from the fragment.
      * 
      * @param genomic_position is the position of the SNV to be removed
-     * @return `true` if and only if a SNV occurred at `position`
-     * @throw std::domain_error `position` does not lays in the fragment
+     * @return `true` if and only if a SNV occurred at `genomic_position`
+     * @throw std::domain_error `genomic_position` does not lays in the
+     *      fragment
      */
     inline bool remove_SNV(GenomicPosition&& genomic_position)
     {
@@ -466,6 +554,15 @@ public:
 
 namespace std
 {
+
+/**
+ * @brief Write a genomic region in a output stream
+ * 
+ * @param out is the output stream
+ * @param genomic_region is the genomic region to stream
+ * @return a reference of the updated stream
+ */
+std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicRegion& genomic_region);
 
 /**
  * @brief Write a fragment in a output stream
