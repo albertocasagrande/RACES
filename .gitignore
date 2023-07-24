@@ -18,4 +18,4 @@ libRACES.*
 include/indicators.hpp
 *.cpython*.pyc
 tests/test_*
-tests/v3.3_SBS3_PROFILE.txt
+tests/assets/v3.3_SBS3_PROFILE.txt

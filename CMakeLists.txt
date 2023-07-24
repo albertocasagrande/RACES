@@ -72,7 +72,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/snv.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fragment.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_reader.cpp)
 
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
@@ -100,7 +101,8 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fragment.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_reader.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
