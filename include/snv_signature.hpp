@@ -2,8 +2,8 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define Single Variation Mutation mutational signature
- * @version 0.6
- * @date 2023-07-22
+ * @version 0.7
+ * @date 2023-07-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,164 +32,13 @@
 #define __RACES_SNV_DISTRIBUTION__
 
 #include <string>
-#include <cstdint>
 #include <map>
 #include <set>
 #include <functional> // std::less
 #include <iostream>
 #include <sstream>
 
-
-namespace Races
-{
-
-namespace Passengers
-{
-
-/**
- * @brief A class to represent mutational context
- * 
- * A context is a nucleic triplet where a mutation may 
- * occur.
- * Every context univocally corresponds to a code that 
- * represents the triplet. This class guarantees the 
- * mutational context code to be in the interval 
- * natural [0,63]: 5', 3', and the central nucleotide 
- * have 4 possible values, i.e., A, C, G, and T.
- * Moreover, all the codes for contexts having either 
- * a 'C' and a 'T' as central nucleotide are guaranteed
- * to be in the interval [0,31].
- */
-class MutationalContext
-{
-    uint8_t code;   //!< the code associated to the context
-public:
-    /**
-     * @brief The empty constructor
-     */
-    MutationalContext();
-
-    /**
-     * @brief A constructor
-     * 
-     * @param nucleic_triplet is the string of the nucleic triplet
-     */
-    MutationalContext(const std::string& nucleic_triplet);
-
-    /**
-     * @brief A constructor
-     * 
-     * @param code is the context code
-     */
-    MutationalContext(const uint8_t code);
-
-    /**
-     * @brief Get the mutational context code 
-     * 
-     * @return a constant reference to the mutational context code 
-     */
-    inline const uint8_t& get_code() const
-    {
-        return code;
-    }
-
-    /**
-     * @brief Get the nucleic sequence of the context
-     * 
-     * @return the nucleic sequence of the context
-     */
-    std::string get_sequence() const;
-
-    /**
-     * @brief Get the context central nucleotide
-     * 
-     * @return the context central nucleotide
-     */
-    char get_central_nucleotide() const;
-
-    /**
-     * @brief Get the complement mutational context
-     * 
-     * @return the complement mutational context 
-     */
-    inline MutationalContext get_complement() const
-    {
-        return MutationalContext(get_complement(code));
-    }
-
-    /**
-     * @brief Test whether two mutational contexts are equivalent
-     * 
-     * @param context is the mutational context to compare
-     * @return `true` if and only if the two mutational contexts represent
-     *      the same nucleic triplet
-     */
-    inline bool operator==(const MutationalContext& context) const
-    {
-        return get_code() == context.get_code();
-    }
-
-    /**
-     * @brief Test whether two mutational contexts differ
-     * 
-     * @param context is the mutational context to compare
-     * @return `true` if and only if the two mutational contexts represent
-     *      different nucleic triplets
-     */
-    inline bool operator!=(const MutationalContext& context) const
-    {
-        return get_code() != context.get_code();
-    }
-
-    /**
-     * @brief Get the code of the complement mutational context
-     * 
-     * @param code is the mutational context code whose complement is request 
-     * @return the code of the complement context of the 
-     *      context whose code is `code` 
-     */
-    static uint8_t get_complement(const uint8_t& code);
-
-    /**
-     * @brief Get the complement base
-     * 
-     * @param base is the base whose complement is request 
-     * @return the complement base of `base` 
-     */
-    static char get_complement(const char& base);
-
-    /**
-     * @brief Get the complement sequence
-     * 
-     * @param sequence is the sequence whose complement is request 
-     * @return the complement sequence of `sequence` 
-     */
-    static std::string get_complement(const std::string& sequence);
-
-    /**
-     * @brief Check whether a symbol represents a nucleic base
-     * 
-     * @param symbol is the symbol to be tested 
-     * @return `true` if and only if symbol represents a base, i.e., 
-     *       it is one among 'A', 'C', 'G', 'T', 'a', 'c', 'g', or 't'.
-     */
-    static bool is_a_base(const char& symbol);
-};
-
-}   // Passengers
-
-}   // Races
-
-
-template<>
-struct std::less<Races::Passengers::MutationalContext>
-{
-    inline bool operator()(const Races::Passengers::MutationalContext &lhs,
-                           const Races::Passengers::MutationalContext &rhs) const
-    {
-        return lhs.get_code() < rhs.get_code();
-    }
-};
+#include "context.hpp"
 
 namespace Races 
 {
@@ -545,18 +394,6 @@ inline MutationalSignatureExprResult operator*(const T& value, const MutationalS
 
 namespace std 
 {
-/**
- * @brief Stream the mutational context in a stream
- * 
- * @param out is the output stream
- * @param context is the mutational context to stream
- * @return a reference to the output stream
- */
-inline std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalContext& context)
-{
-    return (out << context.get_sequence());
-}
-
 /**
  * @brief Stream the mutational type in a stream
  * 

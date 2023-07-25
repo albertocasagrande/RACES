@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Single Variation Mutation mutational signature
- * @version 0.5
- * @date 2023-07-22
+ * @version 0.6
+ * @date 2023-07-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,43 +42,6 @@ namespace Races
 
 namespace Passengers
 {
-
-
-char decode_base(const uint8_t& code)
-{
-    switch(code) {
-        case 0:
-            return 'C';
-        case 1:
-            return 'T';
-        case 2:
-            return 'G';
-        case 3:
-            return 'A';
-        default:
-            throw std::domain_error("Unknown code");
-    }
-}
-
-uint8_t encode_base(const char& base)
-{
-    switch(base) {
-        case 'C':
-        case 'c':
-            return 0;
-        case 'T':
-        case 't':
-            return 1;
-        case 'G':
-        case 'g':
-            return 2;
-        case 'A':
-        case 'a':
-            return 3;
-        default:
-            throw std::domain_error("Unknown base");
-    }
-}
 
 char read_a_base(std::istream& in)
 {
@@ -120,133 +83,6 @@ std::istream& read_symbol(std::istream& in, const char& symbol)
     }
 
     return in;
-}
-
-MutationalContext::MutationalContext():
-    code(0)
-{}
-
-MutationalContext::MutationalContext(const std::string& nucleic_triplet):
-    code(0)
-{
-    if (nucleic_triplet.size()!=3) {
-        throw std::domain_error("Expected a nucleic triplet. Got \""
-                                + nucleic_triplet +"\"");
-    }
-
-    // this is to have the central nucleotide associated
-    // to the most significant bits
-    const std::array<uint8_t, 3> shifts{0,4,2};
-    for (unsigned int i=0; i<3; ++i) {
-        code = code | (encode_base(nucleic_triplet[i]) << shifts[i]);
-    }
-}
-
-MutationalContext::MutationalContext(const uint8_t code)
-{
-    if (code > 63) {
-        throw std::domain_error("'"+std::to_string(code)+"' does not correspond"
-                                + " to any mutational context.");
-    }
-
-    this->code = code;
-}
-
-std::string MutationalContext::get_sequence() const
-{
-    std::string sequence;
-
-    const uint8_t nucleotide_mask = 0x03;
-    
-    // this is to have the central nucleotide associated
-    // to the most significant bits
-    const std::array<uint8_t, 3> shifts{0,4,2};
-    for (unsigned int i=0; i<3; ++i) {
-        auto base = decode_base((code >> shifts[i])&nucleotide_mask);
-        sequence.push_back(static_cast<char>(base));
-    }
-
-    return sequence;
-}
-
-char MutationalContext::get_central_nucleotide() const
-{
-    return static_cast<char>(decode_base((code >> 4)&0x03));
-}
-
-uint8_t MutationalContext::get_complement(const uint8_t& code)
-{
-    const uint8_t nucleotide_mask = 0x03;
-
-    // this is to have the central nucleotide associated
-    // to the most significant bits
-    const std::array<uint8_t, 3> shifts{0,4,2};
-
-    uint8_t complementary_code{0};
-    for (unsigned int i=0; i<3; ++i) {
-        auto base_code = (code >> shifts[i])&nucleotide_mask;
-
-        // Complement base code by using this tricky feature
-        // of base encoding
-        base_code =  (base_code + 2) % 4;
-
-        complementary_code = complementary_code | (base_code << shifts[i]);
-    }    
-
-    return complementary_code;
-}
-
-bool MutationalContext::is_a_base(const char& base)
-{
-    switch(base) {
-        case 'A':
-        case 'a':
-        case 'C':
-        case 'c':
-        case 'G':
-        case 'g':
-        case 'T':
-        case 't':
-            return true;
-        default:
-            return false;
-    }
-}
-
-char MutationalContext::get_complement(const char& base)
-{
-    switch(base) {
-        case 'A':
-        case 'a':
-            return 'T';
-        case 'C':
-        case 'c':
-            return 'G';
-        case 'G':
-        case 'g':
-            return 'C';
-        case 'T':
-        case 't':
-            return 'A';
-        default:
-        {
-            std::ostringstream oss;
-
-            oss << "Unsupported base '" << base << "'";
-            throw std::domain_error(oss.str());
-        }
-    }
-}
-
-std::string MutationalContext::get_complement(const std::string& sequence)
-{
-    std::string complementary(sequence);
-
-    for (char& nucleotide: complementary) {
-        nucleotide = get_complement(nucleotide);
-    }
-
-    return complementary;
 }
 
 MutationalType::MutationalType():
