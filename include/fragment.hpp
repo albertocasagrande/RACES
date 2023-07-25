@@ -2,8 +2,8 @@
  * @file fragment.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic fragment
- * @version 0.2
- * @date 2023-07-24
+ * @version 0.3
+ * @date 2023-07-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -554,6 +554,21 @@ public:
 
 namespace std
 {
+
+template<>
+struct less<Races::Passengers::GenomicRegion>
+{
+    inline bool operator()(const Races::Passengers::GenomicRegion &lhs,
+                           const Races::Passengers::GenomicRegion &rhs) const
+    {
+        return ((lhs.get_chromosome_id()<rhs.get_chromosome_id())
+                || ((lhs.get_chromosome_id()==rhs.get_chromosome_id()) 
+                    && (lhs.get_begin().position<rhs.get_begin().position))
+                || ((lhs.get_chromosome_id()==rhs.get_chromosome_id()) 
+                    && (lhs.get_begin().position==rhs.get_begin().position) 
+                    && (lhs.size()<rhs.size())));
+    }
+};
 
 /**
  * @brief Write a genomic region in a output stream
