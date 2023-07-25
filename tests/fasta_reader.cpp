@@ -1,9 +1,9 @@
 /**
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Testing FASTAReader class
- * @version 0.1
- * @date 2023-07-24
+ * @brief Testing Races::IO::FASTA::Reader class
+ * @version 0.2
+ * @date 2023-07-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,11 +40,11 @@
 
 BOOST_AUTO_TEST_CASE(reader_creation)
 {
-    using namespace Races::IO;
+    using namespace Races::IO::FASTA;
 
     std::ifstream in(FASTA_FILE, std::ios_base::in);
 
-    BOOST_CHECK_NO_THROW(FASTAReader reader(in));
+    BOOST_CHECK_NO_THROW(Reader reader(in));
 }
 
 struct FASTAFixture
@@ -64,11 +64,11 @@ BOOST_FIXTURE_TEST_SUITE( FASTA_test, FASTAFixture )
 
 BOOST_AUTO_TEST_CASE(read_sequence_name)
 {
-    using namespace Races::IO;
+    using namespace Races::IO::FASTA;
 
     std::ifstream in(FASTA_FILE, std::ios_base::in);
 
-    FASTAReader fasta_reader(in);
+    Reader fasta_reader(in);
 
     auto it = sequences.begin();
     auto seq_reader = fasta_reader.next_sequence_reader();
@@ -89,11 +89,11 @@ BOOST_AUTO_TEST_CASE(read_sequence_name)
 
 BOOST_AUTO_TEST_CASE(read_sequence_bases)
 {
-    using namespace Races::IO;
+    using namespace Races::IO::FASTA;
 
     std::ifstream in(FASTA_FILE, std::ios_base::in);
 
-    FASTAReader fasta_reader(in);
+    Reader fasta_reader(in);
 
     auto it = sequences.begin();
     auto seq_reader = fasta_reader.next_sequence_reader();
