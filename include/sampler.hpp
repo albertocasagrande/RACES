@@ -2,8 +2,8 @@
  * @file sampler.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define classes to sample cells in a tissue
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -103,7 +103,7 @@ public:
         using iterator_category =   std::bidirectional_iterator_tag;
 
         /**
-         * @brief An empty construtor
+         * @brief An empty constructor
          */
         const_iterator();
 

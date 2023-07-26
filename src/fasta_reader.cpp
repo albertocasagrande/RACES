@@ -1,8 +1,8 @@
 /**
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implementes a FASTA file reader and support structures
- * @version 0.3
+ * @brief Implements a FASTA file reader and support structures
+ * @version 0.4
  * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
