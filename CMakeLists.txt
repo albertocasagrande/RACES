@@ -108,7 +108,8 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_io.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fragment.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_reader.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_reader.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_utils.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
