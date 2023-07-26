@@ -2,8 +2,8 @@
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implementes a FASTA file reader and support structures
- * @version 0.2
- * @date 2023-07-25
+ * @version 0.3
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,7 +29,6 @@
  */
 
 #include <sstream>
-#include <regex>
 
 #include "fasta_reader.hpp"
 
@@ -42,52 +41,6 @@ namespace IO
 
 namespace FASTA
 {
-
-Passengers::ChromosomeId stochr(const std::string& chr_name)
-{
-    if (chr_name=="X") {
-        return 23;
-    }
-
-    if (chr_name=="Y") {
-        return 24;
-    }
-
-    return static_cast<Passengers::ChromosomeId>(stoi(chr_name));
-}
-
-std::string chrtos(const Passengers::ChromosomeId& chr_id)
-{
-    switch(chr_id) {
-        case 23:
-            return "X";
-        case 24:
-            return "Y";
-        default:
-            return std::to_string(chr_id);
-    }
-}
-
-bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region)
-{
-    using namespace Passengers;
-
-    const std::regex chr_regex("([0-9]+|X|Y) dna:chromosome chromosome:[a-zA-Z0-9]+:([0-9]+|X|Y):1:([0-9]+):1 .*");
-
-    std::smatch m;
-
-    if (!regex_match(seq_name, m, chr_regex)) {
-        return false;
-    }
-
-    ChromosomeId chr_id = stochr(m[0].str());
-
-    GenomicRegion::Length length = static_cast<GenomicRegion::Length>(std::stoi(m[2].str()));
-
-    chr_region = GenomicRegion(chr_id, length);
-
-    return true;
-}
 
 SequenceReader::nucleotide_iterator::nucleotide_iterator(SequenceReader& reader):
     reader(&reader), valid_info(true), seq_name(reader.get_sequence_name()),

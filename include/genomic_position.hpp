@@ -2,8 +2,8 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic position and related functions
- * @version 0.2
- * @date 2023-07-22
+ * @version 0.3
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -103,6 +103,28 @@ struct GenomicPosition
     {
         return !(*this == genomic_position);
     }
+
+    /**
+     * @brief Turn the chromosome name from string for to chromosome id
+     * 
+     * This method performs a standard transformation from string to integer
+     * for all the chromosomes, but 'X' and 'Y'.
+     * 
+     * @param chr_name is a string containing the human chromosome name
+     * @return the chromosome id associated to `chr_name`
+     */
+    static ChromosomeId stochr(const std::string& chr_name);
+
+    /**
+     * @brief Turn a chromosome id into the corresponding chromosome name
+     * 
+     * This method performs a standard transformation from integer to string
+     * for all the chromosomes, but 'X' and 'Y'.
+     * 
+     * @param chr_id is the chromosome id
+     * @return the chromosome nome associated to `chr_id` 
+     */
+    static std::string chrtos(const ChromosomeId& chr_id);
 };
 
 

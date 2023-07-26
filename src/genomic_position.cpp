@@ -2,8 +2,8 @@
  * @file genomic_position.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic position and related functions
- * @version 0.1
- * @date 2023-07-22
+ * @version 0.2
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,6 +28,8 @@
  * SOFTWARE.
  */
 
+#include <limits>
+
 #include "genomic_position.hpp"
 
 namespace Races 
@@ -48,6 +50,32 @@ GenomicPosition::GenomicPosition(const ChromosomeId& chromosome_id, const ChrPos
     chr_id(chromosome_id), position(position)
 {}
 
+
+ChromosomeId GenomicPosition::stochr(const std::string& chr_name)
+{
+    if (chr_name=="X") {
+        return std::numeric_limits<ChromosomeId>::max()-1;
+    }
+
+    if (chr_name=="Y") {
+        return std::numeric_limits<ChromosomeId>::max();
+    }
+
+    return static_cast<Passengers::ChromosomeId>(stoi(chr_name));
+}
+
+std::string GenomicPosition::chrtos(const ChromosomeId& chr_id)
+{
+    if (chr_id == std::numeric_limits<ChromosomeId>::max()-1) {
+        return "X";
+    }
+
+    if (chr_id == std::numeric_limits<ChromosomeId>::max()) {
+        return "Y";
+    }
+
+    return std::to_string(chr_id);
+}
 
 }   // Passengers
 

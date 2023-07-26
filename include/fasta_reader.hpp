@@ -2,8 +2,8 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 0.2
- * @date 2023-07-25
+ * @version 0.3
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,8 +35,6 @@
 #include <string>
 #include <istream>
 
-#include "fragment.hpp"
-
 namespace Races
 {
 
@@ -45,46 +43,6 @@ namespace IO
 
 namespace FASTA
 {
-
-
-/**
- * @brief A structure to decode human genome chromosome sequences name 
- */
-struct HumanSeqNameDecoder
-{
-    /**
-     * @brief Turn the human chromosome name from string for to chromosome id
-     * 
-     * This method performs a standard transformation from string to integer
-     * for all the human chromosomes, but 'X' and 'Y' whose chromosome ids 
-     * are 23 and 24, respectively.
-     * 
-     * @param chr_name is a string containing the human chromosome name
-     * @return the chromosome id associated to `chr_name`
-     */
-    static Passengers::ChromosomeId stochr(const std::string& chr_name);
-
-    /**
-     * @brief Turn a human chromosome id into the corresponding chromosome name
-     * 
-     * This method performs a standard transformation from integer to string
-     * for all the human chromosomes, but 'X' and 'Y' whose chromosome ids 
-     * are 23 and 24, respectively.
-     * 
-     * @param chr_id is the chromosome id
-     * @return the chromosome nome associated to `chr_id` 
-     */
-    static std::string chrtos(const Passengers::ChromosomeId& chr_id);
-
-    /**
-     * @brief Extract the genomic region from a sequence name
-     * 
-     * @param seq_name is a FASTA sequence name
-     * @param chr_region is the variable where the chromosome region will be placed
-     * @return `true` if and only if `seq_name` correspond to a DNA chromosome
-     */
-    static bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region);
-};
 
 /**
  * @brief A class to read a sequence in a fasta file
