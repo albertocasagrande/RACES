@@ -2,8 +2,8 @@
  * @file context.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.1
- * @date 2023-07-25
+ * @version 0.2
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -66,6 +66,13 @@ public:
      * @brief The empty constructor
      */
     MutationalContext();
+    
+    /**
+     * @brief A constructor
+     * 
+     * @param nucleic_triplet is the string of the nucleic triplet
+     */
+    MutationalContext(const char* nucleic_triplet);
 
     /**
      * @brief A constructor
@@ -73,13 +80,6 @@ public:
      * @param nucleic_triplet is the string of the nucleic triplet
      */
     MutationalContext(const std::string& nucleic_triplet);
-
-    /**
-     * @brief A constructor
-     * 
-     * @param code is the context code
-     */
-    MutationalContext(const uint8_t code);
 
     /**
      * @brief Get the mutational context code 
@@ -110,10 +110,7 @@ public:
      * 
      * @return the complement mutational context 
      */
-    inline MutationalContext get_complement() const
-    {
-        return MutationalContext(get_complement(code));
-    }
+    MutationalContext get_complement() const;
 
     /**
      * @brief Test whether two mutational contexts are equivalent
@@ -161,11 +158,11 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static MutationalContext load(ARCHIVE& archive)
     {
-        uint8_t code;
+        MutationalContext mcode;
 
-        archive & code;
+        archive & mcode.code;
 
-        return code;
+        return mcode;
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Single Variation Mutation mutational signature
- * @version 0.6
- * @date 2023-07-25
+ * @version 0.7
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -86,7 +86,7 @@ std::istream& read_symbol(std::istream& in, const char& symbol)
 }
 
 MutationalType::MutationalType():
-    context(0), replace_base('A')
+    context(), replace_base('A')
 {}
 
 MutationalType::MutationalType(const MutationalContext& context, const char& replace_base)

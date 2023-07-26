@@ -2,8 +2,8 @@
  * @file context.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements mutational contexts and extended context automata
- * @version 0.1
- * @date 2023-07-25
+ * @version 0.2
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,6 +29,7 @@
  */
 
 #include <sstream>
+#include <cstring>
 
 #include "context.hpp"
 
@@ -81,6 +82,22 @@ MutationalContext::MutationalContext():
     code(0)
 {}
 
+MutationalContext::MutationalContext(const char* nucleic_triplet):
+    code(0)
+{
+    if (strlen(nucleic_triplet)!=3) {
+        throw std::domain_error("Expected a nucleic triplet. Got \""
+                                + std::string(nucleic_triplet) + "\"");
+    }
+
+    // this is to have the central nucleotide associated
+    // to the most significant bits
+    const std::array<uint8_t, 3> shifts{0,4,2};
+    for (unsigned int i=0; i<3; ++i) {
+        code = code | (encode_base(nucleic_triplet[i]) << shifts[i]);
+    } 
+}
+
 MutationalContext::MutationalContext(const std::string& nucleic_triplet):
     code(0)
 {
@@ -95,16 +112,6 @@ MutationalContext::MutationalContext(const std::string& nucleic_triplet):
     for (unsigned int i=0; i<3; ++i) {
         code = code | (encode_base(nucleic_triplet[i]) << shifts[i]);
     }
-}
-
-MutationalContext::MutationalContext(const uint8_t code)
-{
-    if (code > 63) {
-        throw std::domain_error("'"+std::to_string(code)+"' does not correspond"
-                                + " to any mutational context.");
-    }
-
-    this->code = code;
 }
 
 std::string MutationalContext::get_sequence() const
@@ -149,6 +156,15 @@ uint8_t MutationalContext::get_complement(const uint8_t& code)
     }    
 
     return complementary_code;
+}
+
+MutationalContext MutationalContext::get_complement() const
+{
+    MutationalContext complement;
+
+    complement.code = get_complement(code);
+
+    return complement;
 }
 
 bool MutationalContext::is_a_base(const char& base)

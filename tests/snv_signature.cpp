@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some SNV example
- * @version 0.4
- * @date 2023-07-22
+ * @version 0.5
+ * @date 2023-07-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,40 +50,56 @@ BOOST_AUTO_TEST_CASE(mutational_context_creation)
     BOOST_CHECK_NO_THROW(MutationalContext());
     BOOST_CHECK_NO_THROW(MutationalContext("AAA"));
     BOOST_CHECK_NO_THROW(MutationalContext("ACA"));
-    BOOST_CHECK_NO_THROW(MutationalContext(60));
-    BOOST_CHECK_THROW(MutationalContext(160), std::domain_error);
     BOOST_CHECK_THROW(MutationalContext("AA"), std::domain_error);
     BOOST_CHECK_THROW(MutationalContext("AAAA"), std::domain_error);
     BOOST_CHECK_THROW(MutationalContext("AZA"), std::domain_error);
 }
 
-BOOST_AUTO_TEST_CASE(mutational_context_code)
+struct ContextFixture
+{
+    std::list<Races::Passengers::MutationalContext> contexts;
+
+    ContextFixture()
+    {
+        std::vector<char> bases{'A', 'C', 'G', 'T'};
+
+        for (const auto& seq0: bases) {
+            for (const auto& seq1: bases) {
+                for (const auto& seq2: bases) {
+                    std::string seq{seq0,seq1,seq2};
+
+                    contexts.emplace_back(seq);
+                }
+            }
+        }
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE( context_test, ContextFixture )
+
+BOOST_AUTO_TEST_CASE(mutational_context_lower_case)
 {
     using namespace Races::Passengers;
+    std::vector<char> bases{'a', 'c', 'g', 't'};
 
-    for (uint8_t code=0; code<64; ++code) {
-        MutationalContext context(code);
+    auto it=contexts.cbegin();
 
-        BOOST_CHECK_EQUAL(context.get_code(), code);
+    for (const auto& seq0: bases) {
+        for (const auto& seq1: bases) {
+            for (const auto& seq2: bases) {
+                std::string seq{seq0,seq1,seq2};
+                MutationalContext mc(seq);
+
+                BOOST_CHECK_EQUAL(mc, *(it++));
+            }
+        }
     }
+
 }
 
 BOOST_AUTO_TEST_CASE(mutational_context_relation)
 {
     using namespace Races::Passengers;
-
-    std::list<MutationalContext> contexts;
-    MutationalContext C1(0),C2(1);
-
-    BOOST_CHECK_NE(C1, C2);
-    BOOST_CHECK_NE(C2, C1);
-
-    for (uint8_t code=0; code<64; ++code) {
-        contexts.emplace_back(code);
-    }
-
-    BOOST_CHECK_EQUAL(C1, contexts.front());
-    BOOST_CHECK_EQUAL(contexts.front(), C1);
 
     for (const auto& context: contexts) {
         BOOST_CHECK_EQUAL(context, context);
@@ -102,24 +118,11 @@ BOOST_AUTO_TEST_CASE(mutational_context_relation)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_context_copy_by_code)
-{
-    using namespace Races::Passengers;
-
-    for (uint8_t code=0; code<64; ++code) {
-        MutationalContext context(code);
-        MutationalContext copy(context.get_code());
-
-        BOOST_CHECK_EQUAL(context, copy);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(mutational_context_copy_by_sequence)
 {
     using namespace Races::Passengers;
 
-    for (uint8_t code=0; code<64; ++code) {
-        MutationalContext context(code);
+    for (const auto& context: contexts) {
         MutationalContext copy(context.get_sequence());
 
         BOOST_CHECK_EQUAL(context, copy);
@@ -130,13 +133,14 @@ BOOST_AUTO_TEST_CASE(mutational_context_sequence)
 {
     using namespace Races::Passengers;
 
-    for (uint8_t code=0; code<64; ++code) {
-        MutationalContext context(code);
+    for (const auto& context: contexts) {
         MutationalContext copy(context.get_sequence());
 
         BOOST_CHECK_EQUAL(context.get_sequence(), copy.get_sequence());
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(mutational_context_complement)
 {
@@ -166,13 +170,6 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
 
             BOOST_CHECK_EQUAL(context.get_sequence(), seq);
         }
-    }
-
-    for (uint8_t code=0; code<64; ++code) {
-        MutationalContext context(code);
-        MutationalContext c_context( MutationalContext::get_complement(code));
-
-        BOOST_CHECK_EQUAL(context.get_complement(), c_context);
     }
 }
 
