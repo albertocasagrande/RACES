@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic fragment
- * @version 0.2
- * @date 2023-07-24
+ * @version 0.3
+ * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,10 +44,6 @@ using Length = Fragment::Length;
 
 void validate_fragment(const Fragment& fragment)
 {
-    if (fragment.size() == 0) {
-        throw std::domain_error("the fragment length must greater than 0");
-    }
-
     for (const auto& allele: fragment.get_alleles()) {
         for (const auto& [pos, mutation] : allele) {
             if (!fragment.contains(pos)) {
@@ -62,12 +58,20 @@ GenomicRegion::GenomicRegion():
 {}
 
 GenomicRegion::GenomicRegion(const ChromosomeId chromosome_id, const Length length):
-    initial_pos(chromosome_id, 0), length(length)
-{}
+    initial_pos(chromosome_id, 1), length(length)
+{
+    if (length == 0) {
+        throw std::domain_error("the genomic region length must greater than 0");
+    }
+}
 
 GenomicRegion::GenomicRegion(const GenomicPosition initial_pos, const Length length):
     initial_pos(initial_pos), length(length)
-{}
+{
+    if (length == 0) {
+        throw std::domain_error("the genomic region length must greater than 0");
+    }
+}
 
 GenomicRegion GenomicRegion::split(const GenomicPosition& split_point)
 {
@@ -93,7 +97,7 @@ GenomicRegion& GenomicRegion::join(GenomicRegion& contiguous_region)
     }
 
     if (!precedes(contiguous_region)) {
-        throw std::domain_error("the two genomicregions are not contiguous");
+        throw std::domain_error("the two genomic regions are not contiguous");
     }
 
     length += contiguous_region.length;
@@ -108,8 +112,12 @@ Fragment::Fragment():
     GenomicRegion()
 {}
 
-Fragment::Fragment(const ChromosomeId chromosome_id, const Length length):
-    Fragment(chromosome_id, length, {})
+Fragment::Fragment(const GenomicRegion& genomic_region, const size_t& num_of_alleles):
+    GenomicRegion(genomic_region), alleles(num_of_alleles)
+{}
+
+Fragment::Fragment(const ChromosomeId chromosome_id, const Length length, const size_t& num_of_alleles):
+    GenomicRegion(chromosome_id, length), alleles(num_of_alleles)
 {}
 
 Fragment::Fragment(const ChromosomeId chromosome_id, const Length length, const std::vector<Allele>& alleles):
@@ -118,8 +126,8 @@ Fragment::Fragment(const ChromosomeId chromosome_id, const Length length, const 
     validate_fragment(*this);
 }
 
-Fragment::Fragment(const GenomicPosition initial_pos, const Length length):
-    Fragment(initial_pos, length, {})
+Fragment::Fragment(const GenomicPosition initial_pos, const Length length, const size_t& num_of_alleles):
+    GenomicRegion(initial_pos, length), alleles(num_of_alleles)
 {}
 
 Fragment::Fragment(const GenomicPosition initial_pos, const Length length, const std::vector<Allele>& alleles):
@@ -138,7 +146,7 @@ Fragment Fragment::split(const GenomicPosition& split_point)
         throw std::domain_error("the fragment initial position and the split point are the same");
     } 
 
-    Fragment new_fragment(split_point, length-(split_point.position-initial_pos.position));
+    Fragment new_fragment(split_point, length-(split_point.position-initial_pos.position), 0);
     new_fragment.alleles = std::vector<Allele>(num_of_alleles());
 
     length = split_point.position - initial_pos.position;

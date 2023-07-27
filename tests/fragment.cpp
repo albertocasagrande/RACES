@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some tests for Races::Passengers::Fragment
- * @version 0.2
- * @date 2023-07-22
+ * @version 0.3
+ * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,15 +49,15 @@ BOOST_AUTO_TEST_CASE(fragment_creation)
 
     Fragment::Length length = snv_pos.position+1000;
 
-    BOOST_CHECK_NO_THROW(Fragment(1, length));
+    BOOST_CHECK_NO_THROW(Fragment(1, length, 2));
     BOOST_CHECK_NO_THROW(Fragment(snv_pos.chr_id, length, alleles));
-    BOOST_CHECK_NO_THROW(Fragment(g_pos, length));
+    BOOST_CHECK_NO_THROW(Fragment(g_pos, length, 2));
     BOOST_CHECK_NO_THROW(Fragment(g_pos, length, alleles));
 
-    BOOST_CHECK_THROW(Fragment(1, 0), std::domain_error);
+    BOOST_CHECK_THROW(Fragment(1, 0, 2), std::domain_error);
     BOOST_CHECK_THROW(Fragment(1, length, alleles), std::domain_error);
     BOOST_CHECK_THROW(Fragment(snv_pos.chr_id, 0, alleles), std::domain_error);
-    BOOST_CHECK_THROW(Fragment(snv_pos.chr_id, snv_pos.position, alleles), std::domain_error);
+    BOOST_CHECK_THROW(Fragment(snv_pos.chr_id, snv_pos.position-1, alleles), std::domain_error);
 }
 
 BOOST_AUTO_TEST_CASE(fragment_contains)
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(fragment_contains)
 
     Fragment::Length length = gen_pos.position+1000;
 
-    Fragment fragment(f_pos, length);
+    Fragment fragment(f_pos, length, 2);
 
     // ok
     BOOST_CHECK(fragment.contains(gen_pos));
@@ -89,18 +89,18 @@ BOOST_AUTO_TEST_CASE(fragment_follows)
     using namespace Races::Passengers;
 
     GenomicPosition f_pos_a(12, 235);
-    Fragment fragment_a(f_pos_a, 1000);
+    Fragment fragment_a(f_pos_a, 1000, 2);
 
     auto f_begin_a = fragment_a.get_begin().position;
     auto f_end_a = f_begin_a + fragment_a.size()-1;
 
-    Fragment fragment_b({f_pos_a.chr_id, f_end_a+1}, 1000);
+    Fragment fragment_b({f_pos_a.chr_id, f_end_a+1}, 1000, 2);
 
     BOOST_CHECK(fragment_b.follows(fragment_a));
     BOOST_CHECK(!fragment_a.follows(fragment_b));
     
     // changing chromosome
-    fragment_b = Fragment({static_cast<uint8_t>(f_pos_a.chr_id+1), f_end_a+1}, 1000);
+    fragment_b = Fragment({static_cast<uint8_t>(f_pos_a.chr_id+1), f_end_a+1}, 1000, 2);
 
     BOOST_CHECK(!fragment_b.follows(fragment_a));
     BOOST_CHECK(!fragment_a.follows(fragment_b));
@@ -112,25 +112,25 @@ BOOST_AUTO_TEST_CASE(fragment_follows)
     BOOST_CHECK(!fragment_a.follows(fragment_b));
 
     // overlapping / begins before - ends before
-    fragment_b = Fragment(fragment_b.get_begin(), fragment_a.size());
+    fragment_b = Fragment(fragment_b.get_begin(), fragment_a.size(), 2);
 
     BOOST_CHECK(!fragment_b.follows(fragment_a));
     BOOST_CHECK(!fragment_a.follows(fragment_b));
 
     // overlapping / begins before - ends after
-    fragment_b = Fragment({f_pos_a.chr_id, f_begin_a-100}, fragment_a.size()+200);
+    fragment_b = Fragment({f_pos_a.chr_id, f_begin_a-100}, fragment_a.size()+200, 2);
 
     BOOST_CHECK(!fragment_b.follows(fragment_a));
     BOOST_CHECK(!fragment_a.follows(fragment_b));
 
     // overlapping - matching begin / ends before
-    fragment_b = Fragment(fragment_a.get_begin(), fragment_a.size()-10);
+    fragment_b = Fragment(fragment_a.get_begin(), fragment_a.size()-10, 2);
 
     BOOST_CHECK(!fragment_b.follows(fragment_a));
     BOOST_CHECK(!fragment_a.follows(fragment_b));
 
     // overlapping - matching begin / ends after
-    fragment_b = Fragment(fragment_a.get_begin(), fragment_a.size()+10);
+    fragment_b = Fragment(fragment_a.get_begin(), fragment_a.size()+10, 2);
 
     BOOST_CHECK(!fragment_b.follows(fragment_b));
     BOOST_CHECK(!fragment_a.follows(fragment_b));

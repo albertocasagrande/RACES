@@ -2,8 +2,8 @@
  * @file fragment.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic fragment
- * @version 0.3
- * @date 2023-07-25
+ * @version 0.4
+ * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -306,9 +306,20 @@ public:
      * 
      * @param chromosome_id is the identifier of the chromosome on which the fragment lays
      * @param length is the length of the fragment
+     * @param num_of_alleles is the initial number of alleles
      * @throw std::domain_error `length` is 0
      */
-    Fragment(const ChromosomeId chromosome_id, const Length length);
+    Fragment(const GenomicRegion& genomic_region, const size_t& num_of_alleles);    
+
+    /**
+     * @brief A constructor
+     * 
+     * @param chromosome_id is the identifier of the chromosome on which the fragment lays
+     * @param length is the length of the fragment
+     * @param num_of_alleles is the initial number of alleles
+     * @throw std::domain_error `length` is 0
+     */
+    Fragment(const ChromosomeId chromosome_id, const Length length, const size_t& num_of_alleles);
 
     /**
      * @brief A constructor
@@ -325,9 +336,10 @@ public:
      * 
      * @param initial_pos is the fragment initial position
      * @param length is the fragment length
+     * @param num_of_alleles is the initial number of alleles
      * @throw std::domain_error `length` is 0
      */
-    Fragment(const GenomicPosition initial_pos, const Length length);
+    Fragment(const GenomicPosition initial_pos, const Length length, const size_t& num_of_alleles);
 
     /**
      * @brief A constructor
