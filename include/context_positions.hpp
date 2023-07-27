@@ -2,7 +2,7 @@
  * @file context_positions.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to collect context positions
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
@@ -496,7 +496,7 @@ public:
         c_positions.context2pos = std::make_shared<ContextPositionMap>();
 
         archive & *(c_positions.context2pos)
-                & c_positions.abs_pos2chromosome
+                & c_positions.abs_pos2chr
                 & c_positions.genome_size;
 
         return c_positions;

@@ -1,9 +1,9 @@
 /**
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define some archive classes and their methods
- * @version 0.6
- * @date 2023-07-13
+ * @brief Defines some archive classes and their methods
+ * @version 0.7
+ * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -582,11 +582,46 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 
     for (size_t i=0; i<size; ++i) {
         Key key;
-        T value;
 
         archive & key;
 
         m.emplace(key, T::load(archive));
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Load a map from the archive
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam Key is the type of the map keys and it implements the static method `load`
+ * @tparam T is the type of the map values and it does not implement the static method `load`
+ * @tparam Compare is the type of the key comparator
+ * @tparam Allocator is the type of the map allocator
+ * @param archive is the input archive
+ * @param m is the object in which the map is loaded
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
+            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+                             Races::has_load<Key, ARCHIVE>::value && 
+                             !Races::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
+{
+    size_t size;
+
+    archive & size;
+
+    m.clear();
+
+    for (size_t i=0; i<size; ++i) {
+        Key key = Key::load(archive);
+        T value;
+
+        archive & value;
+
+        m.emplace(key, value);
     }
 
     return archive;
