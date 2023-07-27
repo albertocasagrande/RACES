@@ -2,8 +2,8 @@
  * @file context_positions.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to collect context positions
- * @version 0.1
- * @date 2023-07-26
+ * @version 0.2
+ * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -62,6 +62,8 @@ protected:
     std::shared_ptr<ContextPositionMap> context2pos;                  //!< the context-genomic positions map
     std::map<AbsoluteGenomicPosition, ChromosomeId> abs_pos2chr;      //!< the absolute genomic position-chromosome id map
 
+    AbsoluteGenomicPosition genome_size;  //!< the genome size
+
     /**
      * @brief Find the mutational contexts of a FASTA sequence and save their positions in the map
      * 
@@ -69,11 +71,9 @@ protected:
      * in `ContextPositions::context2pos`.
      * 
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
-     * @param[in,out] abs_position is the absolute position in the genome of the read nucleotide
      * @param[in,out] progress_bar is the progress bar
      */
-    void find_contexts_in_seq(std::ifstream& fasta_stream, ABSOLUTE_GENOMIC_POSITION& abs_position, 
-                              UI::ProgressBar* progress_bar)
+    void find_contexts_in_seq(std::ifstream& fasta_stream, UI::ProgressBar* progress_bar)
     {
         auto filesize = IO::get_stream_size(fasta_stream);
         if (progress_bar != nullptr) {
@@ -88,13 +88,13 @@ protected:
 
             if (c_automata.update_state(last_char)) {
                 if (c_automata.read_a_context()) {
-                    (*context2pos)[c_automata.get_context()].emplace_back(abs_position);
+                    (*context2pos)[c_automata.get_context()].emplace_back(genome_size);
                 }
-                ++abs_position;
+                ++genome_size;
             }
 
             // update progress bar once every 2^22-1 nucleotides
-            if ((abs_position&0x3FFFFF)==0 && progress_bar != nullptr) {
+            if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
                 progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/filesize));
             }
         }
@@ -105,12 +105,11 @@ protected:
      * 
      * @param[in,out] fasta_stream is the input FASTA stream
      * @param[in,out] c_automata is an extended context automaton
-     * @param[in,out] abs_position is the current absolute position
      * @param[in,out] current_pos is the current position
      * @param[in] aimed_position is the aimed position
      */
-    static void skip_to(std::ifstream& fasta_stream, ExtendedContextAutomaton& c_automata, 
-                        ABSOLUTE_GENOMIC_POSITION& abs_position, ChrPosition& position, ChrPosition aimed_position)
+    void skip_to(std::ifstream& fasta_stream, ExtendedContextAutomaton& c_automata, 
+                 ChrPosition& position, ChrPosition aimed_position)
     {
         char last_char{'N'};
         while (last_char != '>' && !fasta_stream.eof() && position < aimed_position) {
@@ -118,7 +117,7 @@ protected:
 
             if (c_automata.update_state(last_char)) {
                 ++position;
-                ++abs_position;
+                ++genome_size;
             }
         }
     }
@@ -130,9 +129,8 @@ protected:
      * it as part of the genome.
      * 
      * @param[in,out] fasta_stream is the input FASTA stream
-     * @param[in,out] abs_position is the current absolute position
      */
-    void skip_to_next_seq(std::ifstream& fasta_stream, ABSOLUTE_GENOMIC_POSITION& abs_position)
+    void skip_to_next_seq(std::ifstream& fasta_stream)
     {
         char in_char{'N'};
         while (in_char != '>' && !fasta_stream.eof())
@@ -140,7 +138,7 @@ protected:
             fasta_stream.get(in_char);
 
             if (ExtendedContextAutomaton::is_a_nucleotide(in_char)) {
-                ++abs_position;
+                ++genome_size;
             }
         }
     }
@@ -153,7 +151,7 @@ protected:
      * 
      * @param[in,out] fasta_stream is the input FASTA stream
      */
-    void skip_to_next_seq(std::ifstream& fasta_stream)
+    static void discharge_seq(std::ifstream& fasta_stream)
     {
         char in_char{'N'};
         while (in_char != '>' && !fasta_stream.eof())
@@ -169,12 +167,10 @@ protected:
      * saves their absolute positions in `ContextPositions::context2pos`.
      * 
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
-     * @param[in,out] abs_position is the absolute position in the genome of the read nucleotide
      * @param[in] genomic_regions is the set of regions to be considered when searching mutational contexts
      * @param[in,out] progress_bar is the progress bar
      */
-    void find_contexts_in_seq(std::ifstream& fasta_stream, ABSOLUTE_GENOMIC_POSITION& abs_position,
-                              const std::set<GenomicRegion>& genomic_regions,
+    void find_contexts_in_seq(std::ifstream& fasta_stream, const std::set<GenomicRegion>& genomic_regions,
                               UI::ProgressBar* progress_bar)
     {
         auto filesize = Races::IO::get_stream_size(fasta_stream);
@@ -188,21 +184,21 @@ protected:
         ChrPosition chr_pos{0};
         auto region_it = genomic_regions.begin();
         while (last_char != '>' && !fasta_stream.eof() && region_it != genomic_regions.end()) {
-            skip_to(fasta_stream, c_automata, abs_position, chr_pos, region_it->get_begin().position-1);
+            skip_to(fasta_stream, c_automata, chr_pos, region_it->get_begin().position-1);
 
             while (last_char != '>' && !fasta_stream.eof() && chr_pos!=region_it->get_end().position+1) {
                 fasta_stream.get(last_char);
 
                 if (c_automata.update_state(last_char)) {
                     if (c_automata.read_a_context()) {
-                        (*context2pos)[c_automata.get_context()].emplace_back(abs_position);
+                        (*context2pos)[c_automata.get_context()].emplace_back(genome_size);
                     }
                     ++chr_pos;
-                    ++abs_position;
+                    ++genome_size;
                 }
 
                 // update progress bar once every 2^22-1 nucleotides
-                if ((abs_position&0x3FFFFF)==0 && progress_bar != nullptr) {
+                if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
                     progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/filesize));
                 }
             }
@@ -211,7 +207,7 @@ protected:
         }
 
         if (last_char != '>' && !fasta_stream.eof()) {
-            skip_to_next_seq(fasta_stream, abs_position);
+            skip_to_next_seq(fasta_stream);
         }
     }
 
@@ -260,12 +256,12 @@ protected:
 
         context2pos = std::make_shared<ContextPositionMap>();
         abs_pos2chr.clear();
+        genome_size = 0;
 
         auto regions_by_chr = split_by_chromosome_id(genomic_regions);
 
         SEQUENCE_NAME_DECODER seq_decoder;
-        ABSOLUTE_GENOMIC_POSITION abs_pos{0};
-        skip_to_next_seq(fasta_stream, abs_pos);
+        skip_to_next_seq(fasta_stream);
 
         while (!fasta_stream.eof()) {
             std::string sequence_title;
@@ -279,22 +275,22 @@ protected:
                 if (progress_bar != nullptr) {
                     progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr_region.get_chromosome_id()));
                 }
-                abs_pos2chr[abs_pos+1] = chr_region.get_chromosome_id();
+                abs_pos2chr[genome_size+1] = chr_region.get_chromosome_id();
 
                 if (genomic_regions == nullptr) {
-                    find_contexts_in_seq(fasta_stream, abs_pos, progress_bar);
+                    find_contexts_in_seq(fasta_stream, progress_bar);
                 } else {
                     auto regions_in = regions_by_chr.find(chr_region.get_chromosome_id());
 
                     // if one of the selected region belongs to the current chromosome
                     if (regions_in != regions_by_chr.end()) {
-                        find_contexts_in_seq(fasta_stream, abs_pos, regions_in->second, progress_bar);
+                        find_contexts_in_seq(fasta_stream, regions_in->second, progress_bar);
                     } else {
-                        skip_to_next_seq(fasta_stream, abs_pos);
+                        skip_to_next_seq(fasta_stream);
                     }
                 }
             } else {
-                skip_to_next_seq(fasta_stream);
+                discharge_seq(fasta_stream);
             }
         }
 
@@ -305,7 +301,7 @@ public:
      * @brief The empty constructor
      */
     ContextPositions():
-        context2pos(std::make_shared<ContextPositionMap>())
+        context2pos(std::make_shared<ContextPositionMap>()), genome_size(0)
     {}
 
     /**
@@ -424,6 +420,30 @@ public:
     }
 
     /**
+     * @brief Get the regions of the chromosomes
+     * 
+     * @return the regions of the chromosomes
+     */
+    std::vector<GenomicRegion> get_chromosome_regions() const
+    {
+        std::vector<GenomicRegion> chr_regions;
+
+        if (abs_pos2chr.size()>0) {
+            auto it = abs_pos2chr.begin();
+            auto next = it;
+
+            while (++next != abs_pos2chr.end()) {
+                chr_regions.emplace_back(it->second, static_cast<GenomicRegion::Length>(next->first-it->first));
+                it = next;
+            }
+
+            chr_regions.emplace_back(it->second, static_cast<GenomicRegion::Length>(genome_size-it->first+1));
+        }
+
+        return chr_regions;
+    }
+
+    /**
      * @brief Turn an absolute genomic position into the corresponding genomic position
      * 
      * @param abs_position is an absolute genomic position
@@ -438,6 +458,16 @@ public:
     }
 
     /**
+     * @brief Get the genome size
+     * 
+     * @return get the genome size 
+     */
+    inline const ABSOLUTE_GENOMIC_POSITION& get_genome_size() const
+    {
+        return genome_size;
+    }
+
+    /**
      * @brief Save a simulator in an archive
      * 
      * @tparam ARCHIVE is the output archive type
@@ -447,7 +477,8 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & *context2pos
-                & abs_pos2chr;
+                & abs_pos2chr
+                & genome_size;
     }
 
     /**
@@ -465,7 +496,8 @@ public:
         c_positions.context2pos = std::make_shared<ContextPositionMap>();
 
         archive & *(c_positions.context2pos)
-                & c_positions.abs_pos2chromosome;
+                & c_positions.abs_pos2chromosome
+                & c_positions.genome_size;
 
         return c_positions;
     }
