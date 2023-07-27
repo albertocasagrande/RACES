@@ -2,7 +2,7 @@
  * @file fragment.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic fragment
- * @version 0.4
+ * @version 0.5
  * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
@@ -32,6 +32,7 @@
 #define __RACES_FRAGMENT__
 
 #include <map>
+#include <set>
 #include <vector>
 #include <ostream>
 
@@ -275,6 +276,20 @@ public:
 };
 
 /**
+ * @brief A type for alleles
+ * 
+ * An allele is the set of SNVs occurring 
+ * on the allele itself.
+ */
+typedef std::map<GenomicPosition, SNV> Allele;
+
+
+/**
+ * @brief A identifier type for alleles
+ */
+typedef size_t AlleleId;
+
+/**
  * @brief A genomic fragment
  * 
  * This class represents a genomic fragment, its 
@@ -284,16 +299,8 @@ struct Fragment : public GenomicRegion
 {
     using Length = ChrPosition;
 
-    /**
-     * @brief A type for alleles
-     * 
-     * An allele is the set of SNVs occurring 
-     * on the allele itself.
-     */
-    typedef std::map<GenomicPosition, SNV> Allele;
-
 protected:
-    std::vector<Allele> alleles;    //!< the fragment alleles
+    std::map<AlleleId, Allele> alleles;    //!< the fragment alleles
 public:
     /**
      * @brief The empty constructor
@@ -352,11 +359,11 @@ public:
     Fragment(const GenomicPosition initial_pos, const Length length, const std::vector<Allele>& alleles);
 
     /**
-     * @brief Get the fragment allele vector
+     * @brief Get the fragment allele map
      * 
-     * @return a constant reference to the allele vector
+     * @return a constant reference to the allele map
      */
-    inline const std::vector<Allele>& get_alleles() const
+    inline const std::map<AlleleId, Allele>& get_alleles() const
     {
         return alleles;
     }
@@ -372,13 +379,30 @@ public:
     }
 
     /**
+     * @brief Check whether two fragments have the same allele ids
+     * 
+     * @param fragment is a fragment
+     * @return `true` if and only if `fragment` and the current 
+     *       object have the same allele ids.
+     */
+    bool has_the_same_allele_ids(const Fragment& fragment) const;
+
+    /**
+     * @brief Get the identificators of the alleles
+     * 
+     * @return the set of the allele identificators available 
+     *      in this fragment
+     */
+    std::set<AlleleId> get_allele_ids() const;
+
+    /**
      * @brief Get the i-th allele
      * 
      * @param index is the aimed allele index
      * @return a constant reference to the `index`-th allele
      *      in the fragment
      */
-    inline const Allele& operator[](const size_t index) const
+    inline const Allele& operator[](const AlleleId index) const
     {
         return alleles.at(index);
     }
@@ -456,20 +480,23 @@ public:
     /**
      * @brief Duplicate an allele
      * 
-     * @param index is the index of the allele to be duplicated
+     * @param allele_id is the identifier of the allele to be duplicated
+     * @param new_allele_id is the identifier of the new allele
      * @return a reference to the updated fragment
-     * @throw std::out_of_range `allele_index` is not a valid allele index
+     * @throw std::out_of_range `allele_id` is not a valid allele index
+     * @throw std::domain_error `new_allele_id` is already present in the
+     *          fragment
      */
-    Fragment& duplicate_allele(const size_t index);
+    Fragment& duplicate_allele(const AlleleId allele_id, const AlleleId new_allele_id);
 
     /**
      * @brief Remove an allele
      * 
-     * @param index is the index of the allele to be removed
+     * @param allele_id is the identifier of the allele to be removed
      * @return a reference to the updated fragment
-     * @throw std::out_of_range `allele_index` is not a valid allele index
+     * @throw std::out_of_range `allele_id` is not a valid allele index
      */
-    Fragment& remove_allele(const size_t index);
+    Fragment& remove_allele(const AlleleId allele_id);
 
     /**
      * @brief Check whether any SNV occurs a possible mutational context
@@ -501,16 +528,17 @@ public:
      * fails.
      * 
      * @param snv is the SNV to be inserted
-     * @param allele_index is the index of the allele in which inserting 
-     *      the SNV
+     * @param allele_id is the identifier of the allele in which 
+     *      inserting the SNV
      * @return `true` if and only if the fragment alleles do not 
      *      contain any other SNVs in `snv`'s mutational context
      * @throw std::domain_error `SNV` does not lays in the fragment
-     * @throw std::out_of_range `allele_index` is not a valid allele index
+     * @throw std::out_of_range `allele_id` is not a valid allele
+     *          identifier
      */
-    inline bool insert(const SNV& snv, const size_t allele_index)
+    inline bool insert(const SNV& snv, const AlleleId allele_id)
     {
-        return insert(SNV(snv), allele_index);
+        return insert(SNV(snv), allele_id);
     }
 
     /**
@@ -522,14 +550,15 @@ public:
      * fails.
      * 
      * @param snv is the SNV to be inserted
-     * @param allele_index is the index of the allele in which inserting 
-     *      the SNV
+     * @param allele_id is the identifier of the allele in which 
+     *      inserting the SNV
      * @return `true` if and only if the fragment alleles do not 
      *      contain any other SNVs in `snv`'s mutational context
      * @throw std::domain_error `SNV` does not lays in the fragment
-     * @throw std::out_of_range `allele_index` is not a valid allele index
+     * @throw std::out_of_range `allele_id` is not a valid allele
+     *          identifier
      */
-    bool insert(SNV&& snv, const size_t allele_index);
+    bool insert(SNV&& snv, const AlleleId allele_index);
 
     /**
      * @brief Remove a SNV from the fragment

@@ -2,7 +2,7 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some tests for Races::Passengers::Fragment
- * @version 0.3
+ * @version 0.4
  * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(fragment_creation)
     GenomicPosition g_pos(12, 235);
     GenomicPosition snv_pos(g_pos.chr_id, g_pos.position+10);
 
-    std::vector<Fragment::Allele> alleles(1);
+    std::vector<Allele> alleles(1);
 
     alleles[0][snv_pos] = SNV(snv_pos, 'A', 'C');
 
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(fragment_insert)
 {
     using namespace Races::Passengers;
 
-    std::vector<Fragment::Allele> alleles(4);
+    std::vector<Allele> alleles(4);
 
     GenomicPosition f_pos(12, 1000);
     Fragment fragment({12,100}, 1000, alleles);
@@ -205,7 +205,7 @@ struct FragmentFixture {
     {
         using namespace Races::Passengers;
 
-        std::vector<Fragment::Allele> alleles(4);
+        std::vector<Allele> alleles(4);
 
         GenomicPosition f_pos(12, 1000);
         fragment = Fragment({12,100}, 1000, alleles);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(fragment_split)
 {
     using namespace Races::Passengers;
 
-    std::vector<Fragment::Allele> alleles(4);
+    std::vector<Allele> alleles(4);
 
     Fragment fragment_a(fragment), fragment_b;
 
@@ -340,8 +340,13 @@ BOOST_AUTO_TEST_CASE(fragment_join)
     
     auto f_a_begin = fragment_a.get_begin();
 
+    std::vector<Allele> vec_alleles;
+    for (const auto& [allele_id, allele]: fragment_a.get_alleles()) {
+        vec_alleles.push_back(allele);
+    }
+
     auto fragment_err = Fragment({static_cast<uint8_t>(f_a_begin.chr_id+1), f_a_begin.position},
-                                 fragment_a.size(), fragment_a.get_alleles());
+                                 fragment_a.size(), vec_alleles);
 
     // not contiguous
     BOOST_CHECK_THROW(fragment_a.join(fragment_a), std::domain_error);
@@ -349,12 +354,12 @@ BOOST_AUTO_TEST_CASE(fragment_join)
     BOOST_CHECK_THROW(fragment_a.join(fragment_err), std::domain_error);
 
     // different number of alleles
-    std::vector<Fragment::Allele> err_alleles(5);
+    std::vector<Allele> err_alleles(5);
     fragment_err = Fragment(f_a_begin, fragment_a.size(), err_alleles);
     BOOST_CHECK_THROW(fragment_b.join(fragment_err), std::domain_error);
     BOOST_CHECK_THROW(fragment_err.join(fragment_b), std::domain_error);
 
-    err_alleles = std::vector<Fragment::Allele>(3);
+    err_alleles = std::vector<Allele>(3);
     fragment_err = Fragment(f_a_begin, fragment_a.size(), err_alleles);
     BOOST_CHECK_THROW(fragment_b.join(fragment_err), std::domain_error);
     BOOST_CHECK_THROW(fragment_err.join(fragment_b), std::domain_error);
@@ -397,10 +402,10 @@ BOOST_AUTO_TEST_CASE(fragment_duplicate_allele)
     auto fragment_a = fragment;
     
     // wrong allele number
-    BOOST_CHECK_THROW(fragment_a.duplicate_allele(fragment_a.num_of_alleles()), std::out_of_range);
+    BOOST_CHECK_THROW(fragment_a.duplicate_allele(fragment_a.num_of_alleles(), fragment_a.num_of_alleles()), std::out_of_range);
 
     // duplicate
-    BOOST_CHECK_NO_THROW(fragment_a.duplicate_allele(1));
+    BOOST_CHECK_NO_THROW(fragment_a.duplicate_allele(1,fragment_a.num_of_alleles()));
     
     // check the existence of a new allele
     BOOST_CHECK_EQUAL(fragment.num_of_alleles()+1, fragment_a.num_of_alleles());
@@ -442,12 +447,12 @@ BOOST_AUTO_TEST_CASE(fragment_remove_allele)
 {
     auto fragment_a = fragment;
 
-    fragment_a.duplicate_allele(1);
+    fragment_a.duplicate_allele(1, fragment_a.num_of_alleles());
 
     auto fragment_b = fragment_a;
 
     // wrong allele number
-    BOOST_CHECK_THROW(fragment_b.remove_allele(fragment_b.num_of_alleles()), std::out_of_range);
+    BOOST_CHECK_THROW(fragment_b.remove_allele(fragment_b.num_of_alleles()+2), std::out_of_range);
 
     // duplicate
     BOOST_CHECK_NO_THROW(fragment_b.remove_allele(1));
@@ -457,16 +462,21 @@ BOOST_AUTO_TEST_CASE(fragment_remove_allele)
 
     // check that the old alleles did not change
     for (size_t i=0; i<fragment.num_of_alleles(); ++i) {
-        auto it = fragment[i].begin();
-        auto b_it = fragment_b[i].begin();
-        while (it != fragment[i].end() && b_it != fragment_a[i].end()) {
-            BOOST_CHECK_EQUAL(it->first, b_it->first);
-            BOOST_CHECK_EQUAL(it->second, b_it->second);
-            ++b_it;
-            ++it;
+        if (i != 1) {
+            auto it = fragment[i].begin();
+            auto b_it = fragment_b[i].begin();
+            while (it != fragment[i].end() && b_it != fragment_a[i].end()) {
+                BOOST_CHECK_EQUAL(it->first, b_it->first);
+                BOOST_CHECK_EQUAL(it->second, b_it->second);
+                ++b_it;
+                ++it;
+            }
+
+            BOOST_CHECK(it==fragment[i].end());
+            BOOST_CHECK(b_it==fragment_b[i].end());
+        } else {
+            BOOST_CHECK_THROW(fragment_b[i], std::out_of_range);
         }
-        BOOST_CHECK(it==fragment[i].end());
-        BOOST_CHECK(b_it==fragment_b[i].end());
     }
 }
 

@@ -2,7 +2,7 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic fragment
- * @version 0.3
+ * @version 0.4
  * @date 2023-07-27
  * 
  * @copyright Copyright (c) 2023
@@ -29,6 +29,7 @@
  */
 
 #include <iostream>
+#include <algorithm>  // std::transform
 
 #include "fragment.hpp"
 
@@ -39,12 +40,11 @@ namespace Races
 namespace Passengers
 {
 
-using Allele = Fragment::Allele;
 using Length = Fragment::Length;
 
 void validate_fragment(const Fragment& fragment)
 {
-    for (const auto& allele: fragment.get_alleles()) {
+    for (const auto& [allele_id, allele]: fragment.get_alleles()) {
         for (const auto& [pos, mutation] : allele) {
             if (!fragment.contains(pos)) {
                 throw std::domain_error("the fragment does not contains one of the allele");
@@ -113,28 +113,83 @@ Fragment::Fragment():
 {}
 
 Fragment::Fragment(const GenomicRegion& genomic_region, const size_t& num_of_alleles):
-    GenomicRegion(genomic_region), alleles(num_of_alleles)
-{}
+    GenomicRegion(genomic_region)
+{
+    for (AlleleId i = 0; i < num_of_alleles; ++i) {
+        alleles[i] = Allele();
+    }
+}
 
 Fragment::Fragment(const ChromosomeId chromosome_id, const Length length, const size_t& num_of_alleles):
-    GenomicRegion(chromosome_id, length), alleles(num_of_alleles)
-{}
+    GenomicRegion(chromosome_id, length)
+{
+    for (AlleleId i = 0; i < num_of_alleles; ++i) {
+        alleles[i] = Allele();
+    }
+}
 
 Fragment::Fragment(const ChromosomeId chromosome_id, const Length length, const std::vector<Allele>& alleles):
-    GenomicRegion(chromosome_id, length), alleles(alleles)
+    GenomicRegion(chromosome_id, length)
 {
+    AlleleId i = 0;
+    for (const auto& allele : alleles) {
+        (this->alleles)[i] = allele;
+        ++i;
+    }
+
     validate_fragment(*this);
 }
 
 Fragment::Fragment(const GenomicPosition initial_pos, const Length length, const size_t& num_of_alleles):
-    GenomicRegion(initial_pos, length), alleles(num_of_alleles)
-{}
+    GenomicRegion(initial_pos, length)
+{
+    for (size_t i = 0; i < num_of_alleles; ++i) {
+        alleles[i] = Allele();
+    }
+}
 
 Fragment::Fragment(const GenomicPosition initial_pos, const Length length, const std::vector<Allele>& alleles):
-    GenomicRegion(initial_pos, length), alleles(alleles)
+    GenomicRegion(initial_pos, length)
 {
+    AlleleId i = 0;
+    for (const auto& allele : alleles) {
+        (this->alleles)[i] = allele;
+        ++i;
+    }
+
     validate_fragment(*this);
 }
+
+bool Fragment::has_the_same_allele_ids(const Fragment& fragment) const
+{
+    if (num_of_alleles() != fragment.num_of_alleles()) {
+        return false;
+    }
+
+    auto t_it = alleles.begin();
+    auto f_it = fragment.alleles.begin();
+
+    for (; t_it != alleles.end(); ++t_it, ++f_it) {
+        if (t_it->first != f_it->first) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::set<AlleleId> Fragment::get_allele_ids() const
+{
+    std::set<AlleleId> allele_ids;
+
+    std::transform(alleles.begin(), alleles.end(), std::inserter(allele_ids, allele_ids.end()),
+        [](decltype(alleles)::value_type const &pair) {
+            return pair.first;
+        });
+    
+    return allele_ids;
+}
+
 
 Fragment Fragment::split(const GenomicPosition& split_point)
 {
@@ -147,30 +202,25 @@ Fragment Fragment::split(const GenomicPosition& split_point)
     } 
 
     Fragment new_fragment(split_point, length-(split_point.position-initial_pos.position), 0);
-    new_fragment.alleles = std::vector<Allele>(num_of_alleles());
 
     length = split_point.position - initial_pos.position;
 
-    /*** split the alleles ***/
-    auto new_it = new_fragment.alleles.begin();
-
     // for all the alleles in *this
-    for (auto& allele: alleles) {
-
+    for (auto& [allele_id, allele]: alleles) {
         // search the iterator to the first mutation in the allele 
         // that lays in the new fragment
         auto in_new_it = allele.lower_bound(split_point);
+
+        // create the new allele and get a reference to it
+        auto& new_allele = new_fragment.alleles[allele_id];
 
         // while there are some mutations in allele that should 
         // lays in new_fragment
         while (in_new_it != allele.end()) {
             // extract the mutation from the original allele and
             // insert it in the new allele
-            new_it->insert(allele.extract(in_new_it++));
+            new_allele.insert(allele.extract(in_new_it++));
         }
-
-        // move to the next allele in new fragment
-        ++new_it;
     }
 
     return new_fragment;
@@ -178,8 +228,8 @@ Fragment Fragment::split(const GenomicPosition& split_point)
 
 Fragment& Fragment::join(Fragment& contiguous_fragment)
 {
-    if (num_of_alleles() != contiguous_fragment.num_of_alleles()) {
-        throw std::domain_error("the two fragments differ in number of alleles");
+    if (!has_the_same_allele_ids(contiguous_fragment)) {
+        throw std::domain_error("the two fragments differ in alleles");
     }
 
     if (follows(contiguous_fragment)) {
@@ -193,7 +243,7 @@ Fragment& Fragment::join(Fragment& contiguous_fragment)
     auto allele_it = alleles.begin();
 
     // for all the alleles in contiguous_fragment
-    for (auto& old_allele: contiguous_fragment.alleles) {
+    for (auto& [allele_id, old_allele]: contiguous_fragment.alleles) {
 
         auto old_it = old_allele.begin();
 
@@ -201,7 +251,7 @@ Fragment& Fragment::join(Fragment& contiguous_fragment)
         while (old_it != old_allele.end()) {
             // extract the mutation from the old_allele and
             // insert it in *allele_it
-            allele_it->insert(old_allele.extract(old_it++));
+            allele_it->second.insert(old_allele.extract(old_it++));
         }
 
         // move to the next allele in new fragment
@@ -212,31 +262,35 @@ Fragment& Fragment::join(Fragment& contiguous_fragment)
 
     // reset contiguous_fragment length and alleles
     contiguous_fragment.length = 0;
-    contiguous_fragment.alleles.resize(0);
+    contiguous_fragment.alleles.clear();
 
     return *this;
 }
 
-Fragment& Fragment::duplicate_allele(const size_t index)
+Fragment& Fragment::duplicate_allele(const AlleleId allele_id, const AlleleId new_allele_id)
 {
-    if (num_of_alleles()<=index) {
+    auto it = alleles.find(allele_id);
+    if (it == alleles.end()) {
         throw std::out_of_range("unknown allele");
     }
 
-    alleles.push_back(alleles[index]);
+    if (alleles.count(new_allele_id)>0) {
+        throw std::runtime_error("the new allele is already present");
+    }
+
+    alleles[new_allele_id] = it->second;
 
     return *this;
 }
 
-Fragment& Fragment::remove_allele(const size_t index)
+Fragment& Fragment::remove_allele(const AlleleId allele_id)
 {
-    if (num_of_alleles()<=index) {
+    auto it = alleles.find(allele_id);
+    if (it == alleles.end()) {
         throw std::out_of_range("unknown allele");
     }
 
-    std::swap(alleles[index], alleles[num_of_alleles()-1]);
-
-    alleles.pop_back();
+    alleles.erase(it);
 
     return *this;
 }
@@ -248,7 +302,7 @@ bool Fragment::is_mutational_context_free(const GenomicPosition& genomic_positio
     }
     
     // for all alleles
-    for (const auto& allele: alleles) {
+    for (const auto& [allele_id, allele]: alleles) {
 
         // find the first mutation not occurring before `genomic_position`
         auto it = allele.lower_bound(genomic_position);
@@ -270,18 +324,19 @@ bool Fragment::is_mutational_context_free(const GenomicPosition& genomic_positio
     return true;
 }
 
-bool Fragment::insert(SNV&& snv, const size_t allele_index)
+bool Fragment::insert(SNV&& snv, const AlleleId allele_id)
 {
     if (!contains(snv)) {
         throw std::domain_error("the fragment does not contains the specified SNV");
     }
 
-    if (num_of_alleles()<=allele_index) {
+    auto it = alleles.find(allele_id);
+    if (it == alleles.end()) {
         throw std::out_of_range("unknown allele");
     }
 
     if (is_mutational_context_free(snv)) {
-        alleles[allele_index][snv] = std::move(snv);
+        (it->second)[snv] = std::move(snv);
 
         return true;
     }
@@ -295,7 +350,7 @@ bool Fragment::remove_SNV(const GenomicPosition& genomic_position)
         throw std::domain_error("the fragment does not contains the specified genomic position");
     }
 
-    for (auto& allele: alleles) {
+    for (auto& [allele_id, allele]: alleles) {
         if (allele.erase(genomic_position)>0) {
             return true;
         }
