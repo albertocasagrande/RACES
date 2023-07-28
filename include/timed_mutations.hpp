@@ -1,9 +1,9 @@
 /**
- * @file genomic_mutations.hpp
+ * @file timed_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implementing timed genomic mutations
- * @version 0.2
- * @date 2023-07-21
+ * @brief Defines timed genomic mutations
+ * @version 0.1
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_GENOMIC_MUTATIONS__
-#define __RACES_GENOMIC_MUTATIONS__
+#ifndef __RACES_TIMED_MUTATIONS__
+#define __RACES_TIMED_MUTATIONS__
 
 #include <functional>
 
@@ -124,4 +124,4 @@ struct std::less<Races::Drivers::Simulation::TimedGenomicMutation> {
     }
 };
 
-#endif // __RACES_GENOMIC_MUTATIONS__
+#endif // __RACES_TIMED_MUTATIONS__

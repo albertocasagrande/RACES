@@ -1,9 +1,9 @@
 /**
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define a tumor evolution simulation
- * @version 0.5
- * @date 2023-07-21
+ * @brief Defines a tumor evolution simulation
+ * @version 0.6
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@
 #include "plot_2D.hpp"
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
-#include "genomic_mutations.hpp"
+#include "timed_mutations.hpp"
 
 #include "progress_bar.hpp"
 

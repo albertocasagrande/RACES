@@ -1,9 +1,9 @@
 /**
- * @file genomic_mutations.cpp
+ * @file timed_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implementing timed genomic mutations
+ * @brief Implements timed genomic mutations
  * @version 0.1
- * @date 2023-07-21
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include "genomic_mutations.hpp"
+#include "timed_mutations.hpp"
 
 namespace Races 
 {

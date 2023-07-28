@@ -63,7 +63,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_io.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_mutations.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
@@ -87,7 +87,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_io.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_mutations.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/timed_mutations.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
