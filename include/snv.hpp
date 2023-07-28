@@ -2,7 +2,7 @@
  * @file snv.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
@@ -76,6 +76,16 @@ struct SNV : public GenomicPosition
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
     SNV(const GenomicPosition& genomic_position, const char original_base, const char mutated_base);
+
+    /**
+     * @brief A constructor
+     * 
+     * @param genomic_position is the SNV genomic_position
+     * @param original_base is the original base
+     * @param mutated_base is the mutated base
+     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     */
+    SNV(GenomicPosition&& genomic_position, const char original_base, const char mutated_base);
 };
 
 }   // Passengers

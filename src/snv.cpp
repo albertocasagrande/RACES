@@ -2,7 +2,7 @@
  * @file snv.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
@@ -29,8 +29,11 @@
  */
 
 #include <ostream>
+#include <sstream>
 
 #include "snv.hpp"
+
+#include "context.hpp"
 
 namespace Races 
 {
@@ -44,20 +47,36 @@ SNV::SNV():
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
          const char original_base, const char mutated_base):
-    GenomicPosition(chromosome_id, chromosomic_position), orig_base(original_base), mutated_base(mutated_base)
+    SNV(GenomicPosition(chromosome_id, chromosomic_position), original_base, mutated_base)
+{}
+
+SNV::SNV(const GenomicPosition& position, const char original_base, const char mutated_base):
+    GenomicPosition(position), orig_base(original_base), mutated_base(mutated_base)
 {
+    if (!MutationalContext::is_a_base(original_base)) {
+        std::ostringstream oss;
+
+        oss << "expected a base; got " << original_base << std::endl;
+
+        throw std::domain_error(oss.str());
+    }
+
+    if (!MutationalContext::is_a_base(mutated_base)) {
+        std::ostringstream oss;
+
+        oss << "expected a base; got " << mutated_base << std::endl;
+
+        throw std::domain_error(oss.str());
+    }
+
     if (original_base == mutated_base) {
         std::domain_error("the original and the mutated bases are the same");
     }
 }
 
-SNV::SNV(const GenomicPosition& position, const char original_base, const char mutated_base):
-    GenomicPosition(position), orig_base(original_base), mutated_base(mutated_base)
-{
-    if (original_base == mutated_base) {
-        std::domain_error("the original and the mutated bases are the same");
-    }
-}
+SNV::SNV(GenomicPosition&& position, const char original_base, const char mutated_base):
+    SNV(position, original_base, mutated_base)
+{}
 
 }   // Passengers
 
