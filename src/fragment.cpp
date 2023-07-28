@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic fragment
- * @version 0.4
- * @date 2023-07-27
+ * @version 0.5
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,6 +71,14 @@ GenomicRegion::GenomicRegion(const GenomicPosition initial_pos, const Length len
     if (length == 0) {
         throw std::domain_error("the genomic region length must greater than 0");
     }
+}
+
+bool GenomicRegion::overlaps(const GenomicRegion& genomic_region) const
+{
+    return (this->contains(genomic_region.get_begin())
+            || genomic_region.contains(get_begin())
+            || this->contains(genomic_region.get_end())
+            || genomic_region.contains(get_end()));
 }
 
 GenomicRegion GenomicRegion::split(const GenomicPosition& split_point)
@@ -267,7 +275,7 @@ Fragment& Fragment::join(Fragment& contiguous_fragment)
     return *this;
 }
 
-Fragment& Fragment::duplicate_allele(const AlleleId allele_id, const AlleleId new_allele_id)
+Fragment& Fragment::duplicate_allele(const AlleleId& allele_id, const AlleleId& new_allele_id)
 {
     auto it = alleles.find(allele_id);
     if (it == alleles.end()) {
@@ -283,7 +291,7 @@ Fragment& Fragment::duplicate_allele(const AlleleId allele_id, const AlleleId ne
     return *this;
 }
 
-Fragment& Fragment::remove_allele(const AlleleId allele_id)
+Fragment& Fragment::remove_allele(const AlleleId& allele_id)
 {
     auto it = alleles.find(allele_id);
     if (it == alleles.end()) {

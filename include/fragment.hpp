@@ -2,8 +2,8 @@
  * @file fragment.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic fragment
- * @version 0.5
- * @date 2023-07-27
+ * @version 0.6
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -110,6 +110,26 @@ public:
     }
 
     /**
+     * @brief Get the genomic region initial position in the chromosome
+     * 
+     * @return the genomic region initial position in the chromosome
+     */
+    inline const ChrPosition& get_initial_position() const
+    {
+        return initial_pos.position;
+    }
+
+    /**
+     * @brief Get the genomic region final position in the chromosome
+     * 
+     * @return the genomic region final position in the chromosome
+     */
+    inline ChrPosition get_final_position() const
+    {
+        return initial_pos.position+length-1;
+    }
+
+    /**
      * @brief Get the genomic region length
      * 
      * @return a constant reference to the genomic region length
@@ -120,7 +140,10 @@ public:
     }
 
     /**
-     * @brief Test whether a genomic region follows another one
+     * @brief Test whether a region follows another region
+     * 
+     * Let `A` and `B` two regions . "`A` follows `B`" when the initial position 
+     * of `A` immediately follows the final position of `B`.  
      * 
      * @param genomic_region is a genomic region
      * @return `true` if and only if the current genomic region begins just 
@@ -133,7 +156,10 @@ public:
     }
 
     /**
-     * @brief Test whether a genomic region follows another one
+     * @brief Test whether a region follows another region
+     * 
+     * Let `A` and `B` two regions . "`A` follows `B`" when the initial position 
+     * of `A` immediately follows the final position of `B`.  
      * 
      * @param genomic_region is a genomic region
      * @return `true` if and only if the current genomic region begins just 
@@ -145,7 +171,10 @@ public:
     }
 
     /**
-     * @brief Test whether a genomic region precedes another one
+     * @brief Test whether a region precedes another region
+     * 
+     * Let `A` and `B` two regions . "`A` precedes `B`" when the final position 
+     * of `A` immediately follows the initial position of `B`.  
      * 
      * @param genomic_region is a genomic region
      * @return `true` if and only if the current `genomic_region` ends just 
@@ -157,7 +186,10 @@ public:
     }
 
     /**
-     * @brief Test whether a genomic region precedes another one
+     * @brief Test whether a region precedes another region
+     * 
+     * Let `A` and `B` two regions . "`A` precedes `B`" when the final position 
+     * of `A` immediately follows the initial position of `B`.  
      * 
      * @param genomic_region is a genomic region
      * @return `true` if and only if the current `genomic_region` ends just 
@@ -166,6 +198,63 @@ public:
     inline bool precedes(GenomicRegion&& genomic_region) const
     {
         return genomic_region.follows(*this);
+    }
+
+    /**
+     * @brief Check whether two genomic region overlap
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current region and 
+     *       `genomic_region` 
+     */
+    bool overlaps(const GenomicRegion& genomic_region) const;
+
+    /**
+     * @brief Check whether two genomic region overlap
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current region and 
+     *       `genomic_region` 
+     */
+    inline bool overlaps(GenomicRegion&& genomic_region) const
+    {
+        return this->overlaps(genomic_region);
+    }
+
+    /**
+     * @brief Check whether a region ends before another one begin
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current region ends before 
+     *          `genomic_region`'s initial position
+     */
+    inline bool ends_before(const GenomicRegion& genomic_position) const
+    {
+        return ends_before(genomic_position.get_begin());
+    }
+
+    /**
+     * @brief Check whether a region ends before another one begin
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current region ends before 
+     *          `genomic_region`'s initial position
+     */
+    inline bool ends_before(GenomicRegion&& genomic_position) const
+    {
+        return ends_before(genomic_position);
+    }
+
+    /**
+     * @brief Check whether a region begin after another one end
+     * 
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if the current region ends before 
+     *          `genomic_position`
+     */
+    inline bool begins_after(const GenomicRegion& genomic_position) const
+    {
+        return genomic_position.ends_before(*this);
     }
 
     /**
@@ -218,6 +307,56 @@ public:
     inline bool strictly_contains(GenomicPosition&& genomic_position) const
     {
         return strictly_contains(genomic_position);
+    }
+
+    /**
+     * @brief Check whether a region ends before a position
+     * 
+     * @param genomic_position is a genomic position
+     * @return `true` if and only if the current region ends before 
+     *          `genomic_position`
+     */
+    inline bool ends_before(const GenomicPosition& genomic_position) const
+    {
+        return ((genomic_position.chr_id==initial_pos.chr_id)
+                && (initial_pos.position+length < genomic_position.position+1));
+    }
+
+    /**
+     * @brief Check whether a region ends before a position
+     * 
+     * @param genomic_position is a genomic position
+     * @return `true` if and only if the current region ends before 
+     *          `genomic_position`
+     */
+    inline bool ends_before(GenomicPosition&& genomic_position) const
+    {
+        return ends_before(genomic_position);
+    }
+
+    /**
+     * @brief Check whether a region begins after a position
+     * 
+     * @param genomic_position is a genomic position
+     * @return `true` if and only if the current region begins after 
+     *          `genomic_position`
+     */
+    inline bool begins_after(const GenomicPosition& genomic_position) const
+    {
+        return ((genomic_position.chr_id==initial_pos.chr_id)
+                && (initial_pos.position > genomic_position.position));
+    }
+
+    /**
+     * @brief Check whether a region begins after a position
+     * 
+     * @param genomic_position is a genomic position
+     * @return `true` if and only if the current region begins after 
+     *          `genomic_position`
+     */
+    inline bool begins_after(GenomicPosition&& genomic_position) const
+    {
+        return begins_after(genomic_position);
     }
 
     /**
@@ -396,15 +535,27 @@ public:
     std::set<AlleleId> get_allele_ids() const;
 
     /**
+     * @brief Check whether the fragment contains an allele
+     * 
+     * @param allele_id is an allele identifier
+     * @return `true` if and only if the fragment contains 
+     *      the the allele having `allele_id` as id.
+     */
+    inline bool has_allele(const AlleleId& allele_id) const
+    {
+        return alleles.count(allele_id)>0;
+    }
+
+    /**
      * @brief Get the i-th allele
      * 
-     * @param index is the aimed allele index
-     * @return a constant reference to the `index`-th allele
+     * @param allele_id is the aimed allele identifier
+     * @return a constant reference to the aimed allele 
      *      in the fragment
      */
-    inline const Allele& operator[](const AlleleId index) const
+    inline const Allele& operator[](const AlleleId& allele_id) const
     {
-        return alleles.at(index);
+        return alleles.at(allele_id);
     }
 
     /**
@@ -487,7 +638,7 @@ public:
      * @throw std::domain_error `new_allele_id` is already present in the
      *          fragment
      */
-    Fragment& duplicate_allele(const AlleleId allele_id, const AlleleId new_allele_id);
+    Fragment& duplicate_allele(const AlleleId& allele_id, const AlleleId& new_allele_id);
 
     /**
      * @brief Remove an allele
@@ -496,7 +647,7 @@ public:
      * @return a reference to the updated fragment
      * @throw std::out_of_range `allele_id` is not a valid allele index
      */
-    Fragment& remove_allele(const AlleleId allele_id);
+    Fragment& remove_allele(const AlleleId& allele_id);
 
     /**
      * @brief Check whether any SNV occurs a possible mutational context
@@ -604,9 +755,9 @@ struct less<Races::Passengers::GenomicRegion>
     {
         return ((lhs.get_chromosome_id()<rhs.get_chromosome_id())
                 || ((lhs.get_chromosome_id()==rhs.get_chromosome_id()) 
-                    && (lhs.get_begin().position<rhs.get_begin().position))
+                    && (lhs.get_initial_position()<rhs.get_initial_position()))
                 || ((lhs.get_chromosome_id()==rhs.get_chromosome_id()) 
-                    && (lhs.get_begin().position==rhs.get_begin().position) 
+                    && (lhs.get_initial_position()==rhs.get_initial_position()) 
                     && (lhs.size()<rhs.size())));
     }
 };

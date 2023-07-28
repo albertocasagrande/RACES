@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some tests for Races::Passengers::Fragment
- * @version 0.4
- * @date 2023-07-27
+ * @version 0.5
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(fragment_follows)
     GenomicPosition f_pos_a(12, 235);
     Fragment fragment_a(f_pos_a, 1000, 2);
 
-    auto f_begin_a = fragment_a.get_begin().position;
+    auto f_begin_a = fragment_a.get_initial_position();
     auto f_end_a = f_begin_a + fragment_a.size()-1;
 
     Fragment fragment_b({f_pos_a.chr_id, f_end_a+1}, 1000, 2);
@@ -161,11 +161,11 @@ BOOST_AUTO_TEST_CASE(fragment_insert)
 
     // not in fragment - before fragment
     snv0.chr_id = f_pos.chr_id;
-    snv0.position = fragment.get_begin().position-1;
+    snv0.position = fragment.get_initial_position()-1;
     BOOST_CHECK_THROW(fragment.insert(snv0, 3), std::domain_error);
 
     // not in fragment - after fragment
-    snv0.position = fragment.get_end().position+2;
+    snv0.position = fragment.get_final_position()+2;
     BOOST_CHECK_THROW(fragment.insert(snv0, 3), std::domain_error);
 
     // ok
@@ -242,11 +242,11 @@ BOOST_AUTO_TEST_CASE(fragment_remove_SNV)
 
     // not in fragment - before fragment
     g_pos.chr_id = snvs[0].chr_id;
-    g_pos.position = fragment_a.get_begin().position-1;
+    g_pos.position = fragment_a.get_initial_position()-1;
     BOOST_CHECK_THROW(fragment_a.remove_SNV(g_pos), std::domain_error);
 
     // not in fragment - after fragment
-    g_pos.position = fragment_a.get_end().position+2;
+    g_pos.position = fragment_a.get_final_position()+2;
     BOOST_CHECK_THROW(fragment_a.remove_SNV(g_pos), std::domain_error);
 
     BOOST_CHECK(fragment_a.remove_SNV(snvs[0]));
@@ -263,18 +263,18 @@ BOOST_AUTO_TEST_CASE(fragment_split)
 
     // wrong chromosome
     BOOST_CHECK_THROW(fragment_a.split({static_cast<uint8_t>(fragment_a.get_chromosome_id()+1), 
-                                        fragment_a.get_begin().position}), std::domain_error);
+                                        fragment_a.get_initial_position()}), std::domain_error);
 
     // before fragment
     BOOST_CHECK_THROW(fragment_a.split({fragment_a.get_chromosome_id(), 
-                                        fragment_a.get_begin().position-1}), std::domain_error);
+                                        fragment_a.get_initial_position()-1}), std::domain_error);
 
     // at the fragment begin
     BOOST_CHECK_THROW(fragment_a.split(fragment_a.get_begin()), std::domain_error);
 
     // after the fragment
     BOOST_CHECK_THROW(fragment_a.split({fragment_a.get_chromosome_id(), 
-                                        fragment_a.get_end().position+1}), std::domain_error);
+                                        fragment_a.get_final_position()+1}), std::domain_error);
 
     // ok
     BOOST_CHECK_NO_THROW(fragment_b = fragment_a.split(fragment_a.get_end()));

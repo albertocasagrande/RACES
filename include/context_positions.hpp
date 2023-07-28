@@ -2,8 +2,8 @@
  * @file context_positions.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to collect context positions
- * @version 0.3
- * @date 2023-07-27
+ * @version 0.4
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -184,9 +184,9 @@ protected:
         ChrPosition chr_pos{0};
         auto region_it = genomic_regions.begin();
         while (last_char != '>' && !fasta_stream.eof() && region_it != genomic_regions.end()) {
-            skip_to(fasta_stream, c_automata, chr_pos, region_it->get_begin().position-1);
+            skip_to(fasta_stream, c_automata, chr_pos, region_it->get_initial_position()-1);
 
-            while (last_char != '>' && !fasta_stream.eof() && chr_pos!=region_it->get_end().position+1) {
+            while (last_char != '>' && !fasta_stream.eof() && chr_pos!=region_it->get_final_position()+1) {
                 fasta_stream.get(last_char);
 
                 if (c_automata.update_state(last_char)) {
