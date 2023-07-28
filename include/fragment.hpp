@@ -2,7 +2,7 @@
  * @file fragment.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic fragment
- * @version 0.6
+ * @version 0.7
  * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
@@ -518,15 +518,6 @@ public:
     }
 
     /**
-     * @brief Check whether two fragments have the same allele ids
-     * 
-     * @param fragment is a fragment
-     * @return `true` if and only if `fragment` and the current 
-     *       object have the same allele ids.
-     */
-    bool has_the_same_allele_ids(const Fragment& fragment) const;
-
-    /**
      * @brief Get the identificators of the alleles
      * 
      * @return the set of the allele identificators available 
@@ -650,11 +641,21 @@ public:
     Fragment& remove_allele(const AlleleId& allele_id);
 
     /**
+     * @brief Check whether any SNV occurred in a position
+     * 
+     * @param genomic_position is a position of the fragment
+     * @return `true` if and only if no SNVs occurred in `genomic_position`
+     * @throw std::domain_error `position` does not lays in the fragment
+     */
+    bool has_SNV_at(GenomicPosition genomic_position) const;
+
+    /**
      * @brief Check whether any SNV occurs a possible mutational context
      * 
      * @param genomic_position is the central position of the mutational context
-     * @return `true` if and only if no SNVs 
-     * @throw std::domain_error `position` does not lays in the fragment
+     * @return `true` if and only if no SNVs occurred in the context centered 
+     *          in `genomic_position`
+     * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
     bool is_mutational_context_free(const GenomicPosition& genomic_position) const;
 
@@ -662,8 +663,9 @@ public:
      * @brief Check whether any SNV occurs a possible mutational context
      * 
      * @param genomic_position is the central position of the mutational context
-     * @return `true` if and only if no SNVs 
-     * @throw std::domain_error `position` does not lays in the fragment
+     * @return `true` if and only if no SNVs occurred in the context centered 
+     *          in `genomic_position`
+     * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
     inline bool is_mutational_context_free(GenomicPosition&& genomic_position) const
     {

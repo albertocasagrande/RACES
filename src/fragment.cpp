@@ -2,7 +2,7 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic fragment
- * @version 0.5
+ * @version 0.6
  * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
@@ -168,17 +168,17 @@ Fragment::Fragment(const GenomicPosition initial_pos, const Length length, const
     validate_fragment(*this);
 }
 
-bool Fragment::has_the_same_allele_ids(const Fragment& fragment) const
+bool have_the_same_alleles(const Fragment& a, const Fragment& b)
 {
-    if (num_of_alleles() != fragment.num_of_alleles()) {
+    if (a.num_of_alleles() != b.num_of_alleles()) {
         return false;
     }
 
-    auto t_it = alleles.begin();
-    auto f_it = fragment.alleles.begin();
+    auto it_a = a.get_alleles().begin();
+    auto it_b = b.get_alleles().begin();
 
-    for (; t_it != alleles.end(); ++t_it, ++f_it) {
-        if (t_it->first != f_it->first) {
+    for (; it_a != a.get_alleles().end(); ++it_a, ++it_b) {
+        if (it_a->first != it_b->first) {
             return false;
         }
     }
@@ -236,7 +236,7 @@ Fragment Fragment::split(const GenomicPosition& split_point)
 
 Fragment& Fragment::join(Fragment& contiguous_fragment)
 {
-    if (!has_the_same_allele_ids(contiguous_fragment)) {
+    if (!have_the_same_alleles(*this, contiguous_fragment)) {
         throw std::domain_error("the two fragments differ in alleles");
     }
 
@@ -301,6 +301,28 @@ Fragment& Fragment::remove_allele(const AlleleId& allele_id)
     alleles.erase(it);
 
     return *this;
+}
+
+bool Fragment::has_SNV_at(GenomicPosition genomic_position) const
+{
+    if (!contains(genomic_position)) {
+        throw std::domain_error("the fragment does not contains the specified position");
+    }
+    
+    // for all alleles
+    for (const auto& [allele_id, allele]: alleles) {
+
+        // find the first mutation not occurring before `genomic_position`
+        auto it = allele.lower_bound(genomic_position);
+
+        if (it != allele.end()) {
+            if (it->first.position == genomic_position.position) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool Fragment::is_mutational_context_free(const GenomicPosition& genomic_position) const
