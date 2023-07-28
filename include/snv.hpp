@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.1
- * @date 2023-07-22
+ * @version 0.2
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -84,6 +84,13 @@ struct SNV : public GenomicPosition
 
 namespace std
 {
+
+template<>
+struct less<Races::Passengers::SNV>
+{
+    bool operator()(const Races::Passengers::SNV &lhs,
+                    const Races::Passengers::SNV &rhs) const;
+};
 
 /**
  * @brief Write a SNV in a output stream

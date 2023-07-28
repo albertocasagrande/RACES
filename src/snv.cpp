@@ -1,9 +1,9 @@
 /**
- * @file snv.hpp
+ * @file snv.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Defines Single Nucleotide Variation and related functions
- * @version 0.1
- * @date 2023-07-22
+ * @brief Implements Single Nucleotide Variation and related functions
+ * @version 0.2
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,6 +65,14 @@ SNV::SNV(const GenomicPosition& position, const char original_base, const char m
 
 namespace std
 {
+
+bool less<Races::Passengers::SNV>::operator()(const Races::Passengers::SNV &lhs,
+                                              const Races::Passengers::SNV &rhs) const
+{
+    less<Races::Passengers::GenomicPosition> op;
+
+    return op(lhs, rhs);
+}
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV& snv)
 {
