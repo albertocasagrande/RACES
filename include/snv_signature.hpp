@@ -1,9 +1,9 @@
 /**
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define Single Variation Mutation mutational signature
- * @version 0.7
- * @date 2023-07-25
+ * @brief Defines Single Variation Mutation mutational signature
+ * @version 0.8
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -159,14 +159,7 @@ template<>
 struct std::less<Races::Passengers::MutationalType>
 {
     bool operator()(const Races::Passengers::MutationalType &lhs,
-                    const Races::Passengers::MutationalType &rhs) const
-    {
-        const auto& lhs_code = lhs.get_context().get_code();
-        const auto& rhs_code = rhs.get_context().get_code();
-
-        return ((lhs_code < rhs_code) || 
-                ((lhs_code == rhs_code) && (lhs.get_replace_base()<rhs.get_replace_base())));
-    }
+                    const Races::Passengers::MutationalType &rhs) const;
 };
 
 namespace Races 

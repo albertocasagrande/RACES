@@ -1,9 +1,9 @@
 /**
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement Single Variation Mutation mutational signature
- * @version 0.7
- * @date 2023-07-26
+ * @brief Implements Single Variation Mutation mutational signature
+ * @version 0.8
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -335,6 +335,16 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
 
 namespace std
 {
+
+bool less<Races::Passengers::MutationalType>::operator()(const Races::Passengers::MutationalType &lhs,
+                                                         const Races::Passengers::MutationalType &rhs) const
+{
+    const auto& lhs_code = lhs.get_context().get_code();
+    const auto& rhs_code = rhs.get_context().get_code();
+
+    return ((lhs_code < rhs_code) || 
+            ((lhs_code == rhs_code) && (lhs.get_replace_base()<rhs.get_replace_base())));
+}
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalType& type)
 {
