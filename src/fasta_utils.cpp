@@ -2,8 +2,8 @@
  * @file fasta_utils.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements support utilities for FASTA files
- * @version 0.1
- * @date 2023-07-26
+ * @version 0.2
+ * @date 2023-07-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,9 +53,9 @@ bool EnsemblSeqNameDecoder::get_chromosome_region(const std::string& seq_name, P
         return false;
     }
 
-    ChromosomeId chr_id = GenomicPosition::stochr(m[0].str());
+    ChromosomeId chr_id = GenomicPosition::stochr(m[1].str());
 
-    GenomicRegion::Length length = static_cast<GenomicRegion::Length>(std::stoi(m[2].str()));
+    GenomicRegion::Length length = static_cast<GenomicRegion::Length>(std::stoi(m[3].str()));
 
     chr_region = GenomicRegion(chr_id, length);
 
