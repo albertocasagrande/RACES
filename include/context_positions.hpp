@@ -2,8 +2,8 @@
  * @file context_positions.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to collect context positions
- * @version 0.4
- * @date 2023-07-28
+ * @version 0.5
+ * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -294,6 +294,9 @@ protected:
             }
         }
 
+        if (progress_bar != nullptr) {
+            progress_bar->set_progress(100, "Context index build");
+        }
     }
 public:
 
