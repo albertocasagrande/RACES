@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.1
- * @date 2023-07-27
+ * @version 0.2
+ * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -255,7 +255,7 @@ bool ChromosomeMutations::has_allele_on(const AlleleId& allele_id, const Genomic
     return true;
 }
 
-bool ChromosomeMutations::increase_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
     if (!has_allele_on(allele_id, genomic_region)) {
         return false;
@@ -277,11 +277,13 @@ bool ChromosomeMutations::increase_copy_number(const GenomicRegion& genomic_regi
 }
 
 
-bool ChromosomeMutations::decrease_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
     if (!has_allele_on(allele_id, genomic_region)) {
         return false;
     }
+
+    split_fragments_overlapping(fragments, genomic_region);
 
     // remove the specified allele
     for (auto f_it = find_first_not_ending_before(fragments, genomic_region.get_begin());
@@ -331,7 +333,6 @@ bool ChromosomeMutations::insert(const SNV& snv, const AlleleId allele_id)
     }
 
     if (!is_mutational_context_free(snv)) {
-        std::cout << "QUI " << snv << std::endl;
         return false;
     }
 
@@ -440,18 +441,18 @@ bool GenomeMutations::has_allele_on(const AlleleId& allele_id, const GenomicRegi
     return chr_it->second.has_allele_on(allele_id, genomic_region);
 }
 
-bool GenomeMutations::increase_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool GenomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.increase_copy_number(genomic_region, allele_id);
+    return chr_it->second.amplify_region(genomic_region, allele_id);
 }
 
-bool GenomeMutations::decrease_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool GenomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.decrease_copy_number(genomic_region, allele_id);
+    return chr_it->second.remove_region(genomic_region, allele_id);
 }
 
 bool GenomeMutations::insert(const SNV& snv, const AlleleId& allele_id)

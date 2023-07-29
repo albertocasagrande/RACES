@@ -2,7 +2,7 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
@@ -180,7 +180,7 @@ public:
     bool is_mutational_context_free(GenomicPosition genomic_position) const;
 
     /**
-     * @brief Increase the copy number of a genomic region
+     * @brief Amplify a genomic region
      * 
      * This method increases the number of copies in a genomic region by selecting 
      * the same allele in each fragment of the region. If not all the fragments touching 
@@ -193,10 +193,10 @@ public:
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool increase_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
 
     /**
-     * @brief Decrease the copy number of a genomic region removing the last allele
+     * @brief Remove a genomic region
      * 
      * This method decreases the number of copies in a genomic region by selecting 
      * the same allele in each fragment of the region. If not all the fragments touching 
@@ -209,7 +209,7 @@ public:
      *      have `allele_id` among their allele ids and the allele has been removed
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool decrease_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
 
     /**
      * @brief Insert a SNV in a context free position
@@ -242,11 +242,12 @@ public:
 /**
  * @brief A class to represent the passenger mutations of a genome
  */
-struct GenomeMutations
+class GenomeMutations
 {
-    using Length = size_t;
-
     std::map<ChromosomeId, ChromosomeMutations> chromosomes;     //!< the chromosomes
+
+public:
+    using Length = size_t;
 
     /**
      * @brief The empty constructor
@@ -323,7 +324,7 @@ struct GenomeMutations
     bool has_allele_on(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Increase the copy number of a genomic region
+     * @brief Amplify a genomic region
      * 
      * This method increases the number of copies in a genomic region by selecting 
      * the same allele in each fragment of the region. If not all the fragments touching 
@@ -334,10 +335,10 @@ struct GenomeMutations
      * @return `true` if and only if the all the fragments touching `genomic_region` 
      *      have `allele_id` among their allele ids and the region has been amplified
      */
-    bool increase_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
 
     /**
-     * @brief Decrease the copy number of a genomic region removing the last allele
+     * @brief Remove a genomic region
      * 
      * This method decreases the number of copies in a genomic region by selecting 
      * the same allele in each fragment of the region. If not all the fragments touching 
@@ -348,7 +349,7 @@ struct GenomeMutations
      * @return the id of the allele to be removed
      * @throw std::domain_error no allele can be removed
      */
-    bool decrease_copy_number(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
 
     /**
      * @brief Insert a SNV in a context free position
