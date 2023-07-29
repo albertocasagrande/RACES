@@ -2,7 +2,7 @@
  * @file context_positions.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to collect context positions
- * @version 0.5
+ * @version 0.6
  * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
@@ -36,6 +36,7 @@
 #include <memory>
 #include <vector>
 #include <fstream>
+#include <type_traits>
 
 #include "archive.hpp"
 #include "fasta_utils.hpp"      // IO::FASTA::EnsemblSeqNameDecoder
@@ -52,7 +53,9 @@ namespace Races
 namespace Passengers
 {
 
-template<typename ABSOLUTE_GENOMIC_POSITION = uint32_t>
+template<typename ABSOLUTE_GENOMIC_POSITION = uint32_t,
+         std::enable_if_t<std::is_integral_v<ABSOLUTE_GENOMIC_POSITION>
+                          && std::is_unsigned_v<ABSOLUTE_GENOMIC_POSITION>, bool> = true>
 struct ContextPositions
 {
     using AbsoluteGenomicPosition = ABSOLUTE_GENOMIC_POSITION;
@@ -479,7 +482,10 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & *context2pos
+        uint8_t abs_pos_size = sizeof(ABSOLUTE_GENOMIC_POSITION);
+
+        archive & abs_pos_size
+                & *context2pos
                 & abs_pos2chr
                 & genome_size;
     }
@@ -495,6 +501,19 @@ public:
     static ContextPositions load(ARCHIVE& archive)
     {
         ContextPositions c_positions;
+        uint8_t abs_pos_size;
+
+        archive & abs_pos_size;
+
+        if (abs_pos_size != sizeof(ABSOLUTE_GENOMIC_POSITION)) {
+            std::ostringstream oss;
+
+            oss << "Absolute position size (" << sizeof(ABSOLUTE_GENOMIC_POSITION) 
+                << " bytes) does not match file object one (" << static_cast<size_t>(abs_pos_size) 
+                << " bytes)." ;
+
+            throw std::runtime_error(oss.str());
+        }
 
         c_positions.context2pos = std::make_shared<ContextPositionMap>();
 
