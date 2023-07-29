@@ -2,8 +2,8 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a progress bar
- * @version 0.3
- * @date 2023-07-19
+ * @version 0.4
+ * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@ namespace UI
 {
 
 ProgressBar::ProgressBar():
-    last_update(std::chrono::system_clock::now()), percentage(0), updated(false)
+    last_update(std::chrono::system_clock::now()), percentage(0), message(), updated(false)
 #ifdef WITH_INDICATORS
     , indicator()
 #endif // WITH_INDICATORS
@@ -67,6 +67,9 @@ ProgressBar::ProgressBar():
 
 ProgressBar& ProgressBar::set_message(const std::string message)
 {
+
+    this->message = message;
+
 #ifdef WITH_INDICATORS
     using namespace indicators;
 
@@ -74,8 +77,6 @@ ProgressBar& ProgressBar::set_message(const std::string message)
         indicator->set_option(option::PostfixText{message});
         indicator->set_progress(percentage);
     }
-#else  // WITH_INDICATORS
-    (void)message;
 #endif  // WITH_INDICATORS
 
     updated = true;
@@ -88,6 +89,8 @@ ProgressBar& ProgressBar::set_progress(const unsigned int percentage, const std:
     using namespace std::chrono;
 
     this->percentage = std::min(percentage, static_cast<unsigned int>(100));
+    this->message = message;
+
     updated = false;
 
     const auto curr_time = system_clock::now();
@@ -145,8 +148,10 @@ void ProgressBar::hide_console_cursor()
 ProgressBar::~ProgressBar()
 {
 #ifdef WITH_INDICATORS
-    if (percentage != 100 || !updated) {
-        indicator->set_progress(percentage);
+    set_message(this->message);
+
+    if (percentage != 100) {
+        indicator->mark_as_completed();
     }
 
     show_console_cursor();
