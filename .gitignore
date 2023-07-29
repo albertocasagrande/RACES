@@ -12,10 +12,12 @@ Makefile
 build.ninja
 races_sim
 races_phylo
+races_build_index
 RACES.so
 RACES.dll
 libRACES.*
 include/indicators.hpp
 *.cpython*.pyc
+*.cif
 tests/test_*
 tests/assets/v3.3_SBS3_PROFILE.txt
