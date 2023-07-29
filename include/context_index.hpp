@@ -1,8 +1,8 @@
 /**
- * @file context_positions.hpp
+ * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implements a class to collect context positions
- * @version 0.6
+ * @brief Implements a class to build a context index
+ * @version 0.1
  * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_CONTEXT_POSITIONS__
-#define __RACES_CONTEXT_POSITIONS__
+#ifndef __RACES_CONTEXT_INDEX__
+#define __RACES_CONTEXT_INDEX__
 
 #include <map>
 #include <set>
@@ -56,7 +56,7 @@ namespace Passengers
 template<typename ABSOLUTE_GENOMIC_POSITION = uint32_t,
          std::enable_if_t<std::is_integral_v<ABSOLUTE_GENOMIC_POSITION>
                           && std::is_unsigned_v<ABSOLUTE_GENOMIC_POSITION>, bool> = true>
-struct ContextPositions
+struct ContextIndex
 {
     using AbsoluteGenomicPosition = ABSOLUTE_GENOMIC_POSITION;
 protected:
@@ -71,12 +71,12 @@ protected:
      * @brief Find the mutational contexts of a FASTA sequence and save their positions in the map
      * 
      * This method finds the mutational contexts of a FASTA sequence and saves their absolute positions
-     * in `ContextPositions::context2pos`.
+     * in `ContextIndex::context2pos`.
      * 
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
      * @param[in,out] progress_bar is the progress bar
      */
-    void find_contexts_in_seq(std::ifstream& fasta_stream, UI::ProgressBar* progress_bar)
+    void build_index_in_seq(std::ifstream& fasta_stream, UI::ProgressBar* progress_bar)
     {
         auto filesize = IO::get_stream_size(fasta_stream);
         if (progress_bar != nullptr) {
@@ -167,13 +167,13 @@ protected:
      * @brief Find the mutational contexts in parts of a FASTA sequence and save their positions in the map
      * 
      * This method finds the mutational contexts laying in the specified regions of a FASTA sequence and 
-     * saves their absolute positions in `ContextPositions::context2pos`.
+     * saves their absolute positions in `ContextIndex::context2pos`.
      * 
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
      * @param[in] genomic_regions is the set of regions to be considered when searching mutational contexts
      * @param[in,out] progress_bar is the progress bar
      */
-    void find_contexts_in_seq(std::ifstream& fasta_stream, const std::set<GenomicRegion>& genomic_regions,
+    void build_index_in_seq(std::ifstream& fasta_stream, const std::set<GenomicRegion>& genomic_regions,
                               UI::ProgressBar* progress_bar)
     {
         auto filesize = Races::IO::get_stream_size(fasta_stream);
@@ -238,10 +238,10 @@ protected:
      * 
      * This method resets the current object, finds the mutational contexts in the chromosome sequences
      * contained in a FASTA stream, and saves their absolute positions in the object member 
-     * `ContextPositions::context2pos`. The chromosome sequences are identified by their names according 
+     * `ContextIndex::context2pos`. The chromosome sequences are identified by their names according 
      * to the method template parameter.
      * At the same time, this method stores the absolute positions of each chromosome in the member 
-     * `ContextPositions::abs_pos2chromosome`.
+     * `ContextIndex::abs_pos2chr`.
      * 
      * @tparam SEQUENCE_NAME_DECODER is a sequence name decoder inherited from `Races::IO::FASTA::SeqNameDecoder` 
      * @param[in,out] fasta_stream is the genome FASTA stream
@@ -281,13 +281,13 @@ protected:
                 abs_pos2chr[genome_size+1] = chr_region.get_chromosome_id();
 
                 if (genomic_regions == nullptr) {
-                    find_contexts_in_seq(fasta_stream, progress_bar);
+                    build_index_in_seq(fasta_stream, progress_bar);
                 } else {
                     auto regions_in = regions_by_chr.find(chr_region.get_chromosome_id());
 
                     // if one of the selected region belongs to the current chromosome
                     if (regions_in != regions_by_chr.end()) {
-                        find_contexts_in_seq(fasta_stream, regions_in->second, progress_bar);
+                        build_index_in_seq(fasta_stream, regions_in->second, progress_bar);
                     } else {
                         skip_to_next_seq(fasta_stream);
                     }
@@ -298,7 +298,7 @@ protected:
         }
 
         if (progress_bar != nullptr) {
-            progress_bar->set_progress(100, "Context index build");
+            progress_bar->set_progress(100, "Context index built");
         }
     }
 public:
@@ -306,7 +306,7 @@ public:
     /**
      * @brief The empty constructor
      */
-    ContextPositions():
+    ContextIndex():
         context2pos(std::make_shared<ContextPositionMap>()), genome_size(0)
     {}
 
@@ -321,13 +321,13 @@ public:
      */
     template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
-    static ContextPositions find_contexts_in(std::ifstream& genome_fasta_stream, UI::ProgressBar* progress_bar=nullptr)
+    static ContextIndex build_index(std::ifstream& genome_fasta_stream, UI::ProgressBar* progress_bar=nullptr)
     {
-        ContextPositions c_positions;
+        ContextIndex context_index;
 
-        c_positions.reset_with<SEQUENCE_NAME_DECODER>(genome_fasta_stream, nullptr, progress_bar);
+        context_index.reset_with<SEQUENCE_NAME_DECODER>(genome_fasta_stream, nullptr, progress_bar);
 
-        return c_positions;
+        return context_index;
     }
 
     /**
@@ -341,7 +341,7 @@ public:
      */
     template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
-    static ContextPositions find_contexts_in(const std::filesystem::path& genome_fasta, UI::ProgressBar* progress_bar=nullptr)
+    static ContextIndex build_index(const std::filesystem::path& genome_fasta, UI::ProgressBar* progress_bar=nullptr)
     {
         std::ifstream genome_fasta_stream(genome_fasta);
 
@@ -352,7 +352,7 @@ public:
             throw std::runtime_error(oss.str());
         }        
         
-        return find_contexts_in<SEQUENCE_NAME_DECODER>(genome_fasta_stream, progress_bar);
+        return build_index<SEQUENCE_NAME_DECODER>(genome_fasta_stream, progress_bar);
     }
 
     /**
@@ -367,14 +367,14 @@ public:
      */
     template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
-    static ContextPositions find_contexts_in(std::ifstream& genome_fasta_stream, const std::set<GenomicRegion>& genomic_regions,
+    static ContextIndex build_index(std::ifstream& genome_fasta_stream, const std::set<GenomicRegion>& genomic_regions,
                                              UI::ProgressBar* progress_bar=nullptr)
     {
-        ContextPositions c_positions;
+        ContextIndex context_index;
 
-        c_positions.reset_with<SEQUENCE_NAME_DECODER>(genome_fasta_stream, &genomic_regions, progress_bar);
+        context_index.reset_with<SEQUENCE_NAME_DECODER>(genome_fasta_stream, &genomic_regions, progress_bar);
 
-        return c_positions;
+        return context_index;
     }
 
     /**
@@ -389,7 +389,7 @@ public:
      */
     template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
-    static ContextPositions find_contexts_in(const std::filesystem::path& genome_fasta, const std::set<GenomicRegion>& genomic_regions,
+    static ContextIndex build_index(const std::filesystem::path& genome_fasta, const std::set<GenomicRegion>& genomic_regions,
                                              UI::ProgressBar* progress_bar=nullptr)
     {
         std::ifstream genome_fasta_stream(genome_fasta);
@@ -401,7 +401,7 @@ public:
             throw std::runtime_error(oss.str());
         }      
 
-        return find_contexts_in<SEQUENCE_NAME_DECODER>(genome_fasta_stream, genomic_regions, progress_bar);
+        return build_index<SEQUENCE_NAME_DECODER>(genome_fasta_stream, genomic_regions, progress_bar);
     }
 
     /**
@@ -498,9 +498,9 @@ public:
      * @return the loaded simulator
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static ContextPositions load(ARCHIVE& archive)
+    static ContextIndex load(ARCHIVE& archive)
     {
-        ContextPositions c_positions;
+        ContextIndex context_index;
         uint8_t abs_pos_size;
 
         archive & abs_pos_size;
@@ -515,13 +515,13 @@ public:
             throw std::runtime_error(oss.str());
         }
 
-        c_positions.context2pos = std::make_shared<ContextPositionMap>();
+        context_index.context2pos = std::make_shared<ContextPositionMap>();
 
-        archive & *(c_positions.context2pos)
-                & c_positions.abs_pos2chr
-                & c_positions.genome_size;
+        archive & *(context_index.context2pos)
+                & context_index.abs_pos2chr
+                & context_index.genome_size;
 
-        return c_positions;
+        return context_index;
     }
 };
 
@@ -530,4 +530,4 @@ public:
 }   // Passengers
 
 
-#endif // __RACES_CONTEXT_POSITIONS__
+#endif // __RACES_CONTEXT_INDEX__

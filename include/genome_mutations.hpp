@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.1
- * @date 2023-07-27
+ * @version 0.2
+ * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 #include <fstream>
 
 #include "snv_signature.hpp"
-#include "context_positions.hpp"
+#include "context_index.hpp"
 
 #include "fragment.hpp"
 #include "progress_bar.hpp"
@@ -266,13 +266,13 @@ struct GenomeMutations
      * This constructor builds the genome mutations model corresponding 
      * to a set of context positions.
      * 
-     * @param context_positions is a context position
+     * @param context_index is a context index
      * @param num_of_alleles is the initial number of alleles
      */
     template<typename ABSOLUTE_GENOMIC_POSITIONS>
-    GenomeMutations(const ContextPositions<ABSOLUTE_GENOMIC_POSITIONS>& context_positions, const size_t& num_of_alleles)
+    GenomeMutations(const ContextIndex<ABSOLUTE_GENOMIC_POSITIONS>& context_index, const size_t& num_of_alleles)
     {
-        std::vector<GenomicRegion> chr_regions = context_positions.get_chromosome_regions();
+        std::vector<GenomicRegion> chr_regions = context_index.get_chromosome_regions();
 
         for (const auto& chr_region : chr_regions) {
             chromosomes[chr_region.get_chromosome_id()] = ChromosomeMutations(chr_region, num_of_alleles);

@@ -104,7 +104,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_io.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/context_positions.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fragment.hpp

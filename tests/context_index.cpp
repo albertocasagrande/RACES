@@ -1,9 +1,9 @@
 /**
- * @file context_positions.cpp
+ * @file context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Testing Races::Passengers::ContextPositions class
+ * @brief Testing Races::Passengers::ContextIndex class
  * @version 0.1
- * @date 2023-07-26
+ * @date 2023-07-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,58 +29,58 @@
  */
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE context_positions
+#define BOOST_TEST_MODULE context_index
 
 #include <boost/test/unit_test.hpp>
 
 #include <fstream>
 
-#include "context_positions.hpp"
+#include "context_index.hpp"
 
 
-BOOST_AUTO_TEST_CASE(context_positions_creation)
+BOOST_AUTO_TEST_CASE(context_index_creation)
 {
     using namespace Races::Passengers;
 
-    BOOST_CHECK_NO_THROW(ContextPositions());
+    BOOST_CHECK_NO_THROW(ContextIndex());
 
-    BOOST_CHECK_NO_THROW(ContextPositions<>::find_contexts_in(FASTA_FILE));
+    BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(FASTA_FILE));
 
     std::set<GenomicRegion> regions{{{2,115}, 20},
                                     {{1,5}, 73},
                                     {{2,247}, 11}};
 
-    BOOST_CHECK_NO_THROW(ContextPositions<>::find_contexts_in(FASTA_FILE, regions));
+    BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(FASTA_FILE, regions));
 
     {
         std::ifstream is(FASTA_FILE, std::ios::in);
 
-        BOOST_CHECK_NO_THROW(ContextPositions<>::find_contexts_in(is));
+        BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(is));
     }
 
     {
         std::ifstream is(FASTA_FILE, std::ios::in);
 
-        BOOST_CHECK_NO_THROW(ContextPositions<>::find_contexts_in(is, regions));
+        BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(is, regions));
     }
 
     {
         std::ifstream is(FASTA_FILE, std::ios::in);
 
-        BOOST_CHECK_NO_THROW(ContextPositions<>::find_contexts_in(is));
+        BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(is));
 
-        BOOST_CHECK_THROW(ContextPositions<>::find_contexts_in(is), std::runtime_error);
+        BOOST_CHECK_THROW(ContextIndex<>::build_index(is), std::runtime_error);
     }
 }
 
 template<typename ABSOLUTE_GENOMIC_POSITION>
-std::set<Races::Passengers::GenomicPosition> get_genomic_positions(const Races::Passengers::ContextPositions<ABSOLUTE_GENOMIC_POSITION>& context_positions,
+std::set<Races::Passengers::GenomicPosition> get_genomic_positions(const Races::Passengers::ContextIndex<ABSOLUTE_GENOMIC_POSITION>& context_index,
                                                                    const Races::Passengers::MutationalContext& mutational_context)
 {
     std::set<Races::Passengers::GenomicPosition> positions;
 
-    for (const auto& abs_pos: context_positions[mutational_context]) {
-        positions.insert(context_positions.get_genomic_position(abs_pos));
+    for (const auto& abs_pos: context_index[mutational_context]) {
+        positions.insert(context_index.get_genomic_position(abs_pos));
     }
 
     return positions;
@@ -106,21 +106,21 @@ struct ContextFixture
 };
 
 
-BOOST_FIXTURE_TEST_SUITE( context_positions_test, ContextFixture )
+BOOST_FIXTURE_TEST_SUITE( context_index_test, ContextFixture )
 
-BOOST_AUTO_TEST_CASE(context_positions_whole_genome)
+BOOST_AUTO_TEST_CASE(context_index_whole_genome)
 {
     using namespace Races::Passengers;
 
-    auto context_positions = ContextPositions<>::find_contexts_in(FASTA_FILE);
+    auto context_index = ContextIndex<>::build_index(FASTA_FILE);
 
     for (const auto& [context_test, positions_test]: test_positions) {
         std::set<Races::Passengers::GenomicPosition> positions;
 
         if (positions_test.size() != 0) {
-            BOOST_CHECK_NO_THROW(positions = get_genomic_positions(context_positions, context_test));
+            BOOST_CHECK_NO_THROW(positions = get_genomic_positions(context_index, context_test));
         } else {
-            BOOST_CHECK_THROW(positions = get_genomic_positions(context_positions, context_test), std::domain_error);
+            BOOST_CHECK_THROW(positions = get_genomic_positions(context_index, context_test), std::domain_error);
         }
 
         BOOST_CHECK_EQUAL(positions.size(), positions_test.size());
@@ -146,7 +146,7 @@ bool in_regions(const std::set<Races::Passengers::GenomicRegion>& genomic_region
     return false;
 }
 
-BOOST_AUTO_TEST_CASE(context_positions_regions)
+BOOST_AUTO_TEST_CASE(context_index_regions)
 {
     using namespace Races::Passengers;
 
@@ -163,15 +163,15 @@ BOOST_AUTO_TEST_CASE(context_positions_regions)
         }
     }
 
-    auto context_positions = ContextPositions<>::find_contexts_in(FASTA_FILE, regions);
+    auto context_index = ContextIndex<>::build_index(FASTA_FILE, regions);
 
     for (const auto& [context_test, positions_test]: filtered_test_positions) {
         std::set<Races::Passengers::GenomicPosition> positions;
 
         if (positions_test.size() != 0) {
-            BOOST_CHECK_NO_THROW(positions = get_genomic_positions(context_positions, context_test));
+            BOOST_CHECK_NO_THROW(positions = get_genomic_positions(context_index, context_test));
         } else {
-            BOOST_CHECK_THROW(positions = get_genomic_positions(context_positions, context_test), std::domain_error);
+            BOOST_CHECK_THROW(positions = get_genomic_positions(context_index, context_test), std::domain_error);
         }
         BOOST_CHECK_EQUAL(positions.size(), positions_test.size());
 
