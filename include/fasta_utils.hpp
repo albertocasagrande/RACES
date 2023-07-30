@@ -2,8 +2,8 @@
  * @file fasta_utils.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines support utilities for FASTA files
- * @version 0.1
- * @date 2023-07-26
+ * @version 0.2
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 
 #include <string>
 
-#include "fragment.hpp"
+#include "genomic_region.hpp"
 
 namespace Races
 {

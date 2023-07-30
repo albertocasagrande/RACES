@@ -2,7 +2,7 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some tests for Races::Passengers::Fragment
- * @version 0.6
+ * @version 0.7
  * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
@@ -75,13 +75,13 @@ BOOST_AUTO_TEST_CASE(fragment_contains)
     BOOST_CHECK(fragment.contains(gen_pos));
 
     // wrong chromosome
-    BOOST_CHECK(!fragment.contains({static_cast<uint8_t>(gen_pos.chr_id+1), gen_pos.position}));
+    BOOST_CHECK(!fragment.contains(GenomicPosition{static_cast<uint8_t>(gen_pos.chr_id+1), gen_pos.position}));
 
     // after fragment
-    BOOST_CHECK(!fragment.contains({gen_pos.chr_id, f_pos.position+length+10}));
+    BOOST_CHECK(!fragment.contains(GenomicPosition{gen_pos.chr_id, f_pos.position+length+10}));
 
     // before fragment
-    BOOST_CHECK(!fragment.contains({gen_pos.chr_id, f_pos.position-10}));
+    BOOST_CHECK(!fragment.contains(GenomicPosition{gen_pos.chr_id, f_pos.position-10}));
 }
 
 BOOST_AUTO_TEST_CASE(fragment_follows)

@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic fragment
- * @version 0.6
- * @date 2023-07-28
+ * @version 0.7
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,69 +51,6 @@ void validate_fragment(const Fragment& fragment)
             }
         }
     }   
-}
-
-GenomicRegion::GenomicRegion():
-    initial_pos(0), length(0)
-{}
-
-GenomicRegion::GenomicRegion(const ChromosomeId chromosome_id, const Length length):
-    initial_pos(chromosome_id, 1), length(length)
-{
-    if (length == 0) {
-        throw std::domain_error("the genomic region length must greater than 0");
-    }
-}
-
-GenomicRegion::GenomicRegion(const GenomicPosition initial_pos, const Length length):
-    initial_pos(initial_pos), length(length)
-{
-    if (length == 0) {
-        throw std::domain_error("the genomic region length must greater than 0");
-    }
-}
-
-bool GenomicRegion::overlaps(const GenomicRegion& genomic_region) const
-{
-    return (this->contains(genomic_region.get_begin())
-            || genomic_region.contains(get_begin())
-            || this->contains(genomic_region.get_end())
-            || genomic_region.contains(get_end()));
-}
-
-GenomicRegion GenomicRegion::split(const GenomicPosition& split_point)
-{
-    if (!contains(split_point)) {
-        throw std::domain_error("the fragment does not contain the split point");
-    }
-
-    if (split_point==initial_pos) {
-        throw std::domain_error("the fragment initial position and the split point are the same");
-    } 
-
-    GenomicRegion new_region(split_point, length-(split_point.position-initial_pos.position));
-
-    length = split_point.position - initial_pos.position;
-
-    return new_region;
-}
-
-GenomicRegion& GenomicRegion::join(GenomicRegion& contiguous_region)
-{
-    if (follows(contiguous_region)) {
-        std::swap(contiguous_region, *this);
-    }
-
-    if (!precedes(contiguous_region)) {
-        throw std::domain_error("the two genomic regions are not contiguous");
-    }
-
-    length += contiguous_region.length;
-
-    // reset contiguous_region length
-    contiguous_region.length = 0;
-
-    return *this;
 }
 
 Fragment::Fragment():
@@ -396,17 +333,6 @@ bool Fragment::remove_SNV(const GenomicPosition& genomic_position)
 
 namespace std
 {
-
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicRegion& genomic_region)
-{
-    auto begin_pos = genomic_region.get_begin();
-
-    out << "GenomicRegion(chr: " << static_cast<int>(begin_pos.chr_id)
-        << ", begin: " << begin_pos.position
-        << ", length: " << genomic_region.size() << ")";
-
-    return out;
-}
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::Fragment& fragment)
 {
