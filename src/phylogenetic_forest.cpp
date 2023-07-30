@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement classes and function for phylogenetic trees
- * @version 0.3
- * @date 2023-07-21
+ * @version 0.4
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,7 +71,7 @@ PhylogeneticForest::PhylogeneticForest()
 PhylogeneticForest::const_node PhylogeneticForest::const_node::parent() const
 {
     if (forest==nullptr) {
-        std::runtime_error("The forest node has not been initialized");
+        throw std::runtime_error("The forest node has not been initialized");
     }
 
     return PhylogeneticForest::const_node(forest, forest->cells.at(cell_id).get_parent_id());
@@ -80,7 +80,7 @@ PhylogeneticForest::const_node PhylogeneticForest::const_node::parent() const
 std::vector<PhylogeneticForest::const_node> PhylogeneticForest::const_node::children() const
 {
     if (forest==nullptr) {
-        std::runtime_error("The forest node has not been initialized");
+        throw std::runtime_error("The forest node has not been initialized");
     }
 
     std::vector<PhylogeneticForest::const_node> nodes;
@@ -95,7 +95,7 @@ std::vector<PhylogeneticForest::const_node> PhylogeneticForest::const_node::chil
 PhylogeneticForest::node PhylogeneticForest::node::parent()
 {
     if (forest==nullptr) {
-        std::runtime_error("The forest node has not been initialized");
+       throw std::runtime_error("The forest node has not been initialized");
     }
 
     return PhylogeneticForest::node(forest, forest->cells.at(cell_id).get_parent_id());
@@ -104,7 +104,7 @@ PhylogeneticForest::node PhylogeneticForest::node::parent()
 std::vector<PhylogeneticForest::node> PhylogeneticForest::node::children()
 {
     if (forest==nullptr) {
-        std::runtime_error("The forest node has not been initialized");
+        throw std::runtime_error("The forest node has not been initialized");
     }
 
     std::vector<PhylogeneticForest::node> nodes;
