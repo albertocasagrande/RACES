@@ -54,7 +54,7 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_io.cpp
+set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
@@ -81,7 +81,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_io.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_utils.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp)
 
-set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_io.hpp
+set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
