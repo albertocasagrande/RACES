@@ -2,8 +2,8 @@
  * @file fragment.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some tests for Races::Passengers::Fragment
- * @version 0.5
- * @date 2023-07-28
+ * @version 0.6
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(fragment_creation)
 
     std::vector<Allele> alleles(1);
 
-    alleles[0][snv_pos] = SNV(snv_pos, 'A', 'C');
+    alleles[0][snv_pos] = SNV(snv_pos, "AAG", 'C');
 
     Fragment::Length length = snv_pos.position+1000;
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(fragment_insert)
     GenomicPosition f_pos(12, 1000);
     Fragment fragment({12,100}, 1000, alleles);
 
-    SNV snv0({f_pos.chr_id, f_pos.position+10}, 'A', 'C');
+    SNV snv0({f_pos.chr_id, f_pos.position+10}, "AAG", 'C');
 
     // unknown allele
     BOOST_CHECK_THROW(fragment.insert(snv0, 7), std::out_of_range);
@@ -210,7 +210,7 @@ struct FragmentFixture {
         GenomicPosition f_pos(12, 1000);
         fragment = Fragment({12,100}, 1000, alleles);
 
-        snvs.push_back(SNV({f_pos.chr_id, f_pos.position+10}, 'A', 'C'));
+        snvs.push_back(SNV({f_pos.chr_id, f_pos.position+10}, "AAG", 'C'));
         fragment.insert(snvs.back(), 3);
 
         // mutational context not free

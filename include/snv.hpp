@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.3
- * @date 2023-07-28
+ * @version 0.4
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,6 +34,7 @@
 #include <ostream>
 
 #include "genomic_position.hpp"
+#include "context.hpp"
 
 namespace Races 
 {
@@ -46,8 +47,8 @@ namespace Passengers
  */
 struct SNV : public GenomicPosition
 {
-    char orig_base;         //!< the original base
-    char mutated_base;      //!< the mutated base
+    MutationalContext context;  //!< the context base
+    char mutated_base;          //!< the mutated base
 
     /**
      * @brief The empty constructor
@@ -60,32 +61,33 @@ struct SNV : public GenomicPosition
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
      * @param position is the SNV position
-     * @param original_base is the original base
+     * @param context is the SNV context
      * @param mutated_base is the mutated base
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
     SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
-        const char original_base, const char mutated_base);
+        const MutationalContext& context, const char mutated_base);
 
     /**
      * @brief A constructor
      * 
      * @param genomic_position is the SNV genomic_position
-     * @param original_base is the original base
+     * @param context is the SNV context
      * @param mutated_base is the mutated base
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
-    SNV(const GenomicPosition& genomic_position, const char original_base, const char mutated_base);
+    SNV(const GenomicPosition& genomic_position, const MutationalContext& context,
+        const char mutated_base);
 
     /**
      * @brief A constructor
      * 
      * @param genomic_position is the SNV genomic_position
-     * @param original_base is the original base
+     * @param context is the SNV context
      * @param mutated_base is the mutated base
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
-    SNV(GenomicPosition&& genomic_position, const char original_base, const char mutated_base);
+    SNV(GenomicPosition&& genomic_position, const MutationalContext& context, const char mutated_base);
 };
 
 }   // Passengers

@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Testing Races::Passengers::GenomeMutations class
- * @version 0.1
- * @date 2023-07-29
+ * @version 0.2
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -85,11 +85,11 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 {
     using namespace Races::Passengers;
 
-    SNV snv0(1, 32, 'A', 'G');  // chromosome 1, position 32
+    SNV snv0(1, 32, "AAG", 'G');  // chromosome 1, position 32
     
-    SNV snv1(snv0.chr_id, snv0.position-1, 'T', 'G'), // at snv0 5'
-        snv2(snv0.chr_id, snv0.position+1, 'G', 'C'), // at snv0 3'
-        snv3(snv0.chr_id+1, snv0.position, 'T', 'G'); // snv0 and snv3 differ in chromosome
+    SNV snv1(snv0.chr_id, snv0.position-1, "CTT", 'G'), // at snv0 5'
+        snv2(snv0.chr_id, snv0.position+1, "AGC", 'C'), // at snv0 3'
+        snv3(snv0.chr_id+1, snv0.position, "TTT", 'G'); // snv0 and snv3 differ in chromosome
 
     auto test_genome_mutations = genome_mutations;
 
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
 
         // snv in a wrong position
-        SNV snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
+        SNV snv_err(snv0.chr_id, chr.size()+1, "AAG", 'G');
 
         BOOST_CHECK_THROW(test_genome_mutations.insert(snv_err, 0), std::domain_error);
     }
@@ -145,9 +145,9 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
 {
     using namespace Races::Passengers;
 
-    SNV snv0(1, 32, 'A', 'G');
+    SNV snv0(1, 32, "AAG", 'G');
     
-    SNV snv1(snv0.chr_id, snv0.position-1, 'T', 'G');
+    SNV snv1(snv0.chr_id, snv0.position-1, "ATG", 'G');
 
     auto test_genome_mutations = genome_mutations;
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
 
         // snv in a wrong position
-        SNV snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
+        SNV snv_err(snv0.chr_id, chr.size()+1, "AAG", 'G');
 
         BOOST_CHECK_THROW(test_genome_mutations.remove_SNV(snv_err), std::domain_error);
     }
@@ -196,10 +196,10 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
 {
     using namespace Races::Passengers;
 
-    SNV snv0(1, 32, 'A', 'G');
+    SNV snv0(1, 32, "AAG", 'G');
     
-    SNV snv1(snv0.chr_id, 64, 'A', 'T'),
-        snv2(snv0.chr_id, 110, 'T', 'G');
+    SNV snv1(snv0.chr_id, 64, "AAG", 'T'),
+        snv2(snv0.chr_id, 110, "ATG", 'G');
 
     GenomicRegion gr_32_64(snv0, 33), // from 32 to 64
                   gr_10_110({snv0.chr_id, 10}, 101),  // from 10 to 110
@@ -270,10 +270,10 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
 {
     using namespace Races::Passengers;
 
-    SNV snv0(1, 32, 'A', 'G');
+    SNV snv0(1, 32, "AAG", 'G');
     
-    SNV snv1(snv0.chr_id, 64, 'A', 'T'),
-        snv2(snv0.chr_id, 110, 'T', 'G');
+    SNV snv1(snv0.chr_id, 64, "AAG", 'T'),
+        snv2(snv0.chr_id, 110, "ATG", 'G');
 
     GenomicRegion gr_32_64(snv0, 33), // from 32 to 64
                   gr_10_110({snv0.chr_id, 10}, 101),  // from 10 to 110
