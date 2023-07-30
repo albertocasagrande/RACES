@@ -73,6 +73,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_io.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/snv.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fragment.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
@@ -108,6 +109,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_io.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fragment.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
