@@ -2,7 +2,7 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
@@ -423,6 +423,76 @@ public:
     inline const std::vector<ABSOLUTE_GENOMIC_POSITION>& operator[](const MutationalContext& context) const
     {
         return context2pos->at(context);
+    }
+
+    /**
+     * @brief Extract a genome position from the index
+     * 
+     * @param context is the context whose position will be extracted
+     * @param index is the index of the position that will be extracted
+     * @return the extracted absolute position for `context`
+     */
+    ABSOLUTE_GENOMIC_POSITION extract(const MutationalContext& context, const size_t index)
+    {
+        auto& context_pos = context2pos->at(context);
+
+        if (context_pos.size() < index+1) {
+            throw std::out_of_range("The context does not have so many positions");
+        }
+
+        if (context_pos.size() > index+1) {
+            std::swap(context_pos[index], context_pos.back());
+        }
+
+        auto extracted = context_pos.back();
+
+        context_pos.pop_back();
+
+        return extracted;
+    }
+
+    /**
+     * @brief Insert a genomic position for a context
+     * 
+     * This method inserts an absolute genomic position in the 
+     * last position of the position vector of a context
+     * 
+     * @param context is the context whose position will be inserted
+     * @param absolute_position is the absolute position to insert
+     */
+    void insert(const MutationalContext& context, const ABSOLUTE_GENOMIC_POSITION& absolute_position)
+    {
+        auto& context_pos = context2pos->at(context);
+
+        if (context_pos.size() < index) {
+            throw std::out_of_range("The context does not have so many positions");
+        }
+
+        context_pos.push_back(absolute_position);
+    }
+
+    /**
+     * @brief Insert a genomic position for a context
+     * 
+     * @param context is the context whose position will be inserted
+     * @param absolute_position is the absolute position to insert
+     * @param index is the index in the position vector of `context`
+     *          in which `absolute_position` will inserted
+     */
+    void insert(const MutationalContext& context, const ABSOLUTE_GENOMIC_POSITION& absolute_position, 
+                const size_t index)
+    {
+        auto& context_pos = context2pos->at(context);
+
+        if (context_pos.size() < index) {
+            throw std::out_of_range("The context does not have so many positions");
+        }
+
+        context_pos.push_back(absolute_position);
+
+        if (context_pos.size() > index+1) {
+            std::swap(context_pos[index], context_pos.back());
+        }
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Testing Races::Passengers::ContextIndex class
- * @version 0.1
- * @date 2023-07-29
+ * @version 0.2
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -181,6 +181,36 @@ BOOST_AUTO_TEST_CASE(context_index_regions)
             BOOST_CHECK_EQUAL(*it, *it_test);
         }
 
+    }
+}
+
+BOOST_AUTO_TEST_CASE(context_index_remove_insert)
+{
+    using namespace Races::Passengers;
+
+    auto context_index = ContextIndex<>::build_index(FASTA_FILE);
+
+    auto context = "CCT";
+
+    BOOST_CHECK_EQUAL(context_index[context].size(), 8);
+
+    std::vector<uint32_t> expected{8,14,20,26,38,67,88,372};
+
+    for (size_t i=0; i<8; ++i) {
+        BOOST_CHECK_EQUAL(context_index[context][i], expected[i]);
+    }
+
+    auto value = context_index.extract(context, 3);
+
+    BOOST_CHECK_EQUAL(value, expected[3]);
+    BOOST_CHECK_EQUAL(context_index[context].size(), 7);
+
+    context_index.insert(context, value, 3);
+
+    BOOST_CHECK_EQUAL(context_index[context].size(), 8);
+
+    for (size_t i=0; i<8; ++i) {
+        BOOST_CHECK_EQUAL(context_index[context][i], expected[i]);
     }
 }
 
