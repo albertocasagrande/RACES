@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.2
- * @date 2023-07-29
+ * @version 0.3
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,173 +40,74 @@ namespace Passengers
 {
 
 ChromosomeMutations::ChromosomeMutations():
-    identifier(0), length(0), allelic_length(0), fragments(), next_allele_id(0)
+    identifier(0), length(0), allelic_length(0), alleles(), next_allele_id(0)
 {}
 
 ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const Length& size, const size_t& num_of_alleles):
-    identifier(identifier), length(size), allelic_length(size*num_of_alleles), fragments(), next_allele_id(num_of_alleles)
+    identifier(identifier), length(size), allelic_length(size*num_of_alleles), alleles(), next_allele_id(0)
 {
-    Fragment chr_fragment{identifier, size, num_of_alleles};
-
-    fragments[chr_fragment.get_begin()] = chr_fragment;
+    for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
+        alleles.insert({next_allele_id, Allele{identifier, 1, size}});
+    }
 }
 
 ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
     identifier(chromosome_region.get_chromosome_id()), length(chromosome_region.size()), 
-    allelic_length(chromosome_region.size()*num_of_alleles), fragments(), next_allele_id(num_of_alleles)        
+    allelic_length(chromosome_region.size()*num_of_alleles), alleles(), next_allele_id(0)        
 {
-    fragments[chromosome_region.get_begin()] = Fragment(chromosome_region, num_of_alleles);
+    for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
+        alleles.insert({next_allele_id, Allele{chromosome_region}});
+    }
 }
 
-auto find_last_not_starting_after(std::map<GenomicPosition, Fragment>& fragments, const GenomicPosition& genomic_position)
+std::set<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
 {
-    // find the first fragment that begins *after* `genomic_position`
-    auto it = fragments.upper_bound(genomic_position);
+    std::set<AlleleId> allele_ids;
 
-    assert(it == fragments.end() || it->first.position > genomic_position.position);
-
-    // if its not the first in the chromosome
-    if (it != fragments.begin()) {
-
-        // consider the previous one, i.e., the last one that started 
-        // before `genomic_position`
-        --it;
-    }
-
-    return it;
-}
-
-auto find_first_not_ending_before(std::map<GenomicPosition, Fragment>& fragments, const GenomicPosition& genomic_position)
-{
-    auto it = find_last_not_starting_after(fragments, genomic_position);
-
-    // if it ends before `genomic_region`
-    if (it != fragments.end() && it->second.ends_before(genomic_position)) {
-
-        // consider the following one
-        ++it;
-    }
-
-    return it;
-}
-
-
-auto find_last_not_starting_after(const std::map<GenomicPosition, Fragment>& fragments, const GenomicPosition& genomic_position)
-{
-    // find the first fragment that begins *after* `genomic_position`
-    auto it = fragments.upper_bound(genomic_position);
-
-    assert(it == fragments.end() || it->first.position > genomic_position.position);
-
-    // if its not the first in the chromosome
-    if (it != fragments.begin()) {
-
-        // consider the previous one, i.e., the last one that started 
-        // before `genomic_position`
-        --it;
-    }
-
-    return it;
-}
-
-auto find_first_not_ending_before(const std::map<GenomicPosition, Fragment>& fragments, const GenomicPosition& genomic_position)
-{
-    auto it = find_last_not_starting_after(fragments, genomic_position);
-
-    // if it ends before `genomic_region`
-    if (it != fragments.end() && it->second.ends_before(genomic_position)) {
-
-        // consider the following one
-        ++it;
-    }
-
-    return it;
-}
-
-std::set<AlleleId> ChromosomeMutations::get_allele_ids_in(const GenomicRegion& genomic_region) const
-{
-    // find the first fragment that may overlaps genomic region
-    auto f_it = find_first_not_ending_before(fragments, genomic_region.get_begin());
-    
-    if (f_it == fragments.end() || f_it->second.begins_after(genomic_region.get_begin())) {
-
-        // no fragment touches the genomic_region
-        return {};
-    }
-
-    // get the allele ids from the first overlapping 
-    // fragment
-    auto allele_ids = f_it->second.get_allele_ids();
-
-    // for all the overlapping fragments
-    for (; f_it!=fragments.end() && f_it->second.overlaps(genomic_region) 
-            && !allele_ids.empty(); ++f_it) {
-
-        // remove all the ids that are not contained 
-        // by the fragment
-        auto ids_it = allele_ids.begin();
-        while (ids_it != allele_ids.end()) {
-            if (!f_it->second.has_allele(*ids_it)) {
-                allele_ids.extract(ids_it++);
-            } else {
-                ++ids_it;
-            }
+    for (const auto& [allele_id, allele]: alleles) {
+        if (allele.contains(genomic_region)) {
+            allele_ids.insert(allele_id);
         }
     }
 
     return allele_ids;
 }
 
-std::map<AlleleId, std::set<SNV>> ChromosomeMutations::get_SNVs_per_allele() const
+const Allele& ChromosomeMutations::find_allele(const AlleleId& allele_id) const
 {
-    std::map<AlleleId, std::set<SNV>> SNVs;
+    auto it = alleles.find(allele_id);
 
-    for (const auto& [begin_pos, fragment]: fragments) {
-        for (const auto& [allele_id, allele]: fragment.get_alleles()) {
-            auto& allele_SNVs = SNVs[allele_id];
-            for (const auto& [pos, snv]: allele) {
-                allele_SNVs.insert(snv);
-            }
-        }
+    if (it == alleles.end()) {
+        std::ostringstream oss;
+
+        oss << "Chromosome " << identifier <<  " has not allele " << allele_id << ".";
+        throw std::out_of_range(oss.str());
     }
 
-    return SNVs;
+    return it->second;
 }
 
-void split_fragments_overlapping(std::map<GenomicPosition, Fragment>& fragments, const GenomicRegion& genomic_region)
+Allele& ChromosomeMutations::find_allele(const AlleleId& allele_id)
 {
-    auto f_it = find_first_not_ending_before(fragments, genomic_region.get_begin());
+    auto it = alleles.find(allele_id);
 
-    // if some fragment not ending before `genomic_region` begin exists and 
-    // it does begin before the initial position of `genomic_region`
-    if (f_it != fragments.end()
-            && f_it->second.get_initial_position()<genomic_region.get_initial_position()) {
-        
-        // split it 
-        auto new_fragment = f_it->second.split(genomic_region.get_begin());
+    if (it == alleles.end()) {
+        std::ostringstream oss;
 
-        // add the new fragment to the chromosome fragments
-        fragments[new_fragment.get_begin()] = new_fragment;
+        oss << "Chromosome " << identifier <<  " has not allele " << allele_id << ".";
+        throw std::out_of_range(oss.str());
     }
 
-    auto region_end = genomic_region.get_end();
-    f_it = find_first_not_ending_before(fragments, region_end);
+    return it->second;
+}
 
-    // if some fragment ending after `genomic_region` end exists and 
-    // it does begin before or at the final position of `genomic_region`
-    if (f_it != fragments.end() 
-            && f_it->second.get_initial_position()<=genomic_region.get_final_position()
-            && f_it->second.get_final_position()>genomic_region.get_final_position()) {
-        
-        // build the split point one nucleotide after the end of `genomic_region`
-        GenomicPosition split_point(region_end.chr_id, region_end.position+1);
-
-        // split the fragment
-        auto new_fragment = f_it->second.split(split_point);
-
-        // add the new fragment to the chromosome fragments
-        fragments[new_fragment.get_begin()] = new_fragment;
+bool ChromosomeMutations::allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const
+{
+    if (!contains(genomic_region)) {
+        throw std::domain_error("The genomic region is not in the chromosome");
     }
+
+    return find_allele(allele_id).contains(genomic_region);
 }
 
 bool ChromosomeMutations::contains(const GenomicPosition& genomic_position) const
@@ -223,55 +124,19 @@ bool ChromosomeMutations::contains(const GenomicRegion& genomic_region) const
             && genomic_region.get_final_position()<=size());
 }
 
-bool ChromosomeMutations::has_allele_on(const AlleleId& allele_id, const GenomicRegion& genomic_region) const
-{
-    if (!contains(genomic_region)) {
-        throw std::domain_error("The genomic region is not in the chromosome");
-    }
-
-    auto f_it = find_first_not_ending_before(fragments, genomic_region.get_begin());
-
-    assert(f_it->second.get_final_position() >= genomic_region.get_initial_position());
-
-    if (f_it == fragments.end() || 
-        f_it->second.get_initial_position() > genomic_region.get_initial_position()) {
-        return false;
-    }
-
-    // check that all the overlapping fragments contains allele_ids and 
-    // that they are continuous
-    auto prec_it=f_it;
-    while (f_it!=fragments.end() && f_it->second.overlaps(genomic_region)) {
-        if (!f_it->second.has_allele(allele_id)
-            ||(prec_it!=f_it 
-               && (prec_it->second.get_final_position()+1 < f_it->second.get_initial_position()))) {
-            return false;
-        }
-
-        prec_it=f_it;
-        ++f_it;
-    }
-
-    return true;
-}
-
 bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
-    if (!has_allele_on(allele_id, genomic_region)) {
+    if (!allele_contains(allele_id, genomic_region)) {
         return false;
     }
 
-    split_fragments_overlapping(fragments, genomic_region);
+    auto new_allele = alleles.at(allele_id).copy(genomic_region);
 
-    // duplicate the allele over all the fragments
-    for (auto f_it = find_first_not_ending_before(fragments, genomic_region.get_begin());
-            f_it!=fragments.end() && !genomic_region.ends_before(f_it->first); ++f_it) {
+    allelic_length += new_allele.size();
 
-        f_it->second.duplicate_allele(allele_id, next_allele_id);
-    }
+    alleles.insert({next_allele_id, std::move(new_allele)});
+
     ++next_allele_id;
-
-    allelic_length += genomic_region.size();
 
     return true;
 }
@@ -279,46 +144,23 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
 
 bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
-    if (!has_allele_on(allele_id, genomic_region)) {
+    if (!allele_contains(allele_id, genomic_region)) {
         return false;
     }
 
-    split_fragments_overlapping(fragments, genomic_region);
-
-    // remove the specified allele
-    for (auto f_it = find_first_not_ending_before(fragments, genomic_region.get_begin());
-            f_it!=fragments.end() && !genomic_region.ends_before(f_it->first); ++f_it) {
-        
-        f_it->second.remove_allele(allele_id);
-    }
-    
-    allelic_length -= genomic_region.size();
+    alleles[allele_id].remove(genomic_region);
 
     return true;
 }
 
-bool ChromosomeMutations::is_mutational_context_free(GenomicPosition genomic_position) const
+bool ChromosomeMutations::has_context_free(const GenomicPosition& genomic_position) const
 {
-    if (genomic_position.position < 2) {
-        return false;
+    if (!contains(genomic_position)) {
+        throw std::domain_error("The genomic position is not in the chromosome");
     }
- 
-    genomic_position.position -= 1;
 
-    auto f_it = find_first_not_ending_before(fragments, genomic_position);
-
-    for (size_t i=0; i<3; ++i) {
-        genomic_position.position += i;
-        if (f_it->second.get_final_position()<genomic_position.position) {
-            ++f_it;
-
-            if (f_it==fragments.end()) {
-                return false;
-            }
-        }
-
-        if ((f_it!=fragments.end() && f_it->second.get_initial_position()>genomic_position.position)
-                || (f_it->second.has_SNV_at(genomic_position))) {
+    for (const auto& [allele_id, allele]: alleles) {
+        if (!allele.has_context_free(genomic_position)) {
             return false;
         }
     }
@@ -326,22 +168,17 @@ bool ChromosomeMutations::is_mutational_context_free(GenomicPosition genomic_pos
     return true;
 }
 
-bool ChromosomeMutations::insert(const SNV& snv, const AlleleId allele_id)
+bool ChromosomeMutations::insert(const SNV& snv, const AlleleId& allele_id)
 {
     if (!contains(snv)) {
         throw std::domain_error("The genomic position of the SNV is not in the chromosome");
     }
 
-    if (!is_mutational_context_free(snv)) {
+    if (!has_context_free(snv)) {
         return false;
     }
 
-    auto f_it = find_first_not_ending_before(fragments, snv);
-    if (f_it->first.position <= snv.position) {
-        return f_it->second.insert(snv, allele_id);   
-    }
-
-    return false;
+    return find_allele(allele_id).insert(snv);
 }
 
 bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
@@ -350,13 +187,13 @@ bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
         throw std::domain_error("The genomic position of the SNV is not in the chromosome");
     }
 
-    auto f_it = find_first_not_ending_before(fragments, genomic_position);
-
-    if (f_it->first.position > genomic_position.position) {
-        return false;
+    for (auto& [allele_id, allele]: alleles) {
+        if (allele.remove_SNV(genomic_position)) {
+            return true;
+        }
     }
 
-    return f_it->second.remove_SNV(genomic_position);
+    return false;
 }
 
 GenomeMutations::GenomeMutations()
@@ -427,18 +264,18 @@ auto find_chromosome(const std::map<ChromosomeId, ChromosomeMutations>& chromoso
     return chr_it;   
 }
 
-std::set<AlleleId> GenomeMutations::get_allele_ids_in(const GenomicRegion& genomic_region) const
+std::set<AlleleId> GenomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.get_allele_ids_in(genomic_region);
+    return chr_it->second.get_alleles_containing(genomic_region);
 }
 
-bool GenomeMutations::has_allele_on(const AlleleId& allele_id, const GenomicRegion& genomic_region) const
+bool GenomeMutations::allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.has_allele_on(allele_id, genomic_region);
+    return chr_it->second.allele_contains(allele_id, genomic_region);
 }
 
 bool GenomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
@@ -473,3 +310,27 @@ bool GenomeMutations::remove_SNV(const GenomicPosition& genomic_position)
 
 }   // Races
 
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMutations& chromosome_mutations)
+{
+    os << "Chromosome " << static_cast<unsigned int>(chromosome_mutations.id()) << std::endl;
+
+    for (const auto& [allele_id, allele]: chromosome_mutations.get_alleles()) {
+        os << "  " << allele_id << ": " << allele << std::endl;
+    }
+
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Races::Passengers::GenomeMutations& genome_mutations)
+{
+    for (const auto& [chr_id, chr_mutations]: genome_mutations.get_chromosomes()) {
+        os << chr_mutations << std::endl;
+    }
+
+    return os;
+}
+
+}   // std

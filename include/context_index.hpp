@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.1
- * @date 2023-07-29
+ * @version 0.2
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 
 #include "archive.hpp"
 #include "fasta_utils.hpp"      // IO::FASTA::EnsemblSeqNameDecoder
-#include "fragment.hpp"         // Passengers::GenomicRegion
+#include "genomic_region.hpp"   // Passengers::GenomicRegion
 #include "basic_IO.hpp"         // IO::get_stream_size
 #include "context.hpp"          // Passengers::ExtendedContextAutomaton
 

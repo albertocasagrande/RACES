@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.3
- * @date 2023-07-29
+ * @version 0.4
+ * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@
 #include "snv_signature.hpp"
 #include "context_index.hpp"
 
-#include "fragment.hpp"
+#include "allele.hpp"
 #include "progress_bar.hpp"
 
 namespace Races 
@@ -47,19 +47,44 @@ namespace Passengers
 {
 
 /**
+ * @brief A identifier type for alleles
+ */
+typedef size_t AlleleId;
+
+/**
  * @brief A class to represent the passenger mutations in a chromosome
  */
 class ChromosomeMutations
 {
     using Length = GenomicRegion::Length;
 private:
-    ChromosomeId identifier;    //!< The chromosome identifier
-    Length length;              //!< The chromosome length
-    Length allelic_length;      //!< The sum of the lengths of all the alleles
+    ChromosomeId identifier;    //!< the chromosome identifier
+    Length length;              //!< the chromosome length
+    Length allelic_length;      //!< the sum of the lengths of all the alleles
 
-    std::map<GenomicPosition, Fragment> fragments;  //!< The chromosome fragments
+    std::map<AlleleId, Allele> alleles;  //!< the chromosome alleles
 
     AlleleId next_allele_id;   //!< the identifier of the next allele
+
+    /**
+     * @brief Find an allele in the chromosome
+     * 
+     * @param allele_id is the identifier of the allele to find
+     * @return a constant reference to the allele
+     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the 
+     *          chromosome
+     */
+    const Allele& find_allele(const AlleleId& allele_id) const;
+
+    /**
+     * @brief Find an allele in the chromosome
+     * 
+     * @param allele_id is the identifier of the allele to find
+     * @return a non-constant reference to the allele
+     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the 
+     *          chromosome
+     */
+    Allele& find_allele(const AlleleId& allele_id);
 
 public:
     /**
@@ -115,43 +140,35 @@ public:
     }
 
     /**
-     * @brief Get the chromosome fragments
+     * @brief Get the chromosome alleles
      * 
-     * @return the chromosome fragments
+     * @return a constant reference to chromosome alleles
      */
-    inline const std::map<GenomicPosition, Fragment>& get_fragments() const
+    inline const std::map<AlleleId, Allele>& get_alleles() const
     {
-        return fragments;
+        return alleles;
     } 
 
     /**
      * @brief Get the identifiers of the alleles that completely include a region
      * 
      * @param genomic_region is a region of the chromosome
-     * @return the identifiers of the allele that completely include `genomic_region`
+     * @return the identifiers of the alleles that completely include `genomic_region`
      */
-    std::set<AlleleId> get_allele_ids_in(const GenomicRegion& genomic_region) const;
+    std::set<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Get the sets of SNVs for all the alleles
+     * @brief Check whether an allele contains a chromosomic region
      * 
-     * This methods returns the SNVs occurring in each allele on the chromosome even 
-     * if the allele does not cover the full chromosome.
-     * 
-     * @return a map that associates the allele id to the SNVs present on that allele
-     */
-    std::map<AlleleId, std::set<SNV>> get_SNVs_per_allele() const;
-
-    /**
-     * @brief Check whether a chromosomic region has an allele 
-     * 
-     * @param allele_id is the identifier of the allele whose presence must be checked
+     * @param allele_id is the identifier of an allele
      * @param genomic_region is the region on which the check is performed 
-     * @return `true` if and only if the whole `genomic_region` contains the allele
-     *          having `allele_id` as allele identifier
+     * @return `true` if and only if the chromosome have an allele having `allele_id` 
+     *          as allele identifier and the whole `genomic_region` is contained
+     *          in this allele
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::out_of_range the chromosome has not the allele `allele_id`
      */
-    bool has_allele_on(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
+    bool allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
 
     /**
      * @brief Check whether a genomic position lays in a chromosome
@@ -177,7 +194,7 @@ public:
      *          in `genomic_position`
      * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
-    bool is_mutational_context_free(GenomicPosition genomic_position) const;
+    bool has_context_free(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Amplify a genomic region
@@ -223,8 +240,10 @@ public:
      * @return `true` if and only if the chromosome do not 
      *      contain any other SNVs in `snv`'s mutational context
      * @throw std::domain_error `SNV` does not lays in the chromosome
+     * @throw std::out_of_range the chromosome has not the allele 
+     *      `allele_id` or `SNV` does not lay in the allele
      */
-    bool insert(const SNV& snv, const AlleleId allele_id);
+    bool insert(const SNV& snv, const AlleleId& allele_id);
 
     /**
      * @brief Remove a SNV
@@ -235,6 +254,8 @@ public:
      * @return `true` if and only if a SNV occurred at `genomic_position`
      * @throw std::domain_error `genomic_position` does not lays in the 
      *      chromosome
+     * @throw std::out_of_range the chromosome has not the allele 
+     *      `allele_id` or `genomic_position` does not lay in the allele
      */
     bool remove_SNV(const GenomicPosition& genomic_position);
 };
@@ -310,18 +331,19 @@ public:
      * @param genomic_region is a region of the chromosome
      * @return the identifiers of the allele that completely include `genomic_region`
      */
-    std::set<AlleleId> get_allele_ids_in(const GenomicRegion& genomic_region) const;
+    std::set<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Check whether a chromosomic region has an allele 
+     * @brief Check whether an allele contains a chromosomic region
      * 
-     * @param allele_id is the identifier of the allele whose presence must be checked
+     * @param allele_id is the identifier of an allele
      * @param genomic_region is the region on which the check is performed 
-     * @return `true` if and only if the whole `genomic_region` contains the allele
-     *          having `allele_id` as allele identifier
+     * @return `true` if and only if the whole `genomic_region` is contained
+     *          in the allele `allele_id` of the corresponding chromosome
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::out_of_range the chromosome has not the allele `allele_id`
      */
-    bool has_allele_on(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
+    bool allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
 
     /**
      * @brief Amplify a genomic region
@@ -379,5 +401,28 @@ public:
 
 }   // Races
 
+
+namespace std
+{
+
+/**
+ * @brief Write chromosome mutations data in a stream
+ * 
+ * @param os is the output stream
+ * @param chromosome_mutations is a chromosome mutations
+ * @return a reference to output stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMutations& chromosome_mutations);
+
+/**
+ * @brief Write genome mutations data in a stream
+ * 
+ * @param os is the output stream
+ * @param genome_mutations is a genome mutations
+ * @return a reference to output stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Passengers::GenomeMutations& genome_mutations);
+
+}   // std
 
 #endif // __RACES_GENOME_MUTATIONS__

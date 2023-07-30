@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Testing Races::Passengers::GenomeMutations class
- * @version 0.2
+ * @version 0.3
  * @date 2023-07-30
  * 
  * @copyright Copyright (c) 2023
@@ -120,11 +120,11 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv3.chr_id);
 
-        auto chr_snvs = chr.get_SNVs_per_allele();
+        auto chr_allele = chr.get_alleles();
 
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 0);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
     }
 
     // insert snv3 in allele 1: ok (same position, different chromosome)
@@ -133,11 +133,11 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv3.chr_id);
 
-        auto chr_snvs = chr.get_SNVs_per_allele();
+        auto chr_allele = chr.get_alleles();
 
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 0);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 1);
     }
 }
 
@@ -168,11 +168,11 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
 
-        auto chr_snvs = chr.get_SNVs_per_allele();
+        auto chr_allele = chr.get_alleles();
 
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 1);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
     }
 
     // remove snv1: false (no SNV in the position)
@@ -184,11 +184,11 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
 
-        auto chr_snvs = chr.get_SNVs_per_allele();
+        auto chr_allele = chr.get_alleles();
 
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 0);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
     }
 }
 
@@ -216,14 +216,13 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(gr_32_64.get_chromosome_id());
 
-        auto chr_snvs = chr.get_SNVs_per_allele();
+        auto chr_allele = chr.get_alleles();
 
-        // now the chromosome contains 3 alleles: both 0 and 2 contains snv0
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 3);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 1);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 0);
-        BOOST_CHECK_EQUAL(chr_snvs.at(2).size(), 1);
-        BOOST_CHECK(chr_snvs.at(0)==chr_snvs.at(2));
+        BOOST_CHECK_EQUAL(chr_allele.size(), 3);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(2).get_SNVs().size(), 1);
+        BOOST_CHECK(chr_allele.at(0).get_SNVs()==chr_allele.at(2).get_SNVs());
     }
 
     {
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
 
     // amplify allele 0 from 10 to 110: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_10_110, 0));
-    
+
     // insert snv2 (chromosome1, position 110)
     test_genome_mutations.insert(snv2, 0);
 
@@ -248,21 +247,22 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_60_80, 0));
 
     {
-        const auto chr = test_genome_mutations.get_chromosomes().at(gr_32_64.get_chromosome_id());
-
-        auto chr_snvs = chr.get_SNVs_per_allele();
-
         // now the chromosome contains 5 alleles: 
         // - snv0 lays in alleles 0, 2, and 3
         // - snv1 lays in alleles 0, 3
         // - snv2 lays in alleles 0, 4
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 5);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 3);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 0);
-        BOOST_CHECK_EQUAL(chr_snvs.at(2).size(), 1);
-        BOOST_CHECK_EQUAL(chr_snvs.at(3).size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(4).size(), 1);
-        BOOST_CHECK(chr_snvs.at(2)!=chr_snvs.at(4));
+
+        const auto chr = test_genome_mutations.get_chromosomes().at(gr_32_64.get_chromosome_id());
+
+        auto chr_allele = chr.get_alleles();
+
+        BOOST_CHECK_EQUAL(chr_allele.size(), 5);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 3);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(2).get_SNVs().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(3).get_SNVs().size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(4).get_SNVs().size(), 1);
+        BOOST_CHECK(chr_allele.at(2).get_SNVs()!=chr_allele.at(4).get_SNVs());
     }
 }
 
@@ -315,15 +315,15 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(gr_32_64.get_chromosome_id());
 
-        auto chr_snvs = chr.get_SNVs_per_allele();
+        auto chr_allele = chr.get_alleles();
 
-        BOOST_CHECK_EQUAL(chr_snvs.size(), 5);
-        BOOST_CHECK_EQUAL(chr_snvs.at(0).size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(1).size(), 0);
-        BOOST_CHECK_EQUAL(chr_snvs.at(2).size(), 1);
-        BOOST_CHECK_EQUAL(chr_snvs.at(3).size(), 2);
-        BOOST_CHECK_EQUAL(chr_snvs.at(4).size(), 1);
-        BOOST_CHECK(chr_snvs.at(2)!=chr_snvs.at(4));
+        BOOST_CHECK_EQUAL(chr_allele.size(), 5);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(2).get_SNVs().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(3).get_SNVs().size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(4).get_SNVs().size(), 1);
+        BOOST_CHECK(chr_allele.at(2).get_SNVs()!=chr_allele.at(4).get_SNVs());
     }
 
     {
