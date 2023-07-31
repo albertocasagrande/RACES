@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.4
- * @date 2023-07-30
+ * @version 0.5
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -148,6 +148,14 @@ public:
     {
         return alleles;
     } 
+
+    /**
+     * @brief Get the identifiers of the alleles containing a genomic position 
+     * 
+     * @param genomic_position is a position of the chromosome
+     * @return the identifiers of the alleles containing `genomic_position`
+     */
+    std::set<AlleleId> get_alleles_containing(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Get the identifiers of the alleles that completely include a region
@@ -324,6 +332,14 @@ public:
     {
         return chromosomes;
     }
+
+    /**
+     * @brief Get the identifiers of the alleles containing a genomic position 
+     * 
+     * @param genomic_position is a position of the genome
+     * @return the identifiers of the alleles containing `genomic_position`
+     */
+    std::set<AlleleId> get_alleles_containing(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Get the identifiers of the alleles that completely include a region

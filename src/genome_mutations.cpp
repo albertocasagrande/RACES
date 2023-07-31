@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.3
- * @date 2023-07-30
+ * @version 0.4
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,6 +58,19 @@ ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region,
     for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
         alleles.insert({next_allele_id, Allele{chromosome_region}});
     }
+}
+
+std::set<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
+{
+    std::set<AlleleId> allele_ids;
+
+    for (const auto& [allele_id, allele]: alleles) {
+        if (allele.contains(genomic_position)) {
+            allele_ids.insert(allele_id);
+        }
+    }
+
+    return allele_ids;
 }
 
 std::set<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
@@ -262,6 +275,13 @@ auto find_chromosome(const std::map<ChromosomeId, ChromosomeMutations>& chromoso
     }
 
     return chr_it;   
+}
+
+std::set<AlleleId> GenomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
+{
+    auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
+
+    return chr_it->second.get_alleles_containing(genomic_position);
 }
 
 std::set<AlleleId> GenomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
