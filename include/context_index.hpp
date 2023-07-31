@@ -2,7 +2,7 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.4
+ * @version 0.5
  * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
@@ -234,6 +234,25 @@ protected:
     }
 
     /**
+     * @brief Initialize `context2pos` map
+     */
+    void initialize_context2pos()
+    {
+        context2pos = std::make_shared<ContextPositionMap>();
+
+        const char bases[] = {'A', 'C', 'G', 'T'};
+
+        for (const auto& nucleotide1 : bases) {
+            for (const auto& nucleotide2 : bases) {
+                for (const auto& nucleotide3 : bases) {
+                    MutationalContext context(std::string{nucleotide1, nucleotide2, nucleotide3});
+                    (*context2pos)[context] = std::vector<ABSOLUTE_GENOMIC_POSITION>();
+                }
+            }
+        }
+    }
+
+    /**
      * @brief Reset the object and find the mutational contexts in a FASTA stream
      * 
      * This method resets the current object, finds the mutational contexts in the chromosome sequences
@@ -257,7 +276,7 @@ protected:
             throw std::runtime_error("the stream is not readable");
         }
 
-        context2pos = std::make_shared<ContextPositionMap>();
+        initialize_context2pos();
         abs_pos2chr.clear();
         genome_size = 0;
 
