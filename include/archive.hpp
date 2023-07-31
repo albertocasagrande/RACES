@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines some archive classes and their methods
- * @version 0.7
- * @date 2023-07-27
+ * @version 0.8
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -407,6 +407,10 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
 
     container.clear();
 
+    if constexpr(std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>) {
+        container.reserve(size);
+    }
+
     for (size_t i=0; i<size; ++i) {
         container.push_back(T::load(archive));
     }
@@ -440,6 +444,10 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
     archive & size;
 
     container.clear();
+
+    if constexpr(std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>) {
+        container.reserve(size);
+    }
 
     for (size_t i=0; i<size; ++i) {
         T value;
