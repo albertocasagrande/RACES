@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.3
- * @date 2023-07-30
+ * @version 0.4
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -462,13 +462,7 @@ public:
      */
     void insert(const MutationalContext& context, const ABSOLUTE_GENOMIC_POSITION& absolute_position)
     {
-        auto& context_pos = context2pos->at(context);
-
-        if (context_pos.size() < index) {
-            throw std::out_of_range("The context does not have so many positions");
-        }
-
-        context_pos.push_back(absolute_position);
+        context2pos->at(context).push_back(absolute_position);
     }
 
     /**
