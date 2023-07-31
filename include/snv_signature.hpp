@@ -2,8 +2,8 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Variation Mutation mutational signature
- * @version 0.8
- * @date 2023-07-28
+ * @version 0.9
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -311,15 +311,7 @@ public:
      * @param type is the mutational type whose probability is aimed
      * @return the probability of `type`
      */
-    inline double operator()(const MutationalType& type) const
-    {
-        auto it = dist_map.find(type);
-        if (it != dist_map.end()) {
-            return it->second;
-        } 
-    
-        return 0;
-    }
+    double operator()(const MutationalType& type) const;
 
     /**
      * @brief Multiply by an arithmetic value

@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.8
- * @date 2023-07-28
+ * @version 0.9
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -232,6 +232,16 @@ MutationalSignature::MutationalSignature(const std::map<MutationalType, double>&
 
         throw std::domain_error(oss.str());
     }
+}
+
+double MutationalSignature::operator()(const MutationalType& type) const
+{
+    auto it = dist_map.find(type);
+    if (it != dist_map.end()) {
+        return it->second;
+    } 
+
+    return 0;
 }
 
 std::vector<std::string> read_row(std::istream& in, const char& delimiter)
