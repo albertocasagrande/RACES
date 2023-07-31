@@ -13,6 +13,7 @@ build.ninja
 races_sim
 races_phylo
 races_build_index
+sample_context_index
 RACES.so
 RACES.dll
 libRACES.*
