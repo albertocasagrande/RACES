@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.4
- * @date 2023-07-30
+ * @version 0.5
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -81,15 +81,42 @@ namespace std
 bool less<Races::Passengers::SNV>::operator()(const Races::Passengers::SNV &lhs,
                                               const Races::Passengers::SNV &rhs) const
 {
-    less<Races::Passengers::GenomicPosition> op;
+    {
+        less<Races::Passengers::GenomicPosition> gp_op;
 
-    return op(lhs, rhs);
+        if (gp_op(lhs, rhs)) {
+            return true;
+        }
+
+        if (gp_op(rhs, lhs)) {
+            return false;
+        }
+    }
+    
+    {
+        less<Races::Passengers::MutationalContext> mc_op;
+        
+        if (mc_op(lhs.context, rhs.context)) {
+            return true; 
+        }
+
+        if (mc_op(rhs.context, lhs.context)) {
+            return false; 
+        }
+    }
+
+
+    return lhs.mutated_base < rhs.mutated_base;
 }
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV& snv)
 {
-    out << static_cast<Races::Passengers::GenomicPosition>(snv) << "["
-        << snv.context << ">" <<  snv.mutated_base << "]";
+    std::string snv_sequence = snv.context.get_sequence();
+
+    out << static_cast<Races::Passengers::GenomicPosition>(snv) << "("
+        << snv_sequence[0] 
+        << "[" << snv_sequence[1] << ">" <<  snv.mutated_base << "]" 
+        << snv_sequence[2] << ")";
 
     return out;
 }
