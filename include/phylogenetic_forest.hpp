@@ -1,9 +1,9 @@
 /**
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define classes and function for phylogenetic trees
- * @version 0.3
- * @date 2023-07-21
+ * @brief Defines classes and function for phylogenetic trees
+ * @version 0.4
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -125,6 +125,26 @@ public:
             return cell.get_id() == cell.get_parent_id();
         }
 
+        /**
+         * @brief Get the cell id of the node
+         * 
+         * @return the cell id of the node 
+         */
+        inline CellId get_id() const
+        {
+            return cell_id;
+        }
+
+        /**
+         * @brief Get the node genotype id
+         * 
+         * @return the node genotype id
+         */
+        inline EpigeneticGenotypeId get_genotype_id() const
+        {
+            return forest->cells.at(cell_id).get_genotype_id();
+        }
+
         friend class PhylogeneticForest;
     };
 
@@ -195,6 +215,16 @@ public:
      * @return std::vector<const_node> 
      */
     std::vector<node> get_roots();
+
+    /**
+     * @brief Get the number of forrest nodes
+     * 
+     * @return the number of forrest nodes 
+     */
+    inline size_t num_of_nodes() const
+    {
+        return cells.size();
+    }
 
     template<typename SAMPLER, typename CELL_STORAGE>
     friend PhylogeneticForest grow_forest_from(SAMPLER& sampler, CELL_STORAGE& cell_storage);
