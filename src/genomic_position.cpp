@@ -2,8 +2,8 @@
  * @file genomic_position.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genomic position and related functions
- * @version 0.2
- * @date 2023-07-26
+ * @version 0.3
+ * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -86,7 +86,7 @@ namespace std
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicPosition& genomic_position)
 {
-    out << "chr" <<  static_cast<int>(genomic_position.chr_id) << "(" 
+    out << "chr" <<  Races::Passengers::GenomicPosition::chrtos(genomic_position.chr_id) << "(" 
         << genomic_position.position << ")";
 
     return out;

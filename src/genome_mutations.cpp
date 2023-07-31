@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.4
+ * @version 0.5
  * @date 2023-07-31
  * 
  * @copyright Copyright (c) 2023
@@ -335,7 +335,7 @@ namespace std
 
 std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMutations& chromosome_mutations)
 {
-    os << "Chromosome " << static_cast<unsigned int>(chromosome_mutations.id()) << std::endl;
+    os << "Chromosome " << Races::Passengers::GenomicPosition::chrtos(chromosome_mutations.id()) << std::endl;
 
     for (const auto& [allele_id, allele]: chromosome_mutations.get_alleles()) {
         os << "  " << allele_id << ": " << allele << std::endl;
