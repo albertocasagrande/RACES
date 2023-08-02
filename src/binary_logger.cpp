@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.9
- * @date 2023-07-21
+ * @version 0.10
+ * @date 2023-08-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -110,7 +110,7 @@ std::streampos compute_bytes_per_cell(const std::filesystem::path& directory)
     Races::Archive::Binary::In cell_archive(first_archive_name);
 
     const auto l_cell = LabelledCell<Time>::load(cell_archive); 
-    return Archive::Binary::ByteCounter::bytes_in_archive(l_cell);
+    return Archive::Binary::ByteCounter::bytes_required_by(l_cell);
 }
 
 BinaryLogger::CellReader::CellReader(std::filesystem::path directory):
