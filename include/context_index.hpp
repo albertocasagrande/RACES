@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.5
- * @date 2023-07-31
+ * @version 0.6
+ * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -74,13 +74,14 @@ protected:
      * in `ContextIndex::context2pos`.
      * 
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
+     * @param[in] streamsize is the size of the FASTA stream in bytes
      * @param[in,out] progress_bar is the progress bar
      */
-    void build_index_in_seq(std::ifstream& fasta_stream, UI::ProgressBar* progress_bar)
+    void build_index_in_seq(std::ifstream& fasta_stream, const std::streampos& streamsize, 
+                            UI::ProgressBar* progress_bar)
     {
-        auto filesize = IO::get_stream_size(fasta_stream);
         if (progress_bar != nullptr) {
-            progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/filesize));
+            progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
         }
 
         ExtendedContextAutomaton c_automata;
@@ -98,7 +99,7 @@ protected:
 
             // update progress bar once every 2^22-1 nucleotides
             if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
-                progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/filesize));
+                progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
             }
         }
     }
@@ -170,15 +171,15 @@ protected:
      * saves their absolute positions in `ContextIndex::context2pos`.
      * 
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
+     * @param[in] streamsize is the size of the FASTA stream in bytes
      * @param[in] genomic_regions is the set of regions to be considered when searching mutational contexts
      * @param[in,out] progress_bar is the progress bar
      */
-    void build_index_in_seq(std::ifstream& fasta_stream, const std::set<GenomicRegion>& genomic_regions,
-                              UI::ProgressBar* progress_bar)
+    void build_index_in_seq(std::ifstream& fasta_stream, const std::streampos& streamsize, 
+                            const std::set<GenomicRegion>& genomic_regions, UI::ProgressBar* progress_bar)
     {
-        auto filesize = Races::IO::get_stream_size(fasta_stream);
         if (progress_bar != nullptr) {
-            progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/filesize));
+            progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
         }
 
         ExtendedContextAutomaton c_automata;
@@ -202,7 +203,7 @@ protected:
 
                 // update progress bar once every 2^22-1 nucleotides
                 if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
-                    progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/filesize));
+                    progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
                 }
             }
 
@@ -276,6 +277,8 @@ protected:
             throw std::runtime_error("the stream is not readable");
         }
 
+        auto streamsize = Races::IO::get_stream_size(fasta_stream);
+
         initialize_context2pos();
         abs_pos2chr.clear();
         genome_size = 0;
@@ -300,18 +303,22 @@ protected:
                 abs_pos2chr[genome_size+1] = chr_region.get_chromosome_id();
 
                 if (genomic_regions == nullptr) {
-                    build_index_in_seq(fasta_stream, progress_bar);
+                    build_index_in_seq(fasta_stream, streamsize, progress_bar);
                 } else {
                     auto regions_in = regions_by_chr.find(chr_region.get_chromosome_id());
 
                     // if one of the selected region belongs to the current chromosome
                     if (regions_in != regions_by_chr.end()) {
-                        build_index_in_seq(fasta_stream, regions_in->second, progress_bar);
+                        build_index_in_seq(fasta_stream, streamsize, regions_in->second, progress_bar);
                     } else {
                         skip_to_next_seq(fasta_stream);
                     }
                 }
             } else {
+                if (progress_bar != nullptr) {
+                    progress_bar->set_message("Discharging a sequence");
+                    progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
+                }
                 discharge_seq(fasta_stream);
             }
         }

@@ -148,7 +148,7 @@ set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
 
 
-set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_build_index.cpp)
+set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
 
 
 set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
@@ -161,9 +161,9 @@ add_executable(races_phylo ${PHYLO_SOURCES})
 target_include_directories(races_phylo PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(races_phylo libRACES)
 
-add_executable(races_build_index ${BUILD_INDEX_SOURCES})
-target_include_directories(races_build_index PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(races_build_index libRACES)
+add_executable(build_context_index ${BUILD_INDEX_SOURCES})
+target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
+target_link_libraries(build_context_index libRACES)
 
 add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
 target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})

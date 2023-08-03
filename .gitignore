@@ -12,7 +12,7 @@ Makefile
 build.ninja
 races_sim
 races_phylo
-races_build_index
+build_context_index
 sample_context_index
 RACES.so
 RACES.dll
