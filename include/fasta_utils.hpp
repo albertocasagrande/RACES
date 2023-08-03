@@ -2,8 +2,8 @@
  * @file fasta_utils.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines support utilities for FASTA files
- * @version 0.2
- * @date 2023-07-30
+ * @version 0.3
+ * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,6 +71,22 @@ struct EnsemblSeqNameDecoder : public SeqNameDecoder
      * @param chr_region is the variable where the chromosome region will be placed
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in Ensembl format
+     */
+    bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const override;
+};
+
+/**
+ * @brief A structure to decode NCBI chromosome sequences name 
+ */
+struct NCBISeqNameDecoder : public SeqNameDecoder
+{
+    /**
+     * @brief Extract the genomic region from a sequence name
+     * 
+     * @param seq_name is a FASTA sequence name
+     * @param chr_region is the variable where the chromosome region will be placed
+     * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
+     *      name in NCBI format
      */
     bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const override;
 };
