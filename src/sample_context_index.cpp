@@ -2,8 +2,8 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.1
- * @date 2023-07-31
+ * @version 0.2
+ * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,176 +38,229 @@
 #include "context_index.hpp"
 
 
-std::ostream& print_help(std::ostream& os, const std::string& program_name, 
-                         const boost::program_options::options_description& options)
+class ContextSampler
 {
-   os << "Syntax: "<< program_name 
-      << " <context index filename> <output filename> <sampling ratio>" << std::endl
-      << options << std::endl;
+    const std::string program_name;
+    boost::program_options::options_description visible_options;
+    boost::program_options::positional_options_description positional_options;
 
-   return os;   
-}
-
-Races::Passengers::ContextIndex<> load_context_index(const std::string filename)
-{
-    Races::Archive::Binary::In archive(filename);
-
-    return Races::Passengers::ContextIndex<>::load(archive);
-}
-
-boost::program_options::variables_map handle_options(int argc, char* argv[])
-{
-    namespace po = boost::program_options;
-
-    po::options_description visible("Options");
-    visible.add_options()
-#ifdef WITH_INDICATORS
-        ("quit,q", "disable progress bar")
-#endif // WITH_INDICATORS
-        ("help,h", "get the help");
-    
     std::string context_index_filename;
     std::string output_filename;
     unsigned int sampling_ratio;
+    size_t bytes_per_abs_position;
+    bool quiet;
 
-    po::options_description hidden("Hidden options");
-    hidden.add_options()
-        ("context index filename", po::value<std::string>(&context_index_filename), 
-         "the genome context index filename")
-        ("output filename", po::value<std::string>(&output_filename), 
-         "the resulting genome context index filename")
-        ("sampling ratio", po::value<unsigned int>(&sampling_ratio), 
-         "the genome context index filename")
-    ;
+    template<typename ABSOLUTE_GENOMIC_POSITION>
+    void sample_context_index() const
+    {
+        using namespace Races::Passengers;
 
-    po::options_description generic;
-    generic.add(visible).add(hidden);
+        size_t total_removal{0}, removed{0}, percentage{0};
+        Races::UI::ProgressBar* bar{nullptr};
 
-    po::positional_options_description p;
-    p.add("context index filename", 1);
-    p.add("output filename", 1);
-    p.add("sampling ratio", 1);
+        {
+            ContextIndex<ABSOLUTE_GENOMIC_POSITION> context_index;
 
-    po::variables_map vm;
-    try {
-        po::command_line_parser parser{argc, argv};
-        po::store(parser.options(generic).positional(p).run(), vm);
-        po::notify(vm);
-    } catch (boost::wrapexcept<boost::program_options::unknown_option> &except) {
-        std::cout << except.what() << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    if (!vm.count("context index filename")) {
-        std::cerr << "The context index filename is mandatory. "
-                  << "You can produce it by using `races_build_index`" << std::endl << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    if (!std::filesystem::exists(context_index_filename)) {
-        std::cerr << "\"" << context_index_filename << "\"  does not exists."
-                  << std::endl << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    if (!std::filesystem::is_regular_file(context_index_filename)) {
-        std::cerr << "\"" << context_index_filename << "\"  is not a regular file."
-                  << std::endl << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    if (!vm.count("output filename")) {
-        std::cerr << "The output context index filename is mandatory." << std::endl << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    if (std::filesystem::exists(output_filename)) {
-        std::cerr << "\"" << output_filename << "\"  does exists."
-                  << std::endl << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    if (!vm.count("sampling ratio")) {
-        std::cerr << "The sampling ratio is mandatory." << std::endl << std::endl;
-        print_help(std::cerr, argv[0], visible);
-        exit(1);
-    }
-
-    return vm;
-}
-
-int main(int argc, char* argv[])
-{
-    using namespace Races;
-    using namespace Races::Passengers;
-    namespace po = boost::program_options;
-
-    auto vm = handle_options(argc, argv);
-
-    if (vm.count("quiet")==0) {
-        std::cout << "Loading context index..." << std::flush;
-    }
-    auto context_index = load_context_index(vm["context index filename"].as<std::string>());
-
-    unsigned int sampling_ratio = vm["sampling ratio"].as<unsigned int>();
-
-    size_t total_removal{0}, removed{0}, percentage{0};
-
-    UI::ProgressBar* bar{nullptr};
-    if (vm.count("quiet")==0) {
-        std::cout << "done" << std::endl << std::flush;
-
-        UI::ProgressBar::hide_console_cursor();
-
-        bar = new UI::ProgressBar();
-        bar->set_message("Sampling context index");
-    }
-
-    for (auto& [context, positions] : context_index.get_context_positions()) {
-        total_removal += positions.size()*(sampling_ratio-1)/sampling_ratio;
-    }
-
-    std::mt19937_64 generator(0);
-    for (auto& [context, positions] : context_index.get_context_positions()) {
-        size_t aimed_size = positions.size()/sampling_ratio;
-        while (positions.size() > aimed_size) {
-            std::uniform_int_distribution<> u_dist(0,positions.size()-1);
-
-            context_index.extract(context, u_dist(generator));
-            ++removed;
-
-            percentage = 100*removed/total_removal;
-            if (percentage<99 && percentage > bar->get_progress()) {
-                bar->set_progress(percentage);
+            {
+                Races::Archive::Binary::In archive(context_index_filename);
+                archive.load(context_index, quiet);
             }
+
+            if (!quiet) {
+                UI::ProgressBar::hide_console_cursor();
+
+                bar = new Races::UI::ProgressBar();
+                bar->set_message("Sampling context index");
+            }
+
+            for (auto& [context, positions] : context_index.get_context_positions()) {
+                total_removal += positions.size()*(sampling_ratio-1)/sampling_ratio;
+            }
+
+            std::mt19937_64 generator(0);
+            for (auto& [context, positions] : context_index.get_context_positions()) {
+                size_t aimed_size = positions.size()/sampling_ratio;
+                while (positions.size() > aimed_size) {
+                    std::uniform_int_distribution<> u_dist(0,positions.size()-1);
+
+                    context_index.extract(context, u_dist(generator));
+                    ++removed;
+
+                    if (!quiet) {
+                        percentage = 100*removed/total_removal;
+                        if (percentage<99 && percentage > bar->get_progress()) {
+                            bar->set_progress(percentage);
+                        }
+                    }
+                }
+            }
+
+            if (quiet) {
+                Races::Archive::Binary::Out archive(output_filename);
+
+                archive.save(context_index, true);
+            } else {
+                bar->set_progress(100, "Done");
+
+                delete bar;
+
+                UI::ProgressBar::show_console_cursor();
+
+                Races::Archive::Binary::Out archive(output_filename);
+
+                archive.save(context_index, false);
+
+                std::cout << " Freeing memory..." << std::flush;
+            }
+        }
+
+        if (!quiet) {
+            std::cout << "done" << std::endl;
         }
     }
 
-    if (vm.count("quiet")==0) {
-        bar->set_progress(100, "Done");
+public:
 
-        UI::ProgressBar::show_console_cursor();
-
-        delete bar;
-
-        std::cout << "Saving context index..." << std::flush;
-    }
-
+    std::ostream& print_help(std::ostream& os) const
     {
-        Races::Archive::Binary::Out archive(vm["output filename"].as<std::string>());
+        os << "Syntax: " << program_name;
+        
+        for (unsigned int i=0;i<positional_options.max_total_count(); ++i) {
+            os << " <" << positional_options.name_for_position(i) << ">"; 
+        }
 
-        archive & context_index;
+        os << std::endl << visible_options << std::endl;
+
+        return os;   
     }
-    
-    if (vm.count("quiet")==0) {
-        std::cout << "done" << std::endl << std::flush;
+
+    ContextSampler(const int argc, const char* argv[]):
+        program_name(argv[0]), visible_options("Options")
+    {
+        namespace po = boost::program_options;
+
+        visible_options.add_options()
+            ("force-overwrite,f", "force overwriting output file")
+#ifdef WITH_INDICATORS
+            ("quiet,q", "disable output messages")
+#endif // WITH_INDICATORS
+            ("help,h", "get the help");
+
+        po::options_description hidden("Hidden options");
+        hidden.add_options()
+            ("context index filename", po::value<std::string>(&context_index_filename), 
+            "the genome context index filename")
+            ("output filename", po::value<std::string>(&output_filename), 
+            "the resulting genome context index filename")
+            ("sampling ratio", po::value<unsigned int>(&sampling_ratio), 
+            "the genome context index filename")
+        ;
+
+        po::options_description generic;
+        generic.add(visible_options).add(hidden);
+
+        positional_options.add("context index filename", 1);
+        positional_options.add("output filename", 1);
+        positional_options.add("sampling ratio", 1);
+
+        po::variables_map vm;
+        try {
+            po::command_line_parser parser{argc, argv};
+            po::store(parser.options(generic).positional(positional_options).run(), vm);
+            po::notify(vm);
+        } catch (boost::wrapexcept<boost::program_options::unknown_option> &except) {
+            std::cerr << except.what() << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        if (vm.count("help")) {
+            print_help(std::cout);
+            exit(0);
+        }
+
+        if (!vm.count("context index filename")) {
+            std::cerr << "The context index filename is mandatory. "
+                      << "You can produce it by using `build_context_index`" << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        if (!std::filesystem::exists(context_index_filename)) {
+            std::cerr << "\"" << context_index_filename << "\"  does not exists."
+                      << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        if (!std::filesystem::is_regular_file(context_index_filename)) {
+            std::cerr << "\"" << context_index_filename << "\"  is not a regular file."
+                      << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        try {
+            using namespace Races::Passengers;
+
+            Races::Archive::Binary::In archive(context_index_filename);
+
+            bytes_per_abs_position = ContextIndex<>::read_bytes_per_absolute_position(archive);
+
+        } catch (std::exception& except) {
+            std::cerr << except.what() << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        quiet = vm.count("quiet")>0;
+
+        if (!vm.count("output filename")) {
+            std::cerr << "The output context index filename is mandatory." << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        if (std::filesystem::exists(output_filename) && !vm.count("force-overwrite")) {
+            std::cerr << "The output file \"" << output_filename << "\" already exists. " 
+                    << "Use \"--force-overwrite\" to overwrite it." << std::endl<< std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
+        if (!vm.count("sampling ratio")) {
+            std::cerr << "The sampling ratio is mandatory." << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
+        }
+
     }
+
+    void run() const
+    {
+        switch (bytes_per_abs_position) {
+            case 2:
+                sample_context_index<uint16_t>();
+                break;
+            case 4:
+                sample_context_index<uint32_t>();
+                break;
+            case 8:
+                sample_context_index<uint64_t>();
+                break;
+            default:
+                std::cerr << "Not supported bits per absolute position."
+                          << " Supported values are 2, 4, or 8." << std::endl;
+                exit(1);
+        }
+    }
+};
+
+int main(const int argc, const char* argv[])
+{
+    ContextSampler sampler(argc, argv);
+
+    sampler.run();
 
     return 0;
 }

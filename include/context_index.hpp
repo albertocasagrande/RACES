@@ -2,7 +2,7 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.6
+ * @version 0.7
  * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
@@ -613,6 +613,28 @@ public:
 
         return context_index;
     }
+
+    /**
+     * @brief Read the number of bytes per absolute position in an input archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the archive from which the number of bytes per absolute
+     *          position must be read
+     * @return the number of bytes per absolute position
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static size_t read_bytes_per_absolute_position(ARCHIVE& archive)
+    {
+        uint8_t abs_pos_size;
+
+        auto orig_pos = archive.tellg();
+
+        archive & abs_pos_size;
+
+        archive.seekg(orig_pos);
+
+        return abs_pos_size;
+    } 
 };
 
 }   // Races
