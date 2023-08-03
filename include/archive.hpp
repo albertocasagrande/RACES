@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines some archive classes and their methods
- * @version 0.9
- * @date 2023-08-02
+ * @version 0.10
+ * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,6 +39,8 @@
 #include <fstream>
 #include <filesystem>
 #include <type_traits>
+
+#include "progress_bar.hpp"
 
 namespace Races {
 
@@ -167,6 +169,16 @@ struct Basic
     }
 
     /**
+     * @brief Get the current position in the file stream
+     * 
+     * @return the current position in the file stream
+     */
+    inline std::streampos tellg()
+    {
+        return fs.tellg();
+    }
+
+    /**
      * @brief The destructor
      */
     ~Basic();
@@ -290,6 +302,43 @@ struct In : public Basic
     std::streampos size();
 };
 
+/**
+ * @brief A saving/loading progress viewer
+ */
+class ProgressViewer
+{
+    Races::UI::ProgressBar* progress_bar;   //!< the viewer progress bar
+    size_t total_steps;                     //!< number of steps to be performed
+    size_t next_percentage;                 //!< number of steps to increase bar percentage
+    size_t performed_steps;                 //!< performed steps
+public:
+    /**
+     * @brief The empty constructor
+     */
+    ProgressViewer();
+
+    /**
+     * @brief Initialize progress viewer
+     * 
+     * @param progress_bar is the progress bar
+     * @param total_steps is the number of steps to be performed
+     */
+    void initialize(Races::UI::ProgressBar* progress_bar, const size_t total_steps);
+
+    /**
+     * @brief Increase the number of performed steps
+     * 
+     * @param steps is the number of steps performed from 
+     *          the last advanced 
+     */
+    void advance(const size_t& steps);
+
+    /**
+     * @brief Conclude the progress advance
+     */
+    void reset();
+};
+
 }  // Basic
 
 /**
@@ -319,7 +368,7 @@ struct requires_constant_size : public std::is_arithmetic<T>
 /**
  * @brief The binary output archive
  */
-struct Out : public Archive::Basic::Out
+struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
 {
     /**
      * @brief The empty constructor
@@ -392,8 +441,20 @@ struct Out : public Archive::Basic::Out
     {
         fs.write((char const*)(&value), sizeof(ARITHMETIC_TYPE));
 
+        advance(sizeof(ARITHMETIC_TYPE));
+
         return *this;
     }
+
+    /**
+     * @brief Save an object
+     * 
+     * @tparam T is the type of the object to save
+     * @param object is the object to save
+     * @param quiet is flag to avoid progress bar visualization 
+     */
+    template<typename T>
+    void save(const T& object, const bool quiet = false);
 };
 
 /**
@@ -462,7 +523,7 @@ public:
     static size_t bytes_required_by(const T& object);
 };
 
-struct In : public Archive::Basic::In 
+struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
 {
     /**
      * @brief A constructor
@@ -522,6 +583,8 @@ struct In : public Archive::Basic::In
     {
         fs.read((char *)(&value), sizeof(ARITHMETIC_TYPE));
 
+        advance(sizeof(ARITHMETIC_TYPE));
+
         return *this;
     }
 
@@ -532,6 +595,17 @@ struct In : public Archive::Basic::In
      * @return a reference to the updated archive 
      */
     In& operator&(std::string& text);
+
+    /**
+     * @brief Load an object
+     * 
+     * @tparam T is the type of the object to load
+     * @param object is the object in which the loaded 
+     *          data is placed
+     * @param quiet is flag to avoid progress bar visualization
+     */
+    template<typename T>
+    void load(T& object, const bool quiet = false);
 };
 
 }   // Binary
@@ -1048,6 +1122,54 @@ namespace Archive
 
 namespace Binary
 {
+
+template<typename T>
+void Out::save(const T& object, const bool quiet)
+{
+    if (quiet) {
+        *this & object;
+
+        return;
+    }
+
+    UI::ProgressBar::hide_console_cursor();
+    
+    Races::UI::ProgressBar bar;
+
+    bar.set_message("Saving...");
+
+    initialize(&bar, ByteCounter::bytes_required_by(object));
+
+    *this & object;
+
+    bar.set_progress(100, "Saved");
+
+    UI::ProgressBar::show_console_cursor();
+}
+
+template<typename T>
+void In::load(T& object, const bool quiet)
+{
+    if (quiet) {
+        *this & object;
+
+        return;
+    }
+
+    UI::ProgressBar::hide_console_cursor();
+
+    Races::UI::ProgressBar bar;
+
+    bar.set_message("Loading...");
+
+    initialize(&bar, static_cast<size_t>(this->size()));
+
+    *this & object;
+
+    bar.set_progress(100, "Loaded");
+
+    UI::ProgressBar::show_console_cursor();
+}
 
 template<typename T>
 size_t ByteCounter::bytes_required_by(const T& object) {

@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define some archive classes and their methods
- * @version 0.4
- * @date 2023-08-02
+ * @version 0.5
+ * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -88,27 +88,58 @@ std::streampos In::size()
     return file_bytes;
 }
 
+ProgressViewer::ProgressViewer():
+    progress_bar(nullptr), total_steps{0}, next_percentage{0}, performed_steps{0}
+{}
+
+void ProgressViewer::initialize(Races::UI::ProgressBar* progress_bar, const size_t total_steps)
+{
+    this->progress_bar = progress_bar;
+    this->total_steps = total_steps;
+    performed_steps = 0;
+    next_percentage = total_steps/100;
+}
+
+void ProgressViewer::advance(const size_t& steps)
+{
+    if (progress_bar != nullptr) {
+        performed_steps += steps;
+        
+        if (performed_steps > next_percentage) {
+            progress_bar->set_progress(progress_bar->get_progress()+1);
+            next_percentage = (progress_bar->get_progress()+1)*total_steps/100;
+        }
+    }
+}
+
+void ProgressViewer::reset()
+{
+    progress_bar = nullptr;
+}
+
 }  // Basic
 
 namespace Binary {
 
 Out::Out():
-    Archive::Basic::Out()
+    Archive::Basic::Out(), ProgressViewer()
 {}
 
 Out::Out(std::filesystem::path position):
-    Archive::Basic::Out(position, std::fstream::binary)
+    Archive::Basic::Out(position, std::fstream::binary), ProgressViewer()
 {}
 
 Out::Out(std::filesystem::path position, std::ios_base::openmode mode):
-    Archive::Basic::Out(position, mode | std::fstream::binary)
+    Archive::Basic::Out(position, mode | std::fstream::binary), ProgressViewer()
 {}
 
 Out& Out::operator&(const std::string& text)
 {
-    size_t size = text.size();
+    const size_t size = text.size();
     fs.write((char const*)(&size), sizeof(size_t));
-    fs.write(text.c_str(), text.size()*sizeof(char));
+    fs.write(text.c_str(), size*sizeof(char));
+
+    advance(sizeof(size_t)+size*sizeof(char));
 
     return *this;
 }
@@ -126,11 +157,11 @@ ByteCounter& ByteCounter::operator&(const std::string& text)
 }
 
 In::In(std::filesystem::path position):
-    Archive::Basic::In(position, std::fstream::binary)
+    Archive::Basic::In(position, std::fstream::binary), ProgressViewer()
 {}
 
 In::In(std::filesystem::path position, std::ios_base::openmode mode):
-    Archive::Basic::In(position, std::fstream::binary | mode)
+    Archive::Basic::In(position, std::fstream::binary | mode), ProgressViewer()
 {}
 
 In& In::operator&(std::string& text)
@@ -147,6 +178,8 @@ In& In::operator&(std::string& text)
     text = std::string(buffer);
 
     delete[] buffer;
+
+    advance(sizeof(size_t)+size*sizeof(char));
 
     return *this;
 }
