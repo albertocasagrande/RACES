@@ -2,7 +2,7 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.2
+ * @version 0.3
  * @date 2023-08-03
  * 
  * @copyright Copyright (c) 2023
@@ -67,7 +67,7 @@ class ContextSampler
             }
 
             if (!quiet) {
-                UI::ProgressBar::hide_console_cursor();
+                Races::UI::ProgressBar::hide_console_cursor();
 
                 bar = new Races::UI::ProgressBar();
                 bar->set_message("Sampling context index");
@@ -104,7 +104,7 @@ class ContextSampler
 
                 delete bar;
 
-                UI::ProgressBar::show_console_cursor();
+                Races::UI::ProgressBar::show_console_cursor();
 
                 Races::Archive::Binary::Out archive(output_filename);
 
