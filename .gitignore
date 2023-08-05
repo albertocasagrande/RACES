@@ -10,7 +10,7 @@ Makefile
 .ninja_deps
 .ninja_log
 build.ninja
-races_sim
+drivers_sim
 races_phylo
 build_context_index
 sample_context_index

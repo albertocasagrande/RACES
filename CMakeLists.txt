@@ -32,6 +32,8 @@ elseif()
     set(COMPILE_SDL2_CODE FALSE)
 endif()
 
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
     message("Downloading \"p-ranav/indicators\" library...")
     file(DOWNLOAD
@@ -140,7 +142,7 @@ target_sources(libRACES PRIVATE ${RACES_SOURCES}
 
 install(TARGETS libRACES FILE_SET HEADERS)
 
-set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_sim.cpp)
+set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp)
 
 set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
@@ -153,9 +155,9 @@ set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
 
 set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
 
-add_executable(races_sim ${SIM_SOURCES})
-target_include_directories(races_sim PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(races_sim libRACES)
+add_executable(drivers_sim ${SIM_SOURCES})
+target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
+target_link_libraries(drivers_sim libRACES nlohmann_json::nlohmann_json)
 
 add_executable(races_phylo ${PHYLO_SOURCES})
 target_include_directories(races_phylo PRIVATE ${Boost_INCLUDE_DIR})

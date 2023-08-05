@@ -1,0 +1,68 @@
+{
+    "comment": "An input example for \"drivers_sim\".",
+    "genotypes": [
+        {
+            "name": "A",
+            "epigenetic rates": [
+                {
+                    "methylation": 0.01,
+                    "demethylation": 0.01
+                }
+            ],
+            "epigenetic types": [
+                {
+                    "status": "-",
+                    "death rate": 0.1,
+                    "duplication rate": 0.2
+                },
+                {
+                    "status": "+",
+                    "death rate": 0.01,
+                    "duplication rate": 0.02 
+                }
+            ]
+        },
+        {
+            "name": "B",
+            "epigenetic rates": [
+                {
+                    "methylation": 0.01,
+                    "demethylation": 0.01
+                }
+            ],
+            "epigenetic types": [
+                {
+                    "status": "-",
+                    "death rate": 0.1,
+                    "duplication rate": 0.3 
+                },
+                {
+                    "status": "+",
+                    "death rate": 0.1,
+                    "duplication rate": 0.45 
+                }
+            ]
+        }
+    ],
+    "tissue": {
+        "name": "Liver",
+        "size": [1000, 1000]
+    },
+    "initial cells": [
+        {
+            "genotype": {
+                "name": "A",
+                "epigenetic status": "-"
+            },
+            "position": [500, 500]
+        }
+    ],
+    "driver mutations": [
+        {
+            "time": 75,
+            "original genotype": "A",
+            "mutated genotype": "B"
+        }
+    ],
+    "death activation level": 100
+}
