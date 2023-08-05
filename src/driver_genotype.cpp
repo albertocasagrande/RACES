@@ -2,8 +2,8 @@
  * @file driver.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.6
- * @date 2023-07-21
+ * @version 0.7
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -105,7 +105,7 @@ double EpigeneticGenotype::get_rate(const CellEventType& event) const
 }
 
 Genotype::Genotype(const std::string& name,
-                               const std::vector<EpigeneticRates> epigenetic_event_rates):
+                   const std::vector<EpigeneticRates>& epigenetic_event_rates):
     id(counter++), name(name)
 {
     size_t epigenetic_mutations = 1<<epigenetic_event_rates.size();

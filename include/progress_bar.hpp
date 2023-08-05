@@ -2,8 +2,8 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a progress bar
- * @version 0.5
- * @date 2023-07-29
+ * @version 0.6
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -85,7 +85,7 @@ public:
      * @param message is the message
      * @return a reference to the updated object
      */
-    ProgressBar& set_message(const std::string message);
+    ProgressBar& set_message(const std::string& message);
 
     /**
      * @brief Update the progress bar level
@@ -102,7 +102,7 @@ public:
      * @param message is the message to be set
      * @return a reference to the updated object
      */
-    ProgressBar& set_progress(const unsigned int percentage, const std::string message);
+    ProgressBar& set_progress(const unsigned int percentage, const std::string& message);
 
     /**
      * @brief Get the percentage level

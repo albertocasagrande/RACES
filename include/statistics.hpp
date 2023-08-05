@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define simulation statistics
- * @version 0.5
- * @date 2023-07-21
+ * @version 0.6
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -74,7 +74,7 @@ struct SpeciesStatistics
      * 
      * @param num_of_cells is the number of cells in the species
      */
-    SpeciesStatistics(const size_t& num_of_cells);
+    explicit SpeciesStatistics(const size_t& num_of_cells);
 
     /**
      * @brief Save species statistics in an archive

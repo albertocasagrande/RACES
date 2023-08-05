@@ -2,8 +2,8 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Variation Mutation mutational signature
- * @version 0.9
- * @date 2023-07-31
+ * @version 0.10
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -94,7 +94,7 @@ public:
      * 
      * @param type is the textual representation of a mutational type
      */
-    MutationalType(const std::string& type);
+    explicit MutationalType(const std::string& type);
 
     /**
      * @brief Get the mutational context
@@ -283,7 +283,7 @@ public:
      * 
      * @param distribution is a mutation type-value map representing a distribution
      */
-    MutationalSignature(const std::map<MutationalType, double>& distribution);
+    explicit MutationalSignature(const std::map<MutationalType, double>& distribution);
 
     /**
      * @brief Get the initial constant iterator

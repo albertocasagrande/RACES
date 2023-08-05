@@ -2,8 +2,8 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic position and related functions
- * @version 0.3
- * @date 2023-07-26
+ * @version 0.4
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -69,7 +69,7 @@ struct GenomicPosition
      * 
      * @param chromosome_id is the chromosome identifier
      */
-    GenomicPosition(const ChromosomeId& chromosome_id);
+    explicit GenomicPosition(const ChromosomeId& chromosome_id);
 
         /**
      * @brief A constructor

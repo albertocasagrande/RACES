@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a UI window to plot a tissue
- * @version 0.7
- * @date 2023-07-21
+ * @version 0.8
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -243,8 +243,6 @@ class TissuePlotter {
 			<< ": " << species.num_of_cells() << "/" << statistics.total_cells
 			<< "/" << statistics.killed_cells << "/" << statistics.lost_cells;
 
-		std::string label{oss.str()};
-
 		unsigned int label_width, label_height;
 
 		window->get_text_size(oss.str(), label_width, label_height);
@@ -283,7 +281,7 @@ public:
 	 * 
 	 * @param tissue is the tissue to plot
 	 */
-	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const unsigned int frames_per_second=10):
+	explicit TissuePlotter(const Drivers::Simulation::Tissue& tissue, const unsigned int frames_per_second=10):
 		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulation"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), frames_per_second)
 	{
 	}
@@ -294,7 +292,7 @@ public:
 	 * @param tissue is the tissue to plot
 	 * @param name is the name of the plotting window
 	 */
-	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const std::string name,
+	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const std::string& name,
 				  const unsigned int frames_per_second=10):
 		tissue(tissue), frame_border(20), frame_thickness(5), legend_rectangle_width(400),
 		legend_rectangle_height(35), legend_label_height(16), redraw_interval(1000/frames_per_second), 

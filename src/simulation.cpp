@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.4
- * @date 2023-07-21
+ * @version 0.5
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -380,7 +380,7 @@ void Simulation::reset()
     //death_activation_level = 1;
 }
 
-Simulation& Simulation::set_tissue(const std::string name, const std::vector<AxisSize> sizes)
+Simulation& Simulation::set_tissue(const std::string& name, const std::vector<AxisSize>& sizes)
 {
     if (tissues.size()>0) {
         reset();

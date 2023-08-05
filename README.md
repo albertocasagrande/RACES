@@ -2,12 +2,14 @@
 RACES is an Advanced Cancer Evolution Simulator.
 
 ## Requirements
-- CMake
-- a C++17 compiler
-- Boost::program_options
-- Boost::unit_test_framework (OPTIONAL: it enables C++ code testing)
-- SDL_ttf and SDL_image libraries (OPTIONAL: they enable simulation plotting)
-- Boost::Python (OPTIONAL: it enables Python bindings)
+-   CMake
+-   a C++17 compiler
+-   Boost::program_options
+
+### Optional
+-   Boost::unit_test_framework (it enables C++ code testing)
+-   SDL_ttf and SDL_image libraries (they enable simulation plotting)
+-   Boost::Python (it enables Python bindings)
 
 ## Setup
 
@@ -27,7 +29,7 @@ TODO
 ## License
 
 Copyright (c) 2023 
-Alberto Casagrande <acasagrande@units.it>
+Alberto Casagrande <[acasagrande@units.it](mailto:acasagrande@units.it)>
 
 MIT License
 

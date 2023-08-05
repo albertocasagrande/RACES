@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines some archive classes and their methods
- * @version 0.10
- * @date 2023-08-03
+ * @version 0.11
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -202,7 +202,7 @@ struct Out : public Basic
      * 
      * @param filename is the archive file name
      */
-    Out(std::filesystem::path filename);
+    explicit Out(std::filesystem::path filename);
 
     /**
      * @brief A constructor
@@ -252,7 +252,7 @@ struct In : public Basic
      * 
      * @param filename is the archive file name
      */
-    In(std::filesystem::path filename);
+    explicit In(std::filesystem::path filename);
 
     /**
      * @brief A constructor
@@ -383,7 +383,7 @@ struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
      * 
      * @param filename is the archive file name
      */
-    Out(std::filesystem::path filename);
+    explicit Out(std::filesystem::path filename);
 
     /**
      * @brief A constructor
@@ -533,7 +533,7 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
      * 
      * @param filename is the archive file name
      */
-    In(std::filesystem::path filename);
+    explicit In(std::filesystem::path filename);
 
     /**
      * @brief A constructor

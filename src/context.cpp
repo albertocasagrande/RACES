@@ -2,8 +2,8 @@
  * @file context.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements mutational contexts and extended context automata
- * @version 0.2
- * @date 2023-07-26
+ * @version 0.3
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -85,9 +85,10 @@ MutationalContext::MutationalContext():
 MutationalContext::MutationalContext(const char* nucleic_triplet):
     code(0)
 {
-    if (strlen(nucleic_triplet)!=3) {
-        throw std::domain_error("Expected a nucleic triplet. Got \""
-                                + std::string(nucleic_triplet) + "\"");
+    if (nucleic_triplet[0]=='\0' || nucleic_triplet[1]=='\0' 
+            || nucleic_triplet[2]=='\0' || nucleic_triplet[3]!='\0') {
+
+        throw std::domain_error("Expected a nucleic triplet");
     }
 
     // this is to have the central nucleotide associated

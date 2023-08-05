@@ -2,8 +2,8 @@
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window by using SDL2
- * @version 0.3
- * @date 2023-07-19
+ * @version 0.4
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@ namespace Races
 namespace UI 
 {
 
-SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const std::string name):
+SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const std::string& name):
 	Plot2DWindow(width,height,name)
 {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {

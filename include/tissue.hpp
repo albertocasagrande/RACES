@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.14
- * @date 2023-07-21
+ * @version 0.15
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -396,7 +396,7 @@ public:
      * 
      * @param sizes are the sizes of the tissue
      */
-    Tissue(const std::vector<AxisSize> sizes);
+    explicit Tissue(const std::vector<AxisSize>& sizes);
 
     /**
      * @brief A constructor for a 3D tissue
@@ -405,7 +405,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const AxisSize x_size, const AxisSize  y_size, const AxisSize z_size);
+    Tissue(const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
@@ -423,7 +423,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
+    Tissue(const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
@@ -432,7 +432,7 @@ public:
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
+    Tissue(const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief A constructor
@@ -440,7 +440,7 @@ public:
      * @param name is the tissue name
      * @param sizes are the sizes of the tissue
      */
-    Tissue(const std::string name, const std::vector<AxisSize> sizes);
+    Tissue(const std::string& name, const std::vector<AxisSize>& sizes);
 
     /**
      * @brief A constructor for a 3D tissue
@@ -450,7 +450,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size);
+    Tissue(const std::string& name, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
@@ -459,7 +459,7 @@ public:
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size);
+    Tissue(const std::string& name, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief A constructor for a 3D tissue
@@ -470,7 +470,7 @@ public:
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize z_size);
+    Tissue(const std::string& name, const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
@@ -480,7 +480,7 @@ public:
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size);
+    Tissue(const std::string& name, const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief Get the initial iterator for the tissue species

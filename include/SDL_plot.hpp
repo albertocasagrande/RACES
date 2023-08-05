@@ -2,8 +2,8 @@
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window by using SDL2
- * @version 0.2
- * @date 2023-06-28
+ * @version 0.3
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -66,7 +66,7 @@ public:
 	 * @param height is the height of the plot window
 	 * @param name is the name of the plot window
 	 */
-	SDLWindow(const unsigned int width, const unsigned int height, const std::string name);
+	SDLWindow(const unsigned int width, const unsigned int height, const std::string& name);
 
 	/**
 	 * @brief Clear the window

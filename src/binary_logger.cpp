@@ -2,7 +2,7 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.11
+ * @version 0.12
  * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
@@ -97,7 +97,7 @@ std::string get_directory_name(const std::string& dir_prefix)
     return oss.str();
 }
 
-BinaryLogger::BinaryLogger(const std::string dir_prefix, const size_t cells_per_file):
+BinaryLogger::BinaryLogger(const std::string& dir_prefix, const size_t cells_per_file):
     BasicLogger(), dir_prefix(dir_prefix), directory(get_directory_name(dir_prefix)),
     cell_archive(), cells_per_file(cells_per_file), cell_in_current_file(0),
     next_file_number(0)
@@ -231,7 +231,7 @@ void BinaryLogger::snapshot(const Simulation& simulation)
     archive & simulation;
 }
 
-void BinaryLogger::reset(const std::string directory_prefix)
+void BinaryLogger::reset(const std::string& directory_prefix)
 {
     close();
 

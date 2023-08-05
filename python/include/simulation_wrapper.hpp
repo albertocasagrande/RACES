@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.3
- * @date 2023-07-21
+ * @version 0.4
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -61,7 +61,7 @@ class SimulationWrapper
 
         std::shared_mutex s_mutex;     //!< the simulation mutex
 
-        _SimulationWrapper(int random_seed);
+        explicit _SimulationWrapper(int random_seed);
     };
 
     std::shared_ptr<SimulationWrapper::_SimulationWrapper> obj_ptr; //!< the pointer to the real c++ wrapper
@@ -72,7 +72,7 @@ public:
      * 
      * @param random_seed is the simulation random seed
      */
-    SimulationWrapper(int random_seed=0);
+    explicit SimulationWrapper(int random_seed=0);
 
     /**
      * @brief Simulate a tissue up to a given time

@@ -2,8 +2,8 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.3
- * @date 2023-08-03
+ * @version 0.4
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -55,7 +55,6 @@ class ContextSampler
     {
         using namespace Races::Passengers;
 
-        size_t total_removal{0}, removed{0}, percentage{0};
         Races::UI::ProgressBar* bar{nullptr};
 
         {
@@ -73,6 +72,7 @@ class ContextSampler
                 bar->set_message("Sampling context index");
             }
 
+            size_t total_removal{0}, removed{0};
             for (auto& [context, positions] : context_index.get_context_positions()) {
                 total_removal += positions.size()*(sampling_ratio-1)/sampling_ratio;
             }
@@ -87,7 +87,7 @@ class ContextSampler
                     ++removed;
 
                     if (!quiet) {
-                        percentage = 100*removed/total_removal;
+                        size_t percentage = 100*removed/total_removal;
                         if (percentage<99 && percentage > bar->get_progress()) {
                             bar->set_progress(percentage);
                         }
@@ -233,7 +233,6 @@ public:
             print_help(std::cerr);
             exit(1);
         }
-
     }
 
     void run() const

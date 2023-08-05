@@ -2,8 +2,8 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 0.3
- * @date 2023-07-26
+ * @version 0.4
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -171,7 +171,7 @@ public:
      * 
      * @param in is the input stream
      */
-    SequenceReader(std::istream& in);
+    explicit SequenceReader(std::istream& in);
 
     /**
      * @brief Get the initial nucleotide iterator
@@ -246,7 +246,7 @@ public:
      * 
      * @param in is the input stream
      */
-    Reader(std::istream& in);
+    explicit Reader(std::istream& in);
 
     /**
      * @brief Test whether the FASTA file has been fully read

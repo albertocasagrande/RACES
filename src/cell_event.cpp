@@ -2,8 +2,8 @@
  * @file cell_event.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell events
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,7 +39,6 @@ namespace Races
 namespace Drivers 
 {
 
-
 std::map<CellEventType, std::string> cell_event_names = {
     {CellEventType::DIE, "death"},
     {CellEventType::DUPLICATE, "duplication"},
@@ -49,6 +48,15 @@ std::map<CellEventType, std::string> cell_event_names = {
     {CellEventType::DRIVER_GENETIC_MUTATION, 
         "driver genomic mutation"}
 };
+
+namespace Simulation
+{
+
+CellEvent::CellEvent():
+    type(), position(), initial_genotype(), final_genotype(), delay()
+{}
+
+}
 
 }   // Drivers
 

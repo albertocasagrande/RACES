@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.6
- * @date 2023-07-28
+ * @version 0.7
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -213,7 +213,7 @@ public:
      * 
      * @param random_seed is the simulation random seed
      */
-    Simulation(int random_seed=0);
+    explicit Simulation(int random_seed=0);
 
     /**
      * @brief A swap constructor
@@ -510,7 +510,7 @@ public:
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    inline Simulation& add_cell(const EpigeneticGenotype& genotype, const PositionInTissue position)
+    inline Simulation& add_cell(const EpigeneticGenotype& genotype, const PositionInTissue& position)
     {
         return add_cell(genotype.get_id(), position);
     }
@@ -522,7 +522,7 @@ public:
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    inline Simulation& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
+    inline Simulation& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue& position)
     {
         tissue().add_cell(genotype_id, position);
 
@@ -539,7 +539,7 @@ public:
      * @param sizes are the sizes of the tissue
      * @return a reference to the updated object
      */
-    Simulation& set_tissue(const std::string name, const std::vector<AxisSize> sizes);
+    Simulation& set_tissue(const std::string& name, const std::vector<AxisSize>& sizes);
 
     /**
      * @brief Get the simulation tissue

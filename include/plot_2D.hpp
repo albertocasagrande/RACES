@@ -2,8 +2,8 @@
  * @file plot_2D.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a 2D plot window
- * @version 0.4
- * @date 2023-07-21
+ * @version 0.5
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -55,7 +55,7 @@ public:
 	 * @param height is the height of the plot window
 	 * @param name is the name of the plot window
 	 */
-	Plot2DWindow(const unsigned int width, const unsigned int height, const std::string name);
+	Plot2DWindow(const unsigned int width, const unsigned int height, const std::string& name);
 
 	/**
 	 * @brief Clear the window

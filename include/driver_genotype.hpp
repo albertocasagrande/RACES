@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Driver genotype representation
- * @version 0.9
- * @date 2023-07-21
+ * @version 0.10
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -66,7 +66,7 @@ public:
      * 
      * @param rate is the promoter methylation/demethylation rate
      */
-    EpigeneticRates(const double rate);
+    explicit EpigeneticRates(const double rate);
 
     /**
      * @brief Get the methylation rate
@@ -332,8 +332,7 @@ public:
      * @param epigenetic_event_rates is the rates of the methylation/demethylation events 
      *          on each target promoters
      */
-    Genotype(const std::string& name,
-                    const std::vector<EpigeneticRates> epigenetic_event_rates);
+    Genotype(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
 
     /**
      * @brief A constructor
@@ -343,7 +342,7 @@ public:
      * 
      * @param name is the name of the driver genotype
      */
-    Genotype(const std::string& name);
+    explicit Genotype(const std::string& name);
 
     /**
      * @brief Get the driver epigenetic genotype identifier

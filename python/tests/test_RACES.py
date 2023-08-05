@@ -289,7 +289,7 @@ class TestSimulation(unittest.TestCase):
         with self.assertRaises(Exception):
             sim.add_species("A")
 
-    def test_add_species(self):
+    def test_add_cell(self):
         sim = RACES.Simulation()
 
         A = RACES.DriverGenotype("A", [[0.01, 0.01]])
@@ -306,7 +306,8 @@ class TestSimulation(unittest.TestCase):
             sim.add_cell(A, "-", [50, 50])
 
         except BaseException:
-            self.fail('sim.add_species(A) raised an unexpected exeception!')
+            self.fail('sim.add_cell(A, "-", [50, 50]) raised ' +
+                      'an unexpected exeception!')
 
         with self.assertRaises(Exception):
             sim.add_cell(A, "-", [50, 150])

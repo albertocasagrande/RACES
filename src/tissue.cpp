@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.12
- * @date 2023-07-21
+ * @version 0.13
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -136,7 +136,7 @@ Tissue::CellInTissueProxy::operator CellInTissue&()
     throw std::runtime_error("Non-driver mutated cell");
 }
 
-Tissue::Tissue(const std::string name, const std::vector<AxisSize> sizes):
+Tissue::Tissue(const std::string& name, const std::vector<AxisSize>& sizes):
     name(name), dimensions(sizes.size())
 {
     AxisSize z_size{1};
@@ -153,17 +153,18 @@ Tissue::Tissue(const std::string name, const std::vector<AxisSize> sizes):
     space = std::vector<std::vector<std::vector<CellInTissue *>>>(sizes[0], y_vector);
 }
 
-Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::string& name, const AxisSize x_size,const AxisSize y_size, const AxisSize z_size):
     Tissue(name, {x_size, y_size, z_size})
 {
 }
 
-Tissue::Tissue(const std::string name, const AxisSize x_size, const AxisSize  y_size):
+Tissue::Tissue(const std::string& name, const AxisSize x_size, const AxisSize y_size):
     Tissue(name, {x_size, y_size})
 {
 }
 
-Tissue::Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::string& name, const std::vector<Genotype>& genotypes,
+               const AxisSize  x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue(name, {x_size, y_size, z_size})
 {
     for (const auto& genotype: genotypes) {
@@ -171,7 +172,8 @@ Tissue::Tissue(const std::string name, const std::vector<Genotype> genotypes, co
     }
 }
 
-Tissue::Tissue(const std::string name, const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
+Tissue::Tissue(const std::string& name, const std::vector<Genotype>& genotypes, 
+               const AxisSize x_size, const AxisSize y_size):
     Tissue(name, {x_size, y_size})
 {
     for (const auto& genotype: genotypes) {
@@ -179,22 +181,24 @@ Tissue::Tissue(const std::string name, const std::vector<Genotype> genotypes, co
     }
 }
 
-Tissue::Tissue(const std::vector<AxisSize> sizes):
+Tissue::Tissue(const std::vector<AxisSize>& sizes):
     Tissue("", sizes)
 {
 }
 
-Tissue::Tissue(const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const AxisSize x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue("", {x_size, y_size, z_size})
 {
 }
 
-Tissue::Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size, const AxisSize  z_size):
+Tissue::Tissue(const std::vector<Genotype>& genotypes,
+               const AxisSize x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<Genotype> genotypes, const AxisSize  x_size, const AxisSize  y_size):
+Tissue::Tissue(const std::vector<Genotype>& genotypes,
+               const AxisSize  x_size, const AxisSize  y_size):
     Tissue("", genotypes, x_size, y_size)
 {
 }
@@ -270,7 +274,7 @@ Tissue& Tissue::add_species(const Genotype& genotype)
         pos.push_back(species.size());
 
         pos_map[e_genotype.get_id()] = species.size();
-        species.push_back(e_genotype);
+        species.push_back(Species(e_genotype));
     }
 
     return *this;

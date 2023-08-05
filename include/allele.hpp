@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines allele representation
- * @version 0.1
- * @date 2023-07-30
+ * @version 0.2
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -114,7 +114,7 @@ public:
      * 
      * @param genomic_region is the genomic region of the allele fragment
      */
-    AlleleFragment(const GenomicRegion& genomic_region);
+    explicit AlleleFragment(const GenomicRegion& genomic_region);
 
     /**
      * @brief Get the allele fragment SNVs

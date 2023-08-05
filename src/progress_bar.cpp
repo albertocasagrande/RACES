@@ -2,8 +2,8 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a progress bar
- * @version 0.4
- * @date 2023-07-29
+ * @version 0.5
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,7 +65,7 @@ ProgressBar::ProgressBar():
 
 }
 
-ProgressBar& ProgressBar::set_message(const std::string message)
+ProgressBar& ProgressBar::set_message(const std::string& message)
 {
 
     this->message = message;
@@ -84,7 +84,7 @@ ProgressBar& ProgressBar::set_message(const std::string message)
     return *this;
 }
 
-ProgressBar& ProgressBar::set_progress(const unsigned int percentage, const std::string message)
+ProgressBar& ProgressBar::set_progress(const unsigned int percentage, const std::string& message)
 {
     using namespace std::chrono;
 

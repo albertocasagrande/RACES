@@ -2,8 +2,8 @@
  * @file phyloXML.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define phyloXML stream
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -81,7 +81,7 @@ public:
      * @param os is the underline output stream
      * @param indentation_symbols are the indentation symbols
      */
-    phyloXMLStream(std::ostream& os=std::cout, const std::string& indentation_symbols=" ");
+    explicit phyloXMLStream(std::ostream& os=std::cout, const std::string& indentation_symbols=" ");
 
     /**
      * @brief  Stream a phylogenetic forest

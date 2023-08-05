@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.11
- * @date 2023-07-21
+ * @version 0.12
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -181,7 +181,7 @@ public:
      * 
      * @param genotype is the epigenetic genotype of the species
      */
-    Species(const EpigeneticGenotype& genotype);
+    explicit Species(const EpigeneticGenotype& genotype);
 
     /**
      * @brief A copy constructor

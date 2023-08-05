@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.5
- * @date 2023-07-31
+ * @version 0.6
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -288,7 +288,7 @@ public:
      * 
      * @param chromosomes is the vector of genome chromosomes
      */
-    GenomeMutations(const std::vector<ChromosomeMutations>& chromosomes);    
+    explicit GenomeMutations(const std::vector<ChromosomeMutations>& chromosomes);    
 
     /**
      * @brief A constructor

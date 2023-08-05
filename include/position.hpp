@@ -2,8 +2,8 @@
  * @file position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a position class in a tissue
- * @version 0.3
- * @date 2023-07-21
+ * @version 0.4
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -114,7 +114,7 @@ struct PositionDelta {
      * 
      * @param direction 
      */
-    PositionDelta(const Direction& direction);
+    explicit PositionDelta(const Direction& direction);
 
     /**
      * @brief Negate position delta;

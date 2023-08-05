@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.13
- * @date 2023-07-21
+ * @version 0.14
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -292,7 +292,7 @@ protected:
      * 
      * @param position is the cell position
      */
-    CellInTissue(const PositionInTissue& position);
+    explicit CellInTissue(const PositionInTissue& position);
 
     /**
      * @brief A cell in tissue constructor
