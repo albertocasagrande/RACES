@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.10
- * @date 2023-08-02
+ * @version 0.11
+ * @date 2023-08-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -69,7 +69,7 @@ std::string get_time_string()
 {
     std::time_t time;
     std::tm* info;
-    char buffer[18];
+    char buffer[81];
 
     std::time(&time);
     info = std::localtime(&time);
