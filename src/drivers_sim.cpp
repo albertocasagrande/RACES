@@ -113,7 +113,7 @@ class DriverSimulator
             throw std::domain_error("The \"epigenetic types\" field must be an array of epigenetic types");
         }
 
-        if ((1<<genotype_json["epigenetic rates"].size())!=genotype_json["epigenetic types"].size()) {
+        if (static_cast<size_t>(1<<genotype_json["epigenetic rates"].size())!=genotype_json["epigenetic types"].size()) {
             throw std::domain_error("The epigenetic types must be exponential in number with respect "
                                     "to the number of promotor epigenetic rates");
         }
