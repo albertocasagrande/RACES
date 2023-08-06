@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.7
- * @date 2023-07-21
+ * @version 0.8
+ * @date 2023-08-06
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
 {
     using namespace Races::Drivers;
 
-    std::vector<Cell> to_save{{0}, {1,300}, {2, 200}};
+    std::vector<Cell> to_save{Cell(0), Cell(1,300), Cell(2, 200)};
 
     auto filename = get_a_temporary_path();
     {

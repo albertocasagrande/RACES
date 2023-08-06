@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.8
- * @date 2023-08-05
+ * @version 0.9
+ * @date 2023-08-06
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -143,7 +143,7 @@ public:
      * @param dir_prefix is the prefix of the filename
      * @param cells_per_file is the number of cells per file
      */
-    BinaryLogger(const std::string& dir_prefix, const size_t cells_per_file=1<<27);
+    explicit BinaryLogger(const std::string& dir_prefix, const size_t cells_per_file=1<<27);
 
     /**
      * @brief Get the log directory

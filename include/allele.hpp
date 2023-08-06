@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines allele representation
- * @version 0.2
- * @date 2023-08-05
+ * @version 0.3
+ * @date 2023-08-06
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -202,7 +202,7 @@ public:
      * 
      * @param genomic_region is the genomic region of the allele
      */
-    Allele(const GenomicRegion& genomic_region);
+    explicit Allele(const GenomicRegion& genomic_region);
 
     /**
      * @brief Get the allele fragments
