@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.4
- * @date 2023-07-30
+ * @version 0.5
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,6 +49,7 @@ struct SNV : public GenomicPosition
 {
     MutationalContext context;  //!< the context base
     char mutated_base;          //!< the mutated base
+    std::string cause;          //!< the cause of the SNV
 
     /**
      * @brief The empty constructor
@@ -88,6 +89,44 @@ struct SNV : public GenomicPosition
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
     SNV(GenomicPosition&& genomic_position, const MutationalContext& context, const char mutated_base);
+
+    /**
+     * @brief A constructor
+     * 
+     * @param chromosome_id is the id of the SNV chromosome
+     * @param chromosomic_position is the SNV position in the chromosome
+     * @param position is the SNV position
+     * @param context is the SNV context
+     * @param mutated_base is the mutated base
+     * @param cause is the cause of the SNV
+     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     */
+    SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
+        const MutationalContext& context, const char mutated_base, const std::string& cause);
+
+    /**
+     * @brief A constructor
+     * 
+     * @param genomic_position is the SNV genomic_position
+     * @param context is the SNV context
+     * @param mutated_base is the mutated base
+     * @param cause is the cause of the SNV
+     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     */
+    SNV(const GenomicPosition& genomic_position, const MutationalContext& context,
+        const char mutated_base, const std::string& cause);
+
+    /**
+     * @brief A constructor
+     * 
+     * @param genomic_position is the SNV genomic_position
+     * @param context is the SNV context
+     * @param mutated_base is the mutated base
+     * @param cause is the cause of the SNV
+     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     */
+    SNV(GenomicPosition&& genomic_position, const MutationalContext& context,
+        const char mutated_base, const std::string& cause);
 };
 
 }   // Passengers

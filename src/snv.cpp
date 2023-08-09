@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.5
- * @date 2023-07-31
+ * @version 0.6
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,12 +47,26 @@ SNV::SNV():
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
          const MutationalContext& context, const char mutated_base):
-    SNV(GenomicPosition(chromosome_id, chromosomic_position), context, mutated_base)
+    SNV(chromosome_id, chromosomic_position, context, mutated_base, "")
 {}
 
 SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
          const char mutated_base):
-    GenomicPosition(position), context(context), mutated_base(mutated_base)
+    SNV(position, context, mutated_base, "")
+{}
+
+SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const char mutated_base):
+    SNV(position, context, mutated_base, "")
+{}
+
+SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
+         const MutationalContext& context, const char mutated_base, const std::string& cause):
+    SNV(GenomicPosition(chromosome_id, chromosomic_position), context, mutated_base, cause)
+{}
+
+SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
+         const char mutated_base, const std::string& cause):
+    GenomicPosition(position), context(context), mutated_base(mutated_base), cause(cause)
 {
     if (!MutationalContext::is_a_base(mutated_base)) {
         std::ostringstream oss;
@@ -67,8 +81,9 @@ SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
     }
 }
 
-SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const char mutated_base):
-    SNV(position, context, mutated_base)
+SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const char mutated_base,
+         const std::string& cause):
+    SNV(position, context, mutated_base, cause)
 {}
 
 }   // Passengers
@@ -105,8 +120,19 @@ bool less<Races::Passengers::SNV>::operator()(const Races::Passengers::SNV &lhs,
         }
     }
 
+    if (lhs.mutated_base < rhs.mutated_base) {
+        return true;
+    }
 
-    return lhs.mutated_base < rhs.mutated_base;
+    if (lhs.mutated_base > rhs.mutated_base) {
+        return false;
+    }
+
+    {
+        less<std::string> str_op;
+        
+        return str_op(lhs.cause, rhs.cause);
+    }
 }
 
 std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV& snv)
