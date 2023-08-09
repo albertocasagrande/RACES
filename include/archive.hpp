@@ -2,7 +2,7 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines some archive classes and their methods
- * @version 0.12
+ * @version 0.13
  * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
@@ -451,10 +451,11 @@ struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
      * 
      * @tparam T is the type of the object to save
      * @param object is the object to save
-     * @param quiet is flag to avoid progress bar visualization 
+     * @param description is a description of the object to 
+     *          be loaded
      */
     template<typename T>
-    void save(const T& object, const bool quiet = false);
+    void save(const T& object, const std::string& description="");
 };
 
 /**
@@ -602,10 +603,11 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
      * @tparam T is the type of the object to load
      * @param object is the object in which the loaded 
      *          data is placed
-     * @param quiet is flag to avoid progress bar visualization
+     * @param description is a description of the object to 
+     *          be loaded
      */
     template<typename T>
-    void load(T& object, const bool quiet = false);
+    void load(T& object, const std::string& description="");
 };
 
 }   // Binary
@@ -1124,25 +1126,31 @@ namespace Binary
 {
 
 template<typename T>
-void Out::save(const T& object, const bool quiet)
+void Out::save(const T& object, const std::string& description)
 {
-    if (quiet) {
-        *this & object;
-
-        return;
-    }
-
     UI::ProgressBar::hide_console_cursor();
     
     Races::UI::ProgressBar bar;
 
-    bar.set_message("Saving...");
+    if (description=="") {
+        bar.set_message("Saving...");
+    } else {
+        bar.set_message("Saving "+description);
+    }
 
     initialize(&bar, ByteCounter::bytes_required_by(object));
 
     *this & object;
 
-    bar.set_progress(100, "Saved");
+    if (description=="") {
+        bar.set_progress(100, "Saved");
+    } else {
+        auto msg = description+" saved";
+
+        msg[0] = toupper(msg[0]);
+
+        bar.set_progress(100, msg);
+    }
 
     reset();
 
@@ -1150,25 +1158,31 @@ void Out::save(const T& object, const bool quiet)
 }
 
 template<typename T>
-void In::load(T& object, const bool quiet)
+void In::load(T& object, const std::string& description)
 {
-    if (quiet) {
-        *this & object;
-
-        return;
-    }
-
     UI::ProgressBar::hide_console_cursor();
 
     Races::UI::ProgressBar bar;
 
-    bar.set_message("Loading...");
+    if (description=="") {
+        bar.set_message("Loading...");
+    } else {
+        bar.set_message("Loading "+description);
+    }
 
     initialize(&bar, static_cast<size_t>(this->size()));
 
     *this & object;
 
-    bar.set_progress(100, "Loaded");
+    if (description=="") {
+        bar.set_progress(100, "Loaded");
+    } else {
+        auto msg = description+" loaded";
+
+        msg[0] = toupper(msg[0]);
+
+        bar.set_progress(100, msg);
+    }
 
     reset();
 

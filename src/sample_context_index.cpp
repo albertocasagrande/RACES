@@ -1,9 +1,9 @@
 /**
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Main file for the simulator
- * @version 0.4
- * @date 2023-08-05
+ * @brief Context index sampler
+ * @version 0.5
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -62,7 +62,11 @@ class ContextSampler
 
             {
                 Races::Archive::Binary::In archive(context_index_filename);
-                archive.load(context_index, quiet);
+                if (quiet) {
+                    archive & context_index;
+                } else {
+                    archive.load(context_index, "context index");
+                }
             }
 
             if (!quiet) {
@@ -95,10 +99,10 @@ class ContextSampler
                 }
             }
 
-            if (quiet) {
-                Races::Archive::Binary::Out archive(output_filename);
+            Races::Archive::Binary::Out archive(output_filename);
 
-                archive.save(context_index, true);
+            if (quiet) {
+                archive & context_index;
             } else {
                 bar->set_progress(100, "Done");
 
@@ -106,9 +110,7 @@ class ContextSampler
 
                 Races::UI::ProgressBar::show_console_cursor();
 
-                Races::Archive::Binary::Out archive(output_filename);
-
-                archive.save(context_index, false);
+                archive.save(context_index, "sampled index");
 
                 std::cout << " Freeing memory..." << std::flush;
             }

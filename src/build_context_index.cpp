@@ -2,8 +2,8 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Builds the context index
- * @version 0.1
- * @date 2023-08-03
+ * @version 0.2
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -122,7 +122,11 @@ class IndexBuilder
             if (chr_regions.size() > 0) {
                 Archive::Binary::Out archive(output_filename);
 
-                archive.save(context_index, quiet);
+                if (quiet) {
+                    archive & context_index;
+                } else {
+                    archive.save(context_index, "context index");
+                }
             }
 
             if (!quiet) {
