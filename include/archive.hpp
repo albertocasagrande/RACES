@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines some archive classes and their methods
- * @version 0.11
- * @date 2023-08-05
+ * @version 0.12
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -1144,6 +1144,8 @@ void Out::save(const T& object, const bool quiet)
 
     bar.set_progress(100, "Saved");
 
+    reset();
+
     UI::ProgressBar::show_console_cursor();
 }
 
@@ -1167,6 +1169,8 @@ void In::load(T& object, const bool quiet)
     *this & object;
 
     bar.set_progress(100, "Loaded");
+
+    reset();
 
     UI::ProgressBar::show_console_cursor();
 }
