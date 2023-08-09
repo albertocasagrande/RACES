@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.6
- * @date 2023-08-05
+ * @version 0.7
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,6 +38,8 @@
 #include "context_index.hpp"
 
 #include "allele.hpp"
+#include "cna.hpp"
+
 #include "progress_bar.hpp"
 
 namespace Races 
@@ -45,11 +47,6 @@ namespace Races
 
 namespace Passengers
 {
-
-/**
- * @brief A identifier type for alleles
- */
-typedef size_t AlleleId;
 
 /**
  * @brief A class to represent the passenger mutations in a chromosome
@@ -63,6 +60,8 @@ private:
     Length allelic_length;      //!< the sum of the lengths of all the alleles
 
     std::map<AlleleId, Allele> alleles;  //!< the chromosome alleles
+
+    std::list<CopyNumberAlteration> CNAs;   //!< the occurred CNAs
 
     AlleleId next_allele_id;   //!< the identifier of the next allele
 
@@ -147,7 +146,17 @@ public:
     inline const std::map<AlleleId, Allele>& get_alleles() const
     {
         return alleles;
-    } 
+    }
+
+    /**
+     * @brief Get the CNAs occurred in the chromosome
+     * 
+     * @return the list of the CNAs occurred in the chromosome
+     */
+    inline const std::list<CopyNumberAlteration>& get_CNAs() const
+    {
+        return CNAs;
+    }
 
     /**
      * @brief Get the identifiers of the alleles containing a genomic position 

@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines allele representation
- * @version 0.3
- * @date 2023-08-06
+ * @version 0.4
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,6 +41,11 @@ namespace Races
 
 namespace Passengers
 {
+
+/**
+ * @brief A identifier type for alleles
+ */
+typedef size_t AlleleId;
 
 /**
  * @brief A class to represent a fragment of an allele
@@ -334,4 +339,4 @@ std::ostream& operator<<(std::ostream& os, const Races::Passengers::Allele& alle
 
 } // std
 
-#endif // __RACES_CELL__
+#endif // __RACES_ALLELE__

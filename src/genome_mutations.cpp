@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.5
- * @date 2023-07-31
+ * @version 0.6
+ * @date 2023-08-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -149,6 +149,8 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
 
     alleles.insert({next_allele_id, std::move(new_allele)});
 
+    CNAs.push_back(CopyNumberAlteration::new_amplification(genomic_region, allele_id, next_allele_id));
+
     ++next_allele_id;
 
     return true;
@@ -162,6 +164,8 @@ bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, con
     }
 
     alleles[allele_id].remove(genomic_region);
+
+    CNAs.push_back(CopyNumberAlteration::new_deletion(genomic_region, allele_id));
 
     return true;
 }
