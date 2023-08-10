@@ -2,7 +2,7 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.8
+ * @version 0.9
  * @date 2023-08-10
  * 
  * @copyright Copyright (c) 2023
@@ -539,7 +539,7 @@ public:
         auto it = abs_pos2chr.upper_bound(abs_position);
         --it;
 
-        return GenomicPosition(it->second, static_cast<ChrPosition>(abs_position-it->first));
+        return GenomicPosition(it->second, static_cast<ChrPosition>(abs_position-it->first+1));
     }
 
     /**
