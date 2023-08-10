@@ -2,8 +2,8 @@
  * @file context.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.2
- * @date 2023-07-26
+ * @version 0.3
+ * @date 2023-08-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,7 @@
 #include <functional>   // std::less
 #include <string>
 #include <iostream>
+#include <array>
 
 #include "archive.hpp"
 
