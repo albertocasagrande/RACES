@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.7
- * @date 2023-08-03
+ * @version 0.8
+ * @date 2023-08-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,7 +39,7 @@
 #include <type_traits>
 
 #include "archive.hpp"
-#include "fasta_utils.hpp"      // IO::FASTA::EnsemblSeqNameDecoder
+#include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_name
 #include "genomic_region.hpp"   // Passengers::GenomicRegion
 #include "basic_IO.hpp"         // IO::get_stream_size
 #include "context.hpp"          // Passengers::ExtendedContextAutomaton
@@ -263,13 +263,10 @@ protected:
      * At the same time, this method stores the absolute positions of each chromosome in the member 
      * `ContextIndex::abs_pos2chr`.
      * 
-     * @tparam SEQUENCE_NAME_DECODER is a sequence name decoder inherited from `Races::IO::FASTA::SeqNameDecoder` 
      * @param[in,out] fasta_stream is the genome FASTA stream
      * @param[in] genomic_regions is the vector of the regions to be processed
      * @param[in,out] progress_bar is the progress bar
      */
-    template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
     void reset_with(std::ifstream& fasta_stream, const std::set<GenomicRegion>* genomic_regions=nullptr,
                     UI::ProgressBar* progress_bar=nullptr)
     {
@@ -285,27 +282,26 @@ protected:
 
         auto regions_by_chr = split_by_chromosome_id(genomic_regions);
 
-        SEQUENCE_NAME_DECODER seq_decoder;
         skip_to_next_seq(fasta_stream);
 
         while (!fasta_stream.eof()) {
             std::string sequence_title;
             getline(fasta_stream, sequence_title);
 
-            GenomicRegion chr_region;
+            ChromosomeId chr_id;
 
             // if the sequence is a chromosome
-            if (seq_decoder.get_chromosome_region(sequence_title, chr_region)) {
+            if (IO::FASTA::is_chromosome_name(sequence_title, chr_id)) {
 
                 if (progress_bar != nullptr) {
-                    progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr_region.get_chromosome_id()));
+                    progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr_id));
                 }
-                abs_pos2chr[genome_size+1] = chr_region.get_chromosome_id();
+                abs_pos2chr[genome_size+1] = chr_id;
 
                 if (genomic_regions == nullptr) {
                     build_index_in_seq(fasta_stream, streamsize, progress_bar);
                 } else {
-                    auto regions_in = regions_by_chr.find(chr_region.get_chromosome_id());
+                    auto regions_in = regions_by_chr.find(chr_id);
 
                     // if one of the selected region belongs to the current chromosome
                     if (regions_in != regions_by_chr.end()) {
@@ -339,19 +335,17 @@ public:
     /**
      * @brief Find the context positions in a FASTA stream
      * 
-     * @tparam SEQUENCE_NAME_DECODER is a sequence name decoder inherited from `Races::IO::FASTA::SeqNameDecoder`
      * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
      * @param[in,out] progress_bar is the progress bar 
      * @return the positions of the contexts in the FASTA sequences whose name 
-     *      corresponds to a chromosome according to `SEQUENCE_NAME_DECODER`
+     *      corresponds to a chromosome according to 
+     *      `Races::IO::FASTA::seq_name_decoders`
      */
-    template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
     static ContextIndex build_index(std::ifstream& genome_fasta_stream, UI::ProgressBar* progress_bar=nullptr)
     {
         ContextIndex context_index;
 
-        context_index.reset_with<SEQUENCE_NAME_DECODER>(genome_fasta_stream, nullptr, progress_bar);
+        context_index.reset_with(genome_fasta_stream, nullptr, progress_bar);
 
         return context_index;
     }
@@ -359,14 +353,12 @@ public:
     /**
      * @brief Find the context positions in a FASTA file
      * 
-     * @tparam SEQUENCE_NAME_DECODER is a sequence name decoder inherited from `Races::IO::FASTA::SeqNameDecoder`
      * @param[in] genome_fasta genome_fasta is a path of a FASTA file
      * @param[in,out] progress_bar is the progress bar 
      * @return the positions of the contexts in the FASTA file whose name 
-     *      corresponds to a chromosome according to `SEQUENCE_NAME_DECODER`
+     *      corresponds to a chromosome  according to 
+     *      `Races::IO::FASTA::seq_name_decoders`
      */
-    template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
     static ContextIndex build_index(const std::filesystem::path& genome_fasta, UI::ProgressBar* progress_bar=nullptr)
     {
         std::ifstream genome_fasta_stream(genome_fasta);
@@ -378,27 +370,25 @@ public:
             throw std::runtime_error(oss.str());
         }        
         
-        return build_index<SEQUENCE_NAME_DECODER>(genome_fasta_stream, progress_bar);
+        return build_index(genome_fasta_stream, progress_bar);
     }
 
     /**
      * @brief Find the context positions in some genomic fragments of a FASTA stream
      * 
-     * @tparam SEQUENCE_NAME_DECODER is a sequence name decoder inherited from `Races::IO::FASTA::SeqNameDecoder`
      * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
      * @param[in] genomic_regions is the set of the genomic regions in which contexts will be searched 
      * @param[in,out] progress_bar is the progress bar 
      * @return the positions of the contexts in the regions `genomic_regions` of the FASTA 
-     *      sequences whose name corresponds to a chromosome according to `SEQUENCE_NAME_DECODER`
+     *      sequences whose name corresponds to a chromosome according to 
+     *      `Races::IO::FASTA::seq_name_decoders`
      */
-    template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
     static ContextIndex build_index(std::ifstream& genome_fasta_stream, const std::set<GenomicRegion>& genomic_regions,
                                              UI::ProgressBar* progress_bar=nullptr)
     {
         ContextIndex context_index;
 
-        context_index.reset_with<SEQUENCE_NAME_DECODER>(genome_fasta_stream, &genomic_regions, progress_bar);
+        context_index.reset_with(genome_fasta_stream, &genomic_regions, progress_bar);
 
         return context_index;
     }
@@ -406,17 +396,16 @@ public:
     /**
      * @brief Find the context positions in some genomic fragments of a FASTA file
      * 
-     * @tparam SEQUENCE_NAME_DECODER is a sequence name decoder inherited from `Races::IO::FASTA::SeqNameDecoder`
      * @param[in] genome_fasta genome_fasta is a path of a FASTA file
      * @param[in] genomic_regions is the set of the genomic regions in which contexts will be searched 
      * @param[in,out] progress_bar is the progress bar 
      * @return the positions of the contexts in the regions `genomic_regions` of the FASTA 
-     *      sequences whose name corresponds to a chromosome according to `SEQUENCE_NAME_DECODER`
+     *      sequences whose name corresponds to a chromosome according to 
+     *      `Races::IO::FASTA::seq_name_decoders`
      */
-    template<typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SeqNameDecoder, SEQUENCE_NAME_DECODER>, bool> = true >
-    static ContextIndex build_index(const std::filesystem::path& genome_fasta, const std::set<GenomicRegion>& genomic_regions,
-                                             UI::ProgressBar* progress_bar=nullptr)
+    static ContextIndex build_index(const std::filesystem::path& genome_fasta,
+                                    const std::set<GenomicRegion>& genomic_regions,
+                                    UI::ProgressBar* progress_bar=nullptr)
     {
         std::ifstream genome_fasta_stream(genome_fasta);
 
@@ -427,7 +416,7 @@ public:
             throw std::runtime_error(oss.str());
         }      
 
-        return build_index<SEQUENCE_NAME_DECODER>(genome_fasta_stream, genomic_regions, progress_bar);
+        return build_index(genome_fasta_stream, genomic_regions, progress_bar);
     }
 
     /**

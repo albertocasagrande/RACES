@@ -2,8 +2,8 @@
  * @file fasta_utils.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements support utilities for FASTA files
- * @version 0.3
- * @date 2023-08-03
+ * @version 0.4
+ * @date 2023-08-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,10 @@ namespace IO
 namespace FASTA
 {
 
-bool EnsemblSeqNameDecoder::get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const
+SeqNameDecoder::~SeqNameDecoder()
+{}
+
+bool EnsemblSeqNameDecoder::is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
 {
     using namespace Passengers;
 
@@ -53,16 +56,12 @@ bool EnsemblSeqNameDecoder::get_chromosome_region(const std::string& seq_name, P
         return false;
     }
 
-    ChromosomeId chr_id = GenomicPosition::stochr(m[1].str());
-
-    GenomicRegion::Length length = static_cast<GenomicRegion::Length>(std::stoi(m[3].str()));
-
-    chr_region = GenomicRegion(chr_id, length);
+    chr_id = GenomicPosition::stochr(m[1].str());
 
     return true;
 }
 
-bool NCBISeqNameDecoder::get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const
+bool NCBISeqNameDecoder::is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
 {
     using namespace Passengers;
 
@@ -74,11 +73,25 @@ bool NCBISeqNameDecoder::get_chromosome_region(const std::string& seq_name, Pass
         return false;
     }
 
-    ChromosomeId chr_id = GenomicPosition::stochr(m[1].str());
-
-    chr_region = GenomicRegion(chr_id, 1);
+    chr_id = GenomicPosition::stochr(m[1].str());
 
     return true;
+}
+
+std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders{
+    std::make_shared<EnsemblSeqNameDecoder>(),
+    std::make_shared<NCBISeqNameDecoder>()
+};
+
+bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id)
+{
+    for (const auto& seq_decoder_ptr : seq_name_decoders) {
+        if (seq_decoder_ptr->is_chromosome_name(seq_name, chr_id)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 }   // FASTA

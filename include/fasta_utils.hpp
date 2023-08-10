@@ -2,8 +2,8 @@
  * @file fasta_utils.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines support utilities for FASTA files
- * @version 0.3
- * @date 2023-08-03
+ * @version 0.4
+ * @date 2023-08-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,9 +31,11 @@
 #ifndef __RACES_FASTA_UTILS__
 #define __RACES_FASTA_UTILS__
 
+#include <list>
 #include <string>
+#include <memory>
 
-#include "genomic_region.hpp"
+#include "genomic_position.hpp"
 
 namespace Races
 {
@@ -50,13 +52,18 @@ namespace FASTA
 struct SeqNameDecoder
 {
     /**
-     * @brief Extract the genomic region from a sequence name
+     * @brief Establish whether a sequence is a chromosome by its name
      * 
      * @param seq_name is a FASTA sequence name
-     * @param chr_region is the variable where the chromosome region will be placed
+     * @param chr_id is the variable where the chromosome id will be placed
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence name
      */
-    virtual bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const = 0;
+    virtual bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const = 0;
+
+    /**
+     * @brief The destroyer
+     */
+    virtual ~SeqNameDecoder();
 };
 
 /**
@@ -65,14 +72,14 @@ struct SeqNameDecoder
 struct EnsemblSeqNameDecoder : public SeqNameDecoder
 {
     /**
-     * @brief Extract the genomic region from a sequence name
+     * @brief Establish whether a sequence is a chromosome by its name
      * 
      * @param seq_name is a FASTA sequence name
-     * @param chr_region is the variable where the chromosome region will be placed
+     * @param chr_id is the variable where the chromosome id will be placed
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in Ensembl format
      */
-    bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const override;
+    bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
 };
 
 /**
@@ -81,15 +88,33 @@ struct EnsemblSeqNameDecoder : public SeqNameDecoder
 struct NCBISeqNameDecoder : public SeqNameDecoder
 {
     /**
-     * @brief Extract the genomic region from a sequence name
+     * @brief Establish whether a sequence is a chromosome by its name
      * 
      * @param seq_name is a FASTA sequence name
-     * @param chr_region is the variable where the chromosome region will be placed
+     * @param chr_id is the variable where the chromosome id will be placed
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in NCBI format
      */
-    bool get_chromosome_region(const std::string& seq_name, Passengers::GenomicRegion& chr_region) const override;
+    bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
 };
+
+/**
+ * @brief The list of sequence name decorders
+ * 
+ * The elements in this list are used by the function
+ * `Races::IO::FASTA::is_chromosome_name(...)`.
+ */
+extern std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders;
+
+/**
+ * @brief Establish whether a sequence is a chromosome by its name
+ * 
+ * @param seq_name is a FASTA sequence name
+ * @param chr_id is the variable where the chromosome id will be placed
+ * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
+ *      name in NCBI format
+ */
+bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id);
 
 }   // FASTA
 

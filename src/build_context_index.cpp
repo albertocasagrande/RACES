@@ -2,8 +2,8 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Builds the context index
- * @version 0.2
- * @date 2023-08-09
+ * @version 0.3
+ * @date 2023-08-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,53 +38,6 @@
 #include "context_index.hpp"
 #include "progress_bar.hpp"
 
-enum class SeqNameDecCode
-{
-    ENSEMBL_DECODER,
-    NCBI_DECODER
-};
-
-template<>
-std::string boost::lexical_cast<std::string>(const SeqNameDecCode& code)
-{
-    switch(code) {
-        case SeqNameDecCode::ENSEMBL_DECODER:
-            return "Ensembl";
-        case SeqNameDecCode::NCBI_DECODER:
-            return "NCBI";
-        default:
-            throw std::domain_error("Unknown sequence name decoder. "
-                                    "Supported decoders are \"Ensembl\" and \"NCBI\".");
-    }
-}
-
-void validate(boost::any& v, std::vector<std::string> const& values, 
-                SeqNameDecCode*, int)
-{
-    using namespace boost::program_options;
-
-    // Make sure no previous assignment to 'v' was made.
-    validators::check_first_occurrence(v);
-
-    // Extract the first string from 'values'. If there is more than
-    // one string, it's an error, and exception will be thrown.
-    std::string const& s = validators::get_single_string(values);
-
-    if (s == "Ensembl") {
-        v = boost::any(SeqNameDecCode::ENSEMBL_DECODER);
-
-        return;
-    }
-
-    if (s == "NCBI") {
-        v = boost::any(SeqNameDecCode::NCBI_DECODER);
-
-        return;
-    }
-
-    throw validation_error(validation_error::invalid_option_value);
-}
-
 class IndexBuilder
 {   
     const std::string program_name;
@@ -94,10 +47,9 @@ class IndexBuilder
     std::string output_filename;
     std::string genome_fasta_filename;
     unsigned int bits_per_abs_position;
-    SeqNameDecCode seq_name_decoder;
     bool quiet;
 
-    template<typename ABSOLUTE_GENOMIC_POSITION, typename SEQUENCE_NAME_DECODER = Races::IO::FASTA::EnsemblSeqNameDecoder>
+    template<typename ABSOLUTE_GENOMIC_POSITION>
     std::vector<Races::Passengers::GenomicRegion> build_and_save_context_index() const
     {
         using namespace Races;
@@ -108,13 +60,13 @@ class IndexBuilder
             ContextIndex<ABSOLUTE_GENOMIC_POSITION> context_index;
 
             if (quiet) {
-                context_index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>::template build_index<SEQUENCE_NAME_DECODER>(genome_fasta_filename);
+                context_index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>::build_index(genome_fasta_filename);
             } else {
                 UI::ProgressBar::hide_console_cursor();
 
                 UI::ProgressBar progress_bar;
 
-                context_index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>::template build_index<SEQUENCE_NAME_DECODER>(genome_fasta_filename, &progress_bar);
+                context_index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>::build_index(genome_fasta_filename, &progress_bar);
             }
             
             chr_regions = context_index.get_chromosome_regions();
@@ -155,25 +107,6 @@ class IndexBuilder
         return chr_regions;
     }
 
-    template<typename SEQUENCE_NAME_DECODER>
-    std::vector<Races::Passengers::GenomicRegion> select_bit_per_abs_position() const
-    {
-        switch (bits_per_abs_position) {
-            case 2:
-                return build_and_save_context_index<uint16_t, SEQUENCE_NAME_DECODER>();
-            case 4:
-                return build_and_save_context_index<uint32_t, SEQUENCE_NAME_DECODER>();
-            case 8:
-                return build_and_save_context_index<uint64_t, SEQUENCE_NAME_DECODER>();
-            default:
-                std::cerr << "Unsupported bits per absolute position."
-                        << " Supported values are 2, 4, or 8." << std::endl<< std::endl;
-                print_help(std::cerr);
-
-                exit(1);
-        }
-    }
-
 public:
 
     std::ostream& print_help(std::ostream& os) const
@@ -200,8 +133,6 @@ public:
             ("force-overwrite,f", "force overwriting output file")
             ("bytes-per-pos,b", po::value<unsigned int>(&bits_per_abs_position)->default_value(4),
             "bytes per absolute position (2, 4, or 8)")
-            ("seq-name,s", po::value<SeqNameDecCode>(&seq_name_decoder)->default_value(SeqNameDecCode::ENSEMBL_DECODER),
-            "sequence name decoder (i.e., \"Ensembl\" or \"NCBI\")")
 #ifdef WITH_INDICATORS
             ("quiet,q", "disable output messages")
 #endif // WITH_INDICATORS
@@ -259,19 +190,20 @@ public:
     {
         using namespace Races::IO::FASTA;
 
-        switch(seq_name_decoder) {
-            case SeqNameDecCode::ENSEMBL_DECODER:
-                return select_bit_per_abs_position<EnsemblSeqNameDecoder>();
-            case SeqNameDecCode::NCBI_DECODER:
-                return select_bit_per_abs_position<NCBISeqNameDecoder>();
+        switch (bits_per_abs_position) {
+            case 2:
+                return build_and_save_context_index<uint16_t>();
+            case 4:
+                return build_and_save_context_index<uint32_t>();
+            case 8:
+                return build_and_save_context_index<uint64_t>();
             default:
-                std::cerr << "Unsupported FASTA sequence name decoder"
-                          << " Supported decoder are \"Ensembl\" and \"NCBI\"." << std::endl
-                          << std::endl;
+                std::cerr << "Unsupported bits per absolute position."
+                        << " Supported values are 2, 4, or 8." << std::endl<< std::endl;
                 print_help(std::cerr);
 
                 exit(1);
-        };
+        }
     }
 };
 
