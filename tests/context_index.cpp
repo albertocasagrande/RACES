@@ -2,8 +2,8 @@
  * @file context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Testing Races::Passengers::ContextIndex class
- * @version 0.2
- * @date 2023-07-30
+ * @version 0.3
+ * @date 2023-08-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -95,12 +95,12 @@ struct ContextFixture
 
     ContextFixture():
         test_positions{
-            {"ACT",{{1,76},{2,263},{3,5}}},
-            {"GCG",{{1,30},{3,8}}},
-            {"TCC",{{1,83},{2,295}}},
-            {"TCT",{{1,61},{1,107},{2,163},{2,165}}},
-            {"GCT",{{1,81},{2,127},{2,170},{2,293}}},
-            {"TCG",{{2,125}}}
+            {"ACT",{{1,77},{2,264},{3,6}}},
+            {"GCG",{{1,31},{3,9}}},
+            {"TCC",{{1,84},{2,296}}},
+            {"TCT",{{1,62},{1,108},{2,164},{2,166}}},
+            {"GCT",{{1,82},{2,128},{2,171},{2,294}}},
+            {"TCG",{{2,126}}}
         }
     {}
 };
