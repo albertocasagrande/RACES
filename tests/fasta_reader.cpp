@@ -2,8 +2,8 @@
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Testing Races::IO::FASTA::Reader class
- * @version 0.2
- * @date 2023-07-25
+ * @version 0.3
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,9 +42,8 @@ BOOST_AUTO_TEST_CASE(reader_creation)
 {
     using namespace Races::IO::FASTA;
 
-    std::ifstream in(FASTA_FILE, std::ios_base::in);
-
-    BOOST_CHECK_NO_THROW(Reader reader(in));
+    BOOST_CHECK_NO_THROW(Sequence sequence);
+    BOOST_CHECK_NO_THROW(SequenceInfo seq_info);
 }
 
 struct FASTAFixture
@@ -62,62 +61,77 @@ struct FASTAFixture
 
 BOOST_FIXTURE_TEST_SUITE( FASTA_test, FASTAFixture )
 
-BOOST_AUTO_TEST_CASE(read_sequence_name)
+BOOST_AUTO_TEST_CASE(read_sequence_infos)
 {
     using namespace Races::IO::FASTA;
 
-    std::ifstream in(FASTA_FILE, std::ios_base::in);
+    std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
 
-    Reader fasta_reader(in);
+    SequenceInfo seq_info;
+    for (const auto& [header, nucleotides]: sequences) {
+        BOOST_CHECK(SequenceInfo::read(fasta_stream, seq_info));
 
-    auto it = sequences.begin();
-    auto seq_reader = fasta_reader.next_sequence_reader();
-    while (!fasta_reader.finished()) {
-
-        if (it == sequences.end()) {
-            throw std::runtime_error("unexpected sequence");
-        }
-
-        BOOST_CHECK_EQUAL(it->first, seq_reader.get_sequence_name());
-
-        ++it;
-        seq_reader = fasta_reader.next_sequence_reader();
+        BOOST_CHECK_EQUAL(seq_info.header, header);
+        BOOST_CHECK_EQUAL(seq_info.length, nucleotides.size());
     }
 
-    BOOST_CHECK(it == sequences.end());
+    BOOST_CHECK(!SequenceInfo::read(fasta_stream, seq_info));
 }
 
-BOOST_AUTO_TEST_CASE(read_sequence_bases)
+BOOST_AUTO_TEST_CASE(read_sequences)
 {
     using namespace Races::IO::FASTA;
 
-    std::ifstream in(FASTA_FILE, std::ios_base::in);
+    std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
 
-    Reader fasta_reader(in);
+    Sequence sequence;
+    for (const auto& [header, nucleotides]: sequences) {
+        BOOST_CHECK(Sequence::read(fasta_stream, sequence));
 
-    auto it = sequences.begin();
-    auto seq_reader = fasta_reader.next_sequence_reader();
-    while (!fasta_reader.finished()) {
-        uint32_t pos=0; 
-        const auto& seq = it->second;
-        auto base_it = seq_reader.begin();
-
-        while (base_it != seq_reader.end()) {
-            BOOST_CHECK_EQUAL(seq[pos], *base_it);
-            BOOST_CHECK_EQUAL(pos+1, base_it.get_position());
-            BOOST_CHECK_EQUAL(it->first, base_it.get_sequence_name());
-
-            ++base_it;
-            ++pos;
-        }
-        BOOST_CHECK_EQUAL(seq.size(), pos);
-
-        ++it;
-        seq_reader = fasta_reader.next_sequence_reader();
+        BOOST_CHECK_EQUAL(sequence.header, header);
+        BOOST_CHECK_EQUAL(sequence.length, nucleotides.size());
+        BOOST_CHECK_EQUAL(sequence.nucleotides, nucleotides);
     }
 
-    BOOST_CHECK(it == sequences.end());
+    BOOST_CHECK(!Sequence::read(fasta_stream, sequence));
 }
 
+struct SequenceFilterBySize: public Races::IO::FASTA::SequenceFilter
+{
+    size_t size;
+
+    SequenceFilterBySize(const size_t size):
+        SequenceFilter(), size(size)
+    {}
+
+    bool operator()(const std::string& header) const
+    {
+        return header.size() >= size;
+    }
+};
+
+BOOST_AUTO_TEST_CASE(read_filtered_sequences)
+{
+    using namespace Races::IO::FASTA;
+
+    std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
+
+    SequenceFilterBySize filter(strlen("2 another test"));
+    Sequence sequence;
+    
+    for (const auto& [header, nucleotides]: sequences) {
+        if (!filter(header)) {
+            BOOST_CHECK(Sequence::read(fasta_stream, sequence, filter));
+
+            BOOST_CHECK_EQUAL(sequence.header, header);
+            BOOST_CHECK_EQUAL(sequence.length, nucleotides.size());
+            BOOST_CHECK_EQUAL(sequence.nucleotides, nucleotides);
+        } else {
+            BOOST_CHECK_EQUAL(header, "2 another test");
+        }
+    }
+
+    BOOST_CHECK(!Sequence::read(fasta_stream, sequence));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

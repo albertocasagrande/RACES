@@ -2,8 +2,8 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 0.4
- * @date 2023-08-05
+ * @version 0.5
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,9 +31,11 @@
 #ifndef __RACES_FASTA_READER__
 #define __RACES_FASTA_READER__
 
-#include <cstdint>
 #include <string>
 #include <istream>
+#include <algorithm>
+
+#include "progress_bar.hpp"
 
 namespace Races
 {
@@ -41,233 +43,269 @@ namespace Races
 namespace IO
 {
 
+/**
+ * @brief A name space for FASTA file format
+ */
 namespace FASTA
 {
 
 /**
- * @brief A class to read a sequence in a fasta file
+ * @brief A class to filter FASTA sequences
+ * 
+ * The objects of this class filter FASTA sequences according to 
+ * their sequence headers. The class offers the method 
+ * `operator()(const std::string& header)` that returns `true` 
+ * when the sequence must be filtered and `false` otherwise.
  */
-class SequenceReader
+struct SequenceFilter
 {
-    std::istream *in;       //!< the reader input stream
-
-    std::string seq_name;   //!< the sequence name
-    uint32_t seq_pos;       //!< the sequence position
-
-    unsigned int buffer_pos;    //!< the buffer position
-    std::string buffer;         //!< the reader buffer
-    bool concluded;             //!< the end-of-sequence flag
-
     /**
-     * @brief Refill the buffer if necessary
+     * @brief The filtering method
      * 
-     * This methods checks  whether the sequence has been fully read 
-     * and, if this is not the case, it refills the buffer when 
-     * necessary.
+     * This method returns `true` when the sequence must be 
+     * filtered and `false` otherwise according to the sequence
+     * header.
      * 
-     * @return `true` if and only if the buffer has required refill
+     * @param header is the FASTA sequence header
+     * @return `true` if and only if the sequence must be filtered
      */
-    bool refill_buffer();
-public:
-    /**
-     * @brief A sequence nucleotide input iterator
-     */
-    class nucleotide_iterator
+    inline constexpr bool operator()(const std::string& header) const
     {
-        SequenceReader* reader;  //!< the reader
+        (void)header;
         
-        const bool valid_info;  //!< a flag to validated the sequence information
-        std::string seq_name;   //!< the sequence name
-        uint32_t seq_pos;       //!< the sequence position
-
-        /**
-         * @brief A constructor
-         * 
-         * @param reader is the sequence reader that build this
-         *          nucleotide iterator
-         */
-        nucleotide_iterator(SequenceReader& reader);
-
-    public:
-        using difference_type   =   std::ptrdiff_t;
-        using value_type        =   char;
-        using pointer           =   const char*;
-        using reference         =   const char&;
-        using istream_type      =   std::istream;
-
-        /**
-         * @brief The empty constructor
-         */
-        nucleotide_iterator();
-
-        /**
-         * @brief Reference operator
-         * 
-         * @return a reference to the species pointer by the iterator 
-         */
-        reference operator*() const;
-
-        /**
-         * @brief Pointer operator
-         * 
-         * @return a pointer to the species pointer by the iterator 
-         */
-        pointer operator->() const;
-
-        /**
-         * @brief The prefix increment
-         * 
-         * @return a reference to the updated object
-         */
-        nucleotide_iterator& operator++();
-
-        /**
-         * @brief Get the name of the sequence been read
-         * 
-         * @return the name of the sequence
-         */
-        const std::string& get_sequence_name() const;
-
-        /**
-         * @brief Get the position of the read nucleotide 
-         * 
-         * @return the position of the read nucleotide  
-         */
-        const uint32_t& get_position() const;
-
-        /**
-         * @brief Test whether two iterator are pointing to the same nucleotide
-         * 
-         * @param it is nucleotide iterator
-         * @return `true` if and only if both the iterator have reached the end 
-         *      of the sequence of their are pointing to the same position in 
-         *      the stream
-         */
-        inline bool operator==(const nucleotide_iterator& it) const
-        {
-            return ((reader==nullptr&&it.reader==nullptr)
-                    || ((reader!=nullptr&&it.reader!=nullptr) &&
-                        (reader->in==it.reader->in) && (seq_pos==it.seq_pos)));
-        }
-
-        /**
-         * @brief Test whether two iterator are pointing to different nucleotide
-         * 
-         * @param it is nucleotide iterator
-         * @return `false` if and only if both the iterator have reached the end 
-         *      of the sequence of their are pointing to the same position in 
-         *      the stream
-         */
-        inline bool operator!=(const nucleotide_iterator& it) const
-        {
-            return !(*this==it);
-        }
-    
-        friend class SequenceReader;
-    };
-
-    /**
-     * @brief The constructor
-     * 
-     * @param in is the input stream
-     */
-    explicit SequenceReader(std::istream& in);
-
-    /**
-     * @brief Get the initial nucleotide iterator
-     * 
-     * @return the initial nucleotide iterator
-     */
-    inline nucleotide_iterator begin() {
-        return nucleotide_iterator(*this);
-    }
-
-    /**
-     * @brief Get the final nucleotide iterator
-     * 
-     * @return the final nucleotide iterator
-     */
-    inline nucleotide_iterator end() const {
-        return nucleotide_iterator();
-    }
-
-    /**
-     * @brief Remove the sequence from the input stream
-     */
-    void skip();
-
-    /**
-     * @brief Check whether the sequence has been fully read
-     * 
-     * This methods checks  whether the sequence has been fully read 
-     * and, if this is not the case, it refills the buffer.
-     * 
-     * @return `true` if and only if the sequence has been fully read
-     */
-    inline bool finished() const
-    {
-        return concluded;
-    }
-
-    /**
-     * @brief Get the position of the read nucleotide 
-     * 
-     * @return the position of the read nucleotide  
-     */
-    inline const std::string& get_sequence_name() const
-    {
-        return seq_name;
-    }
-
-    /**
-     * @brief Get the name of the sequence been read
-     * 
-     * @return a constant reference to the name of the 
-     *      sequence been read
-     */
-    inline const uint32_t& get_position() const
-    {
-        return seq_pos;
-    }
-
-    friend class nucleotide_iterator;
+        return false;
+    } 
 };
 
 /**
- * @brief A class to read FASTA files
+ * @brief A class to represent FASTA sequence information
  */
-class Reader
+class SequenceInfo
 {
-    std::istream& in;      //!< the input stream
+    /**
+     * @brief Read the next content of the stream up-to a new sequence
+     * 
+     * @param fasta_stream is an input stream referring to a FASTA file
+     * @param progress_bar is a progress bar
+     */
+    static void filter_remaining_sequence(std::istream& fasta_stream, UI::ProgressBar& progress_bar);
+
+protected:
+    /**
+     * @brief Read FASTA sequence information from a stream
+     * 
+     * @tparam FILTER is the type of sequence filter
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] seq_info is the object that will be filled by the read information
+     * @param[out] nucleotides is a pointer to the string that will be filled by the sequence nucleotides
+     * @param[in] filter is the filter selecting the appropriate FASTA sequences
+     *              according to their headers
+     * @param[in,out] progress_bar is a progress bar
+     * @return `true` if and only if a sequence that is not filtered by `filter`
+     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           then `seq_info` and, whenever `nucleotides` is not `nullptr`, 
+     *           `*nucleotides` are updated according to the read values
+     */
+    template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
+    static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, std::string* nucleotides,
+                     FILTER& filter, UI::ProgressBar& progress_bar)
+    {
+        char c = fasta_stream.get();
+        while (c != EOF) {
+            if (c!='>') {
+                fasta_stream.unget();
+                std::string char_s(">");
+
+                char_s[0] = c;
+                throw std::runtime_error("expecting '>' got '"+char_s+"'");
+            }
+            std::string header;
+            getline(fasta_stream, header);
+
+            auto seq_name = header.substr(0, header.find(" "));
+
+            progress_bar.set_message("Found "+seq_name);
+            if (!filter(header)) {
+                progress_bar.set_message("Reading "+seq_name);
+
+                seq_info.length=0;
+                seq_info.header = std::move(header);
+                seq_info.name = std::move(seq_name);
+                if (nucleotides != nullptr) {
+                    *nucleotides = "";
+                }
+
+                size_t counter{0};
+                while ((c = fasta_stream.get()) != EOF) {
+                    std::string line;
+                    fasta_stream.unget();
+                    if (c=='>') {
+                        return true;
+                    }
+
+                    getline(fasta_stream, line);
+
+                    // let time elapse in progress bar
+                    if ((counter = (counter+1)%1000) == 0) {
+                        progress_bar.set_progress(progress_bar.get_progress());
+                    }
+
+                    line.erase(remove(line.begin(), line.end(), ' '), line.end());
+                    line.erase(remove(line.begin(), line.end(), '\t'), line.end());
+                    seq_info.length += line.size();
+                    if (nucleotides != nullptr) {
+                        nucleotides->append(line);
+                    }
+                }
+                return true;
+            } else {
+                filter_remaining_sequence(fasta_stream, progress_bar);
+
+                c = fasta_stream.get();
+            }
+        }
+
+        return false;
+    }
 
 public:
-    /**
-     * @brief A constructor
-     * 
-     * @param in is the input stream
-     */
-    explicit Reader(std::istream& in);
+    std::string name;   //!< The name of the FASTA sequence
+    std::string header; //!< The header of the FASTA sequence
+    size_t length;      //!< The length of the FASTA sequence
 
     /**
-     * @brief Test whether the FASTA file has been fully read
+     * @brief Read FASTA sequence information from a stream
      * 
-     * @return `true` no further sequences can be read from the 
-     *          input stream
+     * @param fasta_stream is a stream referring to a FASTA file
+     * @param seq_info is the object that will be filled by the read information
+     * @param progress_bar is a progress bar
+     * @return `true` if and only if a sequence has been read from `fasta_stream`. 
+     *           If the method returns `true`, then `seq_info` is updated
+     *           according to the read values
      */
-    inline bool finished() {
-        return in.eof();
+    static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, UI::ProgressBar& progress_bar);
+
+    /**
+     * @brief Read FASTA sequence information from a stream
+     * 
+     * @tparam FILTER is the type of sequence filter
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] seq_info is the object that will be filled by the read information
+     * @param[in] filter is the filter selecting the appropriate FASTA sequences
+     *              according to their headers
+     * @param[in,out] progress_bar is a progress bar
+     * @return `true` if and only if a sequence that is not filtered by `filter`
+     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           then `seq_info` is updated according to the read values
+     */
+    template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
+    inline static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, FILTER& filter,
+                            UI::ProgressBar& progress_bar)
+    {
+        return read(fasta_stream, seq_info, nullptr, filter, progress_bar);
     }
 
     /**
-     * @brief Get a sequence reader for the next sequence
+     * @brief Read FASTA sequence information from a stream
      * 
-     * @return a sequence reader for the next sequence
+     * @tparam FILTER is the type of sequence filter
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] seq_info is the object that will be filled by the read information
+     * @return `true` if and only if a sequence has been read from `fasta_stream`.
+     *           If the method returns `true`, then `seq_info` is updated 
+     *           according to the read values
      */
-    SequenceReader next_sequence_reader();
+    static bool read(std::istream& fasta_stream, SequenceInfo& seq_info);
 
-    std::streampos tellg() const
+    /**
+     * @brief Read FASTA sequence information from a stream
+     * 
+     * @tparam FILTER is the type of sequence filter
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] seq_info is the object that will be filled by the read information
+     * @param[in] filter is the filter selecting the appropriate FASTA sequences
+     *              according to their headers
+     * @return `true` if and only if a sequence that is not filtered by `filter`
+     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           then `seq_info` is updated according to the read values
+     */
+    template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
+    inline static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, FILTER& filter)
     {
-        return in.tellg();
+        UI::ProgressBar progress_bar(true);
+
+        return SequenceInfo::read(fasta_stream, seq_info, filter, progress_bar);
+    }
+};
+
+/**
+ * @brief A class to represent FASTA sequence
+ */
+struct Sequence : public SequenceInfo
+{
+    std::string nucleotides;    //!< The string of sequence nucleotides
+
+    /**
+     * @brief Read FASTA sequence from a stream
+     * 
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] sequence is the object that will be filled by the read sequence
+     * @param[in,out] progress_bar is a progress bar
+     * @return `true` if and only if a sequence has been read from `fasta_stream`. 
+     *           If the method returns `true`, then `sequence` is updated
+     *           according to the read values
+     */
+    static bool read(std::istream& fasta_stream, Sequence& sequence, UI::ProgressBar& progress_bar);
+
+    /**
+     * @brief Read FASTA sequence from a stream
+     * 
+     * @tparam FILTER is the type of sequence filter
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] sequence is the object that will be filled by the read sequence
+     * @param[in] filter is the filter selecting the appropriate FASTA sequences
+     *              according to their headers
+     * @param[in,out] progress_bar is a progress bar
+     * @return `true` if and only if a sequence that is not filtered by `filter`
+     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           then `seq_info` is updated according to the read values
+     */
+    template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
+    inline static bool read(std::istream& fasta_stream, Sequence& sequence, FILTER& filter,
+                            UI::ProgressBar& progress_bar)
+    {
+        return SequenceInfo::read(fasta_stream, sequence, &(sequence.nucleotides), filter, progress_bar);
+    }
+
+    /**
+     * @brief Read FASTA sequence from a stream
+     * 
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] sequence is the object that will be filled by the read sequence
+     * @return `true` if and only if a sequence has been read from `fasta_stream`. 
+     *           If the method returns `true`, then `sequence` is updated
+     *           according to the read values
+     */
+    static bool read(std::istream& fasta_stream, Sequence& sequence);
+
+    /**
+     * @brief Read FASTA sequence from a stream
+     * 
+     * @tparam FILTER is the type of sequence filter
+     * @param[in,out] fasta_stream is a stream referring to a FASTA file
+     * @param[out] sequence is the object that will be filled by the read sequence
+     * @param[in] filter is the filter selecting the appropriate FASTA sequences
+     *              according to their headers
+     * @return `true` if and only if a sequence that is not filtered by `filter`
+     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           then `seq_info` is updated according to the read values
+     */
+    template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
+    inline static bool read(std::istream& fasta_stream, Sequence& sequence, FILTER& filter)
+    {
+        UI::ProgressBar progress_bar(true);
+
+        return Sequence::read(fasta_stream, sequence, filter, progress_bar);
     }
 };
 

@@ -2,8 +2,8 @@
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a FASTA file reader and support structures
- * @version 0.4
- * @date 2023-07-26
+ * @version 0.5
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,7 +32,6 @@
 
 #include "fasta_reader.hpp"
 
-
 namespace Races
 {
 
@@ -42,212 +41,54 @@ namespace IO
 namespace FASTA
 {
 
-SequenceReader::nucleotide_iterator::nucleotide_iterator(SequenceReader& reader):
-    reader(&reader), valid_info(true), seq_name(reader.get_sequence_name()),
-    seq_pos(reader.get_position())
-{}
-
-SequenceReader::nucleotide_iterator::nucleotide_iterator():
-    reader(nullptr), valid_info(false)
-{}
-
-SequenceReader::nucleotide_iterator::reference SequenceReader::nucleotide_iterator::operator*() const
+void SequenceInfo::filter_remaining_sequence(std::istream& fasta_stream, UI::ProgressBar& progress_bar)
 {
-    if (reader==nullptr) {
-        throw std::domain_error("no more bases in the sequence");
-    }
+    size_t counter{0};
+    char c = fasta_stream.get();
+    while (c != EOF && c != '>') {
+        std::string line;
+        getline(fasta_stream, line);
 
-    if (reader->seq_pos != seq_pos) {
-        throw std::domain_error("invalid iterator");
-    }
-
-    reader->refill_buffer();
-
-    return reader->buffer[reader->buffer_pos];
-}
-
-SequenceReader::nucleotide_iterator::pointer SequenceReader::nucleotide_iterator::operator->() const
-{
-    if (reader==nullptr) {
-        throw std::domain_error("no more bases in the sequence");
-    }
-
-    if (reader->seq_pos != seq_pos) {
-        throw std::domain_error("invalid iterator");
-    }
-
-    return &(reader->buffer[reader->buffer_pos]);
-}
-
-SequenceReader::nucleotide_iterator& SequenceReader::nucleotide_iterator::operator++()
-{
-    if (reader==nullptr) {
-        throw std::domain_error("no more bases in the sequence");
-    }
-
-    if (reader->seq_pos != seq_pos) {
-        throw std::domain_error("invalid iterator");
-    }
-
-    ++reader->buffer_pos;
-    
-    if (!reader->refill_buffer()) {
-        ++reader->seq_pos;
-        ++seq_pos;
-    } else {
-        reader = nullptr;
-    }
-
-    return *this;
-}
-
-const std::string& SequenceReader::nucleotide_iterator::get_sequence_name() const
-{
-    if (!valid_info) {
-        throw std::domain_error("no sequence read");
-    }
-
-    return seq_name;
-}
-
-const uint32_t& SequenceReader::nucleotide_iterator::get_position() const
-{
-    if (!valid_info) {
-        throw std::domain_error("no sequence read");
-    }
-
-    return seq_pos;
-}
-
-SequenceReader::SequenceReader(std::istream& in):
-    in(&in), seq_pos(1), buffer_pos(0), concluded(false)
-{
-    char tag_char;
-
-    // discharge new lines
-    do {
-        if (in.eof()) {
-            concluded = true;
-
-            return;
-        }
-        in >> tag_char;
-    } while (tag_char == '\n');
-
-    // is a new sequence has NOT been found
-    if (tag_char != '>') {
-
-        // putback the last read character 
-        in.putback(tag_char);
-
-        // throw an exception
-        std::ostringstream oss;
-        oss << "SequenceReader: expected '>', got '" << tag_char << "'";
-        throw std::domain_error(oss.str());
-    }
-
-    // read the sequence name
-    getline(in, seq_name);
-}
-
-bool SequenceReader::refill_buffer()
-{
-    // if the sequence has been fully read
-    if (concluded) {
-        return true;
-    }
-
-    // if the buffer is not empty
-    if (buffer_pos<buffer.size()) {
-        return false;
-    }
-
-    // the buffer is empty; reset the buffer position
-    buffer_pos = 0;
-
-    char read_char;
-    do {
-        // if all the character in the file 
-        // have been read
-        if (in->eof()) {
-            concluded = true;
-
-            return true;
-        }
-        *in >> read_char;
-    
-    // repeat until the read character is a new line
-    // or a space
-    } while (read_char == '\n' || read_char == ' ' || read_char == 0);
-
-    // the read character is not '\n'; put it back
-    // in the stream
-    in->putback(read_char);
-
-    // if the read character is '>'
-    if (read_char == '>') {
-        // the considered sequence has been fully
-        // read
-        concluded = true;
-    } else {  // otherwise
-
-        // fill the buffer
-        *in >> buffer;
-    }
-
-    // return `concluded`
-    return concluded;
-}
-
-void SequenceReader::skip()
-{
-    do {
-        buffer_pos = buffer.size();
-    } while (!refill_buffer());
-}
-
-Reader::Reader(std::istream& in):
-    in(in)
-{}
-
-std::istream& skip_to_next_sequence(std::istream& in)
-{
-    std::string buffer;
-
-    do {
-        char read_char;
-        do {
-            // if all the character in the file 
-            // have been read
-            if (in.eof()) {
-                return in;
-            }
-            in >> read_char;
-        
-        // repeat until the read character is a new line
-        // or a space
-        } while (read_char == '\n' || read_char == ' ' || read_char == 0);
-
-        // if the read character is '>'
-        if (read_char == '>') {
-            // the considered sequence has been fully
-            // read
-            in.putback(read_char);
-            return in;
+        if ((counter = (counter+1)%1000) == 0) {
+            // let time elapse in progress bar
+            progress_bar.set_progress(progress_bar.get_progress());
         }
 
-        if (in.eof()) {
-            return in;
-        }
-        getline(in, buffer);
-    } while (true);
+        c = fasta_stream.get();
+    }
+
+    if (c == '>') {
+        fasta_stream.unget();
+    }
 }
 
-SequenceReader Reader::next_sequence_reader()
+bool SequenceInfo::read(std::istream& fasta_stream, SequenceInfo& seq_info, UI::ProgressBar& progress_bar)
 {
-    skip_to_next_sequence(in);
+    SequenceFilter filter;
 
-    return SequenceReader(in);
+    return read(fasta_stream, seq_info, nullptr, filter, progress_bar);
+}
+
+bool SequenceInfo::read(std::istream& fasta_stream, SequenceInfo& seq_info)
+{
+    UI::ProgressBar progress_bar(true);
+
+    return SequenceInfo::read(fasta_stream, seq_info, progress_bar);
+}
+
+bool Sequence::read(std::istream& fasta_stream, Sequence& sequence, UI::ProgressBar& progress_bar)
+{
+    SequenceFilter filter;
+
+    return SequenceInfo::read(fasta_stream, sequence, &(sequence.nucleotides), filter, progress_bar);
+}
+
+bool Sequence::read(std::istream& fasta_stream, Sequence& sequence)
+{
+    UI::ProgressBar progress_bar(true);
+    SequenceFilter filter;
+
+    return Sequence::read(fasta_stream, sequence, filter, progress_bar);
 }
 
 }   // FASTA
