@@ -2,8 +2,8 @@
  * @file fasta_utils.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines support utilities for FASTA files
- * @version 0.4
- * @date 2023-08-10
+ * @version 0.5
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,7 +58,7 @@ struct SeqNameDecoder
      * @param chr_id is the variable where the chromosome id will be placed
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence name
      */
-    virtual bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const = 0;
+    virtual bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const = 0;
 
     /**
      * @brief The destroyer
@@ -79,7 +79,7 @@ struct EnsemblSeqNameDecoder : public SeqNameDecoder
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in Ensembl format
      */
-    bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
+    bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
 };
 
 /**
@@ -95,14 +95,14 @@ struct NCBISeqNameDecoder : public SeqNameDecoder
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in NCBI format
      */
-    bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
+    bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
 };
 
 /**
  * @brief The list of sequence name decorders
  * 
  * The elements in this list are used by the function
- * `Races::IO::FASTA::is_chromosome_name(...)`.
+ * `Races::IO::FASTA::is_chromosome_header(...)`.
  */
 extern std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders;
 
@@ -114,7 +114,7 @@ extern std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders;
  * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
  *      name in NCBI format
  */
-bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id);
+bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id);
 
 }   // FASTA
 

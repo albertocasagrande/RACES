@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.9
- * @date 2023-08-10
+ * @version 0.10
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,7 +39,7 @@
 #include <type_traits>
 
 #include "archive.hpp"
-#include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_name
+#include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_header
 #include "genomic_region.hpp"   // Passengers::GenomicRegion
 #include "basic_IO.hpp"         // IO::get_stream_size
 #include "context.hpp"          // Passengers::ExtendedContextAutomaton
@@ -291,7 +291,7 @@ protected:
             ChromosomeId chr_id;
 
             // if the sequence is a chromosome
-            if (IO::FASTA::is_chromosome_name(sequence_title, chr_id)) {
+            if (IO::FASTA::is_chromosome_header(sequence_title, chr_id)) {
 
                 if (progress_bar != nullptr) {
                     progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr_id));

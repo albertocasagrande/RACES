@@ -2,8 +2,8 @@
  * @file fasta_utils.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements support utilities for FASTA files
- * @version 0.4
- * @date 2023-08-10
+ * @version 0.5
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@ namespace FASTA
 SeqNameDecoder::~SeqNameDecoder()
 {}
 
-bool EnsemblSeqNameDecoder::is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
+bool EnsemblSeqNameDecoder::is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
 {
     using namespace Passengers;
 
@@ -61,7 +61,7 @@ bool EnsemblSeqNameDecoder::is_chromosome_name(const std::string& seq_name, Pass
     return true;
 }
 
-bool NCBISeqNameDecoder::is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
+bool NCBISeqNameDecoder::is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
 {
     using namespace Passengers;
 
@@ -83,10 +83,10 @@ std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders{
     std::make_shared<NCBISeqNameDecoder>()
 };
 
-bool is_chromosome_name(const std::string& seq_name, Passengers::ChromosomeId& chr_id)
+bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id)
 {
     for (const auto& seq_decoder_ptr : seq_name_decoders) {
-        if (seq_decoder_ptr->is_chromosome_name(seq_name, chr_id)) {
+        if (seq_decoder_ptr->is_chromosome_header(seq_name, chr_id)) {
             return true;
         }
     }
