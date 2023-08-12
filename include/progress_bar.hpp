@@ -2,8 +2,8 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a progress bar
- * @version 0.6
- * @date 2023-08-05
+ * @version 0.7
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -78,6 +78,13 @@ public:
      * @brief The constructor
      */
     ProgressBar();
+
+    /**
+     * @brief A constructor
+     * 
+     * @param hide is a hide/show flag 
+     */
+    ProgressBar(const bool hide);
 
     /**
      * @brief Set a message in the progress bar

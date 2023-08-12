@@ -2,8 +2,8 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a progress bar
- * @version 0.6
- * @date 2023-08-09
+ * @version 0.7
+ * @date 2023-08-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,10 @@ namespace UI
 {
 
 ProgressBar::ProgressBar():
+    ProgressBar(false)
+{}
+
+ProgressBar::ProgressBar(const bool hide):
     last_update(std::chrono::system_clock::now()), percentage(0), message(), updated(false)
 #ifdef WITH_INDICATORS
     , indicator(nullptr)
@@ -46,25 +50,26 @@ ProgressBar::ProgressBar():
 
     update_interval = 1s;
 
-    hide_console_cursor();
+    if (!hide) {
+        hide_console_cursor();
 
 #ifdef WITH_INDICATORS
-    using namespace indicators;
+        using namespace indicators;
 
-    indicator = new indicators::ProgressBar{
-        option::BarWidth{40},
-        option::Start{" ["},
-        option::Fill{"█"},
-        option::Lead{"█"},
-        option::Remainder{"-"},
-        option::End{"]"},
-        option::ForegroundColor{Color::yellow},
-        option::ShowElapsedTime{true},
-        option::ShowPercentage{true},
-        option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
-    };
+        indicator = new indicators::ProgressBar{
+            option::BarWidth{40},
+            option::Start{" ["},
+            option::Fill{"█"},
+            option::Lead{"█"},
+            option::Remainder{"-"},
+            option::End{"]"},
+            option::ForegroundColor{Color::yellow},
+            option::ShowElapsedTime{true},
+            option::ShowPercentage{true},
+            option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
+        };
 #endif  // WITH_INDICATORS
-
+    }
 }
 
 ProgressBar& ProgressBar::set_message(const std::string& message)
@@ -75,7 +80,7 @@ ProgressBar& ProgressBar::set_message(const std::string& message)
 #ifdef WITH_INDICATORS
     using namespace indicators;
 
-    if (percentage != 100 || !updated) {
+    if (indicator!=nullptr && (percentage != 100 || !updated)) {
         indicator->set_option(option::PostfixText{message});
         indicator->set_progress(percentage);
     }
@@ -121,7 +126,9 @@ ProgressBar& ProgressBar::set_progress(const unsigned int percentage)
         updated = true;
 
 #ifdef WITH_INDICATORS
-        indicator->set_progress(percentage);
+        if (indicator!=nullptr) {
+            indicator->set_progress(percentage);
+        }
 #endif  // WITH_INDICATORS
     }
 
@@ -149,14 +156,16 @@ void ProgressBar::hide_console_cursor()
 
 ProgressBar::~ProgressBar()
 {
-#ifdef WITH_INDICATORS
     set_message(this->message);
 
-    if (percentage != 100) {
-        indicator->mark_as_completed();
-    }
+#ifdef WITH_INDICATORS
+    if (indicator != nullptr) {
+        if (percentage != 100) {
+            indicator->mark_as_completed();
+        }
 
-    delete indicator;
+        delete indicator;
+    }
 #endif  // WITH_INDICATORS
 
     show_console_cursor();
