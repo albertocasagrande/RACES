@@ -2,8 +2,8 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a progress bar
- * @version 0.7
- * @date 2023-08-12
+ * @version 0.8
+ * @date 2023-08-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -117,6 +117,16 @@ public:
      * @return a constant reference to the percentage level
      */
     const unsigned int& get_progress() const;
+
+    /**
+     * @brief Update elapse time
+     * 
+     * @return a reference to the updated object
+     */
+    inline ProgressBar& update_elapsed_time()
+    {
+        return set_progress(get_progress());
+    }
 
     /**
      * @brief Show the console cursor
