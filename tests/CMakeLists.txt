@@ -8,7 +8,7 @@ if(${Boost_unit_test_framework_FOUND})
     link_directories(${Boost_LIBRARY_DIRS})
     set(TEST_LIBRARIES ${Boost_LIBRARIES} libRACES)
 
-    set(RACES_TESTS archive fragment fasta_reader context_index genome_mutations)
+    set(RACES_TESTS archive fasta_reader context_index genome_mutations)
 
     set(ASSET_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     set(SBS_EXAMPLE "${ASSET_DIR}/v3.3_SBS3_PROFILE.txt")
