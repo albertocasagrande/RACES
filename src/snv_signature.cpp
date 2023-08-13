@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.9
- * @date 2023-07-31
+ * @version 0.10
+ * @date 2023-08-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -208,7 +208,7 @@ MutationalSignature::MutationalSignature():
 
 bool is_about(double x, double y)
 {
-    return std::fabs(x - y) <= std::numeric_limits<double>::epsilon();
+    return std::fabs(x - y) <= 10*std::numeric_limits<double>::epsilon();
 }
 
 MutationalSignature::MutationalSignature(const std::map<MutationalType, double>& distribution):
@@ -227,8 +227,8 @@ MutationalSignature::MutationalSignature(const std::map<MutationalType, double>&
     }
     if (!is_about(partial,1)) {
         std::ostringstream oss;
-        oss << "The parameter is not a probability distribution: the sum of"
-            << " the probabilities is " << partial;
+        oss << "The parameter is not a probability distribution: 1 minus the sum of"
+            << " the probabilities is " << (1-partial);
 
         throw std::domain_error(oss.str());
     }
@@ -265,13 +265,6 @@ std::map<std::string, std::map<MutationalType, double>> not_validated_read_from_
 {
     std::map<std::string, std::map<MutationalType, double>> result;
     std::vector<std::string> name_vector = read_row(in,delimiter);
-
-    if (name_vector.front() != "") {
-        std::ostringstream oss;
-
-        oss << "The cell in position (1,1) should be an empty string. Read \"" << name_vector.front() << "\".";
-        throw std::runtime_error(oss.str());
-    }
 
     unsigned int row_number = 2;
     std::vector<std::string> row = read_row(in,delimiter);
