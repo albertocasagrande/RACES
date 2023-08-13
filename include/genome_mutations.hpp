@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.8
- * @date 2023-08-11
+ * @version 0.9
+ * @date 2023-08-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -337,7 +337,7 @@ public:
      * 
      * @return the mutations of genome chromosomes
      */
-    inline std::map<ChromosomeId, ChromosomeMutations> get_chromosomes() const
+    inline const std::map<ChromosomeId, ChromosomeMutations>& get_chromosomes() const
     {
         return chromosomes;
     }
@@ -348,7 +348,7 @@ public:
      * @param chromosome_id is the identifier of the aimed chromosome mutations
      * @return the mutations of a genome chromosome
      */
-    inline ChromosomeMutations get_chromosome(const ChromosomeId& chromosome_id) const
+    inline const ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id) const
     {
         return chromosomes.at(chromosome_id);
     }
