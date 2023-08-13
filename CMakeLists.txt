@@ -122,7 +122,8 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_utils.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sam_generator.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
@@ -148,20 +149,23 @@ target_sources(libRACES PRIVATE ${RACES_SOURCES}
 
 install(TARGETS libRACES FILE_SET HEADERS)
 
-set(SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp)
+set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp)
 
 set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
 
+set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
 
 set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
 
 
 set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
 
-add_executable(drivers_sim ${SIM_SOURCES})
+add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
 target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(drivers_sim libRACES nlohmann_json::nlohmann_json)
 
@@ -176,6 +180,10 @@ target_link_libraries(build_context_index libRACES)
 add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
 target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(sample_context_index libRACES)
+
+add_executable(passengers_sim ${PASSENGERS_SIM_SOURCES})
+target_include_directories(passengers_sim PRIVATE ${Boost_INCLUDE_DIR})
+target_link_libraries(passengers_sim libRACES)
 
 add_subdirectory(python)
 

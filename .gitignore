@@ -11,6 +11,7 @@ Makefile
 .ninja_log
 build.ninja
 drivers_sim
+passengers_sim
 races_phylo
 build_context_index
 sample_context_index
