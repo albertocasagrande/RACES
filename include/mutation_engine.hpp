@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.1
- * @date 2023-08-09
+ * @version 0.2
+ * @date 2023-08-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -457,7 +457,7 @@ public:
      * @param mutational_coefficients is the map from the signature name to the coefficient
      * @return a reference to the updated object
      */
-    MutationEngine& add(const Time& time, const std::map<std::string, double>& mutational_coefficients)
+    MutationEngine& add(const Time& time, std::map<std::string, double>&& mutational_coefficients)
     {
         if (time<0) {
             throw std::domain_error("Simulation time is a non-negative value");
@@ -474,9 +474,24 @@ public:
             }
         }
 
-        timed_mutational_coefficients.insert({time, mutational_coefficients});
+        timed_mutational_coefficients.emplace(Time(time), std::move(mutational_coefficients));
 
         return *this;
+    }
+
+    /**
+     * @brief Add a timed set of mutational signature coefficients
+     * 
+     * This method add a set mutational signature coefficients that will be applied from 
+     * the specified simulation time on.
+     * 
+     * @param time is the simulation time from which the coefficients will be applied
+     * @param mutational_coefficients is the map from the signature name to the coefficient
+     * @return a reference to the updated object
+     */
+    MutationEngine& add(const Time& time, const std::map<std::string, double>& mutational_coefficients)
+    {
+        return add(time, std::map<std::string, double>(mutational_coefficients));
     }
 
     /**
