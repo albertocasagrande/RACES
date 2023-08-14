@@ -2,8 +2,8 @@
  * @file context.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.3
- * @date 2023-08-10
+ * @version 0.4
+ * @date 2023-08-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -59,9 +59,15 @@ namespace Passengers
  * a 'C' and a 'T' as central nucleotide are guaranteed
  * to be in the interval [0,31].
  */
-class MutationalContext
+struct MutationalContext
 {
-    uint8_t code;   //!< the code associated to the context
+    /**
+     * @brief The type of mutational context type
+     */
+    using CodeType = uint8_t;
+
+private:
+    CodeType code;   //!< the code associated to the context
 public:
     /**
      * @brief The empty constructor
@@ -87,7 +93,7 @@ public:
      * 
      * @return a constant reference to the mutational context code 
      */
-    inline const uint8_t& get_code() const
+    inline const CodeType& get_code() const
     {
         return code;
     }
@@ -173,7 +179,7 @@ public:
      * @return the code of the complement context of the 
      *      context whose code is `code` 
      */
-    static uint8_t get_complement(const uint8_t& code);
+    static CodeType get_complement(const CodeType& code);
 
     /**
      * @brief Get the complement base
@@ -215,11 +221,25 @@ public:
  */
 struct ExtendedContextAutomaton
 {
-    std::array<bool, 125> is_a_context;                  //!< a Boolean vector to flag proper context 
-    std::array<MutationalContext, 125> contexts;         //!< the state corresponding contexts
-    std::array<std::map<uint8_t, uint8_t>, 125> edges;   //!< the automata edges
+    /**
+     * @brief The type of code for bases
+     */
+    using BaseCodeType = uint8_t;
+    
+    /**
+     * @brief The type of the edges from a node
+     * 
+     * This type represents edges leaving a node: the key in the 
+     * map is the code of the newly read base; the value is the 
+     * new context code.
+     */
+    using FromNodeEdgeType = std::map<BaseCodeType, MutationalContext::CodeType>;
 
-    uint8_t state;  //!< the automaton state
+    std::array<bool, 125> is_a_context;             //!< a Boolean vector to flag proper context 
+    std::array<MutationalContext, 125> contexts;    //!< the state corresponding contexts
+    std::array<FromNodeEdgeType, 125> edges;        //!< the automata edges
+
+    MutationalContext::CodeType state;  //!< the current automaton state
 
     /**
      * @brief Get a code for a character
@@ -229,7 +249,7 @@ struct ExtendedContextAutomaton
      *      value 5 is returned for all the characters 
      *      different from  'A', 'C', 'G', 'T', and 'N'.
      */
-    static uint8_t base2code(const char& character);
+    static BaseCodeType base2code(const char& character);
 
     /**
      * @brief Get the state corresponding to an extended context
@@ -240,13 +260,24 @@ struct ExtendedContextAutomaton
      * @return the automaton state corresponding to the extended
      *      context formed by the three characters.
      */
-    static uint8_t get_state_for(const char& first, const char& second, const char& third);
+    static MutationalContext::CodeType get_state_for(const char& first, const char& second,
+                                                     const char& third);
 
 public:
     /**
      * @brief Build an extended context automaton
      */
     ExtendedContextAutomaton();
+
+    /**
+     * @brief Get the current automaton state
+     * 
+     * @return return the current automaton state
+     */
+    inline const MutationalContext::CodeType& get_state() const
+    {
+        return state;
+    }
 
     /**
      * @brief Check whether the automaton state corresponds to a proper context

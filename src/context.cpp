@@ -2,8 +2,8 @@
  * @file context.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements mutational contexts and extended context automata
- * @version 0.3
- * @date 2023-08-05
+ * @version 0.4
+ * @date 2023-08-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -222,7 +222,7 @@ std::string MutationalContext::get_complement(const std::string& sequence)
 }
 
 
-uint8_t ExtendedContextAutomaton::base2code(const char& character)
+ExtendedContextAutomaton::BaseCodeType ExtendedContextAutomaton::base2code(const char& character)
 {
     switch(character) {
         case 'A':
@@ -245,7 +245,7 @@ uint8_t ExtendedContextAutomaton::base2code(const char& character)
     }
 }
 
-uint8_t ExtendedContextAutomaton::get_state_for(const char& first, const char& second, const char& third)
+MutationalContext::CodeType ExtendedContextAutomaton::get_state_for(const char& first, const char& second, const char& third)
 {
     return 5*(5*base2code(first)+base2code(second))+base2code(third);
 }
@@ -280,12 +280,12 @@ ExtendedContextAutomaton::ExtendedContextAutomaton():
     }
 }
 
-bool ExtendedContextAutomaton::update_state(const char& character)
+bool ExtendedContextAutomaton::update_state(const char& base)
 {
-    char char_code = base2code(character);
+    uint8_t base_code = base2code(base);
 
-    if (char_code<5) {
-        state = edges[state][char_code];
+    if (base_code<5) {
+        state = edges[state][base_code];
 
         return true;
     }
