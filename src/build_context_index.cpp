@@ -2,8 +2,8 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Builds the context index
- * @version 0.3
- * @date 2023-08-10
+ * @version 0.4
+ * @date 2023-08-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,6 +46,7 @@ class IndexBuilder
 
     std::string output_filename;
     std::string genome_fasta_filename;
+    size_t sampling_rate;
     unsigned int bits_per_abs_position;
     bool quiet;
 
@@ -57,16 +58,18 @@ class IndexBuilder
 
         std::vector<GenomicRegion> chr_regions;
         {
-            ContextIndex<ABSOLUTE_GENOMIC_POSITION> context_index;
+            using Index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>;
+
+            Index context_index;
 
             if (quiet) {
-                context_index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>::build_index(genome_fasta_filename);
+                context_index = Index::build_index(genome_fasta_filename, sampling_rate);
             } else {
                 UI::ProgressBar::hide_console_cursor();
 
                 UI::ProgressBar progress_bar;
 
-                context_index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>::build_index(genome_fasta_filename, &progress_bar);
+                context_index = Index::build_index(genome_fasta_filename, sampling_rate, &progress_bar);
             }
             
             chr_regions = context_index.get_chromosome_regions();
@@ -130,6 +133,8 @@ public:
         visible_options.add_options()
             ("output-filename,o", po::value<std::string>(&output_filename), 
             "output filename")
+            ("sampling-rate,s", po::value<size_t>(&sampling_rate)->default_value(1), 
+            "context sampling rate (to sample contexts and reduce index memory and space requirements)")
             ("force-overwrite,f", "force overwriting output file")
             ("bytes-per-pos,b", po::value<unsigned int>(&bits_per_abs_position)->default_value(4),
             "bytes per absolute position (2, 4, or 8)")
@@ -175,6 +180,12 @@ public:
 
         if (!vm.count("output-filename")) {
             output_filename = std::filesystem::path(genome_fasta_filename + ".cif").filename();
+        }
+
+        if (vm.count("sampling-rate") && sampling_rate==0) {
+            std::cerr << "The sampling rate must be positive" << std::endl << std::endl;
+            print_help(std::cerr);
+            exit(1);
         }
 
         if (std::ifstream(output_filename).good() && !vm.count("force-overwrite")) {
