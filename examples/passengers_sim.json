@@ -1,0 +1,73 @@
+{
+    "comment": "An configuration example for \"passengers_sim\".",
+    "number of alleles": 2,
+    "sample region": {
+        "lower corner": [450,450],
+        "upper corner": [550,550]
+    },
+    "driver properties": [
+        {
+            "name": "A",
+            "mutation rates": [
+                { "epigenetic status": "-", "rate": 3e-9},
+                { "epigenetic status": "+", "rate": 6e-9}
+            ],
+            "mutations": [
+                {
+                    "type": "SNV",
+                    "chromosome": "1",
+                    "position": 11266,
+                    "context": "TGC",
+                    "mutated base": "A"
+                },
+                {
+                    "type": "SNV",
+                    "chromosome": "2",
+                    "position": 10693,
+                    "context": "CAG",
+                    "mutated base": "G"
+                },
+                {
+                    "type": "CNA",
+                    "subtype": "amplification",
+                    "chromosome": "2",
+                    "position": 10100,
+                    "length": 625,
+                    "allele": 1
+                },
+                {
+                    "type": "CNA",
+                    "subtype": "deletion",
+                    "chromosome": "2",
+                    "position": 500,
+                    "length": 750,
+                    "allele": 0
+                }
+            ]
+        },
+        {
+            "name": "B",
+            "mutation rates": [
+                { "epigenetic status": "-", "rate": 3e-8},
+                { "epigenetic status": "+", "rate": 6e-8}
+            ]
+        }
+    ],
+    "mutational coefficients": {
+        "default": [
+            { "SBS": "SBS3", "fraction": 0.6 },
+            { "SBS": "SBS13", "fraction": 0.3 },
+            { "SBS": "SBS40", "fraction": 0.1 }
+        ],
+        "timed": [
+            {
+                "time": 70,
+                "coefficients": [
+                    { "SBS": "SBS3", "fraction": 0.5 },
+                    { "SBS": "SBS13", "fraction": 0.3 },
+                    { "SBS": "SBS40", "fraction": 0.2 }
+                ]
+            }
+        ]
+    }
+}
