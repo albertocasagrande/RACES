@@ -1,19 +1,35 @@
 # RACES
 RACES is an Advanced Cancer Evolution Simulator.
 
-## Requirements
+RACES is framework for simulating cancer genomic evolution. It supports:
+-   cell strand competition and spacial simulations
+-   epigenetic mutations
+-   copy-number variations
+-   mutational signature ruled SNV
+
+RACES consists in 3 main programs:
+-   `build_context_index` creates an index for the mutational contexts (i.e., consecutive triplets of nucleotides) in a genome. In normal conditions, the context index for a genome must be created once for all and the resulting file can be used many times.
+-   `drivers_sim` performs cell spacial simulation by using driver mutational information. It supports epigenetic switching.
+-   `passengers_sim` samples the results of `drivers_sim`, builds the phylogenetic forest for the sampled cells, and places passengers mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
+    *   produce simulated reads and generate the correspoding SAM file for them
+    *   collect SNVs and CNAs statistical data and save them in CSV files
+
+## Required Packages
 -   CMake
 -   a C++17 compiler
 -   Boost::program_options
+-   nlohmann/json library
 
-### Optional
+### Optional Packages
 -   Boost::unit_test_framework (it enables C++ code testing)
 -   SDL_ttf and SDL_image libraries (they enable simulation plotting)
 -   Boost::Python (it enables Python bindings)
 
 ## Setup
 
-Under GNU/Linux and macOS, use the following commands in a terminal
+### GNU/Linux and macOS
+
+Once the [required packages](#required-packages) have been installed, use the following commands in a shell
 
 ```bash
 git clone https://github.com/albertocasagrande/RACES.git
@@ -22,9 +38,13 @@ cmake .
 make -j
 ```
 
+### Windows
+
+TBD
+
 ## Usage
 
-TODO
+TBD
 
 ## License
 
