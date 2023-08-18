@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.2
- * @date 2023-08-14
+ * @version 0.3
+ * @date 2023-08-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -177,9 +177,9 @@ class MutationEngine
         double cumulative_prob = 0;
         for (const auto& [m_type, prob]: m_signature) {
             if (prob != 0) {
-                inv_cumulative_SBS.insert({cumulative_prob, m_type});
-
                 cumulative_prob += prob;
+
+                inv_cumulative_SBS.insert({cumulative_prob, m_type});
             }
         }
 
