@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.3
- * @date 2023-08-18
+ * @version 0.4
+ * @date 2023-08-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -342,14 +342,35 @@ class MutationEngine
     }
 
     /**
+     * @brief Try to place a CNA
+     * 
+     * @param CNA is the CNA to place
+     * @param cell_mutations are the cell mutations
+     * @return `true` if and only if the CNA placement has succeed. This 
+     *          method returns `false` when the CNA cannot be placed 
+     *          because no allele are available for it.
+     */
+    bool place_CNA(const CopyNumberAlteration& CNA, GenomeMutations& cell_mutations)
+    {
+        switch(CNA.type) {
+            case CopyNumberAlteration::Type::AMPLIFICATION:
+                return cell_mutations.amplify_region(CNA.region, CNA.source);
+            case CopyNumberAlteration::Type::DELETION:
+                return cell_mutations.remove_region(CNA.region, CNA.source);
+            default:
+                throw std::runtime_error("Unsupported CNA type");
+        }
+    }
+
+    /**
      * @brief Place the driver specific SNVs
      * 
      * @param node is a phylogenetic tree node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
      */
-    void place_driver_specific_SNVs(const Drivers::PhylogeneticForest::const_node& node,
-                                    GenomeMutations& cell_mutations)
+    void place_driver_specific_mutations(const Drivers::PhylogeneticForest::const_node& node,
+                                         GenomeMutations& cell_mutations)
     {
         if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
             const auto& driver_mp = mutational_properties.at(node.get_genotype_id());
@@ -358,6 +379,10 @@ class MutationEngine
                 snv.cause = driver_mp.name;
 
                 place_SNV(snv, cell_mutations);
+            }
+
+            for (auto CNA : driver_mp.CNAs) {
+                place_CNA(CNA, cell_mutations);
             }
         }
     }
@@ -380,7 +405,7 @@ class MutationEngine
 
         size_t context_stack_size = context_stack.size();
         
-        place_driver_specific_SNVs(node, cell_mutations);
+        place_driver_specific_mutations(node, cell_mutations);
         place_SNVs(node, cell_mutations);
         //place_CNAs(node, mutations);
 

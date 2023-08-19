@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.1
- * @date 2023-08-09
+ * @version 0.2
+ * @date 2023-08-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,8 +39,10 @@ namespace Passengers
 SpeciesMutationalProperties::EpigeneticGenotypeProperties::EpigeneticGenotypeProperties()
 {}
 
-SpeciesMutationalProperties::EpigeneticGenotypeProperties::EpigeneticGenotypeProperties(const std::string& name, const double& mu, const std::list<SNV>& SNVs):
-    name(name), mu(mu), SNVs(SNVs)
+SpeciesMutationalProperties::EpigeneticGenotypeProperties::EpigeneticGenotypeProperties(const std::string& name, const double& mu,
+                                                                                        const std::list<SNV>& SNVs, 
+                                                                                        const std::list<CopyNumberAlteration>& CNAs):
+    name(name), mu(mu), SNVs(SNVs), CNAs(CNAs)
 {}
 
 SpeciesMutationalProperties::SpeciesMutationalProperties()
@@ -50,7 +52,8 @@ SpeciesMutationalProperties&
 SpeciesMutationalProperties::add_species(const Drivers::Simulation::Simulation& simulation,  
                                          const std::string& name,
                                          const std::map<std::string, double>& epigenetic_status_mu,
-                                         const std::list<SNV>& species_SNVs)
+                                         const std::list<SNV>& species_SNVs,
+                                         const std::list<CopyNumberAlteration>& species_CNAs)
 {
     std::map<std::string, const Drivers::Simulation::Species*> species_map;
 
@@ -75,7 +78,7 @@ SpeciesMutationalProperties::add_species(const Drivers::Simulation::Simulation& 
                                     "\" has been already added.");
         }
 
-        properties[id] = {full_name, mu_value, species_SNVs};
+        properties[id] = {full_name, mu_value, species_SNVs, species_CNAs};
     }
 
     return *this;

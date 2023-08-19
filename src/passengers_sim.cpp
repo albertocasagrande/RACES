@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.2
- * @date 2023-08-14
+ * @version 0.3
+ * @date 2023-08-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -559,7 +559,7 @@ class PassengersSimulator
             collect_driver_mutations(name, SNVs, CNAs, driver_properties_json["mutations"]);
         }
         
-        mutational_properties.add_species(drivers_simulation, name, mutation_rates, SNVs);
+        mutational_properties.add_species(drivers_simulation, name, mutation_rates, SNVs, CNAs);
     }
 
     static Races::Passengers::SpeciesMutationalProperties

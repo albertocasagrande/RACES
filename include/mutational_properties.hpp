@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.1
- * @date 2023-08-09
+ * @version 0.2
+ * @date 2023-08-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,7 @@
 
 #include "simulation.hpp"
 #include "snv.hpp"
+#include "cna.hpp"
 
 namespace Races
 {
@@ -44,13 +45,21 @@ namespace Races
 namespace Passengers
 {
 
+/**
+ * @brief A class representing the passenger mutational properties of a species
+ * 
+ */
 class SpeciesMutationalProperties
 {
+    /**
+     * @brief The passenger mutational properties of an epigenetic genotype
+     */
     struct EpigeneticGenotypeProperties
     {
-        std::string name;      //!< the species name
-        double mu;             //!< the species passenger mutation rate
-        std::list<SNV> SNVs;   //!< the driver species SNVs
+        std::string name;                       //!< the species name
+        double mu;                              //!< the species passenger mutation rate
+        std::list<SNV> SNVs;                    //!< the driver species SNVs
+        std::list<CopyNumberAlteration> CNAs;   //!< the driver species CNAs
 
         /**
          * @brief The empty constructor
@@ -62,8 +71,11 @@ class SpeciesMutationalProperties
          * 
          * @param name is the species name
          * @param SNVs is the vector of species specific SNVs
+         * @param CNAs is the vector of species specific CNAs
          */
-        EpigeneticGenotypeProperties(const std::string& name, const double& mu, const std::list<SNV>& SNVs);
+        EpigeneticGenotypeProperties(const std::string& name, const double& mu,
+                                     const std::list<SNV>& SNVs,
+                                     const std::list<CopyNumberAlteration>& CNAs);
     };
 
     std::map<Drivers::EpigeneticGenotypeId, EpigeneticGenotypeProperties> properties;  //!< the epigenetic species property map
@@ -85,12 +97,14 @@ public:
      * @param epigenetic_status_id is a map from epigenomic status to 
      *          passenger mutational rate
      * @param species_SNVs is a list of SNVs characterizing the species
+     * @param species_CNAs is a list of CNAs characterizing the species
      * @return a reference to the updated object
      */
     SpeciesMutationalProperties& add_species(const Drivers::Simulation::Simulation& simulation,
                                              const std::string& name, 
                                              const std::map<std::string, double>& epigenetic_status_id,
-                                             const std::list<SNV>& species_SNVs={});
+                                             const std::list<SNV>& species_SNVs={},
+                                             const std::list<CopyNumberAlteration>& species_CNAs={});
 
     /**
      * @brief Get the properties of a species
