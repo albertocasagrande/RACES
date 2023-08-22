@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.5
- * @date 2023-08-05
+ * @version 0.6
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -109,10 +109,11 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
         if (event.delay>candidate_delay) {
             event.type = event_type;
             event.delay = candidate_delay;
-            event.position = Position(tissue, species.choose_a_cell(random_gen));
-            event.initial_genotype = species.get_id();
         }
     }
+
+    event.position = Position(tissue, species.choose_a_cell(random_gen));
+    event.initial_genotype = species.get_id();
 }
 
 template<typename GENERATOR_TYPE>
@@ -167,9 +168,11 @@ CellEvent Simulation::select_next_event()
         select_next_event_in_species(event, tissue(), death_enabled, species, uni_dist, random_gen);
     }
 
-    // update candidate event with genomic mutation is possible
+    // update candidate event when genomic mutation is possible
     while (!genomic_mutation_queue.empty()) {
         const TimedGenomicMutation& genomic_mutation = genomic_mutation_queue.top();
+
+        genomic_mutation_queue.pop();
 
         if (genomic_mutation.time < event.delay + time) {
             const auto* cell = choose_a_cell_in_genomic_species(tissue(), genomic_mutation.initial_id, random_gen);
@@ -186,12 +189,8 @@ CellEvent Simulation::select_next_event()
 
                 event.final_genotype = genomic_species[index].get_id();
 
-                genomic_mutation_queue.pop();
-
                 return event;
             }
-
-            genomic_mutation_queue.pop();
         } else {
             return event;
         }
@@ -229,7 +228,7 @@ Simulation::simulate_mutation(const Position& position, const EpigeneticGenotype
 
     parent_cell.genotype = final_id;
 
-    tissue(position) = parent_cell.generate_descendent();
+    tissue(position) = parent_cell.generate_descendent(time);
 
     return {{tissue(position)},{}};
 }
@@ -250,13 +249,13 @@ Simulation::simulate_duplication(const Position& position)
     const Direction& push_dir = select_random_value(random_gen, valid_directions);
     affected.lost_cells = tissue.push_cells(position, push_dir);
     
-    tissue(position) = parent_cell.generate_descendent();
+    tissue(position) = parent_cell.generate_descendent(time);
 
     affected.new_cells.push_back(tissue(position));
 
     PositionInTissue new_cell_position{position + PositionDelta(push_dir)};
     if (tissue.is_valid(new_cell_position)) {
-        tissue(new_cell_position) = parent_cell.generate_descendent();
+        tissue(new_cell_position) = parent_cell.generate_descendent(time);
 
         affected.new_cells.push_back(tissue(new_cell_position));
     }

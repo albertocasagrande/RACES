@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.9
- * @date 2023-07-21
+ * @version 0.10
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,18 +42,22 @@ namespace Drivers
 uint64_t Cell::counter = 0;
 
 Cell::Cell():
-    id(0), parent(0), genotype(NON_DRIVER_GENOTYPE)
+    id(0), parent(0), birth_time(0), genotype(NON_DRIVER_GENOTYPE)
 {
 }
 
 Cell::Cell(const EpigeneticGenotypeId genotype):
-    id(Cell::counter), parent(Cell::counter), genotype(genotype)
+    id(Cell::counter), parent(Cell::counter), birth_time(0), genotype(genotype)
 {
     ++Cell::counter;
 }
 
 Cell::Cell(const EpigeneticGenotypeId genotype, const CellId parent_id):
-    id(Cell::counter), parent(parent_id), genotype(genotype)
+    Cell(genotype,parent_id,0)
+{}
+
+Cell::Cell(const EpigeneticGenotypeId genotype, const CellId parent_id, const Time birth_time):
+    id(Cell::counter), parent(parent_id), birth_time(birth_time), genotype(genotype)
 {
     ++Cell::counter;
 }
@@ -62,6 +66,7 @@ void swap(Cell& a, Cell &b)
 {
     std::swap(a.id,b.id);
     std::swap(a.parent, b.parent);
+    std::swap(a.birth_time, b.birth_time);
     std::swap(a.genotype, b.genotype);
 }
 
@@ -123,6 +128,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
+       << ", birth_time: "<< cell.get_birth_time()
        << ", driver_genotype: " << cell.get_genotype_id()
        << "}";
 
@@ -133,6 +139,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Cel
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
+       << ", birth_time: "<< cell.get_birth_time()
        << ", driver_genotype: " << cell.get_genotype_id()
        << ", position: " << static_cast<Races::Drivers::Simulation::PositionInTissue>(cell)
        << "}";

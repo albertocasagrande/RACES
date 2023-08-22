@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.4
- * @date 2023-08-19
+ * @version 0.5
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -197,9 +197,9 @@ class MutationEngine
      *         to `cell` birth time
      */
     const MutationalCoefficients&
-    get_active_mutational_coefficients(const Drivers::LabelledCell<Time>& cell) const
+    get_active_mutational_coefficients(const Drivers::Cell& cell) const
     {
-        auto mc_it = timed_mutational_coefficients.upper_bound(cell.label);
+        auto mc_it = timed_mutational_coefficients.upper_bound(cell.get_birth_time());
 
         return (--mc_it)->second;
     }

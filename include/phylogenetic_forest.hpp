@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.5
- * @date 2023-08-09
+ * @version 0.6
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,15 +47,11 @@ namespace Drivers
 
 class PhylogeneticForest
 {
-public:
-    using CellDataType = LabelledCell<Time>;
-    
-private:
-    std::map<CellId, CellDataType> cells;          //!< The forest cell id-cell map
+    std::map<CellId,  Cell> cells;                  //!< The forest cell id-cell map
  
-    std::set<CellId> roots;                        //!< The cell ids of the forest roots
+    std::set<CellId> roots;                         //!< The cell ids of the forest roots
 
-    std::map<CellId, std::set<CellId>> branches;   //!< The descendant branches
+    std::map<CellId, std::set<CellId>> branches;    //!< The descendant branches
 public:
 
     /**
@@ -83,7 +79,7 @@ public:
          * 
          * @return a constant reference to a cell
          */
-        inline operator const PhylogeneticForest::CellDataType&() const
+        inline operator const Cell&() const
         {
             return forest->cells.at(cell_id);
         }
@@ -168,7 +164,7 @@ public:
          * 
          * @return a non-constant reference to a cell
          */
-        inline operator PhylogeneticForest::CellDataType&()
+        inline operator Cell&()
         {
             return forest->cells.at(cell_id);
         }

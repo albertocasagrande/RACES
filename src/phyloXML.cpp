@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement phyloXML stream
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -121,17 +121,17 @@ phyloXMLStream& phyloXMLStream::operator<<(const PhylogeneticForest::const_node&
         throw std::runtime_error("The stream has been already closed");
     }
 
-    const PhylogeneticForest::CellDataType& cell = node;
+    const Cell& cell = node;
 
     if (node.is_root()) {
         // this is the root node
         os << indent_string << "<clade>" << std::endl;
     } else {
         // this is not the root
-        const PhylogeneticForest::CellDataType& parent = node.parent();
+        const Cell& parent = node.parent();
 
         os << indent_string << "<clade branch_length=\"" 
-           << (cell.label-parent.label)  << "\">" << std::endl;
+           << (cell.get_birth_time()-parent.get_birth_time())  << "\">" << std::endl;
     }
 
     change_indentation_level(indent_level+1);

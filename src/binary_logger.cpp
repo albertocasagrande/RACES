@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.12
- * @date 2023-08-05
+ * @version 0.13
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -109,8 +109,8 @@ std::streampos compute_bytes_per_cell(const std::filesystem::path& directory)
     const auto first_archive_name = BinaryLogger::get_cell_archive_path(directory, 0);
     Races::Archive::Binary::In cell_archive(first_archive_name);
 
-    const auto l_cell = LabelledCell<Time>::load(cell_archive); 
-    return Archive::Binary::ByteCounter::bytes_required_by(l_cell);
+    const auto cell = Cell::load(cell_archive); 
+    return Archive::Binary::ByteCounter::bytes_required_by(cell);
 }
 
 BinaryLogger::CellReader::CellReader(std::filesystem::path directory):
@@ -137,7 +137,7 @@ BinaryLogger::CellReader::CellReader(std::filesystem::path directory):
     }
 }
 
-LabelledCell<Time> BinaryLogger::CellReader::operator[](const CellId& cell_id) 
+Cell BinaryLogger::CellReader::operator[](const CellId& cell_id) 
 {
     if (cell_id >= number_of_cells) {
         throw std::out_of_range("The cell has not been created");
@@ -158,15 +158,15 @@ LabelledCell<Time> BinaryLogger::CellReader::operator[](const CellId& cell_id)
 
     cell_archive.seekg(get_cell_pos(cell_id));
 
-    auto l_cell = LabelledCell<Time>::load(cell_archive);
+    auto cell = Cell::load(cell_archive);
 
-    if (l_cell.get_id()!=cell_id) {
+    if (cell.get_id()!=cell_id) {
         std::cerr << "Aiming cell id " << cell_id << " read " 
-                  << l_cell << std::endl;
+                  << cell << std::endl;
         throw std::runtime_error("Wrong cell file format.");
     }
 
-    return l_cell;
+    return cell;
 }
 
 void BinaryLogger::rotate_cell_file()
@@ -188,7 +188,7 @@ void BinaryLogger::rotate_cell_file()
     ++next_file_number;  
 }
 
-void BinaryLogger::record_cell(const CellInTissue& cell, const Time& time)
+void BinaryLogger::record_cell(const CellInTissue& cell)
 {
     if (!cell_archive.is_open()) {
         std::filesystem::create_directory(directory);
@@ -196,8 +196,7 @@ void BinaryLogger::record_cell(const CellInTissue& cell, const Time& time)
         rotate_cell_file();
     }
 
-    cell_archive & static_cast<const Cell&>(cell)
-            & time;
+    cell_archive & static_cast<const Cell&>(cell);
 
     if (++cell_in_current_file>=cells_per_file) {
         rotate_cell_file();
@@ -206,11 +205,13 @@ void BinaryLogger::record_cell(const CellInTissue& cell, const Time& time)
 
 void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)
 {
+    (void)time;
+
     if (type==CellEventType::DUPLICATE || 
             type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT ||
             type==CellEventType::DRIVER_GENETIC_MUTATION) {
 
-        record_cell(cell, time);
+        record_cell(cell);
     }
 }
 
@@ -220,7 +221,7 @@ void BinaryLogger::record_initial_cell(const CellInTissue& cell)
         throw std::domain_error("The provided cell is not an initial cell");
     }
 
-    record_cell(cell, 0);
+    record_cell(cell);
 }
 
 

@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a binary simulation logger
- * @version 0.9
- * @date 2023-08-06
+ * @version 0.10
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -78,9 +78,8 @@ struct BinaryLogger : public BasicLogger
      * @brief Record a cell
      * 
      * @param cell is the cell on which event has been occurred
-     * @param time it the event time
      */
-    void record_cell(const CellInTissue& cell, const Time& time);
+    void record_cell(const CellInTissue& cell);
 public:
     /**
      * @brief A structure for cell recovering
@@ -119,10 +118,10 @@ public:
          * @brief Get a timed-labelled cell from the directory
          * 
          * @param cell_id is the identifier of the aimed cell
-         * @return the time-labelled cell in the `cell_id`-th 
-         *      position of the cell archives
+         * @return the cell in the `cell_id`-th position of the 
+         *      cell archives
          */
-        LabelledCell<Time> operator[](const CellId& cell_id);
+        Cell operator[](const CellId& cell_id);
     };
 
     /**

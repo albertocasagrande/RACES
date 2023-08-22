@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Cell representation
- * @version 0.15
- * @date 2023-08-06
+ * @version 0.16
+ * @date 2023-08-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,11 +58,13 @@ using CellId = uint64_t;
 
 class Cell {
 protected:
-    static uint64_t counter;            //!< total number of cell along the computation
-    CellId id;                          //!< cell identifier
-    CellId parent;                      //!< parent cell
+    static uint64_t counter;        //!< Total number of cell along the computation
+    CellId id;                      //!< Cell identifier
+    CellId parent;                  //!< Parent cell identifier
 
-    EpigeneticGenotypeId genotype;      //!< cell species reference
+    Time birth_time;                //!< Cell birth time
+
+    EpigeneticGenotypeId genotype;  //!< cell species reference
 
     /**
      * @brief The empty constructor
@@ -86,6 +88,15 @@ public:
     Cell(const EpigeneticGenotypeId genotype, const CellId parent_id);
 
     /**
+     * @brief Create a new cell
+     * 
+     * @param genotype is the driver genotype identifier
+     * @param parent_id is the parent cell identifier
+     * @param birth_time is the cell birth time
+     */
+    Cell(const EpigeneticGenotypeId genotype, const CellId parent_id, const Time birth_time);
+
+    /**
      * @brief Get the cell identifier
      * 
      * @return a constant reference to the cell identifier
@@ -106,6 +117,16 @@ public:
     }
 
     /**
+     * @brief Get the cell birth time
+     * 
+     * @return the cell birth time 
+     */
+    inline const Time& get_birth_time() const
+    {
+        return birth_time;
+    }
+
+    /**
      * @brief Get the cell driver genotype
      * 
      * @return a constant reference to the cell driver genotype
@@ -120,9 +141,9 @@ public:
      * 
      * @return the generated cell
      */
-    inline Cell generate_descendent() const
+    inline Cell generate_descendent(const Time& time) const
     {
-        return Cell(get_genotype_id(), get_id());
+        return Cell(get_genotype_id(), get_id(), time);
     }
 
     /**
@@ -135,7 +156,8 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & id 
-                & parent 
+                & parent
+                & birth_time
                 & genotype;
     }
 
@@ -151,8 +173,9 @@ public:
     {
         Cell cell;
 
-        archive & cell.id 
-                & cell.parent 
+        archive & cell.id
+                & cell.parent
+                & cell.birth_time
                 & cell.genotype;
 
         return cell;
@@ -228,7 +251,8 @@ public:
     inline static LabelledCell<LABEL> load(ARCHIVE& archive)
     {
         LabelledCell<LABEL> cell;
-        archive & static_cast<Cell &>(cell) & cell.label;
+        archive & static_cast<Cell &>(cell) 
+                & cell.label;
 
         return cell;
     }
