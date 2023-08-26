@@ -2,8 +2,8 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement a progress bar
- * @version 0.7
- * @date 2023-08-12
+ * @version 0.8
+ * @date 2023-08-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -81,8 +81,16 @@ ProgressBar& ProgressBar::set_message(const std::string& message)
     using namespace indicators;
 
     if (indicator!=nullptr && (percentage != 100 || !updated)) {
+        // the following line is a temporary fix for indicators 
+        // issue #126 (https://github.com/p-ranav/indicators/issues/126)
+        std::string curLocale = setlocale(LC_ALL, nullptr);
+
         indicator->set_option(option::PostfixText{message});
         indicator->set_progress(percentage);
+
+        // the following line is a temporary fix for indicators 
+        // issue #126 (https://github.com/p-ranav/indicators/issues/126)
+        setlocale(LC_ALL, curLocale.c_str());
     }
 #endif  // WITH_INDICATORS
 
