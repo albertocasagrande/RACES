@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.1
- * @date 2023-08-09
+ * @version 0.2
+ * @date 2023-08-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,11 +36,14 @@ namespace Races
 namespace Passengers
 {
 
-MutationStatistics::MutationStatistics()
+MutationStatistics::MutationStatistics():
+    num_of_cells(0)
 {}
 
 MutationStatistics& MutationStatistics::record(const GenomeMutations& cell_mutations)
 {
+    std::set<SNV> in_cell;
+
     // for all chromosomes
     for (const auto& [chr_id, chromosome]: cell_mutations.get_chromosomes()) {
 
@@ -60,14 +63,22 @@ MutationStatistics& MutationStatistics::record(const GenomeMutations& cell_mutat
                     auto it = SNVs.find(snv);
 
                     if (it != SNVs.end()) {
-                        ++(it->second);
+                        ++(it->second.mutated_alleles);
                     } else {
-                        SNVs[snv] = 1;   
+                        SNVs.insert({snv, {1, 0}});
                     }
+
+                    in_cell.insert(snv);
                 }
             }
         }
     }
+
+    for (const auto& snv : in_cell) {
+        ++(SNVs[snv].num_of_cells);
+    }
+
+    ++num_of_cells;
  
     return *this;
 }
@@ -77,16 +88,19 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
     os << "chr" << separator << "from" << separator << "to" << separator
        << "ref" << separator << "alt" << separator
        << "type" << separator << "context" << separator << "cause" << separator 
-       << "multiplicity"<< std::endl;
+       << "num. of cells" << separator << "rate" << separator 
+       << "mutated alleles" << std::endl;
 
 
-    for (const auto& [snv, counter] : SNVs) {
+    for (const auto& [snv, snv_statistics] : SNVs) {
 
         os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position 
            << separator << snv.position << separator
            << snv.context.get_central_nucleotide() << separator << snv.mutated_base << separator
            << "SNV" << separator << snv.context << separator
-           << snv.cause << separator << counter << std::endl;
+           << snv.cause << separator << snv_statistics.num_of_cells
+           << separator << (static_cast<double>(snv_statistics.num_of_cells)/num_of_cells)
+           << separator << snv_statistics.mutated_alleles << std::endl;
     }
 
     return os;

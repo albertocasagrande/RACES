@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.5
- * @date 2023-08-22
+ * @version 0.6
+ * @date 2023-08-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,11 +51,22 @@ namespace Passengers
 {
 
 /**
+ * @brief SNV statistics
+ */
+struct SNVStatistics
+{
+    size_t mutated_alleles;     //!< Number of mutated alleles
+    size_t num_of_cells;        //!< Total number of cells containing the SNV
+};
+
+/**
  * @brief Mutation Statistics
  */
 struct MutationStatistics
 {
-    std::map<SNV, size_t> SNVs;  //!< SNVs
+    size_t num_of_cells;    //!< Number of recorded cells
+
+    std::map<SNV, SNVStatistics> SNVs;  //!< SNVs
     std::list<CopyNumberAlteration> CNAs;   //!< CNAs
 
     /**
