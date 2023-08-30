@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.6
- * @date 2023-08-22
+ * @version 0.7
+ * @date 2023-08-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -172,8 +172,6 @@ CellEvent Simulation::select_next_event()
     while (!genomic_mutation_queue.empty()) {
         const TimedGenomicMutation& genomic_mutation = genomic_mutation_queue.top();
 
-        genomic_mutation_queue.pop();
-
         if (genomic_mutation.time < event.delay + time) {
             const auto* cell = choose_a_cell_in_genomic_species(tissue(), genomic_mutation.initial_id, random_gen);
             if (cell != nullptr) {
@@ -189,11 +187,15 @@ CellEvent Simulation::select_next_event()
 
                 event.final_genotype = genomic_species[index].get_id();
 
+                genomic_mutation_queue.pop();
+
                 return event;
             }
         } else {
             return event;
         }
+
+        genomic_mutation_queue.pop();
     }
 
     return event;
