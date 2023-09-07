@@ -2,7 +2,7 @@
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines species representation
- * @version 0.13
+ * @version 0.14
  * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
@@ -62,16 +62,20 @@ class Tissue;
  * This class represents the set of cells having the same driver genotype.
  */
 class Species: public EpigeneticGenotype {
-    std::vector<CellInTissue *> cells;   //!< species cell
-    std::map<CellId, size_t> pos_map;    //!< map from CellId to `cells` position
+    using CellPos = std::list<CellInTissue *>::iterator;
+
+    std::list<CellInTissue *> cells;    //!< species cell
+    std::map<CellId, CellPos> pos_map;  //!< map from CellId to `cells` position
+
+    Time last_insertion_time;     //!< the last insertion time
 
     /**
      * @brief A constant iterator for the species cells
      */
     class const_iterator {
-        std::vector<CellInTissue*>::const_iterator it; //!< the cell pointer vector iterator
+        std::list<CellInTissue*>::const_iterator it; //!< the cell pointer vector iterator
 
-        const_iterator(const std::vector<CellInTissue*>::const_iterator it);
+        const_iterator(const std::list<CellInTissue*>::const_iterator it);
     public:
         using difference_type   =   std::ptrdiff_t;
         using value_type        =   CellInTissue;
@@ -111,33 +115,6 @@ class Species: public EpigeneticGenotype {
         // Postfix decrement
         const_iterator operator--(int);
 
-        inline const_iterator operator+(const int delta) 
-        {
-            return const_iterator(it + delta);
-        }
-
-        inline const_iterator operator-(const int delta) 
-        {
-            return const_iterator(it - delta);
-        }
-
-        inline const_iterator& operator+=(const int& delta) {
-            it += delta;
-
-            return *this;
-        }
-
-        inline const_iterator& operator-=(const int& delta) {
-            it -= delta;
-
-            return *this;
-        }
-
-        inline reference operator[](const int& delta) const 
-        {
-            return *(it[delta]);
-        }
-
         friend inline bool operator==(const const_iterator& a, const const_iterator& b)
         { 
             return a.it == b.it; 
@@ -150,6 +127,17 @@ class Species: public EpigeneticGenotype {
 
         friend class Species;
     };
+
+    /**
+     * @brief Compute the cell age from the last addition to the species
+     * 
+     * @param cell 
+     * @return Time 
+     */
+    inline Time age(const CellInTissue *cell) const
+    {
+        return last_insertion_time-cell->get_birth_time();
+    }
 
     /**
      * @brief Add a cell to the species
@@ -233,6 +221,9 @@ public:
     /**
      * @brief Randomly select a cell in the species
      * 
+     * This method select a cell by using an exponential over 
+     * cell ages.
+     * 
      * @tparam GENERATOR is a random number generator type
      * @param generator is the random number generator used to select 
      *      the cell
@@ -246,11 +237,24 @@ public:
             throw std::domain_error("No cells in the species");
         }
 
-        std::uniform_int_distribution<size_t> distribution(0,num_of_cells()-1);
+        std::exponential_distribution<Time> exp_dist;
 
-        size_t cell_pos = distribution(generator);
+        auto aimed_partial_ages_sum = exp_dist(generator);
 
-        return *(cells[cell_pos]);
+        Time partial_ages_sum = 0;
+        for (const auto& cell : cells) {
+            if (partial_ages_sum == 0) {
+                aimed_partial_ages_sum *= (2*age(cell));
+            }
+
+            partial_ages_sum += age(cell);
+
+            if (partial_ages_sum>=aimed_partial_ages_sum) {
+                return *cell;
+            }
+        }
+
+        return *(cells.front());
     }
 
     /**
@@ -284,7 +288,7 @@ public:
      */
     inline CellInTissue& operator()(const CellId& cell_id)
     {
-        return *(cells[pos_map.at(cell_id)]);
+        return *(*(pos_map.at(cell_id)));
     }
 
     /**
@@ -295,7 +299,7 @@ public:
      */
     inline const CellInTissue& operator()(const CellId& cell_id) const
     {
-        return *(cells[pos_map.at(cell_id)]);
+        return *(*(pos_map.at(cell_id)));
     }
 
     /**
@@ -308,7 +312,6 @@ public:
     {
         return pos_map.find(cell_id) != pos_map.end();
     }
-
 
     /**
      * @brief The destroyer
@@ -325,6 +328,8 @@ public:
     void save(ARCHIVE& archive) const
     {
         archive & static_cast<const EpigeneticGenotype &>(*this);
+
+        archive & last_insertion_time;
 
         archive & cells.size();
         for (const auto& cell_ptr: cells) {
@@ -344,6 +349,8 @@ public:
     {
         auto genotype = EpigeneticGenotype::load(archive);
         Species species(genotype);
+
+        archive & species.last_insertion_time;
 
         size_t num_of_cells;
         archive & num_of_cells;

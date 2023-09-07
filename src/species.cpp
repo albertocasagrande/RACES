@@ -1,9 +1,9 @@
 /**
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell representation
- * @version 0.7
- * @date 2023-07-21
+ * @brief Implements species representation methods
+ * @version 0.8
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -56,11 +56,11 @@ void Species::reset()
 }
 
 Species::Species(const EpigeneticGenotype& genotype):
-    EpigeneticGenotype(genotype)
+    EpigeneticGenotype(genotype), last_insertion_time(0)
 {}
 
 Species::Species(const Species& orig):
-    EpigeneticGenotype(orig)
+    EpigeneticGenotype(orig), last_insertion_time(0)
 {
     for (const auto& cell: orig.cells) {
         this->add(*cell);
@@ -92,40 +92,33 @@ Species& Species::operator=(Species&& orig)
 void Species::remove(const CellId& cell_id)
 {
     // find the cell to be removed
-    const size_t pos = pos_map.at(cell_id);
+    auto pos = pos_map.at(cell_id);
 
     // delete it from the position map
     pos_map.erase(cell_id);
 
-    // swap the to-be-removed cell and the last one
-    // in the cell vector
-    const size_t last_pos = cells.size()-1;
-    if (last_pos>0) {
-        if (pos != last_pos) {
-            std::swap(cells[pos], cells[last_pos]);
+    // delete the cell
+    delete *pos;
 
-            // update the former last cell position
-            pos_map[cells[pos]->get_id()] = pos;
-        }
-    }
-
-    delete cells[last_pos];
-
-    // remove the cell to be removed 
-    cells.pop_back();
+    // remove the cell pointer
+    cells.erase(pos);
 }
 
 CellInTissue* Species::add(CellInTissue* cell)
-{
-    // find a position for the new cell
-    const size_t new_pos = cells.size();
-
-    // set it position in the position map
-    pos_map[cell->get_id()] = new_pos;
-    
+{   
+    // update the genotype id
     cell->genotype = get_id();
 
+    // update `last_insertion_time`
+    last_insertion_time = cell->get_birth_time();
+
     cells.push_back(cell);
+
+    // find a position for the new cell
+    auto final_pos = cells.end();
+
+    // set it position in the position map
+    pos_map[cell->get_id()] = --final_pos;
 
     return cell;
 }
@@ -159,7 +152,7 @@ Species::const_iterator Species::end() const
     return const_iterator(std::end(cells));
 }
 
-Species::const_iterator::const_iterator(const std::vector<CellInTissue*>::const_iterator it): it(it)
+Species::const_iterator::const_iterator(const std::list<CellInTissue*>::const_iterator it): it(it)
 {}
 
 Species::const_iterator::const_iterator(): it()
@@ -186,6 +179,7 @@ void swap(Species& a, Species& b)
               static_cast<EpigeneticGenotype&>(b));
     std::swap(a.cells,b.cells);
     std::swap(a.pos_map,b.pos_map);
+    std::swap(a.last_insertion_time,b.last_insertion_time);
 }
 
 }   // Simulation
