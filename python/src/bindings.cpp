@@ -1,8 +1,8 @@
 /**
  * @file bindings.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement Python bindings
- * @version 0.3
+ * @brief Implements Python bindings
+ * @version 0.4
  * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
@@ -74,7 +74,7 @@ BOOST_PYTHON_MODULE(RACES)
         .def("set_demethylation_rate", &EpigeneticRatesWrapper::set_demethylation_rate)
     ;
 
-    class_<RacesDrv::Genotype, std::shared_ptr<RacesDrv::Genotype>>("DriverGenotype", no_init)
+    class_<RacesDrv::Genotype, std::shared_ptr<RacesDrv::Genotype>>("Genotype", no_init)
         .def("__init__", make_constructor(GenotypeWrapper::create))
         .def("set_rates", &GenotypeWrapper::set_rates)
         .def("get_rate", &GenotypeWrapper::get_rate)

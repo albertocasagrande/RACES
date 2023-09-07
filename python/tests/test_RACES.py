@@ -90,49 +90,49 @@ class TestEpigeneticRates(unittest.TestCase):
             e_rates.set_demethylation_rate(-0.3)
 
 
-class TestDriverGenotype(unittest.TestCase):
+class TestGenotype(unittest.TestCase):
     def test_init(self):
         try:
-            RACES.DriverGenotype("A", [RACES.EpigeneticRates(0.01, 0.01)])
+            RACES.Genotype("A", [RACES.EpigeneticRates(0.01, 0.01)])
         except BaseException:
-            self.fail('RACES.DriverGenotype("A", '
+            self.fail('RACES.Genotype("A", '
                       + '[RACES.EpigeneticRates(0.01, 0.01)]) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.DriverGenotype("A", [[0.01, 0.01]])
+            RACES.Genotype("A", [[0.01, 0.01]])
         except BaseException:
-            self.fail('RACES.DriverGenotype("A", [[0.01, 0.01]]) '
+            self.fail('RACES.Genotype("A", [[0.01, 0.01]]) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.DriverGenotype("A", [])
+            RACES.Genotype("A", [])
         except BaseException:
-            self.fail('RACES.DriverGenotype("A", []) '
+            self.fail('RACES.Genotype("A", []) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.DriverGenotype("A", [[0.01, 0.01], [0.01, 0.01]])
+            RACES.Genotype("A", [[0.01, 0.01], [0.01, 0.01]])
         except BaseException:
-            self.fail('RACES.DriverGenotype("A", [[0.01, 0.01], '
+            self.fail('RACES.Genotype("A", [[0.01, 0.01], '
                       + '[0.01, 0.01]]) raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            RACES.DriverGenotype("A", 2)
+            RACES.Genotype("A", 2)
 
         with self.assertRaises(Exception):
-            RACES.DriverGenotype("A", ['a'])
+            RACES.Genotype("A", ['a'])
 
         with self.assertRaises(Exception):
-            RACES.DriverGenotype("A", [[0.01, 0.01, 2]])
+            RACES.Genotype("A", [[0.01, 0.01, 2]])
 
     def test_properties(self):
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
 
         self.assertEqual(A.name, "A")
         self.assertEqual(A.num_of_promoters, 1)
 
-        B = RACES.DriverGenotype("B", [])
+        B = RACES.Genotype("B", [])
 
         self.assertEqual(B.name, "B")
         self.assertEqual(B.id, A.id+1)
@@ -148,7 +148,7 @@ class TestDriverGenotype(unittest.TestCase):
             A.num_of_promoters = 7
 
     def test_set_rates(self):
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
         try:
             A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                               RACES.CellEventType.DUPLICATE: 0.2})
@@ -161,7 +161,7 @@ class TestDriverGenotype(unittest.TestCase):
             A.set_rates("", {RACES.CellEventType.DIE: 0.1,
                              RACES.CellEventType.DUPLICATE: 0.2})
 
-        B = RACES.DriverGenotype("B", [])
+        B = RACES.Genotype("B", [])
 
         try:
             B.set_rates("", {RACES.CellEventType.DIE: 0.1,
@@ -176,7 +176,7 @@ class TestDriverGenotype(unittest.TestCase):
                               RACES.CellEventType.DUPLICATE: 0.2})
 
     def test_get_rate(self):
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         try:
@@ -187,13 +187,13 @@ class TestDriverGenotype(unittest.TestCase):
                                         RACES.CellEventType.EPIGENETIC_EVENT),
                              0.0)
         except BaseException:
-            self.fail('RACES.DriverGenotype.set_rate() '
+            self.fail('RACES.Genotype.set_rate() '
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
             self.assertEqual(A.get_rate("", RACES.CellEventType.DIE), 0.01)
 
-        B = RACES.DriverGenotype("B", [])
+        B = RACES.Genotype("B", [])
         B.set_rates("", {RACES.CellEventType.DIE: 0.1,
                          RACES.CellEventType.DUPLICATE: 0.2})
         try:
@@ -204,7 +204,7 @@ class TestDriverGenotype(unittest.TestCase):
                                         RACES.CellEventType.EPIGENETIC_EVENT),
                              0.0)
         except BaseException:
-            self.fail('RACES.DriverGenotype.set_rate() '
+            self.fail('RACES.Genotype.set_rate() '
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
@@ -267,7 +267,7 @@ class TestSimulation(unittest.TestCase):
     def test_add_species(self):
         sim = RACES.Simulation()
 
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
@@ -292,7 +292,7 @@ class TestSimulation(unittest.TestCase):
     def test_add_cell(self):
         sim = RACES.Simulation()
 
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
@@ -317,21 +317,21 @@ class TestSimulation(unittest.TestCase):
 
         sim.set_tissue("Liver", [100, 100])
 
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
                           RACES.CellEventType.DUPLICATE: 0.02})
         sim.add_species(A)
 
-        B = RACES.DriverGenotype("B", [[0.01, 0.01]])
+        B = RACES.Genotype("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.3})
         B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.45})
         sim.add_species(B)
 
-        C = RACES.DriverGenotype("C", [])
+        C = RACES.Genotype("C", [])
         C.set_rates("", {RACES.CellEventType.DIE: 0.1,
                          RACES.CellEventType.DUPLICATE: 0.3})
         sim.add_species(C)
@@ -358,14 +358,14 @@ class TestSimulation(unittest.TestCase):
 
         sim.set_tissue("Liver", [100, 100])
 
-        A = RACES.DriverGenotype("A", [[0.01, 0.01]])
+        A = RACES.Genotype("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.2})
         A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
                           RACES.CellEventType.DUPLICATE: 0.02})
         sim.add_species(A)
 
-        B = RACES.DriverGenotype("B", [[0.01, 0.01]])
+        B = RACES.Genotype("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.3})
         B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
