@@ -1,9 +1,9 @@
 /**
  * @file logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define simulation logger
- * @version 0.8
- * @date 2023-07-21
+ * @brief Implements simulation loggers
+ * @version 0.9
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,102 +65,6 @@ void BasicLogger::record_initial_cell(const CellInTissue& cell)
 void BasicLogger::snapshot(const Simulation& simulation)
 {
     (void)simulation;
-}
-
-JSONLogger::JSONLogger():
-    BasicLogger(), os(std::cout)
-{}
-
-void JSONLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)
-{
-    char event_symbol;
-    switch(type) {
-        case CellEventType::DIE:
-            event_symbol = 'K';
-            break;
-        case CellEventType::DUPLICATE:
-            event_symbol = 'D';
-            break;
-        case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            event_symbol = 'F';
-            break;
-        case CellEventType::EPIGENETIC_EVENT:
-            event_symbol = 'E';
-            break;
-        case CellEventType::DRIVER_GENETIC_MUTATION:
-            event_symbol = 'M';
-            break;
-        default:
-            throw std::domain_error("Unhandled event");
-    }
-
-    os << event_symbol << " " 
-       << cell.get_id() << " " 
-       << cell.get_parent_id() << " " 
-       << cell.get_genotype_id() << " "
-       << time << std::endl;
-}
-
-void JSONLogger::record_initial_cell(const CellInTissue& cell)
-{
-    if (cell.get_id() != cell.get_parent_id()) {
-        throw std::domain_error("The provided cell is not an initial cell");
-    }
-
-    os << "I " 
-       << cell.get_id() << " " 
-       << cell.get_parent_id() << " " 
-       << cell.get_genotype_id() << " 0"
-       << std::endl;
-}
-
-/*
-void JSONLogger::snapshot(const CellInTissue& cell)
-{
-    out << " {id: " << cell.get_id() 
-            << ", parent: " << cell.get_parent_id()
-            << ", position: " << static_cast<PositionInTissue>(cell) 
-            << "}";
-        sep = ',';
-}
-
-void JSONLogger::snapshot(const Species& species)
-{
-    out << "{name: " << species.get_name()
-        << ", id: " << species.get_id() 
-        << ", methylated: " << (species.is_methylated()?1:0)
-        << ", cells: ";
-    char sep{'{'};
-    for (const auto& cell: species) {
-        out << sep << " {id: " << cell.get_id() 
-            << ", parent: " << cell.get_parent_id()
-            << ", position: " << static_cast<Position>(cell) 
-            << "}";
-        sep = ',';
-    }
-    out <<"}}";
-
-    os << "{time: "<< time <<", {name: \"" << tissue.get_name() << "\"";
-    for (const auto& species: tissue) {
-        os << "," << species;
-    }
-
-    os << "}";
-}
-*/
-
-void JSONLogger::snapshot(const Simulation& simulation)
-{
-    (void)simulation;
-/*
-    auto epoch = std::chrono::system_clock::now().time_since_epoch().count();
-    os << "{epoch: "<< epoch <<", {name: \"" << tissue.get_name() << "\"";
-    for (const auto& species: tissue) {
-        os << "," << species;
-    }
-
-    os << "}" << std::endl;
-*/
 }
 
 }   // Simulation

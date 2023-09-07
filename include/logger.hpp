@@ -1,9 +1,9 @@
 /**
  * @file logger.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define simulation logger
- * @version 0.6
- * @date 2023-07-21
+ * @brief Defines simulation loggers
+ * @version 0.7
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -96,47 +96,6 @@ struct BasicLogger
      */
     inline void reset()
     {}
-};
-
-struct JSONLogger : public BasicLogger
-{
-    std::ostream& os;  //!< The output stream
-
-    /**
-     * @brief The empty constructor
-     */
-    JSONLogger();
-
-    /**
-     * @brief Record an event
-     * 
-     * @param type is the event type
-     * @param cell is the cell on which event has been occurred
-     * @param time it the event time
-     */
-    void record(const CellEventType& type, const CellInTissue& cell, const Time& time);
-
-    /**
-     * @brief Record an initial cell
-     * 
-     * @param cell is the initial cell to record 
-     */
-    void record_initial_cell(const CellInTissue& cell);
-
-    /**
-     * @brief Save a simulation snapshot
-     * 
-     * @param simulation is the simulation whose snapshot is requested
-     */
-    void snapshot(const Simulation& simulation);
-
-    /**
-     * @brief Flush archive data
-     */
-    inline void flush_archives()
-    {
-        os.flush();
-    }
 };
 
 }   // Simulation
