@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.7
- * @date 2023-08-30
+ * @version 0.8
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -101,6 +101,7 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
         event_types.push_back(CellEventType::DIE);
     }
 
+    bool selected_new_event = false;
     // deal with exclusively genomic events
     for (const auto& event_type: event_types) {
         const Time event_rate = species.get_rate(event_type);
@@ -109,11 +110,14 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
         if (event.delay>candidate_delay) {
             event.type = event_type;
             event.delay = candidate_delay;
+            selected_new_event = true;
         }
     }
 
-    event.position = Position(tissue, species.choose_a_cell(random_gen));
-    event.initial_genotype = species.get_id();
+    if (selected_new_event) {
+        event.position = Position(tissue, species.choose_a_cell(random_gen));
+        event.initial_genotype = species.get_id();
+    }
 }
 
 template<typename GENERATOR_TYPE>
@@ -122,18 +126,23 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
 {
     const auto& num_of_cells{species.num_of_cells()};
 
+    bool selected_new_event = false;
     // Deal with possible epigenetic events whenever admitted
     for (const auto& [dst_id, event_rate]: species.get_epigenetic_mutation_rates()) {
         const Time r_value = uni_dist(random_gen);
         const Time candidate_delay = -log(r_value) / (num_of_cells * event_rate);
         
         if (event.delay>candidate_delay) {
-            event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
             event.delay = candidate_delay;
-            event.position = Position(tissue, species.choose_a_cell(random_gen));
-            event.initial_genotype = species.get_id();
             event.final_genotype = dst_id;
+            selected_new_event = true;
         }
+    }
+
+    if (selected_new_event) {
+        event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
+        event.position = Position(tissue, species.choose_a_cell(random_gen));
+        event.initial_genotype = species.get_id();
     }
 }
 
