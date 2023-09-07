@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines allele representation
- * @version 0.4
- * @date 2023-08-09
+ * @version 0.5
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -97,6 +97,9 @@ class AlleleFragment : public GenomicRegion
     }
 
 public:
+    /**
+     * @brief The allele fragment length
+     */
     using Length = GenomicRegion::Length;
 
     /**
@@ -186,6 +189,9 @@ class Allele
 {
     std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
 public:
+    /**
+     * @brief The allele length
+     */
     using Length = AlleleFragment::Length;
 
     /**

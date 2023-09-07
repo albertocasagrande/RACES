@@ -1,9 +1,9 @@
 /**
  * @file cell_event.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell events
- * @version 0.3
- * @date 2023-08-05
+ * @brief Implements cell events
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

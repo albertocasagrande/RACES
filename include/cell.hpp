@@ -1,9 +1,9 @@
 /**
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell representation
- * @version 0.16
- * @date 2023-08-22
+ * @brief Defines cell representation
+ * @version 0.17
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,6 +39,11 @@
 #include "position.hpp"
 #include "driver_genotype.hpp"
 
+/**
+ * @brief An identifier for non-driver cell genotype
+ * 
+ * This macro represents the genotype identifier of the wild-type cells.
+ */
 #define NON_DRIVER_GENOTYPE std::numeric_limits<EpigeneticGenotypeId>::max()
 
 namespace Races
@@ -54,8 +59,14 @@ class Simulation;
 
 }
 
+/**
+ * @brief The cell identifier type
+ */
 using CellId = uint64_t;
 
+/**
+ * @brief A class representing cells
+ */
 class Cell {
 protected:
     static uint64_t counter;        //!< Total number of cell along the computation
@@ -327,7 +338,7 @@ protected:
      * @param y is the y axis position in the tissue
      * @param z is the z axis position in the tissue
      */
-    CellInTissue(const AxisValue& x, const AxisValue& y, const AxisValue& z);
+    CellInTissue(const AxisPosition& x, const AxisPosition& y, const AxisPosition& z);
 
     /**
      * @brief Copy a cell into a cell in a tissue

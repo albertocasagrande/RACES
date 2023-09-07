@@ -1,9 +1,9 @@
 /**
  * @file driver.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Driver genotype representation
- * @version 0.7
- * @date 2023-08-05
+ * @brief Implements the driver genotype representation
+ * @version 0.8
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -249,8 +249,8 @@ namespace std
 
 std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRates& epigentic_rates)
 {
-    out << "{methylation: " << epigentic_rates.get_methylation_rate() 
-            << ",demethylation: " << epigentic_rates.get_demethylation_rate() << "}";
+    out << "{\"on\": " << epigentic_rates.get_methylation_rate() 
+            << ",\"off\": " << epigentic_rates.get_demethylation_rate() << "}";
     return out;
 }
 

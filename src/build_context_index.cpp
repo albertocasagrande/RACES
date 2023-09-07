@@ -50,7 +50,7 @@ class IndexBuilder
     unsigned int bits_per_abs_position;
     bool quiet;
 
-    template<typename ABSOLUTE_GENOMIC_POSITION>
+    template<typename GENOME_WIDE_POSITION>
     std::vector<Races::Passengers::GenomicRegion> build_and_save_context_index() const
     {
         using namespace Races;
@@ -58,7 +58,7 @@ class IndexBuilder
 
         std::vector<GenomicRegion> chr_regions;
         {
-            using Index = ContextIndex<ABSOLUTE_GENOMIC_POSITION>;
+            using Index = ContextIndex<GENOME_WIDE_POSITION>;
 
             Index context_index;
 

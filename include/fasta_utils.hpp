@@ -2,8 +2,8 @@
  * @file fasta_utils.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines support utilities for FASTA files
- * @version 0.5
- * @date 2023-08-12
+ * @version 0.6
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,6 +40,10 @@
 namespace Races
 {
 
+/**
+ * @brief The generic Input/Output namespace
+ * 
+ */
 namespace IO
 {
 

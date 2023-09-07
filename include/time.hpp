@@ -1,9 +1,9 @@
 /**
  * @file time.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define time type
- * @version 0.2
- * @date 2023-07-21
+ * @brief Defines time type
+ * @version 0.3
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,6 +36,9 @@
 namespace Races 
 {
 
+/**
+ * @brief The simulation time type
+ */
 using Time = long double;
 
 }  // Races

@@ -1,9 +1,9 @@
 /**
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement a 2D plot window by using SDL2
- * @version 0.3
- * @date 2023-08-05
+ * @brief Implements a 2D plot window by using SDL2
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,10 @@ namespace Races
 namespace UI 
 {
 
+
+/**
+ * @brief SDL 2D plotting windows
+ */
 class SDLWindow : public Plot2DWindow
 {
 	enum {
@@ -138,9 +142,9 @@ public:
 	/**
 	 * @brief Get the size of the a string 
 	 * 
-	 * @param text is the string to be drawn
-	 * @param width[out] is the width of the string
-	 * @param height[out] is the height of the string
+	 * @param[in] text is the string to be drawn
+	 * @param[out] width is the width of the string
+	 * @param[out] height is the height of the string
 	 */
 	void get_text_size(const std::string& text, unsigned int& width, unsigned int& height);
 

@@ -1,9 +1,9 @@
 /**
  * @file cell.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell representation
- * @version 0.10
- * @date 2023-08-22
+ * @brief Implements cell representation
+ * @version 0.11
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -88,7 +88,7 @@ CellInTissue::CellInTissue(const PositionInTissue& position):
 {
 }
 
-CellInTissue::CellInTissue(const AxisValue& x, const AxisValue& y, const AxisValue& z):
+CellInTissue::CellInTissue(const AxisPosition& x, const AxisPosition& y, const AxisPosition& z):
     Cell(), PositionInTissue(x, y, z)
 {
 }

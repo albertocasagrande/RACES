@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.7
- * @date 2023-08-05
+ * @version 0.8
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,6 +52,9 @@ namespace Races
 namespace Drivers
 {
 
+/**
+ * @brief The namespace of driver simulations
+ */
 namespace Simulation
 {
 
@@ -506,7 +509,7 @@ public:
     /**
      * @brief Add a cell to the simulated tissue
      * 
-     * @param genotype_ is the driver genotype of the new cell
+     * @param genotype is the driver genotype of the new cell
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */

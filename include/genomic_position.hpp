@@ -2,8 +2,8 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic position and related functions
- * @version 0.4
- * @date 2023-08-05
+ * @version 0.5
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,12 +42,14 @@ namespace Passengers
 {
 
 /**
- * @brief 
+ * @brief The chromosome identifier type
  */
-typedef uint8_t ChromosomeId;
+using ChromosomeId = uint8_t;
 
-
-typedef uint32_t ChrPosition;
+/**
+ * @brief The chromosomic position type
+ */
+using ChrPosition = uint32_t;
 
 /**
  * @brief A class to represent genomic position

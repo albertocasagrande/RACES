@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to build a context index
- * @version 0.11
- * @date 2023-08-14
+ * @version 0.12
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,19 +53,30 @@ namespace Races
 namespace Passengers
 {
 
-template<typename ABSOLUTE_GENOMIC_POSITION = uint32_t,
-         std::enable_if_t<std::is_integral_v<ABSOLUTE_GENOMIC_POSITION>
-                          && std::is_unsigned_v<ABSOLUTE_GENOMIC_POSITION>, bool> = true>
+/**
+ * @brief Genome-wise mutational context indices
+ * 
+ * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
+ */
+template<typename GENOME_WIDE_POSITION = uint32_t,
+         std::enable_if_t<std::is_integral_v<GENOME_WIDE_POSITION>
+                          && std::is_unsigned_v<GENOME_WIDE_POSITION>, bool> = true>
 struct ContextIndex
 {
-    using AbsoluteGenomicPosition = ABSOLUTE_GENOMIC_POSITION;
+    /**
+     * @brief The genome-wide position type
+     */
+    using GenomeWidePosition = GENOME_WIDE_POSITION;
 protected:
-    using ContextPositionMap = std::map<MutationalContext, std::vector<AbsoluteGenomicPosition> >;
+    /**
+     * @brief Maps associating mutational contexts to their position in the genome
+     */
+    using ContextPositionMap = std::map<MutationalContext, std::vector<GenomeWidePosition> >;
 
     std::shared_ptr<ContextPositionMap> context2pos;                  //!< the context-genomic positions map
-    std::map<AbsoluteGenomicPosition, ChromosomeId> abs_pos2chr;      //!< the absolute genomic position-chromosome id map
+    std::map<GenomeWidePosition, ChromosomeId> abs_pos2chr;      //!< the absolute genomic position-chromosome id map
 
-    AbsoluteGenomicPosition genome_size;  //!< the genome size
+    GenomeWidePosition genome_size;  //!< the genome size
 
     /**
      * @brief Initialize a skipped contexts array
@@ -162,7 +173,7 @@ protected:
      * 
      * @param[in,out] fasta_stream is the input FASTA stream
      * @param[in,out] c_automata is an extended context automaton
-     * @param[in,out] current_pos is the current position
+     * @param[in,out] position is the current position
      * @param[in] aimed_position is the aimed position
      */
     void skip_to(std::ifstream& fasta_stream, ExtendedContextAutomaton& c_automata, 
@@ -309,7 +320,7 @@ protected:
             for (const auto& nucleotide2 : bases) {
                 for (const auto& nucleotide3 : bases) {
                     MutationalContext context(std::string{nucleotide1, nucleotide2, nucleotide3});
-                    (*context2pos)[context] = std::vector<ABSOLUTE_GENOMIC_POSITION>();
+                    (*context2pos)[context] = std::vector<GENOME_WIDE_POSITION>();
                 }
             }
         }
@@ -509,8 +520,6 @@ public:
      * @brief Find the context positions in a FASTA stream
      * 
      * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
-     * @param[in] sampling_rate is the number of contexts to be found in order to record a context 
-     *          in the index
      * @param[in,out] progress_bar is the progress bar 
      * @return the positions of the contexts in the FASTA sequences whose name 
      *      corresponds to a chromosome according to 
@@ -576,7 +585,7 @@ public:
      * 
      * @return a constant reference to simulator context positions
      */
-    inline const std::map<MutationalContext, std::vector<ABSOLUTE_GENOMIC_POSITION> >& get_context_positions() const
+    inline const std::map<MutationalContext, std::vector<GENOME_WIDE_POSITION> >& get_context_positions() const
     {
         return *context2pos;
     }
@@ -587,7 +596,7 @@ public:
      * @param context is the searched context
      * @return the vector of the absolute genomic positions 
      */
-    inline const std::vector<ABSOLUTE_GENOMIC_POSITION>& operator[](const MutationalContext& context) const
+    inline const std::vector<GENOME_WIDE_POSITION>& operator[](const MutationalContext& context) const
     {
         return context2pos->at(context);
     }
@@ -599,7 +608,7 @@ public:
      * @param index is the index of the position that will be extracted
      * @return the extracted absolute position for `context`
      */
-    ABSOLUTE_GENOMIC_POSITION extract(const MutationalContext& context, const size_t index)
+    GENOME_WIDE_POSITION extract(const MutationalContext& context, const size_t index)
     {
         auto& context_pos = context2pos->at(context);
 
@@ -627,7 +636,7 @@ public:
      * @param context is the context whose position will be inserted
      * @param absolute_position is the absolute position to insert
      */
-    void insert(const MutationalContext& context, const ABSOLUTE_GENOMIC_POSITION& absolute_position)
+    void insert(const MutationalContext& context, const GENOME_WIDE_POSITION& absolute_position)
     {
         context2pos->at(context).push_back(absolute_position);
     }
@@ -640,7 +649,7 @@ public:
      * @param index is the index in the position vector of `context`
      *          in which `absolute_position` will inserted
      */
-    void insert(const MutationalContext& context, const ABSOLUTE_GENOMIC_POSITION& absolute_position, 
+    void insert(const MutationalContext& context, const GENOME_WIDE_POSITION& absolute_position, 
                 const size_t index)
     {
         auto& context_pos = context2pos->at(context);
@@ -686,7 +695,7 @@ public:
      * @param abs_position is an absolute genomic position
      * @return the genomic position corresponding to `abs_position`  
      */
-    GenomicPosition get_genomic_position(const ABSOLUTE_GENOMIC_POSITION& abs_position) const
+    GenomicPosition get_genomic_position(const GENOME_WIDE_POSITION& abs_position) const
     {
         auto it = abs_pos2chr.upper_bound(abs_position);
         --it;
@@ -699,7 +708,7 @@ public:
      * 
      * @return get the genome size 
      */
-    inline const ABSOLUTE_GENOMIC_POSITION& get_genome_size() const
+    inline const GENOME_WIDE_POSITION& get_genome_size() const
     {
         return genome_size;
     }
@@ -713,7 +722,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        uint8_t abs_pos_size = sizeof(ABSOLUTE_GENOMIC_POSITION);
+        uint8_t abs_pos_size = sizeof(GENOME_WIDE_POSITION);
 
         archive & abs_pos_size
                 & *context2pos
@@ -736,10 +745,10 @@ public:
 
         archive & abs_pos_size;
 
-        if (abs_pos_size != sizeof(ABSOLUTE_GENOMIC_POSITION)) {
+        if (abs_pos_size != sizeof(GENOME_WIDE_POSITION)) {
             std::ostringstream oss;
 
-            oss << "Absolute position size (" << sizeof(ABSOLUTE_GENOMIC_POSITION) 
+            oss << "Absolute position size (" << sizeof(GENOME_WIDE_POSITION) 
                 << " bytes) does not match file object one (" << static_cast<size_t>(abs_pos_size) 
                 << " bytes)." ;
 

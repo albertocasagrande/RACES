@@ -2,8 +2,8 @@
  * @file position.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a position class in a tissue
- * @version 0.4
- * @date 2023-08-05
+ * @version 0.5
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,7 +46,7 @@ namespace Simulation
 class Tissue;
 
 /**
- * @brief Directions
+ * @brief A class to represent 2D/3D directions
  */
 struct Direction {
     uint8_t bit_vector; 
@@ -54,6 +54,9 @@ struct Direction {
     int get_delta(const size_t& axis_index) const;
 
 public:
+    /**
+     * @brief Canonical directions
+     */
     enum Value {
         X_NULL = 0x00,
         X_DOWN = 0x01,
@@ -66,6 +69,11 @@ public:
         Z_UP = 0x02 << 4
     };
 
+    /**
+     * @brief A constructor
+     * 
+     * @param value is a direction obtained by composing `Value`'s
+     */
     Direction(const uint8_t value);
 
     int get_delta_x() const;
@@ -95,6 +103,9 @@ int Direction::get_delta_z() const
     return get_delta(2);
 }
 
+/**
+ * @brief A class representing the difference between two positions
+ */
 struct PositionDelta {
     int x;  //!< x axis
     int y;  //!< y axis
@@ -123,11 +134,13 @@ struct PositionDelta {
     PositionDelta operator-() const;
 };
 
-using AxisValue = uint16_t;
+/**
+ * @brief The type of a position on an axis
+ */
+using AxisPosition = uint16_t;
 
 /**
  * @brief A 3D position in a tissues
- * 
  */
 struct PositionInTissue {
     int16_t x;  //!< x axis
@@ -140,13 +153,13 @@ struct PositionInTissue {
     PositionInTissue();
 
     /**
-     * @brief Construct a new Position In Tissue object
+     * @brief A new constructor
      * 
      * @param x is the x-axis position
      * @param y is the y-axis position
      * @param z is the z-axis position
      */
-    PositionInTissue(const AxisValue x, const AxisValue y, const AxisValue z=0);
+    PositionInTissue(const AxisPosition x, const AxisPosition y, const AxisPosition z=0);
 
     /**
      * @brief Add a delta to the position
@@ -230,10 +243,10 @@ struct Position : public PositionInTissue
      * @param y is the y axis position in the tissue
      * @param z is the z axis position in the tissue
      */
-    Position(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z);
+    Position(Tissue& tissue, const AxisPosition& x, const AxisPosition& y, const AxisPosition& z);
 
     /**
-     * @brief Construct a new Position object
+     * @brief A constructor
      * 
      * @param tissue is the tissue referred by the position
      * @param position is the position in the tissue
@@ -252,21 +265,35 @@ struct Position : public PositionInTissue
 namespace std
 {
 
+/**
+ * @brief Write a direction in an output stream
+ * 
+ * @param os is the output stream
+ * @param direction is the direction to be streamed
+ * @return a reference to the output stream
+ */
 std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Direction& direction);
 
+/**
+ * @brief Write a position delta in an output stream
+ * 
+ * @param os is the output stream
+ * @param delta is the position delta to be streamed
+ * @return a reference to the output stream
+ */
 std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionDelta& delta);
 
 /**
- * @brief Stream the position in output
+ * @brief Write a position in a tissue in an output stream
  * 
  * @param os is the output stream
- * @param position is the position to be streamed
+ * @param position is the position in a tissue to be streamed
  * @return a reference to the output stream
  */
 std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionInTissue& position);
 
 /**
- * @brief Stream the position in output
+ * @brief Write a position in an output stream
  * 
  * @param os is the output stream
  * @param position is the position to be streamed

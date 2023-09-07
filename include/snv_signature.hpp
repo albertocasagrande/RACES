@@ -2,8 +2,8 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Variation Mutation mutational signature
- * @version 0.10
- * @date 2023-08-05
+ * @version 0.11
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,7 +71,7 @@ public:
      * @brief A constructor
      * 
      * @param context is the mutational type context
-     * @param substituting_base is the base replacing the context central nucleotide
+     * @param replace_base is the base replacing the context central nucleotide
      */
     MutationalType(const MutationalContext& context, const char& replace_base);
 
@@ -79,7 +79,7 @@ public:
      * @brief A constructor
      * 
      * @param context is the mutational type context
-     * @param substituting_base is the base replacing the context central nucleotide
+     * @param replace_base is the base replacing the context central nucleotide
      */
     MutationalType(const std::string& context, const char& replace_base);
 

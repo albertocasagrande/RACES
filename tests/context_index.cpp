@@ -2,8 +2,8 @@
  * @file context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Testing Races::Passengers::ContextIndex class
- * @version 0.3
- * @date 2023-08-11
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(context_index_creation)
     }
 }
 
-template<typename ABSOLUTE_GENOMIC_POSITION>
-std::set<Races::Passengers::GenomicPosition> get_genomic_positions(const Races::Passengers::ContextIndex<ABSOLUTE_GENOMIC_POSITION>& context_index,
+template<typename GENOME_WIDE_POSITION>
+std::set<Races::Passengers::GenomicPosition> get_genomic_positions(const Races::Passengers::ContextIndex<GENOME_WIDE_POSITION>& context_index,
                                                                    const Races::Passengers::MutationalContext& mutational_context)
 {
     std::set<Races::Passengers::GenomicPosition> positions;

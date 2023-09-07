@@ -1,9 +1,9 @@
 /**
  * @file binary_logger.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define a binary simulation logger
- * @version 0.13
- * @date 2023-08-22
+ * @brief Implements a binary simulation logger
+ * @version 0.14
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

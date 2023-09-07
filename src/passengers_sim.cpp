@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.3
- * @date 2023-08-19
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -282,7 +282,7 @@ class PassengersSimulator
         return leaves_mutations;
     }
 
-    static std::vector<Races::Drivers::Simulation::AxisValue>
+    static std::vector<Races::Drivers::Simulation::AxisPosition>
     get_corner(const nlohmann::json& sampler_region_json, const std::string& field_name)
     {
         if (!sampler_region_json.contains(field_name)) {
@@ -296,10 +296,10 @@ class PassengersSimulator
             throw std::runtime_error("The \"" + field_name + "\" must be an array of natural values");
         }
 
-        std::vector<Races::Drivers::Simulation::AxisValue> corner;
+        std::vector<Races::Drivers::Simulation::AxisPosition> corner;
 
         for (const auto& axis_value : corner_json) {
-            corner.push_back(axis_value.template get<Races::Drivers::Simulation::AxisValue>());
+            corner.push_back(axis_value.template get<Races::Drivers::Simulation::AxisPosition>());
         }
 
         if (corner.size()<2 || corner.size()>3) {

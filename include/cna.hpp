@@ -2,8 +2,8 @@
  * @file cna.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class for copy number alterations
- * @version 0.1
- * @date 2023-08-09
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,9 @@ namespace Passengers
  */
 struct CopyNumberAlteration
 {
+    /**
+     * @brief The CNA type
+     */
     enum class Type {
         AMPLIFICATION,
         DELETION

@@ -2,8 +2,8 @@
  * @file genomic_region.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genomic region
- * @version 0.1
- * @date 2023-07-30
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,6 +47,9 @@ namespace Passengers
  */
 struct GenomicRegion
 {
+    /**
+     * @brief The genomic region length
+     */
     using Length = ChrPosition;
 protected:
     GenomicPosition initial_pos;    //!< the genomic region initial position
@@ -225,9 +228,9 @@ public:
      * @return `true` if and only if the current region ends before 
      *          `genomic_region`'s initial position
      */
-    inline bool ends_before(const GenomicRegion& genomic_position) const
+    inline bool ends_before(const GenomicRegion& genomic_region) const
     {
-        return ends_before(genomic_position.get_begin());
+        return ends_before(genomic_region.get_begin());
     }
 
     /**
@@ -237,9 +240,9 @@ public:
      * @return `true` if and only if the current region ends before 
      *          `genomic_region`'s initial position
      */
-    inline bool ends_before(GenomicRegion&& genomic_position) const
+    inline bool ends_before(GenomicRegion&& genomic_region) const
     {
-        return ends_before(genomic_position);
+        return ends_before(genomic_region);
     }
 
     /**
@@ -249,9 +252,9 @@ public:
      * @return `true` if and only if the current region ends before 
      *          `genomic_position`
      */
-    inline bool begins_after(const GenomicRegion& genomic_position) const
+    inline bool begins_after(const GenomicRegion& genomic_region) const
     {
-        return genomic_position.ends_before(*this);
+        return genomic_region.ends_before(*this);
     }
 
     /**

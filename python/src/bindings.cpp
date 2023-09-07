@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement Python bindings
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,8 +49,8 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(run_up_to_overloads, SimulationWrapper::static_r
 
 BOOST_PYTHON_MODULE(RACES)
 {
-    class_<RacesSim::PositionInTissue>("Position", init<RacesSim::AxisValue, RacesSim::AxisValue>())
-        .def(init<RacesSim::AxisValue, RacesSim::AxisValue, RacesSim::AxisValue>())
+    class_<RacesSim::PositionInTissue>("Position", init<RacesSim::AxisPosition, RacesSim::AxisPosition>())
+        .def(init<RacesSim::AxisPosition, RacesSim::AxisPosition, RacesSim::AxisPosition>())
         .def(self_ns::str(self))
         .def_readwrite("x", &RacesSim::PositionInTissue::x)
         .def_readwrite("y", &RacesSim::PositionInTissue::y)

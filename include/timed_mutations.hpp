@@ -2,8 +2,8 @@
  * @file timed_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines timed genomic mutations
- * @version 0.1
- * @date 2023-07-28
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -66,8 +66,8 @@ struct TimedGenomicMutation {
     /**
      * @brief A constructor
      * 
-     * @param initial_id is the initial genomic genotype
-     * @param final_id is the final genomic genotype
+     * @param initial_genotype is the initial genomic genotype
+     * @param final_genotype is the final genomic genotype
      * @param time is the simulation time of the genomic mutation
      */
     TimedGenomicMutation(const Genotype& initial_genotype, const Genotype& final_genotype, const Time& time);

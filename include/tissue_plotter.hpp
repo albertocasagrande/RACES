@@ -1,9 +1,9 @@
 /**
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define a UI window to plot a tissue
- * @version 0.8
- * @date 2023-08-05
+ * @brief Defines a UI window to plot a tissue
+ * @version 0.9
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -76,6 +76,11 @@ std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, den
     return oss.str();
 }
 
+/**
+ * @brief A tissue plotting class
+ * 
+ * @tparam PLOT_WINDOW is the type of plotting window
+ */
 template<typename PLOT_WINDOW>
 class TissuePlotter {
 	using Tissue = Drivers::Simulation::Tissue;
@@ -280,6 +285,7 @@ public:
 	 * @brief A constructor
 	 * 
 	 * @param tissue is the tissue to plot
+	 * @param frames_per_second is the number of frames per second
 	 */
 	explicit TissuePlotter(const Drivers::Simulation::Tissue& tissue, const unsigned int frames_per_second=10):
 		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulation"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), frames_per_second)
@@ -291,6 +297,7 @@ public:
 	 * 
 	 * @param tissue is the tissue to plot
 	 * @param name is the name of the plotting window
+	 * @param frames_per_second is the number of frames per second
 	 */
 	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const std::string& name,
 				  const unsigned int frames_per_second=10):

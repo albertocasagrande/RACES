@@ -1,9 +1,9 @@
 /**
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define some archive classes and their methods
- * @version 0.5
- * @date 2023-08-03
+ * @brief Implements some archive classes and their methods
+ * @version 0.6
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

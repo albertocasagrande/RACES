@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.5
- * @date 2023-08-09
+ * @version 0.6
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -61,7 +61,6 @@ struct SNV : public GenomicPosition
      * 
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
-     * @param position is the SNV position
      * @param context is the SNV context
      * @param mutated_base is the mutated base
      * @throw std::domain_error `original_base` and `mutated_base` are the same
@@ -95,7 +94,6 @@ struct SNV : public GenomicPosition
      * 
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
-     * @param position is the SNV position
      * @param context is the SNV context
      * @param mutated_base is the mutated base
      * @param cause is the cause of the SNV

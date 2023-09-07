@@ -1,9 +1,9 @@
 /**
  * @file species.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell representation
- * @version 0.12
- * @date 2023-08-05
+ * @brief Defines species representation
+ * @version 0.13
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

@@ -1,9 +1,9 @@
 /**
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define tissue class
- * @version 0.15
- * @date 2023-08-05
+ * @brief Defines tissue class
+ * @version 0.16
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,8 +52,14 @@ namespace Drivers
 namespace Simulation
 {
 
+/**
+ * @brief The type of tissue axis sizes
+ */
 using AxisSize = uint16_t;
 
+/**
+ * @brief A class to represent tissues
+ */
 class Tissue {
     using GenotypePosition = std::map<GenotypeId, std::vector<size_t>>;
 
@@ -344,11 +350,27 @@ public:
         }
     public:
 
+        /**
+         * @brief Test whether the referenced cell has a driver mutation
+         * 
+         * @return `true` if and only if the referenced cell has a driver mutation 
+         */
         inline bool has_driver_mutations() const
         {
             return tissue.cell_pointer(position)!=nullptr;
         }
 
+        /**
+         * @brief Get a constant reference to the referenced cell
+         * 
+         * This method returns a constant reference of the referenced cell. When 
+         * the referenced cell has not a driver mutation, the method throws 
+         * a `std::runtime_error`.
+         * 
+         * @return a constant reference of the referenced cell
+         * @throws `std::runtime_error` if the referenced cell has not a driver 
+         *      mutation
+         */
         operator const CellInTissue&() const
         {
             const auto ptr = tissue.cell_pointer(position);

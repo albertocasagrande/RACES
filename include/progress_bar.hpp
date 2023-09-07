@@ -1,9 +1,9 @@
 /**
  * @file progress_bar.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define a progress bar
- * @version 0.8
- * @date 2023-08-13
+ * @brief Defines a progress bar
+ * @version 0.9
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

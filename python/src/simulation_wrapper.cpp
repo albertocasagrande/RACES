@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement the Python wrapper class and functions for `Races::Simulation`
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -135,11 +135,11 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
     namespace bp = boost::python;
     using namespace Races::Drivers::Simulation;
 
-    std::vector<AxisValue> c_position;
+    std::vector<AxisPosition> c_position;
     try {
-        c_position = std::vector<AxisValue>{
-            bp::stl_input_iterator<AxisValue>(position),
-            bp::stl_input_iterator<AxisValue>()
+        c_position = std::vector<AxisPosition>{
+            bp::stl_input_iterator<AxisPosition>(position),
+            bp::stl_input_iterator<AxisPosition>()
         };
     } catch (...) {
         throw std::domain_error("Expected a list of integer numbers");

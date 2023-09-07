@@ -2,8 +2,8 @@
  * @file sam_generator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes to generate genomic mutations SAM file
- * @version 0.1
- * @date 2023-08-13
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,6 +51,9 @@ namespace Races
 namespace Passengers
 {
 
+/**
+ * @brief The Input/Output namespace for classes related to passenger mutations
+ */
 namespace IO
 {
 

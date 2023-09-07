@@ -1,9 +1,9 @@
 /**
  * @file statistics.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define simulation statistics
- * @version 0.6
- * @date 2023-08-05
+ * @brief Defines simulation statistics
+ * @version 0.7
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -64,8 +64,6 @@ struct SpeciesStatistics
 
     /**
      * @brief The empty constructor
-     * 
-     * @param num_of_cells is the number of cells in the species
      */
     SpeciesStatistics();
 
@@ -197,10 +195,11 @@ public:
     {
         return s_statistics.count(species_id)==1;
     }
+
     /**
      * @brief Test whether the object contains statistics for a species
      * 
-     * @param species_id is the species whose statistics are aimed
+     * @param species is the species whose statistics are aimed
      * @return `true` if and only if the object contains statistics for the 
      *          specified species
      */

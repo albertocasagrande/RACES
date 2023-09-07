@@ -1,9 +1,9 @@
 /**
  * @file palette.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define colors and a palette
- * @version 0.1
- * @date 2023-07-14
+ * @brief Defines colors and a palette
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,22 +37,51 @@
 namespace Races 
 {
 
+/**
+ * @brief The namespace of RACES UI
+ */
 namespace UI 
 {
 
+/**
+ * @brief A class to represent colors
+ */
 struct Color {
-	uint8_t red;
-	uint8_t green;
-	uint8_t blue;
-	uint8_t alpha;
+	uint8_t red;	//!< The red level
+	uint8_t green;	//!< The green level
+	uint8_t blue;	//!< The blue level
+	uint8_t alpha;	//!< The alpha level
 
+	/**
+	 * @brief The empty constructor
+	 */
 	Color();
 
+	/**
+	 * @brief A constructor
+	 * 
+	 * This method creates a totally opaque color.
+	 * 
+	 * @param red is the red level of the new color
+	 * @param green is the green level of the new color
+	 * @param blue is the blue level of the new color
+	 */
 	Color(const uint8_t red, const uint8_t green, const uint8_t blue);
 
+	/**
+	 * @brief A constructor
+	 * 
+	 * @param red is the red level of the new color
+	 * @param green is the green level of the new color
+	 * @param blue is the blue level of the new color
+	 * @param alpha is the alpha level of the new color
+	 */
 	Color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha);
 };
 
+/**
+ * @brief The UI palette
+ */
 extern std::vector<Color> palette;
 
 } // UI

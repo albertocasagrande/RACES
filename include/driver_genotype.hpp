@@ -1,9 +1,9 @@
 /**
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Driver genotype representation
- * @version 0.10
- * @date 2023-08-05
+ * @brief Defines driver genotype representation
+ * @version 0.11
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

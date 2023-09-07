@@ -1,9 +1,9 @@
 /**
  * @file sampler.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define classes to sample cells in a tissue
- * @version 0.3
- * @date 2023-07-26
+ * @brief Defines classes to sample cells in a tissue
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -82,6 +82,9 @@ class RectangleSampler : public BasicSampler
     Simulation::PositionInTissue upper_corner;  //!< The upper corner in the sampler hyper-rectangle
 
 public:
+    /**
+     * @brief Constant iterators for the sample cells
+     */
     class const_iterator
     {
         const RectangleSampler* sampler;

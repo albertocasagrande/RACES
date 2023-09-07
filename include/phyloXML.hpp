@@ -1,9 +1,9 @@
 /**
  * @file phyloXML.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define phyloXML stream
- * @version 0.3
- * @date 2023-08-05
+ * @brief Defines phyloXML stream
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,6 +42,9 @@ namespace Races
 namespace Drivers
 {
 
+/**
+ * @brief The namespace of IO classes in driver simulation
+ */
 namespace IO
 {
 

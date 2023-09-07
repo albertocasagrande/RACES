@@ -2,8 +2,8 @@
  * @file position.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a position class in a tissue
- * @version 0.3
- * @date 2023-07-21
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -88,7 +88,7 @@ PositionInTissue::PositionInTissue():
     x(0), y(0), z(0)
 {}
 
-PositionInTissue::PositionInTissue(const AxisValue x, const AxisValue y, const AxisValue z):
+PositionInTissue::PositionInTissue(const AxisPosition x, const AxisPosition y, const AxisPosition z):
     x(x), y(y), z(z)
 {}
 
@@ -156,7 +156,7 @@ Position::Position():
     PositionInTissue(), tissue(nullptr)
 {}
 
-Position::Position(Tissue& tissue, const AxisValue& x, const AxisValue& y, const AxisValue& z):
+Position::Position(Tissue& tissue, const AxisPosition& x, const AxisPosition& y, const AxisPosition& z):
     PositionInTissue(x, y, z), tissue(&tissue)
 {}
 

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.6
- * @date 2023-08-22
+ * @version 0.7
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,9 @@ namespace Races
 namespace Drivers 
 {
 
+/**
+ * @brief A class representing phylogenetic forests
+ */
 class PhylogeneticForest
 {
     std::map<CellId,  Cell> cells;                  //!< The forest cell id-cell map
@@ -154,6 +157,9 @@ public:
         friend class PhylogeneticForest;
     };
 
+    /**
+     * @brief A non-constant node of the forest
+     */
     class node : public const_node
     {
 

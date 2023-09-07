@@ -1,9 +1,9 @@
 /**
  * @file races_icon.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define the RACES icon
- * @version 0.1
- * @date 2023-07-19
+ * @brief Defines the RACES icon
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 

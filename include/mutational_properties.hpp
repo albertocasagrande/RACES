@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.2
- * @date 2023-08-19
+ * @version 0.3
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -82,10 +82,7 @@ class SpeciesMutationalProperties
 public:
 
     /**
-     * @brief The constructor
-     * 
-     * @param simulation is the tissue simulation 
-     * @param species_properties is the list of species mutational properties
+     * @brief The empty constructor
      */
     SpeciesMutationalProperties();
 

@@ -1,9 +1,9 @@
 /**
  * @file cell_event.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Cell events
- * @version 0.6
- * @date 2023-08-05
+ * @brief Defines cell events
+ * @version 0.7
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -75,6 +75,9 @@ struct CellEvent
     EpigeneticGenotypeId final_genotype;    //!< final genotype for mutational events
     Time delay;                             //!< event delay
 
+    /**
+     * @brief The empty constructor
+     */
     CellEvent();
 };
 

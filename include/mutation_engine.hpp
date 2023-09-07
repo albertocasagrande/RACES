@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.6
- * @date 2023-08-30
+ * @version 0.8
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -108,10 +108,10 @@ struct MutationStatistics
  * The objects of this class place mutations on the cell genome according 
  * to a phylogenetic tree
  * 
- * @tparam ABSOLUTE_GENOMIC_POSITION is the absolute position type
+ * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
  * @tparam RANDOM_GENERATOR is the type of random generator
  */
-template<typename ABSOLUTE_GENOMIC_POSITION = uint32_t, typename RANDOM_GENERATOR = std::mt19937_64>
+template<typename GENOME_WIDE_POSITION = uint32_t, typename RANDOM_GENERATOR = std::mt19937_64>
 class MutationEngine
 {
     /**
@@ -133,11 +133,11 @@ class MutationEngine
     /**
      * @brief The stack of contexts removed from a context index
      */
-    using ContextStack = std::stack<std::pair<MutationalContext, ABSOLUTE_GENOMIC_POSITION>>;
+    using ContextStack = std::stack<std::pair<MutationalContext, GENOME_WIDE_POSITION>>;
 
     RANDOM_GENERATOR generator; //!< the random generator
 
-    ContextIndex<ABSOLUTE_GENOMIC_POSITION> context_index;  //!< the genome context index
+    ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
     ContextStack context_stack;                             //!< the stack of the contexts removed from `context_index`
 
     size_t num_of_alleles;                                  //!< number of alleles 
@@ -252,7 +252,7 @@ class MutationEngine
             mutated_base = MutationalContext::get_complement(mutated_base);
         }
 
-        ABSOLUTE_GENOMIC_POSITION pos = context_index.extract(context, index);
+        GENOME_WIDE_POSITION pos = context_index.extract(context, index);
 
         context_stack.push({context, pos});
 
@@ -306,7 +306,7 @@ class MutationEngine
     /**
      * @brief Place the mutations associated to a cell in the phylogenetic tree
      * 
-     * @tparam ABSOLUTE_GENOMIC_POSITION is the absolute position type
+     * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a phylogenetic tree node representing a cell
      * @param cell_mutations are the cell mutations
      */
@@ -463,11 +463,14 @@ public:
     /**
      * @brief A constructor
      * 
+     * @param context_index is the genome context index
+     * @param num_of_alleles is the number of alleles in wild-type cells
      * @param default_mutational_coefficients is the map of the default mutational signature coefficients
      * @param mutational_signatures is the map of the mutational signatures
      * @param mutational_properties is the species mutational properties
+     * @param seed is the random generator seed
      */
-    MutationEngine(ContextIndex<ABSOLUTE_GENOMIC_POSITION>& context_index,
+    MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const size_t& num_of_alleles,
                    const std::map<std::string, double>& default_mutational_coefficients,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,

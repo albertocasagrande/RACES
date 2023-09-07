@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.9
- * @date 2023-08-13
+ * @version 0.10
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,9 @@
 namespace Races 
 {
 
+/**
+ * @brief A namespace for classes related to passenger mutations
+ */
 namespace Passengers
 {
 
@@ -53,6 +56,9 @@ namespace Passengers
  */
 class ChromosomeMutations
 {
+    /**
+     * @brief The chromosome length type
+     */
     using Length = GenomicRegion::Length;
 private:
     ChromosomeId identifier;    //!< the chromosome identifier
@@ -285,6 +291,9 @@ class GenomeMutations
     std::map<ChromosomeId, ChromosomeMutations> chromosomes;     //!< the chromosomes
 
 public:
+    /**
+     * @brief The genome length type
+     */
     using Length = size_t;
 
     /**
@@ -308,8 +317,8 @@ public:
      * @param context_index is a context index
      * @param num_of_alleles is the initial number of alleles
      */
-    template<typename ABSOLUTE_GENOMIC_POSITIONS>
-    GenomeMutations(const ContextIndex<ABSOLUTE_GENOMIC_POSITIONS>& context_index, const size_t& num_of_alleles)
+    template<typename GENOME_WIDE_POSITIONS>
+    GenomeMutations(const ContextIndex<GENOME_WIDE_POSITIONS>& context_index, const size_t& num_of_alleles)
     {
         std::vector<GenomicRegion> chr_regions = context_index.get_chromosome_regions();
 
@@ -390,6 +399,7 @@ public:
      * method returns `false`
      * 
      * @param genomic_region is the genomic region whose copy number must be increased
+     * @param allele_id is the identifier of the allele to be amplified
      * @return `true` if and only if the all the fragments touching `genomic_region` 
      *      have `allele_id` among their allele ids and the region has been amplified
      */
@@ -404,7 +414,8 @@ public:
      * method returns `false`
      * 
      * @param genomic_region is the genomic region whose copy number must be decrease
-     * @return the id of the allele to be removed
+     * @param allele_id is the identifier of the allele from which the region must be removed
+     * @return `true` if and only if deletion has been successful 
      * @throw std::domain_error no allele can be removed
      */
     bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
@@ -417,8 +428,9 @@ public:
      * fails.
      * 
      * @param snv is the SNV to be inserted in the chromosome
-     * @return `true` if and only if the chromosome do not 
-     *      contain any other SNVs in `snv`'s mutational context
+     * @param allele_id is the identifier of the allele in which the SNV must be applied
+     * @return `true` if and only if the chromosome do not contain any other SNVs in 
+     *      `snv`'s mutational context
      */
     bool insert(const SNV& snv, const AlleleId& allele_id);
 

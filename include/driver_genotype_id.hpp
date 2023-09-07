@@ -2,8 +2,8 @@
  * @file driver_genotype_id.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines driver genotype type
- * @version 0.3
- * @date 2023-07-21
+ * @version 0.4
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,10 +36,20 @@
 namespace Races 
 {
 
+/**
+ * @brief The namespace of classes handing drivers
+ */
 namespace Drivers
 {
 
+/**
+ * @brief The genotype identifier type
+ */
 using GenotypeId = uint16_t;
+
+/**
+ * @brief The epigenetic genotype identifier type
+ */
 using EpigeneticGenotypeId = uint16_t;
 
 

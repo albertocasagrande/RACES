@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the driver simulator
- * @version 0.1
- * @date 2023-08-05
+ * @version 0.2
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -88,6 +88,28 @@ class DriverSimulator
         return rate;
     }
 
+    static double get_epigenetic_rate(const nlohmann::json& rate_json,
+                                      const std::vector<std::string>& field_aliases)
+    {
+        for (const auto& field_name : field_aliases) {
+            if (rate_json.contains(field_name)) {
+                return get_rate(rate_json[field_name]);
+            }
+        }
+
+        std::ostringstream oss;
+        auto alias_it = std::begin(field_aliases);
+
+        oss << "Every \"epigenetic rates\" element must contain a \""
+            << *alias_it;
+        while (++alias_it != std::end(field_aliases)) {
+            oss << "/" << *alias_it;
+        }
+        oss << "\" field";
+
+        throw std::domain_error(oss.str());
+    }
+
     static Races::Drivers::Genotype create_genotype(const nlohmann::json& genotype_json)
     {
         using namespace Races::Drivers;
@@ -124,16 +146,11 @@ class DriverSimulator
                 throw std::domain_error("Every \"epigenetic rates\" must be an object");
             }
 
-            if (!rate_json.contains("methylation")) {
-                throw std::domain_error("Every \"epigenetic rates\" element must contain a \"methylation\" field");
-            }
-
-            if (!rate_json.contains("demethylation")) {
-                throw std::domain_error("Every \"epigenetic rates\" element must contain a \"demethylation\" field");
-            }
-
-            epigenetic_rates.push_back({get_rate(rate_json["methylation"]),
-                                        get_rate(rate_json["demethylation"])});
+            const auto methylation_rate = get_epigenetic_rate(rate_json, 
+                                                              {"methylation", "on"});
+            const auto demethylation_rate = get_epigenetic_rate(rate_json, 
+                                                                {"demethylation", "off"});
+            epigenetic_rates.push_back({methylation_rate, demethylation_rate});
         }
 
         if (!genotype_json.contains("epigenetic rates")) {
@@ -188,9 +205,9 @@ class DriverSimulator
         if (!position_json.is_array()) {
             throw std::domain_error("The \"position\" field must be an array of Natural values");
         }
-        std::vector<AxisValue> position;
+        std::vector<AxisPosition> position;
         for (const auto& value : position_json) {
-            position.push_back(value.template get<AxisValue>());
+            position.push_back(value.template get<AxisPosition>());
         }
 
         if (position.size()==2) {

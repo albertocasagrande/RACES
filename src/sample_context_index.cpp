@@ -1,9 +1,9 @@
 /**
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Context index sampler
- * @version 0.5
- * @date 2023-08-09
+ * @brief The main source file for context index sampler
+ * @version 0.6
+ * @date 2023-09-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,7 +50,7 @@ class ContextSampler
     size_t bytes_per_abs_position;
     bool quiet;
 
-    template<typename ABSOLUTE_GENOMIC_POSITION>
+    template<typename GENOME_WIDE_POSITION>
     void sample_context_index() const
     {
         using namespace Races::Passengers;
@@ -58,7 +58,7 @@ class ContextSampler
         Races::UI::ProgressBar* bar{nullptr};
 
         {
-            ContextIndex<ABSOLUTE_GENOMIC_POSITION> context_index;
+            ContextIndex<GENOME_WIDE_POSITION> context_index;
 
             {
                 Races::Archive::Binary::In archive(context_index_filename);
