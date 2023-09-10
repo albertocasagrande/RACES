@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.4
- * @date 2023-09-07
+ * @version 0.5
+ * @date 2023-09-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -700,9 +700,9 @@ class PassengersSimulator
         return get_mutational_coefficients(mutational_coeff_json["default"]);
     }
 
-    template<typename ABSOLUTE_POSITION_TYPE>
+    template<typename GENOME_WIDE_POSITION>
     static void
-    add_timed_mutational_coefficients(Races::Passengers::MutationEngine<ABSOLUTE_POSITION_TYPE>& engine, 
+    add_timed_mutational_coefficients(Races::Passengers::MutationEngine<GENOME_WIDE_POSITION>& engine, 
                                       const nlohmann::json& mutational_coeff_json)
     {
         std::map<double, std::map<std::string, double>> timed_coefficients;
@@ -772,7 +772,7 @@ class PassengersSimulator
         }
     }
 
-    template<typename ABSOLUTE_POSITION_TYPE>
+    template<typename GENOME_WIDE_POSITION>
     void run_abs_position() const
     {
         using namespace Races;
@@ -801,7 +801,7 @@ class PassengersSimulator
 
         auto signatures = load_signatures(SBS_filename);
 
-        auto context_index = load_context_index<ABSOLUTE_POSITION_TYPE>(context_index_filename);
+        auto context_index = load_context_index<GENOME_WIDE_POSITION>(context_index_filename);
 
         if (!simulation_cfg.contains("mutational coefficients")) {
             throw std::runtime_error("The passengers simulation configuration must contain "
@@ -814,9 +814,9 @@ class PassengersSimulator
 
         auto num_of_allele = get_number_of_alleles(simulation_cfg);
 
-        MutationEngine<ABSOLUTE_POSITION_TYPE> engine(context_index, num_of_allele,
-                                                      default_coefficients, signatures,
-                                                      mutational_properties);
+        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_allele,
+                                                    default_coefficients, signatures,
+                                                    mutational_properties);
 
         add_timed_mutational_coefficients(engine, mutational_coeff_json);
 
