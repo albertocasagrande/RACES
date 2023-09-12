@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.13
- * @date 2023-08-05
+ * @version 0.14
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -212,6 +212,17 @@ size_t Tissue::num_of_mutated_cells() const
     }
 
     return mutated;
+}
+
+std::vector<EpigeneticGenotype> Tissue::get_genotypes() const
+{
+    std::vector<EpigeneticGenotype> genotypes;
+
+    for (const auto& species: *this) {
+        genotypes.push_back(species);
+    }
+
+    return genotypes;
 }
 
 const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id) const

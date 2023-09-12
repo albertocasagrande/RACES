@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines tissue class
- * @version 0.16
- * @date 2023-09-07
+ * @version 0.17
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -523,6 +523,13 @@ public:
     {
         return std::end(species);
     }
+
+    /**
+     * @brief Get the tissue genotypes
+     * 
+     * @return the vector of the tissue genotypes 
+     */
+    std::vector<EpigeneticGenotype> get_genotypes() const;
 
     /**
      * @brief Get a tissue species by driver identifier
