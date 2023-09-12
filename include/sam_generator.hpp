@@ -2,8 +2,8 @@
  * @file sam_generator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes to generate genomic mutations SAM file
- * @version 0.2
- * @date 2023-09-07
+ * @version 0.3
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -107,11 +107,13 @@ class SAMGenerator
      * This method computes the sum of the allelic sizes of the genomic 
      * mutations in a list.
      * 
+     * @tparam GENOME_MUTATION is the type of genome mutations
      * @param mutations is the list of genomic mutations
      * @param progress_bar is a progress bar
      * @return the sum of the allelic sizes of the genomic mutations in `mutations`
      */
-    static size_t get_overall_allelic_size(const std::list<GenomeMutations>& mutations,
+    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<GenomeMutations, GENOME_MUTATION>, bool> = true>
+    static size_t get_overall_allelic_size(const std::list<GENOME_MUTATION>& mutations,
                                            UI::ProgressBar& progress_bar)
     {
         progress_bar.set_message("Evaluating allelic size");
@@ -130,6 +132,7 @@ class SAMGenerator
      * This method checks whether all the genomic mutations in a list represent genomes having 
      * the same number of chromosomes and the chromosome sizes are consistent.
      * 
+     * @tparam GENOME_MUTATION is the type of genome mutations
      * @param mutations is a list of genome mutations
      * @param progress_bar is a progress bar
      * @return `true` if and only if all the genomic mutations in `mutations` have the same 
@@ -137,8 +140,8 @@ class SAMGenerator
      *          and \f$m_2\f$, the $i$-th chromosomes in \f$m_1\f$ and \f$m_2\f$ are equal in
      *          size
      */
-    static bool represents_same_genome(const std::list<GenomeMutations>& mutations,
-                                       UI::ProgressBar& progress_bar)
+    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>, bool> = true>
+    static bool represents_same_genome(const std::list<GENOME_MUTATION>& mutations, UI::ProgressBar& progress_bar)
     {
         if (mutations.size()==0) {
             return true;
@@ -334,12 +337,14 @@ class SAMGenerator
      * @param chr_data is the data about the chromosome from which the simulated read come from
      * @param SNVs is a map from genomic positions to the corresponding SNVs
      * @param read_first_position is the first position of the simulated read
+     * @param group_name_id is the read group name
      */
     template<typename DATA_TYPE, 
          std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void write_SAM_alignment(std::ostream& SAM_stream, const ChromosomeData<DATA_TYPE>& chr_data,
                              const std::map<GenomicPosition, SNV>& SNVs,
-                             const ChrPosition& read_first_position)
+                             const ChrPosition& read_first_position,
+                             const std::string& group_name_id="")
     {
         const GenomicPosition genomic_position{chr_data.chr_id, read_first_position};
 
@@ -363,8 +368,11 @@ class SAMGenerator
                    << '\t' << '0'   // PNEXT
                    << '\t' << '0'   // TLEN
                    << '\t' << read  // SEQ
-                   << '\t' << '*'   // QUAL
-                   << std::endl;
+                   << '\t' << '*';  // QUAL
+        if (group_name_id.size()!=0) {
+            SAM_stream << '\t' << "RG:Z:" << group_name_id;  // TAGS
+        }
+        SAM_stream << std::endl;
     }
 
     /**
@@ -375,16 +383,21 @@ class SAMGenerator
      * and write the corresponding SAM alignments in a stream.
      * 
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
+     * @tparam GENOME_MUTATION is the type of genome mutations
      * @param SAM_stream is the SAM file output stream
      * @param mutations is a list of genome mutations
+     * @param genotype_group is a map associating every epigenetic identifier to a group name
      * @param chr_data is the data about the chromosome from which the simulated read come from
      * @param allelic_coverage is the aimed coverage the alleles of the mutated genomes
      * @param total_steps is the total number of steps required to complete the overall procedure
      * @param steps is the number of performed steps
      * @param progress_bar is the progress bar 
      */
-    template<typename DATA_TYPE, std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_SAM_alignments(std::ostream& SAM_stream, const std::list<GenomeMutations>& mutations, 
+    template<typename DATA_TYPE=Races::IO::FASTA::Sequence, typename GENOME_MUTATION=GenomeMutations, 
+             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>
+                                && std::is_base_of_v<GenomeMutations, GENOME_MUTATION>, bool> = true>
+    void generate_SAM_alignments(std::ostream& SAM_stream, const std::list<GENOME_MUTATION>& mutations,
+                                 const std::map<Drivers::EpigeneticGenotypeId, std::string>& genotype_group,
                                  const ChromosomeData<DATA_TYPE>& chr_data,
                                  const double& allelic_coverage, const size_t& total_steps, 
                                  size_t& steps, Races::UI::ProgressBar& progress_bar)
@@ -392,6 +405,15 @@ class SAMGenerator
         progress_bar.set_message("Processing chr. "+GenomicPosition::chrtos(chr_data.chr_id));
 
         for (const auto& cell_mutations: mutations) {
+            std::string group_name = "";
+
+            if constexpr(std::is_same_v<CellGenomeMutations, GENOME_MUTATION>) {
+                auto group_it =  genotype_group.find(cell_mutations.get_genotype_id());
+                if (group_it != genotype_group.end()) {
+                    group_name = group_it->second;
+                }
+            }
+
             const auto& chr_mutations = cell_mutations.get_chromosome(chr_data.chr_id);
 
             for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
@@ -408,7 +430,7 @@ class SAMGenerator
 
                         std::uniform_int_distribution<ChrPosition> dist(first_possible_begin, last_possible_begin);
                         for (size_t i=0; i<num_of_reads; ++i) {
-                            write_SAM_alignment(SAM_stream, chr_data, SNVs, dist(random_generator));
+                            write_SAM_alignment(SAM_stream, chr_data, SNVs, dist(random_generator), group_name);
                         }
                     }
                 }
@@ -428,19 +450,30 @@ class SAMGenerator
      * in files, named after genome chromosomes, inside an output directory. 
      * 
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
-     * @param SAM_directory_name is the name of the directory for the output SAM files 
+     * @tparam GENOME_MUTATION is the type of genome mutations
      * @param mutations is a list of genome mutations
+     * @param genotype_classes is a map associating a name to the corresponding sets of genotype identifiers
      * @param allelic_coverage is the aimed coverage the alleles of the mutated genomes
      * @param total_steps is the total number of steps required to complete the overall procedure
      * @param steps is the number of performed steps
      * @param progress_bar is the progress bar
      */
-    template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_SAM(const std::list<GenomeMutations>& mutations, const double& allelic_coverage,
-                      const size_t& total_steps, size_t& steps, UI::ProgressBar& progress_bar)
+    template<typename DATA_TYPE=Races::IO::FASTA::Sequence, typename GENOME_MUTATION=GenomeMutations, 
+             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>
+                                && std::is_base_of_v<GenomeMutations, GENOME_MUTATION>, bool> = true>
+    void generate_SAM(const std::list<GENOME_MUTATION>& mutations,
+                      const std::map<std::string, std::set<Drivers::EpigeneticGenotypeId>>& genotype_classes,
+                      const double& allelic_coverage, const size_t& total_steps, size_t& steps,
+                      UI::ProgressBar& progress_bar)
     {
         std::ifstream ref_stream(ref_genome_filename);
+
+        std::map<Drivers::EpigeneticGenotypeId, std::string> genotype_group;
+        for (const auto& [name, epigenetic_id_set] : genotype_classes) {
+            for (const auto& epigenetic_id : epigenetic_id_set) {
+                genotype_group[epigenetic_id] = name;
+            }
+        }
 
         ChromosomeData<DATA_TYPE> chr_data;
         
@@ -461,6 +494,10 @@ class SAMGenerator
                 SAM_stream << "@SQ\tSN:" << chr_data.name << "\tLN:" << chr_data.length 
                         << "\tAN:chromosome" << chr_str << ",chr" << chr_str 
                         << ",chromosome_" << chr_str << ",chr_" << chr_str << std::endl;
+                for (const auto& [name, id_set] : genotype_classes) {
+                    SAM_stream << "@RG\tID:" << name << std::endl;
+                }                
+
             } else {
                 if (!std::filesystem::is_regular_file(SAM_file_path)) {
                     throw std::runtime_error("\""+std::string(SAM_file_path)+"\" is not a regular file");
@@ -468,7 +505,7 @@ class SAMGenerator
 
                 SAM_stream = std::ofstream(SAM_file_path, std::ofstream::app);
             }
-            generate_SAM_alignments(SAM_stream, mutations, chr_data, allelic_coverage, 
+            generate_SAM_alignments(SAM_stream, mutations, genotype_group, chr_data, allelic_coverage, 
                                     total_steps, steps, progress_bar);
         }
         
@@ -548,15 +585,18 @@ public:
      * depends on the specified coverage. Upon request, the SAM alignments avoid 
      * to report the reads sequence.
      * 
+     * @tparam GENOME_MUTATION is the type of genome mutations
      * @param mutations is a list of genome mutations
      * @param coverage is the aimed coverage
+     * @param genotype_classes is a map associating a name to the corresponding sets of genotype identifiers
      * @param with_sequences is a Boolean flag to include/avoid read sequence in SAM files
      * @param quiet is a Boolean flag to avoid progress bar and user messages
      * @return a reference to the updated object
      */
-    SAMGenerator& operator()(const std::list<GenomeMutations>& mutations, 
-                             const double& coverage, const bool with_sequences=true,
-                             const bool quiet=false)
+    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<GenomeMutations, GENOME_MUTATION>, bool> = true>
+    SAMGenerator& operator()(const std::list<GENOME_MUTATION>& mutations, const double& coverage,
+                             const std::map<std::string, std::set<Drivers::EpigeneticGenotypeId>>& genotype_classes={},
+                             const bool with_sequences=true, const bool quiet=false)
     {
         using namespace Races;
 
@@ -584,10 +624,10 @@ public:
         size_t steps{0};
 
         if (with_sequences) {
-            generate_SAM<Races::IO::FASTA::Sequence>(mutations, allelic_coverage,
+            generate_SAM<Races::IO::FASTA::Sequence>(mutations, genotype_classes, allelic_coverage,
                                                      total_steps, steps, progress_bar);
         } else {
-            generate_SAM<Races::IO::FASTA::SequenceInfo>(mutations, allelic_coverage,
+            generate_SAM<Races::IO::FASTA::SequenceInfo>(mutations, genotype_classes, allelic_coverage,
                                                          total_steps, steps, progress_bar);
         }
 
