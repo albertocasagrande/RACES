@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.8
- * @date 2023-09-07
+ * @version 0.9
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -403,19 +403,21 @@ class MutationEngine
      * 
      * @param[in,out] leaves_mutations is the list of genomic mutations of the phylogenetic forest leaves
      * @param[in] node is a phylogenetic tree node representing a cell
-     * @param[in] cell_mutations is the genomic mutation of the node ancestors
+     * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
-    void place_mutations(std::list<GenomeMutations>& leaves_mutations,
+    void place_mutations(std::list<CellGenomeMutations>& leaves_mutations,
                          const Drivers::PhylogeneticForest::const_node& node,
-                         GenomeMutations cell_mutations,
+                         const GenomeMutations& ancestor_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
         using namespace Races::Passengers;
 
         size_t context_stack_size = context_stack.size();
         
+        CellGenomeMutations cell_mutations(static_cast<const Drivers::Cell&>(node), ancestor_mutations);
+
         place_driver_specific_mutations(node, cell_mutations);
         place_SNVs(node, cell_mutations);
         //place_CNAs(node, mutations);
@@ -538,16 +540,16 @@ public:
      * 
      * @param forest is a phylogenetic forest
      * @param progress_bar is a progress bar pointer
-     * @return the list of genomic mutations for each leaf in `forest`
+     * @return the list of genomic mutations of `forest`'s leaves
      */
-    std::list<GenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
-                                               UI::ProgressBar *progress_bar=nullptr)
+    std::list<CellGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
+                                                   UI::ProgressBar *progress_bar=nullptr)
     {
         using namespace Races::Passengers;
 
         GenomeMutations mutations(context_index, num_of_alleles);
 
-        std::list<GenomeMutations> leaves_mutations;
+        std::list<CellGenomeMutations> leaves_mutations;
         size_t visited_node = 0;
         for (const auto& root: forest.get_roots()) {
             place_mutations(leaves_mutations, root, mutations, visited_node, progress_bar);
@@ -561,10 +563,10 @@ public:
      * 
      * @param forest is a phylogenetic forest
      * @param progress_bar is a progress bar pointer
-     * @return the list of genomic mutations for each leaf in `forest`
+     * @return the list of genomic mutations of `forest`'s leaves
      */
-    inline std::list<GenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
-                                                      UI::ProgressBar &progress_bar)
+    inline std::list<CellGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
+                                                          UI::ProgressBar &progress_bar)
     {
         return place_mutations(forest, &progress_bar);
     }
