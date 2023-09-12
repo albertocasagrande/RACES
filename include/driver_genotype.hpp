@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines driver genotype representation
- * @version 0.11
- * @date 2023-09-07
+ * @version 0.12
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -422,6 +422,13 @@ public:
 
     static size_t signature_to_index(const MethylationSignature& methylation_signature);
     static MethylationSignature index_to_signature(const size_t& index, const size_t num_of_promoters);
+
+    inline static std::string signature_to_string(const MethylationSignature& methylation_signature)
+    {
+        const auto signature_index = signature_to_index(methylation_signature);
+
+        return Genotype::index_to_string(signature_index, methylation_signature.size());
+    }
 };
 
 template<typename SIGNATURE_TYPE>
