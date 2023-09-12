@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.6
- * @date 2023-08-09
+ * @version 0.7
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -329,6 +329,15 @@ bool GenomeMutations::remove_SNV(const GenomicPosition& genomic_position)
 
     return chr_it->second.remove_SNV(genomic_position);
 }
+
+CellGenomeMutations::CellGenomeMutations():
+    Cell(), GenomeMutations()
+{}
+
+
+CellGenomeMutations::CellGenomeMutations(const Drivers::Cell& cell, const GenomeMutations& genome_mutations):
+    Cell(cell), GenomeMutations(genome_mutations)
+{}
 
 }   // Passengers
 

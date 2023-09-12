@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.10
- * @date 2023-09-07
+ * @version 0.11
+ * @date 2023-09-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,6 +39,8 @@
 
 #include "allele.hpp"
 #include "cna.hpp"
+
+#include "cell.hpp"
 
 #include "progress_bar.hpp"
 
@@ -443,6 +445,30 @@ public:
      * @return `true` if and only if a SNV occurred at `genomic_position`
      */
     bool remove_SNV(const GenomicPosition& genomic_position);
+};
+
+
+/**
+ * @brief A class to represent the passenger mutations of a specific cell
+ */
+struct CellGenomeMutations : public Drivers::Cell, public GenomeMutations
+{
+    /**
+     * @brief The genome length type
+     */
+    using Length = size_t;
+
+    /**
+     * @brief The empty constructor
+     */
+    CellGenomeMutations();
+
+    /**
+     * @brief A constructor
+     * 
+     * @param chromosomes is the vector of genome chromosomes
+     */
+    explicit CellGenomeMutations(const Drivers::Cell& cell, const GenomeMutations& genome_mutations);    
 };
 
 }   // Passengers
