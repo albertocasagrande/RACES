@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.6
- * @date 2023-09-12
+ * @version 0.7
+ * @date 2023-09-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,6 +50,8 @@
 #include "fasta_reader.hpp"
 
 #include "sam_generator.hpp"
+
+#include "filter.hpp"
 
 #include "progress_bar.hpp"
 
@@ -100,58 +102,6 @@ Races::Passengers::IO::SAMGenerator<>::Mode boost::lexical_cast<Races::Passenger
 
     throw po::validation_error(po::validation_error::kind_t::invalid_option_value, oss.str());
 }
-
-template<typename OBJECT>
-class BaseFilter
-{
-    std::string name;
-public:
-
-    BaseFilter():
-        name()
-    {}
-
-    BaseFilter(const std::string& name):
-        name(name)
-    {} 
-
-    inline bool filtered(const OBJECT& object) const
-    {
-        (void)object;
-
-        return false;
-    }
-
-    inline const std::string& get_name() const
-    {
-        return name;
-    }
-};
-
-template<typename OBJECT>
-class FilterNotIn : public BaseFilter<OBJECT>
-{
-    std::set<OBJECT> not_filtered;
-public:
-    template<typename CONTAINER, std::enable_if_t<std::is_same_v<OBJECT, typename CONTAINER::value_type>, bool> = true>
-    FilterNotIn(const CONTAINER& container):
-        FilterNotIn("", container)
-    {}
-
-    template<typename CONTAINER, std::enable_if_t<std::is_same_v<OBJECT, typename CONTAINER::value_type>, bool> = true>
-    FilterNotIn(const std::string& name, const CONTAINER& container):
-        BaseFilter<OBJECT>(name)
-    {
-        for (const auto& value : container) {
-            not_filtered.insert(value);
-        }
-    }
-
-    inline bool filtered(const OBJECT& object) const
-    {
-        return not_filtered.count(object)==0;
-    }
-};
 
 class PassengersSimulator
 {
@@ -283,9 +233,10 @@ class PassengersSimulator
 
     template<typename GENOME_MUTATION, typename FILTER, 
              std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>
-                                && std::is_base_of_v<BaseFilter<Races::Drivers::EpigeneticGenotypeId>, FILTER>, bool> = true>
+                                && std::is_base_of_v<Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId>, FILTER>, bool> = true>
     Races::Passengers::MutationStatistics 
-    collect_statistics(const std::list<GENOME_MUTATION>& cells_mutations, const FILTER& filter) const
+    collect_statistics(const std::list<GENOME_MUTATION>& cells_mutations, const FILTER& filter,
+                       const std::string& data_name="") const
     {
         using namespace Races;
         using namespace Races::Passengers;
@@ -294,9 +245,7 @@ class PassengersSimulator
 
         if (quiet) {
             for (const auto& cell_mutations: cells_mutations) {
-                if (!filter.filtered(cell_mutations.get_genotype_id())) { 
-                    statistics.record(cell_mutations);
-                }
+                statistics.record(cell_mutations, filter);
             }
 
             return statistics;
@@ -304,16 +253,14 @@ class PassengersSimulator
 
         UI::ProgressBar progress_bar;
 
-        if (filter.get_name().size()>0) {
-            progress_bar.set_message("Collecting "+ filter.get_name()+ "'s data");
+        if (data_name.size()>0) {
+            progress_bar.set_message("Collecting "+ data_name+ "'s data");
         } else {
             progress_bar.set_message("Collecting data");
         }
         size_t recorded{0};
         for (const auto& cell_mutations: cells_mutations) {
-            if (!filter.filtered(cell_mutations.get_genotype_id())) { 
-                statistics.record(cell_mutations);
-            }
+            statistics.record(cell_mutations, filter);
 
             size_t percentage = 100*(++recorded)/cells_mutations.size();
             if (percentage>progress_bar.get_progress()) {
@@ -321,8 +268,8 @@ class PassengersSimulator
             }
         }
 
-        if (filter.get_name().size()>0) {
-            progress_bar.set_message(filter.get_name()+ "'s data collected");
+        if (data_name.size()>0) {
+            progress_bar.set_message(data_name+ "'s data collected");
         } else {
             progress_bar.set_message("Data collected");
         }
@@ -335,7 +282,7 @@ class PassengersSimulator
     Races::Passengers::MutationStatistics 
     collect_statistics(const std::list<GENOME_MUTATION>& cells_mutations) const
     {
-        BaseFilter<Races::Drivers::EpigeneticGenotypeId> filter;
+        Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId> filter;
 
         return collect_statistics(cells_mutations, filter);
     }
@@ -860,9 +807,9 @@ class PassengersSimulator
             std::string prefix_CNAs = CNAs_csv_filename.substr(0,CNAs_csv_filename.find_last_of('.'));
 
             for (const auto& [signature, id_set] : epigenetic_classes) {
-                FilterNotIn<Races::Drivers::EpigeneticGenotypeId> filter(signature, id_set);
+                Races::FilterNotIn<Races::Drivers::EpigeneticGenotypeId> filter(id_set);
 
-                auto statistics = collect_statistics(mutations, filter);
+                auto statistics = collect_statistics(mutations, filter, signature);
 
                 if (SNVs_csv_filename != "") {
                     std::ofstream os(prefix_SNVs+"_"+signature+".csv");

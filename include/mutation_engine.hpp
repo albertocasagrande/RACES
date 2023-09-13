@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.9
- * @date 2023-09-12
+ * @version 0.10
+ * @date 2023-09-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,6 +44,9 @@
 #include "snv_signature.hpp"
 #include "mutational_properties.hpp"
 
+#include "filter.hpp"
+
+
 namespace Races
 {
 
@@ -55,8 +58,9 @@ namespace Passengers
  */
 struct SNVStatistics
 {
-    size_t mutated_alleles;     //!< Number of mutated alleles
-    size_t num_of_cells;        //!< Total number of cells containing the SNV
+    size_t mutated_alleles;            //!< Number of mutated alleles
+    size_t num_of_cells;               //!< Total number of cells containing the SNV
+    size_t num_of_non_filtered_cells;  //!< Number of non-filtered cells containing the SNV
 };
 
 /**
@@ -64,7 +68,8 @@ struct SNVStatistics
  */
 struct MutationStatistics
 {
-    size_t num_of_cells;    //!< Number of recorded cells
+    size_t num_of_cells;                 //!< Number of recorded cells
+    size_t num_of_non_filtered_cells;    //!< Number of recorded non-filtered cells
 
     std::map<SNV, SNVStatistics> SNVs;  //!< SNVs
     std::list<CopyNumberAlteration> CNAs;   //!< CNAs
@@ -77,11 +82,82 @@ struct MutationStatistics
     /**
      * @brief Record the SVNs in a cell genome
      * 
+     * @tparam FILTER is the type of the cell filter
+     * @param cell_mutations are the mutations of the cell whose statistics
+     *          is about to be recorded
+     * @param filter is a cell filter based on its epigenetic genotype identifier
+     * @return a reference to the updated object
+     */
+    template<typename FILTER, 
+             std::enable_if_t<std::is_base_of_v<Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId>, FILTER>, bool> = true>
+    MutationStatistics& record(const CellGenomeMutations& cell_mutations, const FILTER& filter)
+    {
+        std::set<SNV> in_cell;
+
+        auto filtered = filter.filtered(cell_mutations.get_genotype_id());
+
+        // for all chromosomes
+        for (const auto& [chr_id, chromosome]: cell_mutations.get_chromosomes()) {
+
+            for (const auto& cna : chromosome.get_CNAs()) {
+                CNAs.push_back(cna);
+            }
+
+            // for all chromosome alleles
+            for (const auto& [allele_id, allele]: chromosome.get_alleles()) {
+
+                // for all fragments in the allele
+                for (const auto& [fragment_pos, fragment]: allele.get_fragments()) {
+
+                    // for all SNVs in the fragment
+                    for (const auto& [snv_pos, snv]: fragment.get_SNVs()) {
+
+                        auto it = SNVs.find(snv);
+
+                        if (it != SNVs.end()) {
+                            if (!filtered) {
+                                ++(it->second.mutated_alleles);
+                            }
+                        } else {
+                            size_t mutated_alleles = (filter.filtered(cell_mutations.get_genotype_id()) ? 0 : 1);
+
+                            SNVs.insert({snv, {mutated_alleles, 0, 0}});
+                        }
+
+                        in_cell.insert(snv);
+                    }
+                }
+            }
+        }
+
+        ++num_of_cells;
+        for (const auto& snv : in_cell) {
+            ++(SNVs[snv].num_of_cells);
+        }
+        if (!filtered) {
+            ++num_of_non_filtered_cells;
+
+            for (const auto& snv : in_cell) {
+                ++(SNVs[snv].num_of_non_filtered_cells);
+            }
+        }
+    
+        return *this;
+    }
+
+    /**
+     * @brief Record the SVNs in a cell genome
+     * 
      * @param cell_mutations are the mutations of the cell whose statistics
      *          is about to be recorded
      * @return a reference to the updated object
      */
-    MutationStatistics& record(const GenomeMutations& cell_mutations);
+    inline MutationStatistics& record(const CellGenomeMutations& cell_mutations)
+    {
+        Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId> filter;
+
+        return this->record(cell_mutations, filter);
+    }
 
     /**
      * @brief Write in a stream a table summarizing SNV statistics
