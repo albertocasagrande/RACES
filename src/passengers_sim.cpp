@@ -49,22 +49,23 @@
 #include "fasta_utils.hpp"
 #include "fasta_reader.hpp"
 
-#include "sam_generator.hpp"
+#include "read_simulator.hpp"
 
 #include "filter.hpp"
 
 #include "progress_bar.hpp"
 
 template<>
-std::string boost::lexical_cast<std::string, Races::Passengers::IO::SAMGenerator<>::Mode>(const Races::Passengers::IO::SAMGenerator<>::Mode& mode)
+std::string 
+boost::lexical_cast<std::string, Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode>(const Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode& mode)
 {
-    using namespace Races::Passengers::IO;
+    using namespace Races::Passengers::SequencingSimulations;
     switch (mode) {
-        case SAMGenerator<>::Mode::CREATE:
+        case ReadSimulator<>::Mode::CREATE:
             return "create";
-        case SAMGenerator<>::Mode::OVERWRITE:
+        case ReadSimulator<>::Mode::OVERWRITE:
             return "overwrite";
-        case SAMGenerator<>::Mode::APPEND:
+        case ReadSimulator<>::Mode::APPEND:
             return "append";
         default:
             throw std::runtime_error("Unknown mode");
@@ -72,30 +73,31 @@ std::string boost::lexical_cast<std::string, Races::Passengers::IO::SAMGenerator
 }
 
 template<>
-Races::Passengers::IO::SAMGenerator<>::Mode boost::lexical_cast<Races::Passengers::IO::SAMGenerator<>::Mode, std::string>(const std::string& mode)
+Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode 
+boost::lexical_cast<Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode, std::string>(const std::string& mode)
 {
     std::string upper_token = mode;
     for (auto& t_char: upper_token) {
         t_char = toupper(t_char);
     }
 
-    using namespace Races::Passengers::IO;
+    using namespace Races::Passengers::SequencingSimulations;
 
     if (upper_token == "CREATE") {
-        return SAMGenerator<>::Mode::CREATE;
+        return ReadSimulator<>::Mode::CREATE;
     }
 
     if (upper_token == "OVERWRITE") {
-        return SAMGenerator<>::Mode::OVERWRITE;
+        return ReadSimulator<>::Mode::OVERWRITE;
     }
 
     if (upper_token == "APPEND") {
-        return SAMGenerator<>::Mode::APPEND;
+        return ReadSimulator<>::Mode::APPEND;
     }
 
     std::ostringstream oss;
 
-    oss << "Invalid SAMGenerator mode \"" << mode << "\". "
+    oss << "Invalid ReadSimulator mode \"" << mode << "\". "
         << "Supported \"create\", \"overwrite\", and \"append\".";
 
     namespace po = boost::program_options;
@@ -106,7 +108,9 @@ Races::Passengers::IO::SAMGenerator<>::Mode boost::lexical_cast<Races::Passenger
 class PassengersSimulator
 {
     const std::string program_name;
-    boost::program_options::options_description visible_options;
+    boost::program_options::options_description passengers_options;
+    boost::program_options::options_description sequencing_options;
+    boost::program_options::options_description generic_options;
     boost::program_options::positional_options_description positional_options;
 
     std::string simulation_filename;
@@ -116,12 +120,15 @@ class PassengersSimulator
     std::string SBS_filename;
 
     double coverage;
-    std::string SAM_directory;
-    Races::Passengers::IO::SAMGenerator<>::Mode SAM_mode;
+    std::string seq_output_directory;
+    Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
+    bool paired_read;
     size_t read_size;
+    size_t insert_size;
     std::string SNVs_csv_filename;
     std::string CNAs_csv_filename;
     bool epigenetic_FACS;
+    bool write_SAM;
 
     int seed;
     size_t bytes_per_abs_position;
@@ -848,11 +855,11 @@ class PassengersSimulator
     {
         using namespace Races;
         using namespace Races::Passengers;
-        using namespace Races::Passengers::IO;
+        using namespace Races::Passengers::SequencingSimulations;
 
         nlohmann::json simulation_cfg = get_simulation_json();
 
-        SAMGenerator<> sam_generator;
+        ReadSimulator<> read_simulator;
 
         Drivers::PhylogeneticForest forest;
         SpeciesMutationalProperties mutational_properties;
@@ -873,8 +880,13 @@ class PassengersSimulator
         }
 
         if (coverage>0) {
-            sam_generator = SAMGenerator<>(SAM_directory, ref_genome_filename, read_size, seed, 
-                                           SAM_mode);
+            if (paired_read) {
+                read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size, 
+                                                 insert_size, read_simulator_output_mode, seed);
+            } else {
+                read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size, 
+                                                 read_simulator_output_mode, seed);
+            }
         }
 
         auto signatures = load_signatures(SBS_filename);
@@ -901,7 +913,9 @@ class PassengersSimulator
         auto leaves_mutations = place_mutations(engine, forest);
 
         if (coverage>0) {
-            sam_generator(leaves_mutations, coverage, epigenetic_status_classes);
+            read_simulator.enable_SAM_writing(write_SAM);
+
+            read_simulator(leaves_mutations, coverage, epigenetic_status_classes);
         }
 
         if (epigenetic_FACS) {
@@ -1014,9 +1028,9 @@ class PassengersSimulator
             print_help_and_exit(1);
         }
         
-        for (const auto SAM_option : {"SAM-directory"}) {
-            if ((coverage>0) && (vm.count(SAM_option)==0)) {
-                std::cerr << "\"--"<< SAM_option << "\" is mandatory when coverage differs from 0." 
+        for (const auto sequencing_option : {"output-directory"}) {
+            if ((coverage>0) && (vm.count(sequencing_option)==0)) {
+                std::cerr << "\"--"<< sequencing_option << "\" is mandatory when coverage differs from 0." 
                           << std::endl << std::endl;
                 print_help_and_exit(1);
             }
@@ -1043,32 +1057,46 @@ public:
             os << " <" << positional_options.name_for_position(i) << ">"; 
         }
 
-        os << std::endl << visible_options << std::endl;
+        os << std::endl
+           << std::endl << passengers_options
+           << std::endl << sequencing_options
+           << std::endl << generic_options 
+           << std::endl;
 
         exit(err_code);
     }
 
     PassengersSimulator(int argc, char* argv[]):
-        program_name(argv[0]), visible_options("Options"),
-        SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
+        program_name(argv[0]), passengers_options("Passenger mutation simulation options"),
+        sequencing_options("Sequencing simulation options"), generic_options("Generic options"),
+        paired_read(false), 
+        insert_size(0), SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
     {
         namespace po = boost::program_options;
 
-        using namespace Races::Passengers::IO;
+        using namespace Races::Passengers::SequencingSimulations;
 
-        visible_options.add_options()
-            ("coverage,c", po::value<double>(&coverage)->default_value(0.0), 
-             "coverage for the simulated reads (greater than 0 to produce SAM files)")
-            ("SAM-directory,d", po::value<std::string>(&SAM_directory), 
-             "the output directory for the produces SAM files")
-            ("SAM-mode,m", po::value<SAMGenerator<>::Mode>(&SAM_mode)->default_value(SAMGenerator<>::Mode::CREATE), 
-             "SAM generator mode (create, overwrite, append)")
-            ("read-size,r", po::value<size_t>(&read_size)->default_value(150),
-             "simulated read size")
+        passengers_options.add_options()
             ("SNVs-CSV,S", po::value<std::string>(&SNVs_csv_filename),
              "the SNVs CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
              "the CNAs CSV output file")
+        ;
+
+        sequencing_options.add_options()
+            ("coverage,c", po::value<double>(&coverage)->default_value(0.0), 
+             "coverage for the simulated reads (>0 to simulate sequencing)")
+            ("output-directory,d", po::value<std::string>(&seq_output_directory), 
+             "the output directory for sequencing simulation")
+            ("overwrite,o", "overwrite the output directory")
+            ("read-size,r", po::value<size_t>(&read_size)->default_value(150),
+             "simulated read size")
+            ("insert-size,i", po::value<size_t>(&insert_size),
+             "simulated insert size (enable paired-read)")
+            ("write-SAM,w", "write the simulated read SAM files")
+        ;
+
+        generic_options.add_options()
             ("epigenetic-FACS,F", "distinguish between epigenetic states")
             ("seed,s", po::value<int>(&seed)->default_value(0), 
              "random generator seed")
@@ -1090,8 +1118,11 @@ public:
              "the filename of the reference genome FASTA file")
         ;
 
-        po::options_description generic;
-        generic.add(visible_options).add(hidden);
+        po::options_description program_options;
+        program_options.add(generic_options)
+                       .add(passengers_options)
+                       .add(sequencing_options)
+                       .add(hidden);
 
         positional_options.add("simulation file", 1);
         positional_options.add("driver directory", 1);
@@ -1103,7 +1134,7 @@ public:
 
         try {
             po::command_line_parser parser{argc, argv};
-            po::store(parser.options(generic).positional(positional_options).run(), vm);
+            po::store(parser.options(program_options).positional(positional_options).run(), vm);
             po::notify(vm);
         } catch (boost::wrapexcept<boost::program_options::unknown_option> &except) {
             print_help_and_exit(except.what(), 1);
@@ -1111,7 +1142,18 @@ public:
 
         quiet = vm.count("quiet")>0;
 
+        {
+            using namespace Races::Passengers::SequencingSimulations;
+
+            read_simulator_output_mode = ((vm.count("overwrite")>0)?
+                                          ReadSimulator<>::Mode::OVERWRITE:
+                                          ReadSimulator<>::Mode::CREATE);
+        }
+
+        paired_read = vm.count("insert-size")>0;
+
         epigenetic_FACS = vm.count("epigenetic-FACS")>0;
+        write_SAM = vm.count("write-SAM")>0;
 
         try {
             using namespace Races::Passengers;

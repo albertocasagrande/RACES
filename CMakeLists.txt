@@ -83,7 +83,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp)
 
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
@@ -121,7 +122,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/sam_generator.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
