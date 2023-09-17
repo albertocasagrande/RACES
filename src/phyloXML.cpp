@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement phyloXML stream
- * @version 0.3
- * @date 2023-08-22
+ * @version 0.4
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -136,7 +136,7 @@ phyloXMLStream& phyloXMLStream::operator<<(const PhylogeneticForest::const_node&
 
     change_indentation_level(indent_level+1);
 
-    *this << cell.get_genotype_id() << UI::palette[cell.get_genotype_id()];
+    *this << cell.get_epigenetic_id() << UI::palette[cell.get_epigenetic_id()];
 
     os << indent_string << "<name>" << cell.get_id() << "</name>" << std::endl;
 

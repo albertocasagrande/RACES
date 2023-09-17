@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.7
- * @date 2023-09-07
+ * @version 0.8
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -135,13 +135,13 @@ public:
         }
 
         /**
-         * @brief Get the node genotype id
+         * @brief Get the node epigenetic genotype id
          * 
-         * @return the node genotype id
+         * @return the node epigenetic genotype id
          */
-        inline EpigeneticGenotypeId get_genotype_id() const
+        inline EpigeneticGenotypeId get_epigenetic_id() const
         {
-            return forest->cells.at(cell_id).get_genotype_id();
+            return forest->cells.at(cell_id).get_epigenetic_id();
         }
 
         /**

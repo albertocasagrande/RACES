@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements species representation methods
- * @version 0.8
- * @date 2023-09-07
+ * @version 0.9
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -107,7 +107,7 @@ void Species::remove(const CellId& cell_id)
 CellInTissue* Species::add(CellInTissue* cell)
 {   
     // update the genotype id
-    cell->genotype = get_id();
+    cell->epigenetic_id = get_id();
 
     // update `last_insertion_time`
     last_insertion_time = cell->get_birth_time();
@@ -125,14 +125,14 @@ CellInTissue* Species::add(CellInTissue* cell)
 
 CellInTissue* Species::add(CellInTissue&& cell)
 {
-    cell.genotype = get_id();
+    cell.epigenetic_id = get_id();
 
     return add(new CellInTissue(cell));
 }
 
 CellInTissue* Species::add(CellInTissue& cell)
 {
-    cell.genotype = get_id();
+    cell.epigenetic_id = get_id();
 
     return add(new CellInTissue(cell));
 }

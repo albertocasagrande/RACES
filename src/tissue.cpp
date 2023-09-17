@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.14
- * @date 2023-09-12
+ * @version 0.15
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -82,7 +82,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
     // kill the cell in the position
     kill();
 
-    Species& species = tissue.get_species(cell.get_genotype_id());
+    Species& species = tissue.get_species(cell.get_epigenetic_id());
 
     // if the new cell is already in its species
     if (species.contains(cell.get_id())) {
@@ -109,7 +109,7 @@ void Tissue::CellInTissueProxy::kill()
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
         // remove the cell from its species
-        Species& former_species = tissue.get_species(space_ptr->get_genotype_id());
+        Species& former_species = tissue.get_species(space_ptr->get_epigenetic_id());
         former_species.remove(space_ptr->get_id());
 
         space_ptr = nullptr;
@@ -321,7 +321,7 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
     if (to_be_moved!=nullptr) {
         lost_cell.push_back(*to_be_moved);
 
-        Species &species = get_species(to_be_moved->get_genotype_id());
+        Species &species = get_species(to_be_moved->get_epigenetic_id());
 
         species.remove(to_be_moved->get_id());
     }

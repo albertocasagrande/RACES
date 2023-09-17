@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines cell representation
- * @version 0.17
- * @date 2023-09-07
+ * @version 0.18
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,20 +31,12 @@
 #ifndef __RACES_CELL__
 #define __RACES_CELL__
 
-#include <limits>
 #include <cstdint>
 
 #include "archive.hpp"
 #include "time.hpp"
 #include "position.hpp"
 #include "driver_genotype.hpp"
-
-/**
- * @brief An identifier for non-driver cell genotype
- * 
- * This macro represents the genotype identifier of the wild-type cells.
- */
-#define NON_DRIVER_GENOTYPE std::numeric_limits<EpigeneticGenotypeId>::max()
 
 namespace Races
 {
@@ -69,13 +61,13 @@ using CellId = uint64_t;
  */
 class Cell {
 protected:
-    static uint64_t counter;        //!< Total number of cell along the computation
-    CellId id;                      //!< Cell identifier
-    CellId parent;                  //!< Parent cell identifier
+    static uint64_t counter;             //!< Total number of cell along the computation
+    CellId id;                           //!< Cell identifier
+    CellId parent;                       //!< Parent cell identifier
 
-    Time birth_time;                //!< Cell birth time
+    Time birth_time;                     //!< Cell birth time
 
-    EpigeneticGenotypeId genotype;  //!< cell species reference
+    EpigeneticGenotypeId epigenetic_id;  //!< cell species reference
 
     /**
      * @brief The empty constructor
@@ -86,26 +78,26 @@ public:
     /**
      * @brief Create a new cell with no passenger mutations
      * 
-     * @param genotype is the driver genotype identifier
+     * @param epigenetic_id is the epigenetic genotype identifier
      */
-    explicit Cell(const EpigeneticGenotypeId genotype);
+    explicit Cell(const EpigeneticGenotypeId epigenetic_id);
 
     /**
      * @brief Create a new cell
      * 
-     * @param genotype is the driver genotype identifier
+     * @param epigenetic_id is the epigenetic genotype identifier
      * @param parent_id is the parent cell identifier
      */
-    Cell(const EpigeneticGenotypeId genotype, const CellId parent_id);
+    Cell(const EpigeneticGenotypeId epigenetic_id, const CellId parent_id);
 
     /**
      * @brief Create a new cell
      * 
-     * @param genotype is the driver genotype identifier
+     * @param epigenetic_id is the epigenetic genotype identifier
      * @param parent_id is the parent cell identifier
      * @param birth_time is the cell birth time
      */
-    Cell(const EpigeneticGenotypeId genotype, const CellId parent_id, const Time birth_time);
+    Cell(const EpigeneticGenotypeId epigenetic_id, const CellId parent_id, const Time birth_time);
 
     /**
      * @brief Get the cell identifier
@@ -142,9 +134,9 @@ public:
      * 
      * @return a constant reference to the cell driver genotype
      */
-    inline const EpigeneticGenotypeId& get_genotype_id() const
+    inline const EpigeneticGenotypeId& get_epigenetic_id() const
     {
-        return genotype;
+        return epigenetic_id;
     }
 
     /**
@@ -154,7 +146,7 @@ public:
      */
     inline Cell generate_descendent(const Time& time) const
     {
-        return Cell(get_genotype_id(), get_id(), time);
+        return Cell(get_epigenetic_id(), get_id(), time);
     }
 
     /**
@@ -169,7 +161,7 @@ public:
         archive & id 
                 & parent
                 & birth_time
-                & genotype;
+                & epigenetic_id;
     }
 
     /**
@@ -187,7 +179,7 @@ public:
         archive & cell.id
                 & cell.parent
                 & cell.birth_time
-                & cell.genotype;
+                & cell.epigenetic_id;
 
         return cell;
     }
@@ -365,7 +357,7 @@ public:
      */
     inline bool has_driver_mutations() const
     {
-        return get_genotype_id() != NON_DRIVER_GENOTYPE;
+        return get_epigenetic_id() != NON_DRIVER_GENOTYPE;
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.8
- * @date 2023-08-06
+ * @version 0.9
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -165,7 +165,7 @@ bool operator==(const Races::Drivers::Cell& a, const Races::Drivers::Cell& b)
 {
     return (a.get_id()==b.get_id() && 
             a.get_parent_id()==b.get_parent_id() &&
-            a.get_genotype_id()==b.get_genotype_id());
+            a.get_epigenetic_id()==b.get_epigenetic_id());
 }
 
 bool operator==(const Races::Drivers::Simulation::CellInTissue& a, const Races::Drivers::Simulation::CellInTissue& b)
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
 
             BOOST_CHECK(read_value.get_id()==value.get_id());
             BOOST_CHECK(read_value.get_parent_id()==value.get_parent_id());
-            BOOST_CHECK(read_value.get_genotype_id()==value.get_genotype_id());
+            BOOST_CHECK(read_value.get_epigenetic_id()==value.get_epigenetic_id());
         }
     }
 

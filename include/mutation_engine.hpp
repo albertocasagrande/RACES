@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.10
- * @date 2023-09-13
+ * @version 0.11
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,7 +71,7 @@ struct MutationStatistics
     size_t num_of_cells;                 //!< Number of recorded cells
     size_t num_of_non_filtered_cells;    //!< Number of recorded non-filtered cells
 
-    std::map<SNV, SNVStatistics> SNVs;  //!< SNVs
+    std::map<SNV, SNVStatistics> SNVs;      //!< SNVs
     std::list<CopyNumberAlteration> CNAs;   //!< CNAs
 
     /**
@@ -94,7 +94,7 @@ struct MutationStatistics
     {
         std::set<SNV> in_cell;
 
-        auto filtered = filter.filtered(cell_mutations.get_genotype_id());
+        auto filtered = filter.filtered(cell_mutations.get_epigenetic_id());
 
         // for all chromosomes
         for (const auto& [chr_id, chromosome]: cell_mutations.get_chromosomes()) {
@@ -119,7 +119,7 @@ struct MutationStatistics
                                 ++(it->second.mutated_alleles);
                             }
                         } else {
-                            size_t mutated_alleles = (filter.filtered(cell_mutations.get_genotype_id()) ? 0 : 1);
+                            size_t mutated_alleles = (filter.filtered(cell_mutations.get_epigenetic_id()) ? 0 : 1);
 
                             SNVs.insert({snv, {mutated_alleles, 0, 0}});
                         }
@@ -390,7 +390,7 @@ class MutationEngine
                     GenomeMutations& cell_mutations)
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
-                                          mutational_properties.at(node.get_genotype_id()).mu);
+                                          mutational_properties.at(node.get_epigenetic_id()).mu);
 
         // get the active SBS coefficients
         const auto& mc = get_active_mutational_coefficients(node);
@@ -459,8 +459,8 @@ class MutationEngine
     void place_driver_specific_mutations(const Drivers::PhylogeneticForest::const_node& node,
                                          GenomeMutations& cell_mutations)
     {
-        if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
-            const auto& driver_mp = mutational_properties.at(node.get_genotype_id());
+        if (node.is_root() || node.get_epigenetic_id()!=node.parent().get_epigenetic_id()) {
+            const auto& driver_mp = mutational_properties.at(node.get_epigenetic_id());
 
             for (auto snv : driver_mp.SNVs) {
                 snv.cause = driver_mp.name;

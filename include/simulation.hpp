@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.8
- * @date 2023-09-07
+ * @version 0.9
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -726,7 +726,7 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
         }
 
         // if death has not been enabled yet
-        const auto species_id = cell.get_genotype_id();
+        const auto species_id = cell.get_epigenetic_id();
         if (death_enabled.count(species_id)==0) {
             Species& species = tissue().get_species(species_id);
             
@@ -741,7 +741,7 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
 
     statistics.record_event(event, time);
     for (const auto& cell: affected.lost_cells) {
-        statistics.record_lost(cell.get_genotype_id(), time);
+        statistics.record_lost(cell.get_epigenetic_id(), time);
     }
 
     if (plotter != nullptr && !plotter->closed()) {

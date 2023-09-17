@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.8
- * @date 2023-09-07
+ * @version 0.9
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -187,7 +187,7 @@ CellEvent Simulation::select_next_event()
                 event.delay = (genomic_mutation.time >= time? genomic_mutation.time - time:0);
                 event.type = CellEventType::DRIVER_GENETIC_MUTATION;
                 event.position = Position(tissue(), *cell);
-                event.initial_genotype = cell->get_genotype_id();
+                event.initial_genotype = cell->get_epigenetic_id();
 
                 const Species& initial_species = tissue().get_species(event.initial_genotype);
 
@@ -237,7 +237,7 @@ Simulation::simulate_mutation(const Position& position, const EpigeneticGenotype
 
     Cell parent_cell = tissue(position);
 
-    parent_cell.genotype = final_id;
+    parent_cell.epigenetic_id = final_id;
 
     tissue(position) = parent_cell.generate_descendent(time);
 
@@ -287,7 +287,7 @@ Simulation::simulate_duplication_epigenetic_event(const Position& position, cons
 
     Cell cell = tissue(position);
 
-    cell.genotype = final_id;
+    cell.epigenetic_id = final_id;
 
     tissue(position) = cell;
 
