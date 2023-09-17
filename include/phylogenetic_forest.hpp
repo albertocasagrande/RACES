@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.8
+ * @version 0.9
  * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
@@ -55,6 +55,8 @@ class PhylogeneticForest
     std::set<CellId> roots;                         //!< The cell ids of the forest roots
 
     std::map<CellId, std::set<CellId>> branches;    //!< The descendant branches
+
+    std::map<EpigeneticGenotypeId, GenotypeId> genotype_map;    //!< A map associating every epigenetic genotype to the corresponding genotype id 
 public:
 
     /**
@@ -143,6 +145,13 @@ public:
         {
             return forest->cells.at(cell_id).get_epigenetic_id();
         }
+
+        /**
+         * @brief Get the node genotype id
+         * 
+         * @return the node genotype id
+         */
+        GenotypeId get_genotype_id() const;
 
         /**
          * @brief Get the node forest
@@ -239,7 +248,8 @@ public:
     }
 
     template<typename SAMPLER, typename CELL_STORAGE>
-    friend PhylogeneticForest grow_forest_from(SAMPLER& sampler, CELL_STORAGE& cell_storage);
+    friend PhylogeneticForest grow_forest_from(SAMPLER& sampler, CELL_STORAGE& cell_storage,
+                                               const std::vector<EpigeneticGenotype>& genotypes);
 };
 
 /**
@@ -253,13 +263,19 @@ public:
  * @tparam CELL_STORAGE is the type of the cell storage
  * @param sample is the cell sample
  * @param cell_storage is the cell storage
+ * @param genotypes is the vector of epigenetic genotypes
  * @return the phylogenetic forest obtained by using the 
  *       cells in `sample` as leafs and recovering 
  */
 template<typename CELL_SAMPLE, typename CELL_STORAGE>
-PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_storage)
+PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_storage,
+                                    const std::vector<EpigeneticGenotype>& genotypes)
 {
     PhylogeneticForest forest;
+
+    for (const auto& epigenetic_genotype: genotypes) {
+        forest.genotype_map[epigenetic_genotype.get_id()] = epigenetic_genotype.get_genomic_id();
+    }
 
     std::set<CellId> parent_ids;
     for (const auto& cell: sample) {

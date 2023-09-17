@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implement classes and function for phylogenetic trees
- * @version 0.4
- * @date 2023-07-30
+ * @version 0.5
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -92,6 +92,17 @@ std::vector<PhylogeneticForest::const_node> PhylogeneticForest::const_node::chil
     return nodes;
 }
 
+GenotypeId PhylogeneticForest::const_node::get_genotype_id() const
+{
+    auto genotype_it = forest->genotype_map.find(get_epigenetic_id());
+    
+    if (genotype_it == forest->genotype_map.end()) {
+        throw std::runtime_error("unknown epigenetic genotype");
+    }
+
+    return genotype_it->second;
+}
+
 PhylogeneticForest::node PhylogeneticForest::node::parent()
 {
     if (forest==nullptr) {
@@ -115,7 +126,6 @@ std::vector<PhylogeneticForest::node> PhylogeneticForest::node::children()
 
     return nodes;
 }
-
 
 std::vector<PhylogeneticForest::const_node> PhylogeneticForest::get_roots() const
 {

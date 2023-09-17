@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.11
+ * @version 0.12
  * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
@@ -459,7 +459,7 @@ class MutationEngine
     void place_driver_specific_mutations(const Drivers::PhylogeneticForest::const_node& node,
                                          GenomeMutations& cell_mutations)
     {
-        if (node.is_root() || node.get_epigenetic_id()!=node.parent().get_epigenetic_id()) {
+        if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
             const auto& driver_mp = mutational_properties.at(node.get_epigenetic_id());
 
             for (auto snv : driver_mp.SNVs) {

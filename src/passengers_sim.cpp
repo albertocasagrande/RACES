@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.7
- * @date 2023-09-13
+ * @version 0.8
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -210,9 +210,13 @@ class PassengersSimulator
 
         Simulation::BinaryLogger::CellReader reader(drivers_directory);
 
-        RectangleSampler sampler(simulation.tissue(), sampler_region.first, sampler_region.second);
+        const auto& tissue = simulation.tissue();
 
-        return grow_forest_from(sampler, reader);
+        RectangleSampler sampler(tissue, sampler_region.first, sampler_region.second);
+
+        auto genotypes = tissue.get_genotypes();
+
+        return grow_forest_from(sampler, reader, genotypes);
     }
 
     template<typename ABSOLUTE_GENOTYPE_POSITION = uint32_t>

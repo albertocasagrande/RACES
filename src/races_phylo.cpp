@@ -2,8 +2,8 @@
  * @file races_phylo.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Main file for the simulator
- * @version 0.3
- * @date 2023-07-21
+ * @version 0.4
+ * @date 2023-09-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -159,9 +159,13 @@ int main(int argc, char* argv[])
         archive & simulation;
     }
 
-    RectangleSampler sampler(simulation.tissue(),{496,495},{500,500});
+    const auto& tissue = simulation.tissue();
 
-    PhylogeneticForest forest = grow_forest_from(sampler, reader);
+    RectangleSampler sampler(tissue,{496,495},{500,500});
+
+    auto genotypes = tissue.get_genotypes();
+
+    PhylogeneticForest forest = grow_forest_from(sampler, reader, genotypes);
 
     IO::phyloXMLStream os;
 
