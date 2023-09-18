@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.3
- * @date 2023-09-13
+ * @version 0.4
+ * @date 2023-09-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,11 +44,17 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
 {
     os << "chr" << separator << "from" << separator << "to" << separator
        << "ref" << separator << "alt" << separator
-       << "type" << separator << "context" << separator << "cause" << separator 
-       << "# of non-filtered cells" << separator  << "# of cells" << separator 
-       << "non-filtered rate" << separator << "over-total rate" << separator 
-       << "mutated alleles" << std::endl;
+       << "type" << separator << "context" << separator << "cause"
+       << separator << "# of mutated alleles";
 
+    if (num_of_non_filtered_cells != num_of_cells) { 
+        os << separator << "# of non-filtered cells" << separator  << "# of cells"
+           << separator << "non-filtered rate" << separator << "over-total rate";
+    } else {
+        os << separator  << "# of cells" << separator << "rate";
+    }
+    
+    os << std::endl;
 
     for (const auto& [snv, snv_statistics] : SNVs) {
 
@@ -56,11 +62,20 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
            << separator << snv.position << separator
            << snv.context.get_central_nucleotide() << separator << snv.mutated_base << separator
            << "SNV" << separator << snv.context << separator
-           << snv.cause << separator << snv_statistics.num_of_non_filtered_cells 
-           << separator << snv_statistics.num_of_cells
-           << separator << (static_cast<double>(snv_statistics.num_of_non_filtered_cells)/num_of_non_filtered_cells)
-           << separator << (static_cast<double>(snv_statistics.num_of_non_filtered_cells)/num_of_cells)
-           << separator << snv_statistics.mutated_alleles << std::endl;
+           << snv.cause << separator << snv_statistics.mutated_alleles;
+
+        const auto double_non_filtered = static_cast<double>(snv_statistics.num_of_non_filtered_cells);
+        if (num_of_non_filtered_cells != num_of_cells) {
+            os << separator << snv_statistics.num_of_non_filtered_cells 
+               << separator << snv_statistics.num_of_cells
+               << separator << (double_non_filtered/num_of_non_filtered_cells)
+               << separator << (double_non_filtered/num_of_cells);
+        } else {
+            os << separator << snv_statistics.num_of_cells
+               << separator << (double_non_filtered/num_of_cells);
+        }
+
+        os << std::endl;
     }
 
     return os;
