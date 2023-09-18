@@ -32,6 +32,16 @@ elseif()
     set(COMPILE_SDL2_CODE FALSE)
 endif()
 
+find_package(Matplot++)
+
+if(${Matplot++_FOUND})
+    message("Matplot++ found")
+
+    add_compile_definitions(WITH_MATPLOT)
+elseif()
+    message("Matplot++ NOT found")
+endif()
+
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
@@ -89,6 +99,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype_id.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/position.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
@@ -125,6 +136,10 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
+
+if(${Matplot++_FOUND})
+    set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
+endif()
 
 if(${COMPILE_SDL2_CODE})
     add_compile_definitions(WITH_SDL2)

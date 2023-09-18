@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.1
- * @date 2023-09-16
+ * @version 0.2
+ * @date 2023-09-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,10 @@
 #include "fasta_utils.hpp"
 
 #include "progress_bar.hpp"
+
+#ifdef WITH_MATPLOT
+#include <matplot/matplot.h>
+#endif // WITH_MATPLOT
 
 namespace Races
 {
@@ -132,6 +136,26 @@ public:
      * @param filename is the directory filename
      */
     void save_VAF_csv(const std::filesystem::path& filename) const;
+
+#ifdef WITH_MATPLOT
+    /**
+     * @brief Save a image representing the coverage of a chromosome
+     * 
+     * @param filename is the image filename
+     * @param chromosome_id is the identifier of the chromosome whose
+     *          coverage must be represented
+     */
+    void save_coverage_images(const std::filesystem::path& filename, const ChromosomeId& chromosome_id) const;
+
+    /**
+     * @brief Save a image representing the histogram of a chromosome SNVs
+     * 
+     * @param filename is the image filename
+     * @param chromosome_id is the identifier of the chromosome whose
+     *          SNVs must be represented
+     */
+    void save_SNV_histogram(const std::filesystem::path& filename, const ChromosomeId& chromosome_id) const;
+#endif // WITH_MATPLOT
 };
 
 /**
@@ -575,15 +599,19 @@ private:
      * @param[in,out] not_covered_size is the size of the fragments for which reads have not been generated yet
      * @param[in,out] num_of_templates is the number of template to be simulated
      * @param[in] group_name is the read group name
-     * @param[in,out] group_statistics are the statistics of the read group `group_name` 
+     * @param[in,out] group_statistics are the statistics of the read group `group_name`
+     * @param[in] total_steps is the total number of steps required to complete the overall procedure
+     * @param[in,out] steps is the number of performed steps
+     * @param[in,out] progress_bar is the progress bar
      * @param[in,out] SAM_stream is the SAM file output stream
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void generate_fragment_reads(const AlleleFragment& fragment, const ChromosomeData<DATA_TYPE>& chr_data,
                                  size_t& not_covered_size, size_t& num_of_templates, 
-                                 const std::string& group_name, Statistics::GroupStatistics& group_statistics, 
-                                 std::ostream* SAM_stream)
+                                 const std::string& group_name, Statistics::GroupStatistics& group_statistics,
+                                 const size_t& total_steps, size_t& steps,
+                                 Races::UI::ProgressBar& progress_bar, std::ostream* SAM_stream)
     {
         auto template_size = ((read_type==ReadType::PAIRED_READ)
                               ?2*read_size+insert_size:read_size);
@@ -593,6 +621,10 @@ private:
             std::binomial_distribution<size_t> b_dist(num_of_templates, hit_probability);
 
             size_t num_of_frag_templates = b_dist(random_generator);
+
+            const double fragment_progress_ratio = (100*static_cast<double>(fragment.size())/num_of_frag_templates)/total_steps;
+
+            const double current_progress = 100*static_cast<double>(steps)/total_steps;
 
             const auto& SNVs = fragment.get_SNVs();
 
@@ -624,10 +656,12 @@ private:
                     ++simulated_templates;
                     --num_of_templates;
                 }
+                progress_bar.set_progress(current_progress+simulated_templates*fragment_progress_ratio);
             }
         }
 
         not_covered_size -= fragment.size();
+        steps += fragment.size();
     }
 
     /**
@@ -666,7 +700,7 @@ private:
             std::string group_name = "";
 
             if constexpr(std::is_same_v<CellGenomeMutations, GENOME_MUTATION>) {
-                auto group_it =  genotype_group.find(cell_mutations.get_genotype_id());
+                auto group_it =  genotype_group.find(cell_mutations.get_epigenetic_id());
                 if (group_it != genotype_group.end()) {
                     group_name = group_it->second;
                 }
@@ -682,10 +716,9 @@ private:
                 for (const auto& [position, fragment] : allele.get_fragments()) {
                     generate_fragment_reads(fragment, chr_data, not_covered_size,
                                             num_of_templates, group_name, 
-                                            group_statistics, SAM_stream);
+                                            group_statistics, total_steps, steps,
+                                            progress_bar, SAM_stream);
                 }
-
-                steps += allele.size();
 
                 progress_bar.set_progress(100*steps/total_steps);
             }
@@ -693,8 +726,16 @@ private:
 
         progress_bar.set_message("Saving statistics");
 
-        const std::string VAF_filename = "chr_"+GenomicPosition::chrtos(chr_data.chr_id)+"_VAF.csv";
-        statistics.save_VAF_csv(output_directory/VAF_filename);
+        const std::string base_filename = "chr_"+GenomicPosition::chrtos(chr_data.chr_id);
+        statistics.save_VAF_csv(output_directory/(base_filename+"_VAF.csv"));
+#ifdef WITH_MATPLOT
+        progress_bar.update_elapsed_time();
+
+        progress_bar.set_message("Saving "+base_filename+" images");
+        statistics.save_coverage_images(output_directory/(base_filename+"_coverage.jpg"), chr_data.chr_id);
+        progress_bar.update_elapsed_time();
+        statistics.save_SNV_histogram(output_directory/(base_filename+"_hist.jpg"), chr_data.chr_id);
+#endif // WITH_MATPLOT
     }
 
     /**
