@@ -1,9 +1,9 @@
 /**
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement a 2D plot window by using SDL2
- * @version 0.4
- * @date 2023-08-05
+ * @brief Implements a 2D plot window by using SDL2
+ * @version 0.5
+ * @date 2023-09-20
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -88,26 +88,34 @@ SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const 
 void SDLWindow::draw_rectangle(const unsigned int upper_left_x, const unsigned int upper_left_y,
 					           const unsigned int width, const unsigned int height, const unsigned int thickness)
 {
+	auto top_left_x = static_cast<int>(upper_left_x)-static_cast<int>(thickness);
+	auto top_left_y = static_cast<int>(upper_left_y)-static_cast<int>(thickness);
+	auto lower_left_x = top_left_x+static_cast<int>(width+thickness);
+	auto lower_left_y = top_left_y+static_cast<int>(height+thickness);
 
-	SDL_Rect outer  = { static_cast<int>(upper_left_x), 
-						static_cast<int>(upper_left_y), 
-					    static_cast<int>(width), 
-					    static_cast<int>(height) };
+	SDL_Rect outer  = { top_left_x, top_left_y, 
+					    static_cast<int>(width+2*thickness), 
+					    static_cast<int>(thickness) };
 
 	SDL_RenderFillRect( renderer, &outer );
 
-	if (width>2*thickness &&  height>2*thickness) {
-		Color color = get_color();
+	outer  = { top_left_x, top_left_y, 
+			   static_cast<int>(thickness), 
+			   static_cast<int>(height+2*thickness) };
+			
+	SDL_RenderFillRect( renderer, &outer );
 
-		set_color(this->background_color);
-		SDL_Rect inner = { static_cast<int>(upper_left_x+thickness), 
-						   static_cast<int>(upper_left_y+thickness), 
-						   static_cast<int>(width-2*thickness), 
-						   static_cast<int>(height-2*thickness) };
+	outer  = { top_left_x, lower_left_y, 
+			   static_cast<int>(width+2*thickness), 
+			   static_cast<int>(thickness) };
 
-		SDL_RenderFillRect( renderer, &inner );
-		set_color(color);
-	}
+	SDL_RenderFillRect( renderer, &outer );
+
+	outer  = { lower_left_x, top_left_y, 
+			   static_cast<int>(thickness), 
+			   static_cast<int>(height+2*thickness) };
+
+	SDL_RenderFillRect( renderer, &outer );
 }
 
 void SDLWindow::draw_filled_rectangle(const unsigned int upper_left_x, const unsigned int upper_left_y,
