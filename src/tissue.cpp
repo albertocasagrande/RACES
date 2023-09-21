@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define tissue class
- * @version 0.15
- * @date 2023-09-17
+ * @version 0.16
+ * @date 2023-09-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -299,6 +299,20 @@ Tissue::CellInTissueProxy Tissue::operator()(const PositionInTissue& position)
 const Tissue::CellInTissueConstantProxy Tissue::operator()(const PositionInTissue& position) const
 {
     return CellInTissueConstantProxy(*this, position);
+}
+
+size_t Tissue::count_driver_cells_from(PositionInTissue position, 
+                                       const Direction& direction) const
+{
+    size_t counter{0};
+
+    PositionDelta delta(direction);
+    while (is_valid(position)&&cell_pointer(position)!=nullptr) {
+        position += delta;
+        ++counter;
+    }
+
+    return counter;
 }
 
 std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const Direction& direction)

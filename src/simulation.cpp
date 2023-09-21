@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Define a tumor evolution simulation
- * @version 0.9
- * @date 2023-09-17
+ * @version 0.10
+ * @date 2023-09-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -222,6 +222,38 @@ Simulation::simulate_death(const Position& position)
     return {{cell.copy_and_kill()},{}};
 }
 
+template<typename GENERATOR>
+inline const Direction& select_push_direction(GENERATOR& random_gen,
+                                              const Tissue& tissue,
+                                              const PositionInTissue& position,
+                                              const std::vector<Direction>& directions)
+{
+    std::vector<double> cells_to_push;
+    double total{0.0};
+    for (const auto& direction : directions) {
+        size_t num_of_cells = tissue.count_driver_cells_from(position, direction);
+        cells_to_push.push_back(static_cast<double>(1.0)/num_of_cells);
+        total += cells_to_push.back(); 
+    }
+
+    std::uniform_real_distribution<double> distribution(0,total);
+
+    auto selected = distribution(random_gen);
+
+    total = 0.0;
+    auto it = cells_to_push.begin();
+    for (const auto& direction : directions) {
+        total += *it;
+        ++it;
+
+        if (total >= selected) {
+            return direction;
+        }
+    }
+
+    return directions.back();
+}
+
 template<typename GENERATOR, typename T>
 inline const T& select_random_value(GENERATOR& random_gen, const std::vector<T>& values)
 {
@@ -257,7 +289,9 @@ Simulation::simulate_duplication(const Position& position)
     Cell parent_cell = tissue(position);
 
     // push the cell in position towards a random direction
-    const Direction& push_dir = select_random_value(random_gen, valid_directions);
+    //const Direction& push_dir = select_random_value(random_gen, valid_directions);
+    const Direction& push_dir = select_push_direction(random_gen, tissue, position, 
+                                                      valid_directions);
     affected.lost_cells = tissue.push_cells(position, push_dir);
     
     tissue(position) = parent_cell.generate_descendent(time);

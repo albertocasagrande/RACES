@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines tissue class
- * @version 0.17
- * @date 2023-09-12
+ * @version 0.18
+ * @date 2023-09-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -657,6 +657,17 @@ public:
     {
         return dimensions;
     }
+
+    /**
+     * @brief Count the contiguous driver mutated cells in a direction
+     * 
+     * @param position is the position from which the cells are counted
+     * @param direction is the counting direction 
+     * @return the number of contiguous driver mutated cells from 
+     *      `from_position` towards `directions`
+     */
+    size_t count_driver_cells_from(const PositionInTissue position, 
+                                   const Direction& directions) const;
 
     /**
      * @brief Push contiguous driver mutated cells in a direction
