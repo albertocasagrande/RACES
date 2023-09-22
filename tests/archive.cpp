@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Some archive tests
- * @version 0.9
- * @date 2023-09-17
+ * @version 0.10
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -386,7 +386,9 @@ BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation_queue)
 
     std::vector<TimedGenomicMutation> vector{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
 
-    using PriorityQueue = std::priority_queue<TimedGenomicMutation>;
+    using PriorityQueue = std::priority_queue<TimedGenomicMutation,
+                                              std::vector<TimedGenomicMutation>,
+                                              std::greater<TimedGenomicMutation>>;
 
     PriorityQueue queue(vector.begin(), vector.end());
 

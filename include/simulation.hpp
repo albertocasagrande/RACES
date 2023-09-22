@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.9
- * @date 2023-09-17
+ * @version 0.10
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -91,7 +91,9 @@ class Simulation
         std::list<Cell> lost_cells;
     };
 
-    using GenomicQueue = std::priority_queue<TimedGenomicMutation>;
+    using GenomicQueue = std::priority_queue<TimedGenomicMutation,
+                                             std::vector<TimedGenomicMutation>,
+                                             std::greater<TimedGenomicMutation>>;
     using system_clock = std::chrono::system_clock;
 
     std::vector<Tissue> tissues;     //!< Simulated tissues

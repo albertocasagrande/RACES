@@ -2,8 +2,8 @@
  * @file timed_mutations.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines timed genomic mutations
- * @version 0.2
- * @date 2023-09-07
+ * @version 0.3
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -116,11 +116,11 @@ struct TimedGenomicMutation {
 
 
 template<>
-struct std::less<Races::Drivers::Simulation::TimedGenomicMutation> {
+struct std::greater<Races::Drivers::Simulation::TimedGenomicMutation> {
     inline constexpr bool operator()(const Races::Drivers::Simulation::TimedGenomicMutation &lhs, 
                                      const Races::Drivers::Simulation::TimedGenomicMutation &rhs) const 
     {
-        return lhs.time < rhs.time;
+        return lhs.time > rhs.time;
     }
 };
 
