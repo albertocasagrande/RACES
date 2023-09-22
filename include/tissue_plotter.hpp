@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Defines a UI window to plot a tissue
- * @version 0.9
- * @date 2023-09-07
+ * @version 0.10
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -129,7 +129,7 @@ class TissuePlotter {
 	{
 		auto sizes(tissue.size());
 		if constexpr(PLOT_WINDOW::dimensions()==2) {
-			window->set_color(Color(0xFF,0xFF,0xFF));
+			window->use_color(window->get_font_color());
 			window->draw_rectangle(frame_border-frame_thickness, 
 								   legend_rectangle_height+frame_border-frame_thickness,
 							       sizes[0]+2*frame_thickness, sizes[1]+2*frame_thickness);
@@ -152,7 +152,7 @@ class TissuePlotter {
 		const unsigned int label_x_pos = frame_border;
 		const unsigned int label_y_pos = (frame_border+legend_rectangle_height-label_height)/2;
 
-		window->set_color(Color(0xFF,0xFF,0xFF));
+		window->use_color(window->get_font_color());
 		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
@@ -172,7 +172,7 @@ class TissuePlotter {
 		const unsigned int label_x_pos=frame_border+300;
 		const unsigned int label_y_pos = (frame_border+legend_rectangle_height-label_height)/2;
 
-		window->set_color(Color(0xFF,0xFF,0xFF));
+		window->use_color(window->get_font_color());
 		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
@@ -196,7 +196,7 @@ class TissuePlotter {
 		const unsigned int label_x_pos=frame_border+600;
 		const unsigned int label_y_pos = (frame_border+legend_rectangle_height-label_height)/2;
 
-		window->set_color(Color(0xFF,0xFF,0xFF));
+		window->use_color(window->get_font_color());
 		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
@@ -218,7 +218,7 @@ class TissuePlotter {
 		for (const auto& species: tissue) {
 			const auto& color = palette[species_idx++];
 
-			window->set_color(color);
+			window->use_color(color);
 
 			for (const auto& cell: species) {
 				if constexpr(PLOT_WINDOW::dimensions()==2) {
@@ -237,10 +237,10 @@ class TissuePlotter {
 							 const Drivers::Simulation::SpeciesStatistics& statistics, 
 							 const unsigned int& x, const unsigned int& y, const Color& color)
 	{
-		window->set_color(color);
+		window->use_color(color);
 		window->draw_filled_rectangle(x,y,legend_rectangle_width,legend_rectangle_height);
 
-		window->set_color(window->get_background_color());
+		window->use_color(window->get_font_color());
 
 		std::ostringstream oss;
 
@@ -372,6 +372,26 @@ public:
 	inline void set_frames_per_second(const unsigned int frames_per_second)
 	{
 		redraw_interval = std::chrono::milliseconds(1000/frames_per_second);
+	}
+
+	/**
+	 * @brief Set the font color
+	 * 
+	 * @param font_color is the new font color
+	 */
+	inline void set_font_color(const Color& font_color)
+	{
+		window->set_font_color(font_color);
+	}
+
+	/**
+	 * @brief Set the background color
+	 * 
+	 * @param background_color is the new background color
+	 */
+	inline void set_background_color(const Color& background_color)
+	{
+		window->set_background_color(background_color);
 	}
 
 	/**

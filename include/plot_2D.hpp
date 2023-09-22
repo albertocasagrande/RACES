@@ -1,9 +1,9 @@
 /**
  * @file plot_2D.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implements a 2D plot window
- * @version 0.6
- * @date 2023-09-07
+ * @brief Defines a 2D plot window
+ * @version 0.7
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,6 +47,7 @@ namespace UI
  */
 class Plot2DWindow {
 protected:
+	Color font_color;			//!< font color
 	Color background_color;		//!< background color
 
 	bool w_closed;				//!< flag reporting whether the window has been closed
@@ -73,11 +74,25 @@ public:
 	Color get_color() const;
 
 	/**
-	 * @brief Set a color
+	 * @brief Use a color
 	 * 
-	 * @param color is the color to be set
+	 * @param color is the color to be used
 	 */
-	void set_color(const Color& color);
+	void use_color(const Color& color);
+
+	/**
+	 * @brief Get the background color
+	 * 
+	 * @return the background color
+	 */
+	Color get_font_color() const;
+
+	/**
+	 * @brief Set the font color
+	 * 
+	 * @param color is the color to be set a font color
+	 */
+	void set_font_color(const Color& color);
 
 	/**
 	 * @brief Get the background color
@@ -190,20 +205,29 @@ inline void Plot2DWindow::clear()
 {
 }
 	
-inline void Plot2DWindow::set_color(const Color& color)
+inline void Plot2DWindow::use_color(const Color& color)
 {
 	(void)color;
+}
+
+inline void Plot2DWindow::set_font_color(const Color& color)
+{
+	font_color = color;
 }
 
 inline void Plot2DWindow::set_background_color(const Color& color)
 {
 	background_color = color;
 }
-
 	
 inline Color Plot2DWindow::get_color() const
 {
 	return Color();
+}
+
+inline Color Plot2DWindow::get_font_color() const
+{
+	return font_color;
 }
 
 inline Color Plot2DWindow::get_background_color() const

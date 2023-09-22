@@ -1,9 +1,9 @@
 /**
  * @file plot_2D.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement a 2D plot window
- * @version 0.4
- * @date 2023-08-05
+ * @brief Implements a 2D plot window
+ * @version 0.5
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@ namespace UI
 {
 
 Plot2DWindow::Plot2DWindow(const unsigned int width, const unsigned int height, const std::string& name):
-	background_color(), w_closed(false)
+	font_color(Color(0x00,0x00,0x00)), background_color(Color(0xDC,0xDC,0xDC)), w_closed(false)
 {
 	(void)width;
 	(void)height;

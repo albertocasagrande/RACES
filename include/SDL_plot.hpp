@@ -1,9 +1,9 @@
 /**
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implements a 2D plot window by using SDL2
- * @version 0.4
- * @date 2023-09-07
+ * @brief Defines a 2D plot window by using SDL2
+ * @version 0.5
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -77,7 +77,7 @@ public:
 	 */
 	inline void clear()
 	{
-		set_color(this->background_color);
+		use_color(this->background_color);
 		SDL_RenderClear( renderer );
 	}
 
@@ -96,11 +96,11 @@ public:
 	}
 
 	/**
-	 * @brief Set a color
+	 * @brief Use a color
 	 * 
-	 * @param color is the color to be set
+	 * @param color is the color to be used
 	 */
-	inline void set_color(const Color& color)
+	inline void use_color(const Color& color)
 	{
 		SDL_SetRenderDrawColor( renderer, color.red, color.green, color.blue, color.alpha );
 	}

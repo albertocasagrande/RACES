@@ -1,9 +1,9 @@
 /**
  * @file palette.cpp
  * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Define the TissuePlotter driver palette
- * @version 0.1
- * @date 2023-06-14
+ * @brief Implements the Color class and defines the TissuePlotter driver palette
+ * @version 0.2
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,10 +52,17 @@ Color::Color(const uint8_t red, const uint8_t green, const uint8_t blue, const u
 {}
 
 std::vector<Color> palette{
+/*
 	{0x00,0x00,0xFF},
 	{0xFF,0x00,0x00},
 	{0x01,0xFF,0xFE},
 	{0xFF,0xA6,0xFE},
+*/
+	{0x00,0x73,0xC2},
+	{0xEF,0xC0,0x00},
+	{0x86,0x86,0x86},
+	{0xCD,0x53,0x4C},
+
 	{0xFF,0xDB,0x66},
 	{0x00,0x64,0x01},
 	{0x01,0x00,0x67},

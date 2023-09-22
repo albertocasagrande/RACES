@@ -2,8 +2,8 @@
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (acasagrande@units.it)
  * @brief Implements a 2D plot window by using SDL2
- * @version 0.5
- * @date 2023-09-20
+ * @version 0.6
+ * @date 2023-09-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -81,7 +81,7 @@ SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const 
 		throw std::runtime_error( "Renderer could not be created" );
 	}
 	//Initialize renderer color
-	set_color(this->background_color);
+	use_color(this->background_color);
 }
 
 
@@ -134,12 +134,12 @@ void SDLWindow::delete_point(const unsigned int x, const unsigned int y)
 	Color color = get_color();
 	
 	// set background color 
-	set_color(this->background_color);
+	use_color(this->background_color);
 
 	// plot the point
 	draw_point(x,y);
 
-	set_color(color);
+	use_color(color);
 }
 
 void SDLWindow::get_text_size(const std::string& text, unsigned int& width, unsigned int& height)
