@@ -1,9 +1,9 @@
 /**
  * @file races_phylo.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the simulator
- * @version 0.4
- * @date 2023-09-17
+ * @version 0.5
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,10 +42,13 @@
 
 #include "phyloXML.hpp"
 
+#include "json_config.hpp"
+
+
 std::ostream& print_help(std::ostream& os, const std::string& program_name, 
                          const boost::program_options::options_description& options)
 {
-   os << "Syntax: "<< program_name <<" <directory>" << std::endl
+   os << "Syntax: "<< program_name <<" <directory> <passenger config>" << std::endl
       << options << std::endl;
 
    return os;   
@@ -95,6 +98,50 @@ std::filesystem::path find_last_snapshot(const std::filesystem::path directory)
     return last;
 }
 
+Races::Drivers::Simulation::Simulation
+load_drivers_simulation(const std::string& driver_directory, const bool quiet=false)
+{
+    auto last_snapshot_path = find_last_snapshot(driver_directory);
+
+    Races::Archive::Binary::In archive(last_snapshot_path);
+
+    Races::Drivers::Simulation::Simulation simulation;
+
+    if (quiet) {
+        archive & simulation;
+    } else {
+        archive.load(simulation, "simulation");
+    }
+
+    return simulation;
+}
+
+Races::Drivers::PhylogeneticForest 
+build_forest(const std::string& driver_directory, const nlohmann::json& simulation_cfg,
+             const bool quiet=true)
+{
+    using namespace Races::Drivers;
+    using ConfigReader = Races::Passengers::ConfigReader;
+
+    if (!simulation_cfg.contains("sample region")) {
+        throw std::runtime_error("The passengers simulation file must contain "
+                                    "a \"sample region\" field");
+    }
+
+    const auto sampler_region = ConfigReader::get_sample_region(simulation_cfg["sample region"]);
+
+    Simulation::BinaryLogger::CellReader reader(driver_directory);
+
+    auto simulation = load_drivers_simulation(driver_directory, quiet);
+    const auto& tissue = simulation.tissue();
+
+    RectangleSampler sampler(tissue, sampler_region.first, sampler_region.second);
+
+    auto genotypes = tissue.get_genotypes();
+
+    return grow_forest_from(sampler, reader, genotypes);
+}
+
 int main(int argc, char* argv[])
 {
     using namespace Races::Drivers;
@@ -105,11 +152,14 @@ int main(int argc, char* argv[])
         ("help,h", "get the help");
     
     std::string directory;
+    std::string config;
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
         ("directory", po::value<std::string>(&directory), 
          "the simulation log directory")
+        ("passenger-config", po::value<std::string>(&config), 
+         "the passenger simulation config")
     ;
 
     po::options_description generic;
@@ -117,6 +167,7 @@ int main(int argc, char* argv[])
 
     po::positional_options_description p;
     p.add("directory", 1);
+    p.add("passenger-config", 1);
 
     po::variables_map vm;
     try {
@@ -140,36 +191,27 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::filesystem::path last_snapshot_path;
+    if (!vm.count("passenger-config")) {
+        std::cerr << "Missing passenger configuration file!" << std::endl << std::endl;
+        print_help(std::cout, argv[0], visible);
+        return 1;
+    }
+
+    std::ifstream config_stream(config);
+    nlohmann::json simulation_cfg = nlohmann::json::parse(config_stream);
+
     try {
-        last_snapshot_path = find_last_snapshot(directory);
+        auto forest = build_forest(directory, simulation_cfg);
+
+        IO::phyloXMLStream os;
+
+        os << forest;
     } catch (std::runtime_error& ex) {
         std::cerr << ex.what() << std::endl << std::endl;
         print_help(std::cout, argv[0], visible); 
 
         return 1;
     }
-
-    Simulation::BinaryLogger::CellReader reader(directory);
-    
-    Simulation::Simulation simulation;
-    {
-        Races::Archive::Binary::In archive(last_snapshot_path);
-
-        archive & simulation;
-    }
-
-    const auto& tissue = simulation.tissue();
-
-    RectangleSampler sampler(tissue,{496,495},{500,500});
-
-    auto genotypes = tissue.get_genotypes();
-
-    PhylogeneticForest forest = grow_forest_from(sampler, reader, genotypes);
-
-    IO::phyloXMLStream os;
-
-    os << forest;
 
     return 0;
 }
