@@ -30,4 +30,10 @@ snapshot_*-*.dat
 *.bam
 *.csv
 *.jpg
+*.xml
+*.pdf
+*.txt
+*.fna
+*.fasta
+*.fa
 docs/*
