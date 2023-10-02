@@ -1,9 +1,9 @@
 /**
  * @file context_index.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Passengers::ContextIndex class
- * @version 0.4
- * @date 2023-09-07
+ * @version 0.5
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

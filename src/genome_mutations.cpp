@@ -1,9 +1,9 @@
 /**
  * @file genome_mutations.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.7
- * @date 2023-09-12
+ * @version 0.8
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

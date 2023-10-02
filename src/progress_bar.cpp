@@ -1,9 +1,9 @@
 /**
  * @file progress_bar.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement a progress bar
- * @version 0.8
- * @date 2023-08-26
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
+ * @brief Implements a progress bar
+ * @version 0.9
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

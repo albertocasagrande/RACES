@@ -1,9 +1,9 @@
 /**
  * @file archive.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.10
- * @date 2023-09-22
+ * @version 0.11
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

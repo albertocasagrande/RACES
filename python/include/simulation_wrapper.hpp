@@ -1,9 +1,9 @@
 /**
  * @file simulation_wrapper.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.4
- * @date 2023-08-05
+ * @version 0.5
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

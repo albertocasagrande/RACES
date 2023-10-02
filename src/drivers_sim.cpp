@@ -1,9 +1,9 @@
 /**
  * @file drivers_sim.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.2
- * @date 2023-09-07
+ * @version 0.3
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -153,7 +153,7 @@ class DriverSimulator
             epigenetic_rates.push_back({methylation_rate, demethylation_rate});
         }
 
-        if (!genotype_json.contains("epigenetic rates")) {
+        if (!genotype_json.contains("name")) {
             throw std::domain_error("The genotype specification must contain a \"name\" field");
         }
 

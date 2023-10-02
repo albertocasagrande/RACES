@@ -1,9 +1,9 @@
 /**
  * @file phylogenetic_forest.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement classes and function for phylogenetic trees
- * @version 0.5
- * @date 2023-09-17
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
+ * @brief Implements classes and function for phylogenetic trees
+ * @version 0.6
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

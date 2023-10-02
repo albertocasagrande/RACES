@@ -1,9 +1,9 @@
 /**
  * @file epigenetic_rates.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement the Python wrapper class and functions for `Races::EpigeneticRates`
- * @version 0.2
- * @date 2023-07-21
+ * @version 0.3
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

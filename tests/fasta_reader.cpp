@@ -1,9 +1,9 @@
 /**
  * @file fasta_reader.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::IO::FASTA::Reader class
- * @version 0.3
- * @date 2023-08-12
+ * @version 0.4
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

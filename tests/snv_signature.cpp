@@ -1,9 +1,9 @@
 /**
  * @file snv_signature.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some SNV example
- * @version 0.5
- * @date 2023-07-26
+ * @version 0.6
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

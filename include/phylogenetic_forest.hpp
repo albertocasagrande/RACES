@@ -1,9 +1,9 @@
 /**
  * @file phylogenetic_forest.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.9
- * @date 2023-09-17
+ * @version 0.10
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

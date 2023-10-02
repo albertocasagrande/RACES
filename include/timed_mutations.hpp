@@ -1,9 +1,9 @@
 /**
  * @file timed_mutations.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines timed genomic mutations
- * @version 0.3
- * @date 2023-09-22
+ * @version 0.4
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

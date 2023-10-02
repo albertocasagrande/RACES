@@ -1,9 +1,9 @@
 /**
  * @file simulation_wrapper.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement the Python wrapper class and functions for `Races::Simulation`
- * @version 0.3
- * @date 2023-09-07
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
+ * @brief Implements the Python wrapper class and functions for `Races::Simulation`
+ * @version 0.4
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

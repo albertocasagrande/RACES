@@ -1,9 +1,9 @@
 /**
  * @file archive.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.14
- * @date 2023-09-07
+ * @version 0.15
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

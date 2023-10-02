@@ -1,9 +1,9 @@
 /**
  * @file mutational_properties.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.2
- * @date 2023-08-19
+ * @version 0.3
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

@@ -1,9 +1,9 @@
 /**
  * @file read_simulator.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.2
- * @date 2023-09-18
+ * @version 0.3
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

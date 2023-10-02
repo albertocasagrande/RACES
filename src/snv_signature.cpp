@@ -1,9 +1,9 @@
 /**
  * @file snv_signature.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.10
- * @date 2023-08-13
+ * @version 0.11
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

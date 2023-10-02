@@ -1,9 +1,9 @@
 /**
  * @file driver.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the driver genotype representation
- * @version 0.8
- * @date 2023-09-07
+ * @version 0.9
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

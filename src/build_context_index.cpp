@@ -1,9 +1,9 @@
 /**
  * @file build_context_index.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the context index
- * @version 0.4
- * @date 2023-08-14
+ * @version 0.5
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

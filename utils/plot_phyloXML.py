@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2023 Alberto Casagrande <acasagrande@units.it>
+# Copyright (c) 2023 Alberto Casagrande <alberto.casagrande@uniud.it>
 #
 # MIT License
 #

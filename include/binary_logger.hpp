@@ -1,9 +1,9 @@
 /**
  * @file binary_logger.hpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.11
- * @date 2023-09-07
+ * @version 0.12
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

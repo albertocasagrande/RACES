@@ -1,9 +1,9 @@
 /**
  * @file genomic_position.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic position and related functions
- * @version 0.3
- * @date 2023-07-31
+ * @version 0.4
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

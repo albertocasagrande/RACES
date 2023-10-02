@@ -49,7 +49,7 @@ TBD
 ## License
 
 Copyright (c) 2023 
-Alberto Casagrande <[acasagrande@units.it](mailto:acasagrande@units.it)>
+Alberto Casagrande <[alberto.casagrande@uniud.it](mailto:alberto.casagrande@uniud.it)>
 
 MIT License
 

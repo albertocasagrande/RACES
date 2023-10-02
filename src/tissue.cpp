@@ -1,9 +1,9 @@
 /**
  * @file tissue.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.16
- * @date 2023-09-21
+ * @version 0.17
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

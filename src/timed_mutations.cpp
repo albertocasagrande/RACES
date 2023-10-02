@@ -1,9 +1,9 @@
 /**
  * @file timed_mutations.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements timed genomic mutations
- * @version 0.1
- * @date 2023-07-28
+ * @version 0.2
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

@@ -1,9 +1,9 @@
 /**
  * @file phyloXML.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement phyloXML stream
- * @version 0.4
- * @date 2023-09-17
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
+ * @brief Implements phyloXML stream
+ * @version 0.5
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

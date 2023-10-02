@@ -1,9 +1,9 @@
 /**
  * @file mutation_engine.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.4
- * @date 2023-09-18
+ * @version 0.5
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

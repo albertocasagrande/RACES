@@ -1,9 +1,9 @@
 /**
  * @file genotype.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
- * @brief Implement the Python wrapper class and functions for `Races::Genotype`
- * @version 0.2
- * @date 2023-07-22
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
+ * @brief Implements the Python wrapper class and functions for `Races::Genotype`
+ * @version 0.3
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 

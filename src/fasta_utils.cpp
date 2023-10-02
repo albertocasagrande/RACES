@@ -1,9 +1,9 @@
 /**
  * @file fasta_utils.cpp
- * @author Alberto Casagrande (acasagrande@units.it)
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements support utilities for FASTA files
- * @version 0.5
- * @date 2023-08-12
+ * @version 0.6
+ * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
  * 
