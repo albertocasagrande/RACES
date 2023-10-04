@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.11
- * @date 2023-10-02
+ * @version 0.12
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@ namespace Simulation
 
 Simulation::Simulation(int random_seed):
     logger(nullptr), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
-    time(0), death_activation_level(1)
+    time(0), death_activation_level(1), duplicate_internal_cells(true)
 {
     random_gen.seed(random_seed);
 }
@@ -66,6 +66,7 @@ Simulation& Simulation::operator=(Simulation&& orig)
     std::swap(genomic_mutation_queue, orig.genomic_mutation_queue);
     std::swap(death_enabled, orig.death_enabled);
     std::swap(death_activation_level, orig.death_activation_level);
+    std::swap(duplicate_internal_cells, orig.duplicate_internal_cells);
 
     return *this;
 }
@@ -93,8 +94,6 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
                                       std::uniform_real_distribution<double>& uni_dist,
                                       GENERATOR_TYPE& random_gen)
 {
-    const auto& num_of_cells{species.num_of_cells()};
-
     std::list<CellEventType> event_types{CellEventType::DUPLICATE};
 
     if (death_enabled.count(species.get_id())>0) {
@@ -106,6 +105,10 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
     for (const auto& event_type: event_types) {
         const Time event_rate = species.get_rate(event_type);
         const Time r_value = uni_dist(random_gen);
+        size_t num_of_cells;
+        
+        num_of_cells = species.num_of_cells_available_for(event_type);
+        //num_of_cells = species.num_of_cells();
         const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
         if (event.delay>candidate_delay) {
             event.type = event_type;
@@ -115,7 +118,7 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
     }
 
     if (selected_new_event) {
-        event.position = Position(tissue, species.choose_a_cell(random_gen));
+        event.position = Position(tissue, species.choose_a_cell(random_gen, event.type));
         event.initial_genotype = species.get_id();
     }
 }
@@ -141,7 +144,7 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
 
     if (selected_new_event) {
         event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
-        event.position = Position(tissue, species.choose_a_cell(random_gen));
+        event.position = Position(tissue, species.choose_a_cell(random_gen, event.type));
         event.initial_genotype = species.get_id();
     }
 }
@@ -182,7 +185,7 @@ CellEvent Simulation::select_next_event()
         const TimedGenomicMutation& genomic_mutation = genomic_mutation_queue.top();
 
         if (genomic_mutation.time < event.delay + time) {
-            const auto* cell = choose_a_cell_in_genomic_species(tissue(), genomic_mutation.initial_id, random_gen);
+            const auto* cell = choose_a_cell_in_genomic_species(random_gen, tissue(), genomic_mutation.initial_id);
             if (cell != nullptr) {
                 event.delay = (genomic_mutation.time >= time? genomic_mutation.time - time:0);
                 event.type = CellEventType::DRIVER_GENETIC_MUTATION;
@@ -210,6 +213,26 @@ CellEvent Simulation::select_next_event()
     return event;
 }
 
+void enable_duplication_on_neighborhood_externals(Tissue& tissue, const PositionInTissue& position)
+{
+    auto sizes = tissue.size();
+    PositionInTissue pos;
+    pos.x = (position.x>0?position.x-1:0);
+    for (; (pos.x < position.x+2 &&  pos.x < sizes[0]); ++pos.x) {
+        pos.y = (position.y>0?position.y-1:0);
+        for (; (pos.y < position.y+2 &&  pos.y < sizes[1]); ++pos.y) {
+            pos.z = (position.z>0?position.z-1:0);
+            for (; ((pos.z < position.z+2 &&  pos.z < sizes[2])
+                    || (sizes[2]==0 && pos.z==0)); ++pos.z) {
+                Tissue::CellInTissueProxy cell_in_tissue = tissue(pos);
+                if (cell_in_tissue.has_driver_mutations() && cell_in_tissue.is_on_border()) {
+                    cell_in_tissue.enable_duplication();
+                }
+            }                     
+        }   
+    }
+}
+
 typename Simulation::EventAffectedCells 
 Simulation::simulate_death(const Position& position)
 {
@@ -219,7 +242,11 @@ Simulation::simulate_death(const Position& position)
         return {{},{}};
     }
 
-    return {{cell.copy_and_kill()},{}};
+    Simulation::EventAffectedCells affected = {{cell.copy_and_kill()},{}};
+
+    enable_duplication_on_neighborhood_externals(*(position.tissue), position);
+
+    return affected;
 }
 
 template<typename GENERATOR>
@@ -254,6 +281,46 @@ inline const Direction& select_push_direction(GENERATOR& random_gen,
     return directions.back();
 }
 
+
+template<typename GENERATOR>
+inline const Direction& select_min_push_direction(GENERATOR& random_gen,
+                                                  const Tissue& tissue,
+                                                  const PositionInTissue& position,
+                                                  const std::vector<Direction>& directions)
+{
+    std::list<size_t> cells_to_push;
+    size_t min_cells_to_push = std::numeric_limits<size_t>::max();
+    uint8_t num_of_mins = 0;
+    for (const auto& direction : directions) {
+        cells_to_push.push_back(tissue.count_driver_cells_from(position, direction));
+        if (min_cells_to_push>cells_to_push.back()) {
+            num_of_mins = 1;
+            min_cells_to_push = cells_to_push.back();
+        } else {
+            if (min_cells_to_push==cells_to_push.back()) {
+                ++num_of_mins;
+            }
+        }
+    }
+
+    std::uniform_int_distribution<uint8_t> distribution(1,num_of_mins);
+
+    auto selected = distribution(random_gen);
+
+    auto it = cells_to_push.begin();
+    uint8_t counter = 0;
+    for (const auto& direction : directions) {
+        if (*it==min_cells_to_push) {
+            if (++counter==selected) {
+                return direction;
+            }
+        }
+        ++it;
+    }
+
+    throw std::runtime_error("The direction has not been selected");
+}
+
 template<typename GENERATOR, typename T>
 inline const T& select_random_value(GENERATOR& random_gen, const std::vector<T>& values)
 {
@@ -276,6 +343,27 @@ Simulation::simulate_mutation(const Position& position, const EpigeneticGenotype
     return {{tissue(position)},{}};
 }
 
+
+void disable_duplication_on_neighborhood_internals(Tissue& tissue, const PositionInTissue& position)
+{
+    auto sizes = tissue.size();
+    PositionInTissue pos;
+    pos.x = (position.x>0?position.x-1:0);
+    for (; (pos.x < position.x+2 &&  pos.x < sizes[0]); ++pos.x) {
+        pos.y = (position.y>0?position.y-1:0);
+        for (; (pos.y < position.y+2 &&  pos.y < sizes[1]); ++pos.y) {
+            pos.z = (position.z>0?position.z-1:0);
+            for (; ((pos.z < position.z+2 &&  pos.z < sizes[2])
+                    || (sizes[2]==0 && pos.z==0)); ++pos.z) {
+                Tissue::CellInTissueProxy cell_in_tissue = tissue(pos);
+                if (cell_in_tissue.has_driver_mutations() && !cell_in_tissue.is_on_border()) {
+                    cell_in_tissue.disable_duplication();
+                }
+            }                     
+        }   
+    }
+}
+
 typename Simulation::EventAffectedCells 
 Simulation::simulate_duplication(const Position& position)
 {
@@ -289,20 +377,29 @@ Simulation::simulate_duplication(const Position& position)
     Cell parent_cell = tissue(position);
 
     // push the cell in position towards a random direction
-    //const Direction& push_dir = select_random_value(random_gen, valid_directions);
-    const Direction& push_dir = select_push_direction(random_gen, tissue, position, 
-                                                      valid_directions);
+    const Direction& push_dir = select_random_value(random_gen, valid_directions);
+    //const Direction& push_dir = select_min_push_direction(random_gen, tissue, position, 
+    //                                                      valid_directions);
+    
     affected.lost_cells = tissue.push_cells(position, push_dir);
     
-    tissue(position) = parent_cell.generate_descendent(time);
+    Tissue::CellInTissueProxy cell_in_tissue = tissue(position);
 
-    affected.new_cells.push_back(tissue(position));
+    cell_in_tissue = parent_cell.generate_descendent(time);
+
+    affected.new_cells.push_back(cell_in_tissue);
 
     PositionInTissue new_cell_position{position + PositionDelta(push_dir)};
     if (tissue.is_valid(new_cell_position)) {
-        tissue(new_cell_position) = parent_cell.generate_descendent(time);
+        Tissue::CellInTissueProxy cell_in_tissue = tissue(new_cell_position);
 
-        affected.new_cells.push_back(tissue(new_cell_position));
+        cell_in_tissue = parent_cell.generate_descendent(time);
+
+        if (!duplicate_internal_cells) {
+            disable_duplication_on_neighborhood_internals(tissue, new_cell_position);
+        }
+
+        affected.new_cells.push_back(cell_in_tissue);
     }
 
     return affected;
@@ -333,7 +430,7 @@ Simulation::simulate_duplication_epigenetic_event(const Position& position, cons
 }
 
 const CellInTissue*
-Simulation::choose_a_cell_in_genomic_species(const Tissue& tissue, const GenotypeId& genotype_id, std::mt19937_64& generator)
+Simulation::choose_a_cell_in_genomic_species(std::mt19937_64& generator, const Tissue& tissue, const GenotypeId& genotype_id)
 {
     std::vector<size_t> num_of_cells;
 

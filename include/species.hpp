@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.15
- * @date 2023-10-02
+ * @version 0.16
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,6 @@
 #include "driver_genotype.hpp"
 
 
-
 namespace Races 
 {
 
@@ -62,10 +61,13 @@ class Tissue;
  * This class represents the set of cells having the same driver genotype.
  */
 class Species: public EpigeneticGenotype {
-    using CellPos = std::list<CellInTissue *>::iterator;
+    /**
+     * @brief A map from cell ids to the corresponding pointers
+     */
+    using CellIdToCell = std::map<CellId, CellInTissue *>;
 
-    std::list<CellInTissue *> cells;    //!< species cell
-    std::map<CellId, CellPos> pos_map;  //!< map from CellId to `cells` position
+    CellIdToCell cells;                 //!< species cells sorted by birth time/id
+    CellIdToCell duplication_enabled;   //!< species cells that are duplication enabled
 
     Time last_insertion_time;     //!< the last insertion time
 
@@ -73,9 +75,9 @@ class Species: public EpigeneticGenotype {
      * @brief A constant iterator for the species cells
      */
     class const_iterator {
-        std::list<CellInTissue*>::const_iterator it; //!< the cell pointer vector iterator
+        CellIdToCell::const_iterator it; //!< the cell pointer vector iterator
 
-        const_iterator(const std::list<CellInTissue*>::const_iterator it);
+        const_iterator(const CellIdToCell::const_iterator it);
     public:
         using difference_type   =   std::ptrdiff_t;
         using value_type        =   CellInTissue;
@@ -87,12 +89,12 @@ class Species: public EpigeneticGenotype {
 
         inline reference operator*() const 
         { 
-            return **it; 
+            return *(it->second); 
         }
 
         inline pointer operator->() 
         {
-            return *it;
+            return it->second;
         }
 
         // Prefix increment
@@ -150,6 +152,48 @@ class Species: public EpigeneticGenotype {
      * @return pointer to the added cell
      */
     CellInTissue* add(CellInTissue* cell);
+
+    /**
+     * @brief Randomly select a cell among those in a id-cell pointer map
+     * 
+     * This method select a cell by using an exponential over 
+     * cell ages.
+     * 
+     * @tparam GENERATOR is a random number generator type
+     * @param generator is the random number generator used to select 
+     *      the cell
+     * @param id2cell_ptrs is the map id-cell pointers among which the 
+     *      cell must be selected
+     * @return a non-constant reference to a randomly selected
+     *       cell in the species 
+     */
+    template<typename GENERATOR>
+    const CellInTissue& choose_a_cell(GENERATOR& generator, 
+                                      const CellIdToCell& id2cell_ptrs) const
+    {
+        if (id2cell_ptrs.size()==0) {
+            throw std::domain_error("No cells can be selected");
+        }
+
+        std::exponential_distribution<Time> exp_dist;
+
+        auto aimed_partial_ages_sum = exp_dist(generator);
+
+        Time partial_ages_sum = 0;
+        for (const auto& [cell_id, cell_ptr] : id2cell_ptrs) {
+            if (partial_ages_sum == 0) {
+                aimed_partial_ages_sum *= (10*age(cell_ptr));
+            }
+
+            partial_ages_sum += age(cell_ptr);
+
+            if (partial_ages_sum>=aimed_partial_ages_sum) {
+                return *cell_ptr;
+            }
+        }
+
+        return *(cells.begin()->second);
+    }
 
     /**
      * @brief An empty constructor
@@ -219,6 +263,45 @@ public:
     }
 
     /**
+     * @brief Get the number of cells available for an event
+     * 
+     * @param event_type is the event for which the cells are needed
+     * @return the number of cells available for `event_type`
+     */
+    size_t num_of_cells_available_for(const CellEventType& event_type) const;
+
+    /**
+     * @brief Randomly select a cell for a specific event type
+     * 
+     * This method select a cell by using an exponential over 
+     * cell ages.
+     * 
+     * @tparam GENERATOR is a random number generator type
+     * @param generator is the random number generator used to select 
+     *      the cell
+     * @param event_type is the type of the event that will occurs 
+     *      to the selected cell
+     * @return a non-constant reference to a randomly selected
+     *       cell in the species 
+     */
+    template<typename GENERATOR>
+    const CellInTissue& choose_a_cell(GENERATOR& generator,
+                                      const CellEventType event_type) const
+    {
+        switch (event_type) {
+            case CellEventType::DIE:
+            case CellEventType::EPIGENETIC_EVENT:
+            case CellEventType::DRIVER_GENETIC_MUTATION:
+                return choose_a_cell(generator, cells);
+            case CellEventType::DUPLICATE:
+            case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
+                return choose_a_cell(generator, duplication_enabled);
+            default:
+                throw std::domain_error("Unsupported event type");
+        }
+    }
+
+    /**
      * @brief Randomly select a cell in the species
      * 
      * This method select a cell by using an exponential over 
@@ -231,30 +314,9 @@ public:
      *       cell in the species 
      */
     template<typename GENERATOR>
-    const CellInTissue& choose_a_cell(GENERATOR& generator) const
+    inline const CellInTissue& choose_a_cell(GENERATOR& generator) const
     {
-        if (num_of_cells()==0) {
-            throw std::domain_error("No cells in the species");
-        }
-
-        std::exponential_distribution<Time> exp_dist;
-
-        auto aimed_partial_ages_sum = exp_dist(generator);
-
-        Time partial_ages_sum = 0;
-        for (const auto& cell : cells) {
-            if (partial_ages_sum == 0) {
-                aimed_partial_ages_sum *= (2*age(cell));
-            }
-
-            partial_ages_sum += age(cell);
-
-            if (partial_ages_sum>=aimed_partial_ages_sum) {
-                return *cell;
-            }
-        }
-
-        return *(cells.front());
+        return choose_a_cell(generator, cells);
     }
 
     /**
@@ -266,6 +328,8 @@ public:
 
     /**
      * @brief Add a cell to the species
+     * 
+     * By default the duplication of the cell is switched on.
      * 
      * @param cell is the cell to be added to the species
      * @return pointer to the added cell
@@ -281,15 +345,39 @@ public:
     CellInTissue* add(CellInTissue& cell);
 
     /**
+     * @brief Switch on/off the duplication of a cell
+     * 
+     * @param cell is the identifier of the cell on which 
+     *          the duplication will be enabled/disabled
+     * @param duplication_on is a Boolean flag to enable 
+     *          (True)/disable(False) duplication on `cell` 
+     */
+    void switch_duplication_for(const CellId& cell_id,
+                                const bool duplication_on);
+
+    /**
+     * @brief Enable the duplication of a cell
+     * 
+     * @param cell is the identifier of the cell to be enabled
+     *          for the duplication
+     */
+    void enable_duplication_for(const CellId& cell_id);
+
+    /**
+     * @brief Disable the duplication of a cell
+     * 
+     * @param cell is the identifier of the cell to be disabled
+     *          for the duplication
+     */
+    void disable_duplication_for(const CellId& cell_id);
+
+    /**
      * @brief Get cell by identifier
      * 
      * @param cell_id is the identifier of the aimed cell
      * @return a non-constant reference to the aimed cell
      */
-    inline CellInTissue& operator()(const CellId& cell_id)
-    {
-        return *(*(pos_map.at(cell_id)));
-    }
+    CellInTissue& operator()(const CellId& cell_id);
 
     /**
      * @brief Get cell by identifier
@@ -297,10 +385,7 @@ public:
      * @param cell_id is the identifier of the aimed cell
      * @return a constant reference to the aimed cell
      */
-    inline const CellInTissue& operator()(const CellId& cell_id) const
-    {
-        return *(*(pos_map.at(cell_id)));
-    }
+    const CellInTissue& operator()(const CellId& cell_id) const;
 
     /**
      * @brief Test whether a cell is already contained in a species
@@ -310,7 +395,7 @@ public:
      */
     inline bool contains(const CellId& cell_id) const
     {
-        return pos_map.find(cell_id) != pos_map.end();
+        return cells.find(cell_id) != cells.end();
     }
 
     /**
@@ -331,9 +416,16 @@ public:
 
         archive & last_insertion_time;
 
+        // save species cells
         archive & cells.size();
-        for (const auto& cell_ptr: cells) {
+        for (const auto& [cell_id, cell_ptr]: cells) {
             archive & *cell_ptr;
+        }
+
+        // save duplicated ids
+        archive & duplication_enabled.size();
+        for (const auto& [cell_id, cell_ptr]: duplication_enabled) {
+            archive & cell_id;
         }
     }
 
@@ -353,6 +445,8 @@ public:
         archive & species.last_insertion_time;
 
         size_t num_of_cells;
+
+        // load species cells
         archive & num_of_cells;
         for (size_t i=0; i<num_of_cells; ++i) {
             CellInTissue *cell = new CellInTissue();
@@ -360,6 +454,16 @@ public:
             archive & *cell;
 
             species.add(cell);
+        }
+
+        // load duplicated enabled ids
+        archive & num_of_cells;
+        for (size_t i=0; i<num_of_cells; ++i) {
+            CellId cell_id;
+
+            archive & cell_id;
+
+            species.enable_duplication_for(cell_id);
         }
 
         return species;

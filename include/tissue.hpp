@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.19
- * @date 2023-10-02
+ * @version 0.20
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -361,6 +361,38 @@ public:
         }
 
         /**
+         * @brief Check whether a cell is on the cancer edge
+         * 
+         * @return `true` if and only if one of the eight 
+         *      neighbor cell does not have a driver mutation
+         */
+        bool is_on_border() const
+        {
+            if (!has_driver_mutations()) {
+                return false;
+            }
+
+            auto sizes = tissue.size();
+
+            PositionInTissue pos;
+            pos.x = (position.x>0?position.x-1:0);
+            for (; (pos.x < position.x+2 &&  pos.x < sizes[0]); ++pos.x) {
+                pos.y = (position.y>0?position.y-1:0);
+                for (; (pos.y < position.y+2 &&  pos.y < sizes[1]); ++pos.y) {
+                    pos.z = (position.z>0?position.z-1:0);
+                    for (; (pos.z < position.z+2 &&  pos.z < sizes[2])
+                            || (sizes[2]==0 && pos.z==0); ++pos.z) {
+                        if (tissue.cell_pointer(pos)==nullptr) {
+                            return true;
+                        }
+                    }
+                }   
+            }
+
+            return false;
+        }
+
+        /**
          * @brief Get a constant reference to the referenced cell
          * 
          * This method returns a constant reference of the referenced cell. When 
@@ -409,6 +441,18 @@ public:
         void kill();
 
         CellInTissue copy_and_kill();
+
+        void switch_duplication(const bool duplication_on);
+
+        inline void enable_duplication()
+        {
+            switch_duplication(true);
+        }
+
+        void disable_duplication()
+        {
+            switch_duplication(false);
+        }
 
         friend class Tissue;
     };

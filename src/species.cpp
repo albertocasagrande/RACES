@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.10
- * @date 2023-10-02
+ * @version 0.11
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,12 +47,12 @@ Species::Species():
 
 void Species::reset()
 {
-    for (auto& cell: cells) {
-        delete cell;
+    for (auto& [cell_id, cell_ptr]: cells) {
+        delete cell_ptr;
     }
 
     cells.clear();
-    pos_map.clear();
+    duplication_enabled.clear();
 }
 
 Species::Species(const EpigeneticGenotype& genotype):
@@ -60,10 +60,14 @@ Species::Species(const EpigeneticGenotype& genotype):
 {}
 
 Species::Species(const Species& orig):
-    EpigeneticGenotype(orig), last_insertion_time(0)
+    EpigeneticGenotype(orig), last_insertion_time(orig.last_insertion_time)
 {
-    for (const auto& cell: orig.cells) {
-        this->add(*cell);
+    for (const auto& [cell_id, cell_ptr]: orig.cells) {
+        this->add(*cell_ptr);
+    }
+
+    for (const auto& [cell_id, cell_ptr]: orig.duplication_enabled) {
+        this->enable_duplication_for(cell_id);
     }
 }
 
@@ -73,8 +77,14 @@ Species& Species::operator=(const Species& orig)
 
     static_cast<EpigeneticGenotype&>(*this) = static_cast<EpigeneticGenotype>(orig);
 
-    for (const auto& cell: orig.cells) {
-        this->add(*cell);
+    last_insertion_time = orig.last_insertion_time;
+
+    for (const auto& [cell_id, cell_ptr]: orig.cells) {
+        this->add(*cell_ptr);
+    }
+
+    for (const auto& [cell_id, cell_ptr]: orig.duplication_enabled) {
+        this->enable_duplication_for(cell_id);
     }
 
     return *this;
@@ -89,19 +99,38 @@ Species& Species::operator=(Species&& orig)
     return *this;
 }
 
+size_t Species::num_of_cells_available_for(const CellEventType& event_type) const
+{
+    switch(event_type) {
+        case CellEventType::DIE:
+        case CellEventType::EPIGENETIC_EVENT:
+        case CellEventType::DRIVER_GENETIC_MUTATION:
+            return cells.size();
+        case CellEventType::DUPLICATE:
+        case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
+            return duplication_enabled.size();
+        default:
+            throw std::domain_error("Unsupported event type");
+    }
+}
+
 void Species::remove(const CellId& cell_id)
 {
     // find the cell to be removed
-    auto pos = pos_map.at(cell_id);
+    auto cell_it = cells.find(cell_id);
 
-    // delete it from the position map
-    pos_map.erase(cell_id);
+    if (cell_it == cells.end()) {
+        throw std::domain_error("Unknown cell "+std::to_string(cell_id));
+    }
+
+    // delete it from the duplication enabled map
+    duplication_enabled.erase(cell_id);
 
     // delete the cell
-    delete *pos;
+    delete cell_it->second;
 
     // remove the cell pointer
-    cells.erase(pos);
+    cells.erase(cell_it);
 }
 
 CellInTissue* Species::add(CellInTissue* cell)
@@ -110,15 +139,12 @@ CellInTissue* Species::add(CellInTissue* cell)
     cell->epigenetic_id = get_id();
 
     // update `last_insertion_time`
-    last_insertion_time = cell->get_birth_time();
+    if (cell->get_birth_time()>last_insertion_time) {
+        last_insertion_time = cell->get_birth_time();
+    }
 
-    cells.push_back(cell);
-
-    // find a position for the new cell
-    auto final_pos = cells.end();
-
-    // set it position in the position map
-    pos_map[cell->get_id()] = --final_pos;
+    cells.insert({cell->get_id(), cell});
+    duplication_enabled.insert({cell->get_id(), cell});
 
     return cell;
 }
@@ -137,6 +163,58 @@ CellInTissue* Species::add(CellInTissue& cell)
     return add(new CellInTissue(cell));
 }
 
+void Species::switch_duplication_for(const CellId& cell_id,
+                                     const bool duplication_on)
+{
+    if (duplication_on) {
+        enable_duplication_for(cell_id);
+    } else {
+        disable_duplication_for(cell_id);
+    }
+}
+
+void Species::enable_duplication_for(const CellId& cell_id)
+{
+    auto cell_it = cells.find(cell_id);
+    if (cell_it == cells.end()) {
+        throw std::domain_error("Unknown cell "+std::to_string(cell_id));
+    }
+
+    duplication_enabled.insert({cell_id, cell_it->second});
+}
+
+void Species::disable_duplication_for(const CellId& cell_id)
+{
+    auto cell_it = cells.find(cell_id);
+    if (cell_it == cells.end()) {
+        throw std::domain_error("Unknown cell "+std::to_string(cell_id));
+    }
+
+    duplication_enabled.erase(cell_id);
+}
+
+CellInTissue& Species::operator()(const CellId& cell_id)
+{
+    auto cell_it = cells.find(cell_id);
+
+    if (cell_it == cells.end()) {
+        throw std::domain_error("Unknown cell "+std::to_string(cell_id));
+    }
+
+    return *(cell_it->second);
+}
+
+const CellInTissue& Species::operator()(const CellId& cell_id) const
+{
+    auto cell_it = cells.find(cell_id);
+
+    if (cell_it == cells.end()) {
+        throw std::domain_error("Unknown cell "+std::to_string(cell_id));
+    }
+
+    return *(cell_it->second);
+}
+
 Species::~Species()
 {
     reset();
@@ -152,7 +230,7 @@ Species::const_iterator Species::end() const
     return const_iterator(std::end(cells));
 }
 
-Species::const_iterator::const_iterator(const std::list<CellInTissue*>::const_iterator it): it(it)
+Species::const_iterator::const_iterator(const Species::CellIdToCell::const_iterator it): it(it)
 {}
 
 Species::const_iterator::const_iterator(): it()
@@ -178,7 +256,7 @@ void swap(Species& a, Species& b)
     std::swap(static_cast<EpigeneticGenotype&>(a),
               static_cast<EpigeneticGenotype&>(b));
     std::swap(a.cells,b.cells);
-    std::swap(a.pos_map,b.pos_map);
+    std::swap(a.duplication_enabled,b.duplication_enabled);
     std::swap(a.last_insertion_time,b.last_insertion_time);
 }
 
@@ -200,7 +278,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::Simulation::Sp
         out << sep << cell;
         sep = ",";
     }
-    out <<"}";
+    out <<"}}";
 
     return out;
 }

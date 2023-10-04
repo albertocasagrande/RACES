@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.11
- * @date 2023-10-02
+ * @version 0.12
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -199,19 +199,23 @@ class Simulation
      * 
      * @param generator is a random number generator
      * @param tissue is the tissue in which cell must be choosen
-     * @param genotype_id is the identifier of the genomic genotype that must have the selected cell
+     * @param genotype_id is the identifier of the genomic genotype that must have 
+     *          the selected cell
      * @return whenever the targeted genomic species contain at least 
      *        one cell, a pointer to a randomly selected cell whose 
      *        driver genomic genotype identifier is `genotype_id`. 
      *        If otherwise there are no cells whose driver genomic 
      *        genotype identifier is `genotype_id`, this method 
      *        returns `nullptr`
-     * 
      */
-    static const CellInTissue* choose_a_cell_in_genomic_species(const Tissue& tissue, const GenotypeId& genotype_id, std::mt19937_64& generator);
+    static const CellInTissue*
+    choose_a_cell_in_genomic_species(std::mt19937_64& generator, const Tissue& tissue,
+                                     const GenotypeId& genotype_id);
 
 public:
     size_t death_activation_level;  //!< The minimum number of cells required to activate death
+
+    bool duplicate_internal_cells; //!< A flag to enable/disable duplication in internal cells
 
     /**
      * @brief The basic simulation constructor
@@ -637,7 +641,8 @@ public:
                 & time
                 & genomic_mutation_queue
                 & death_enabled
-                & death_activation_level;
+                & death_activation_level
+                & duplicate_internal_cells;
     }
 
     /**
@@ -658,7 +663,8 @@ public:
                 & simulation.time
                 & simulation.genomic_mutation_queue
                 & simulation.death_enabled
-                & simulation.death_activation_level;
+                & simulation.death_activation_level
+                & simulation.duplicate_internal_cells;
 
         simulation.init_valid_directions();
 

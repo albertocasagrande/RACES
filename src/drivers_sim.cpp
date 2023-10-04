@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -76,6 +76,7 @@ class DriverSimulator
     bool plot;
     bool quiet;
     bool logging;
+    bool duplicate_internal_cells;
 
     static double get_rate(const nlohmann::json& rate_json)
     {
@@ -381,6 +382,7 @@ public:
             "the number of frames per second")
     #endif
             ("seed,s", po::value<int>()->default_value(0), "random generator seed")
+            ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
             ("no-logging,n", "disable logging")
             ("help,h", "get the help");
 
@@ -428,6 +430,7 @@ public:
         quiet = vm.count("quiet")>0;
         plot = vm.count("plot")>0;
         logging = (vm.count("no-logging")==0);
+        duplicate_internal_cells = (vm.count("border-duplications-only")==0);
     }
 
     void run() const
@@ -442,6 +445,8 @@ public:
         }
 
         configure_simulation(simulation_filename);
+
+        simulation.duplicate_internal_cells = duplicate_internal_cells;
 
 #ifdef WITH_SDL2
         if (plot) {

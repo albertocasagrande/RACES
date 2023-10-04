@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.17
- * @date 2023-10-02
+ * @version 0.18
+ * @date 2023-10-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -123,6 +123,18 @@ CellInTissue Tissue::CellInTissueProxy::copy_and_kill()
     kill();
 
     return copy;
+}
+
+void Tissue::CellInTissueProxy::switch_duplication(const bool duplication_on)
+{
+    // if the position already contains a cell
+    if (has_driver_mutations()) {
+        CellInTissue*& space_ptr = tissue.cell_pointer(position);
+
+        // switch duplication behaviour of the cell
+        Species& species = tissue.get_species(space_ptr->get_epigenetic_id());
+        species.switch_duplication_for(space_ptr->get_id(), duplication_on);
+    }
 }
 
 Tissue::CellInTissueProxy::operator CellInTissue&()
