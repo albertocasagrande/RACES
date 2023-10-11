@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.20
- * @date 2023-10-04
+ * @version 0.21
+ * @date 2023-10-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -771,7 +771,7 @@ public:
 
         size_t i=0;
         for (auto& species : tissue.species) {
-            tissue.pos_map[species.get_id()] = ++i;
+            tissue.pos_map[species.get_id()] = i++;
             for (auto& cell : species) {
                 tissue.cell_pointer(cell) = const_cast<CellInTissue*>(&cell);
             }
