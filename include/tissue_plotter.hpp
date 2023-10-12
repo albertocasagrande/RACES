@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a UI window to plot a tissue
- * @version 0.11
- * @date 2023-10-02
+ * @version 0.12
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -213,10 +213,9 @@ class TissuePlotter {
 	void draw_tissue()
 	{	
 		draw_tissue_frame();
-	
-		size_t species_idx=0;
+
 		for (const auto& species: tissue) {
-			const auto& color = palette[species_idx++];
+			const auto& color = palette[species.get_id()];
 
 			window->use_color(color);
 
@@ -265,15 +264,14 @@ class TissuePlotter {
 		const unsigned int x = 2*frame_border + static_cast<unsigned int>(sizes[0]);
 		unsigned int y = legend_rectangle_height+frame_border-frame_thickness;
 
-		size_t species_idx=0;
 		for (const auto& species: tissue) {
 			if (statistics.contains_data_for(species.get_id())) {
 				draw_species_legend(species, statistics.at(species.get_id()),
-									x, y, palette[species_idx++]);
+									x, y, palette[species.get_id()]);
 			} else {
 				Drivers::Simulation::SpeciesStatistics s_statistics;
 				draw_species_legend(species, s_statistics,
-									x, y, palette[species_idx++]);
+									x, y, palette[species.get_id()]);
 			}
 
 			y += legend_rectangle_height+frame_border;
