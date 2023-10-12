@@ -2,8 +2,8 @@
  * @file races_phylo.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the simulator
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,8 @@
 
 #include <boost/program_options.hpp>
 
+#include "common.hpp"
+
 #include "simulation.hpp"
 
 #include "sampler.hpp"
@@ -52,68 +54,6 @@ std::ostream& print_help(std::ostream& os, const std::string& program_name,
       << options << std::endl;
 
    return os;   
-}
-
-std::filesystem::path find_last_snapshot(const std::filesystem::path directory)
-{
-    namespace fs = std::filesystem;
-
-    if (!fs::exists(directory)) {
-        std::ostringstream oss;
-
-        oss << "The path "<< directory<< " does not exists";
-        throw std::runtime_error(oss.str());
-    }
-
-    if (!fs::is_directory(directory)) {
-        std::ostringstream oss;
-
-        oss << directory<< " is not a directory";
-        throw std::runtime_error(oss.str());
-    }
-
-    std::regex re(std::string(directory / "snapshot_\\d+-\\d+.dat"));
-
-    bool found{false};
-    std::string last;
-    for (const auto & entry : fs::directory_iterator(directory)) {
-        if (entry.is_regular_file()) {
-            const std::string e_string = entry.path();
-            if (std::regex_match(e_string, re)) {
-                if (!found || last.compare(e_string)>0) {
-                    last = e_string;
-                    found = true;
-                }
-            }
-        }
-    }
-
-    if (!found) {
-        std::ostringstream oss;
-
-        oss << "No RACES simulation snapshot in "<< directory<< "";
-        throw std::runtime_error(oss.str());
-    }
-
-    return last;
-}
-
-Races::Drivers::Simulation::Simulation
-load_drivers_simulation(const std::string& driver_directory, const bool quiet=false)
-{
-    auto last_snapshot_path = find_last_snapshot(driver_directory);
-
-    Races::Archive::Binary::In archive(last_snapshot_path);
-
-    Races::Drivers::Simulation::Simulation simulation;
-
-    if (quiet) {
-        archive & simulation;
-    } else {
-        archive.load(simulation, "simulation");
-    }
-
-    return simulation;
 }
 
 Races::Drivers::PhylogeneticForest 

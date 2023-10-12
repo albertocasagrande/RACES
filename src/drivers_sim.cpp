@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.4
- * @date 2023-10-04
+ * @version 0.5
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,6 +38,7 @@
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
 
+#include "common.hpp"
 #include "simulation.hpp"
 #include "progress_bar.hpp"
 
@@ -71,6 +72,7 @@ class DriverSimulator
     boost::program_options::positional_options_description positional_options;
 
     std::string simulation_filename;
+    std::string recover_directory;
     long double time_horizon;
     unsigned int frames_per_second;
     bool plot;
@@ -351,6 +353,22 @@ class DriverSimulator
         simulation.set_interval_between_snapshots(5min);
     }
 
+    void init_simulation()
+    {
+        using namespace Races;
+
+        configure_simulation(simulation_filename);
+
+        simulation.duplicate_internal_cells = duplicate_internal_cells;
+    }
+
+    void recover_simulation(const std::string& drivers_directory)
+    {
+        using namespace Races;
+
+        simulation = load_drivers_simulation(drivers_directory, quiet);
+    }
+
 public:
 
     std::ostream& print_help(std::ostream& os) const
@@ -381,9 +399,12 @@ public:
             ("frames-per-second,f", po::value<unsigned int>(&frames_per_second)->default_value(1), 
             "the number of frames per second")
     #endif
-            ("seed,s", po::value<int>()->default_value(0), "random generator seed")
+            ("recover-simulation,r", 
+             po::value<std::string>(&recover_directory)->default_value(""), 
+             "recover a simulation from a directory")
             ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
             ("no-logging,n", "disable logging")
+            ("seed,s", po::value<int>()->default_value(0), "random generator seed")
             ("help,h", "get the help");
 
         po::options_description hidden("Hidden options");
@@ -433,7 +454,7 @@ public:
         duplicate_internal_cells = (vm.count("border-duplications-only")==0);
     }
 
-    void run() const
+    void run()
     {
         using namespace Races;
 
@@ -444,9 +465,11 @@ public:
             bar->set_message("Creating tissue");
         }
 
-        configure_simulation(simulation_filename);
-
-        simulation.duplicate_internal_cells = duplicate_internal_cells;
+        if (recover_directory != "") {
+            recover_simulation(recover_directory);
+        } else {
+            init_simulation();
+        }
 
 #ifdef WITH_SDL2
         if (plot) {

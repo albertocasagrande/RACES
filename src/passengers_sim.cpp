@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.9
- * @date 2023-10-02
+ * @version 0.10
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,8 @@
 #include <regex>
 
 #include <boost/program_options.hpp>
+
+#include "common.hpp"
 
 #include "simulation.hpp"
 
@@ -134,67 +136,6 @@ class PassengersSimulator
     int seed;
     size_t bytes_per_abs_position;
     bool quiet;
-
-    static std::filesystem::path find_last_snapshot(const std::filesystem::path directory)
-    {
-        namespace fs = std::filesystem;
-
-        if (!fs::exists(directory)) {
-            std::ostringstream oss;
-
-            oss << "The path "<< directory<< " does not exist";
-            throw std::runtime_error(oss.str());
-        }
-
-        if (!fs::is_directory(directory)) {
-            std::ostringstream oss;
-
-            oss << directory<< " is not a directory";
-            throw std::runtime_error(oss.str());
-        }
-
-        std::regex re(std::string(directory / "snapshot_\\d+-\\d+.dat"));
-
-        bool found{false};
-        std::string last;
-        for (const auto & entry : fs::directory_iterator(directory)) {
-            if (entry.is_regular_file()) {
-                const std::string e_string = entry.path();
-                if (std::regex_match(e_string, re)) {
-                    if (!found || last.compare(e_string)>0) {
-                        last = e_string;
-                        found = true;
-                    }
-                }
-            }
-        }
-
-        if (!found) {
-            std::ostringstream oss;
-
-            oss << "No RACES simulation snapshot in "<< directory<< "";
-            throw std::runtime_error(oss.str());
-        }
-
-        return last;
-    }
-
-    Races::Drivers::Simulation::Simulation load_drivers_simulation(const std::string& driver_directory) const
-    {
-        auto last_snapshot_path = find_last_snapshot(driver_directory);
-
-        Races::Archive::Binary::In archive(last_snapshot_path);
-
-        Races::Drivers::Simulation::Simulation simulation;
-
-        if (quiet) {
-            archive & simulation;
-        } else {
-            archive.load(simulation, "simulation");
-        }
-
-        return simulation;
-    }
 
     Races::Drivers::PhylogeneticForest 
     build_forest(const Races::Drivers::Simulation::Simulation& simulation,
@@ -408,7 +349,7 @@ class PassengersSimulator
 
         std::map<std::string, std::set<Drivers::EpigeneticGenotypeId>> epigenetic_status_classes;
         {
-            auto drivers_simulation = load_drivers_simulation(drivers_directory);
+            auto drivers_simulation = load_drivers_simulation(drivers_directory, quiet);
 
             if (epigenetic_FACS) {
                 auto tissue_genotypes = drivers_simulation.tissue().get_genotypes();

@@ -163,18 +163,23 @@ target_sources(libRACES PRIVATE ${RACES_SOURCES}
 
 install(TARGETS libRACES FILE_SET HEADERS)
 
-set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp)
+
+set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
+                   ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
+
+set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp
+                        ${COMMON_SOURCES})
 
 set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
+                  ${COMMON_SOURCES})
 
 set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
+                           ${COMMON_SOURCES})
 
 set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
 
