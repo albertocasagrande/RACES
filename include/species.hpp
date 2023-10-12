@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.16
- * @date 2023-10-04
+ * @version 0.17
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -453,7 +453,7 @@ public:
 
             archive & *cell;
 
-            species.add(cell);
+            species.cells.insert({cell->get_id(), cell});
         }
 
         // load duplicated enabled ids
