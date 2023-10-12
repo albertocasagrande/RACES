@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.12
- * @date 2023-10-04
+ * @version 0.13
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -643,6 +643,11 @@ public:
                 & death_enabled
                 & death_activation_level
                 & duplicate_internal_cells;
+
+        if (logger != nullptr) {
+            archive & true
+                    & *logger; 
+        }
     }
 
     /**
@@ -657,6 +662,8 @@ public:
     {
         Simulation simulation;
 
+        bool logging;
+
         archive & simulation.tissues
                 & simulation.secs_between_snapshots
                 & simulation.statistics
@@ -664,11 +671,17 @@ public:
                 & simulation.genomic_mutation_queue
                 & simulation.death_enabled
                 & simulation.death_activation_level
-                & simulation.duplicate_internal_cells;
+                & simulation.duplicate_internal_cells
+                & logging;
 
         simulation.init_valid_directions();
 
         simulation.last_snapshot_time = system_clock::now();
+
+        if (logging) {
+            simulation.logger = new BinaryLogger();
+            archive & *(simulation.logger);
+        }
 
         return simulation;
     }
