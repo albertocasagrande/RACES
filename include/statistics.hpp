@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.8
- * @date 2023-10-02
+ * @version 0.9
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -314,8 +314,11 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & s_statistics
+                & sim_times
+                & real_times
                 & max_stored_times
-                & total_events;
+                & total_events
+                & first_event_time;
     }
     
     /**
@@ -331,8 +334,11 @@ public:
         TissueStatistics stats;
 
         archive & stats.s_statistics
+                & stats.sim_times
+                & stats.real_times
                 & stats.max_stored_times
-                & stats.total_events;
+                & stats.total_events
+                & stats.first_event_time;
 
         return stats;
     }

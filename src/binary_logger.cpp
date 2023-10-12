@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.15
- * @date 2023-10-02
+ * @version 0.16
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,8 +47,32 @@ namespace Drivers
 namespace Simulation 
 {
 
+std::string get_time_string()
+{
+    std::time_t time;
+    std::tm* info;
+    char buffer[81];
+
+    std::time(&time);
+    info = std::localtime(&time);
+
+    std::strftime(buffer,80,"%Y%m%d-%H%M%S",info);
+
+    return buffer;
+}
+
+std::string get_directory_name(const std::string& dir_prefix)
+{
+    std::ostringstream oss;
+
+    oss << dir_prefix << "_" << get_time_string();
+
+    return oss.str();
+}
+
+
 BinaryLogger::BinaryLogger():
-    BinaryLogger("races")
+    BinaryLogger(get_directory_name("races"))
 {
 }
 
@@ -65,20 +89,6 @@ std::filesystem::path BinaryLogger::get_cell_archive_path(const std::filesystem:
     return directory / (oss.str()+".dat") ;
 }
 
-std::string get_time_string()
-{
-    std::time_t time;
-    std::tm* info;
-    char buffer[81];
-
-    std::time(&time);
-    info = std::localtime(&time);
-
-    std::strftime(buffer,80,"%Y%m%d-%H%M%S",info);
-
-    return buffer;
-}
-
 std::filesystem::path BinaryLogger::get_snapshot_path() const
 {
     std::ostringstream oss;
@@ -88,20 +98,29 @@ std::filesystem::path BinaryLogger::get_snapshot_path() const
     return directory / oss.str();
 }
 
-std::string get_directory_name(const std::string& dir_prefix)
+BinaryLogger::BinaryLogger(const std::string& output_directory, const size_t cells_per_file):
+    BasicLogger(), directory(output_directory), cell_archive(), 
+    cells_per_file(cells_per_file), cell_in_current_file(0), current_file_number(0)
 {
-    std::ostringstream oss;
-
-    oss << dir_prefix << "_" << get_time_string();
-
-    return oss.str();
 }
 
-BinaryLogger::BinaryLogger(const std::string& dir_prefix, const size_t cells_per_file):
-    BasicLogger(), dir_prefix(dir_prefix), directory(get_directory_name(dir_prefix)),
-    cell_archive(), cells_per_file(cells_per_file), cell_in_current_file(0),
-    next_file_number(0)
+BinaryLogger::BinaryLogger(const BinaryLogger& orig):
+    BasicLogger(), directory(orig.directory),  cell_archive(),
+    cells_per_file(orig.cells_per_file), cell_in_current_file(orig.cell_in_current_file), 
+    current_file_number(orig.current_file_number)
 {
+}
+
+BinaryLogger& BinaryLogger::operator=(const BinaryLogger& orig)
+{
+    close();
+
+    directory = orig.directory;
+    cells_per_file = orig.cells_per_file;
+    cell_in_current_file = orig.cell_in_current_file;
+    current_file_number = orig.current_file_number;
+
+    return *this;
 }
 
 std::streampos compute_bytes_per_cell(const std::filesystem::path& directory)
@@ -178,22 +197,27 @@ void BinaryLogger::rotate_cell_file()
     {
         // save the number of cells per file and the next file number to be used
         std::ofstream cell_file(directory / "cell_file_info.txt", std::fstream::out);
-        cell_file << cells_per_file << " " << next_file_number << std::endl; 
+        cell_file << cells_per_file << " " << ++current_file_number << std::endl; 
     }
 
-    auto filename = get_cell_archive_path(directory, next_file_number);
+    auto filename = get_cell_archive_path(directory, current_file_number);
 
     cell_in_current_file=0;
     cell_archive.open(filename, std::fstream::binary);
-    ++next_file_number;  
 }
 
 void BinaryLogger::record_cell(const CellInTissue& cell)
 {
     if (!cell_archive.is_open()) {
-        std::filesystem::create_directory(directory);
+        if (std::filesystem::exists(directory)) {
+            auto filename = get_cell_archive_path(directory, current_file_number);
 
-        rotate_cell_file();
+            cell_archive.open(filename, std::fstream::binary | std::fstream::app);
+        } else {
+            std::filesystem::create_directory(directory);
+
+            rotate_cell_file();
+        }
     }
 
     cell_archive & static_cast<const Cell&>(cell);
@@ -232,14 +256,13 @@ void BinaryLogger::snapshot(const Simulation& simulation)
     archive & simulation;
 }
 
-void BinaryLogger::reset(const std::string& directory_prefix)
+void BinaryLogger::reset(const std::string& output_directory)
 {
     close();
 
-    dir_prefix = directory_prefix;
-    directory = get_directory_name(directory_prefix);
+    directory = output_directory;
     cell_in_current_file = 0;
-    next_file_number = 0;
+    current_file_number = 0;
 }
 
 BinaryLogger::~BinaryLogger()

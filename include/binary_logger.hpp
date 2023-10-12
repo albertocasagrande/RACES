@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.12
- * @date 2023-10-02
+ * @version 0.13
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,12 +53,11 @@ namespace Simulation
  */
 struct BinaryLogger : public BasicLogger
 {
-    std::string dir_prefix;            //!< the output directory prefix
     std::filesystem::path directory;   //!< the log directory 
     Archive::Binary::Out cell_archive; //!< the current cell output file
     size_t cells_per_file;             //!< the number of cells to be saved before changing file
     size_t cell_in_current_file;       //!< cells saved in current file
-    uint16_t next_file_number;         //!< the next file number
+    uint16_t current_file_number;      //!< the current file number
 
     /**
      * @brief Get a new snapshot file full path
@@ -139,10 +138,25 @@ public:
     /**
      * @brief A constructor
      * 
-     * @param dir_prefix is the prefix of the filename
+     * @param output_directory is the output directory name
      * @param cells_per_file is the number of cells per file
      */
-    explicit BinaryLogger(const std::string& dir_prefix, const size_t cells_per_file=1<<27);
+    explicit BinaryLogger(const std::string& output_directory, const size_t cells_per_file=1<<27);
+
+    /**
+     * @brief The copy-constructor
+     * 
+     * @param orig is the template for the new object
+     */
+    BinaryLogger(const BinaryLogger& orig);
+
+    /**
+     * @brief The copy operator
+     * 
+     * @param orig is the template for the new object
+     * @return a reference to the updated object
+     */
+    BinaryLogger& operator=(const BinaryLogger& orig);
 
     /**
      * @brief Get the log directory
@@ -198,16 +212,55 @@ public:
     /**
      * @brief Reset the logger
      * 
-     * @param directory_prefix is the output directory prefix
+     * @param output_directory is the output directory name
      */
-    void reset(const std::string& directory_prefix);
+    void reset(const std::string& directory);
 
     /**
      * @brief Reset the logger
      */
     inline void reset()
     {
-        reset(dir_prefix);
+        reset(directory);
+    }
+
+    /**
+     * @brief Save a `BinaryLogger` in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<std::string>(directory)
+                & cells_per_file
+                & cell_in_current_file
+                & current_file_number;
+    }
+
+    /**
+     * @brief Load a `BinaryLogger` from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded `BinaryLogger` object
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static BinaryLogger load(ARCHIVE& archive)
+    {
+        BinaryLogger logger;
+
+        std::string output_directory;
+
+        archive & output_directory
+                & logger.cells_per_file
+                & logger.cell_in_current_file
+                & logger.current_file_number;
+
+        logger.directory = output_directory;
+
+        return logger;
     }
 
     /**
