@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.15
- * @date 2023-10-02
+ * @version 0.16
+ * @date 2023-10-12
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,6 +39,7 @@
 #include <fstream>
 #include <filesystem>
 #include <type_traits>
+#include <chrono>
 
 #include "progress_bar.hpp"
 
@@ -668,6 +669,56 @@ template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<Races::Archive::has_s
 inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
 {
     value.save(archive);
+
+    return archive;
+}
+
+
+/**
+ * @brief Save an `std::chrono::time_point` object
+ * 
+ * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::Out`
+ * @tparam VALUE_TYPE is the type of the value to save
+ * @param archive is an output archive
+ * @param value is the value to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class CLOCK, class DURATION, 
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+inline ARCHIVE& 
+operator&(ARCHIVE& archive, const std::chrono::time_point<CLOCK,DURATION>& time_point)
+{
+    using namespace std::chrono;
+
+    size_t epoch = duration_cast<milliseconds>(time_point.time_since_epoch()).count();
+
+    archive & epoch;
+
+    return archive;
+}
+
+/**
+ * @brief Load an `std::chrono::time_point` object
+ * 
+ * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::Out`
+ * @tparam VALUE_TYPE is the type of the value to save
+ * @param archive is an output archive
+ * @param value is the value to save
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class CLOCK, class DURATION, 
+         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+inline ARCHIVE& 
+operator&(ARCHIVE& archive, std::chrono::time_point<CLOCK,DURATION>& time_point)
+{
+    using namespace std::chrono;
+
+    size_t epoch;
+
+    archive & epoch;
+
+    const DURATION duration{duration_cast<DURATION>(milliseconds{epoch})};  
+    time_point = std::chrono::time_point<CLOCK, DURATION>(duration);
 
     return archive;
 }
