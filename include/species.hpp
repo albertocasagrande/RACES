@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.17
- * @date 2023-10-12
+ * @version 0.18
+ * @date 2023-10-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -320,11 +320,11 @@ public:
     }
 
     /**
-     * @brief Remove a cell from the species
+     * @brief Remove a cell from the species and delete it
      * 
-     * @param cell_id is the id of the cell to be removed
+     * @param cell_id is the id of the cell to be deleted
      */
-    void remove(const CellId& cell_id);
+    void erase(const CellId& cell_id);
 
     /**
      * @brief Add a cell to the species

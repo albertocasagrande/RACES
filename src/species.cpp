@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.11
- * @date 2023-10-04
+ * @version 0.12
+ * @date 2023-10-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -114,7 +114,7 @@ size_t Species::num_of_cells_available_for(const CellEventType& event_type) cons
     }
 }
 
-void Species::remove(const CellId& cell_id)
+void Species::erase(const CellId& cell_id)
 {
     // find the cell to be removed
     auto cell_it = cells.find(cell_id);

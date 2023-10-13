@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.12
- * @date 2023-10-04
+ * @version 0.13
+ * @date 2023-10-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -242,7 +242,7 @@ Simulation::simulate_death(const Position& position)
         return {{},{}};
     }
 
-    Simulation::EventAffectedCells affected = {{cell.copy_and_kill()},{}};
+    Simulation::EventAffectedCells affected = {{cell.copy_and_erase()},{}};
 
     enable_duplication_on_neighborhood_externals(*(position.tissue), position);
 

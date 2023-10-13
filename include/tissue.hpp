@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.21
- * @date 2023-10-11
+ * @version 0.22
+ * @date 2023-10-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -438,9 +438,9 @@ public:
 
         operator CellInTissue&();
 
-        void kill();
+        void erase();
 
-        CellInTissue copy_and_kill();
+        CellInTissue copy_and_erase();
 
         void switch_duplication(const bool duplication_on);
 

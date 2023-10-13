@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.18
- * @date 2023-10-04
+ * @version 0.19
+ * @date 2023-10-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -79,8 +79,8 @@ Tissue::CellInTissueProxy::CellInTissueProxy(Tissue &tissue, const PositionInTis
 
 Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell)
 {
-    // kill the cell in the position
-    kill();
+    // erase the cell in the current position
+    erase();
 
     Species& species = tissue.get_species(cell.get_epigenetic_id());
 
@@ -102,7 +102,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
     return *this;
 }
 
-void Tissue::CellInTissueProxy::kill()
+void Tissue::CellInTissueProxy::erase()
 {
     // if the position already contains a cell with driver mutation
     if (has_driver_mutations()) {
@@ -110,17 +110,17 @@ void Tissue::CellInTissueProxy::kill()
 
         // remove the cell from its species
         Species& former_species = tissue.get_species(space_ptr->get_epigenetic_id());
-        former_species.remove(space_ptr->get_id());
+        former_species.erase(space_ptr->get_id());
 
         space_ptr = nullptr;
     }
 }
 
-CellInTissue Tissue::CellInTissueProxy::copy_and_kill()
+CellInTissue Tissue::CellInTissueProxy::copy_and_erase()
 {
     CellInTissue copy = *this;
 
-    kill();
+    erase();
 
     return copy;
 }
@@ -349,7 +349,7 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
 
         Species &species = get_species(to_be_moved->get_epigenetic_id());
 
-        species.remove(to_be_moved->get_id());
+        species.erase(to_be_moved->get_id());
     }
 
     cell_pointer(from_position) = nullptr;
