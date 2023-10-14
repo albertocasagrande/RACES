@@ -373,7 +373,7 @@ class TestSimulation(unittest.TestCase):
         sim.add_species(B)
         sim.add_genomic_mutation(A, B, 70)
 
-        sim.run_up_to(100, logging=False, quiet=True)
+        sim.run_up_to(100, disable_storage=True, quiet=True)
 
     def test_death_activation_level(self):
         sim = RACES.Simulation()

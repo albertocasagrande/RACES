@@ -2,7 +2,7 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.11
+ * @version 0.12
  * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
@@ -107,19 +107,14 @@ boost::lexical_cast<Races::Passengers::SequencingSimulations::ReadSimulator<>::M
     throw po::validation_error(po::validation_error::kind_t::invalid_option_value, oss.str());
 }
 
-class PassengersSimulator
+class PassengersSimulator : public BasicExecutable
 {
-    const std::string program_name;
-    boost::program_options::options_description passengers_options;
-    boost::program_options::options_description sequencing_options;
-    boost::program_options::options_description generic_options;
-    boost::program_options::positional_options_description positional_options;
-
-    std::string simulation_filename;
-    std::string drivers_directory;
-    std::string context_index_filename;
-    std::string ref_genome_filename;
-    std::string SBS_filename;
+    std::filesystem::path simulation_filename;
+    std::filesystem::path drivers_directory;
+    std::filesystem::path snapshot_path;
+    std::filesystem::path context_index_filename;
+    std::filesystem::path ref_genome_filename;
+    std::filesystem::path SBS_filename;
 
     double coverage;
     std::string seq_output_directory;
@@ -346,7 +341,7 @@ class PassengersSimulator
 
         std::map<std::string, std::set<Drivers::EpigeneticGenotypeId>> epigenetic_status_classes;
         {
-            auto drivers_simulation = load_drivers_simulation(drivers_directory, quiet);
+            auto drivers_simulation = load_drivers_simulation(snapshot_path, quiet);
 
             if (epigenetic_FACS) {
                 auto tissue_genotypes = drivers_simulation.tissue().get_genotypes();
@@ -411,145 +406,90 @@ class PassengersSimulator
     {
         namespace fs = std::filesystem;
 
-        if (vm.count("help")) {
-            print_help_and_exit(0);
-        }
-
         if (!vm.count("simulation file")) {
             print_help_and_exit("The simulation file is mandatory", 1);
         }
     
         if (!vm.count("driver directory")) {
             print_help_and_exit("The driver directory is mandatory. "
-                                "You can produce it by using `races_sim`", 1);
+                                "You can produce it by using `drivers_sim`", 1);
         }
 
-        if (!fs::exists(drivers_directory)) {
-            print_help_and_exit("\"" + drivers_directory + "\"  does not exist", 1);
-        }
-
-        if (!fs::is_directory(drivers_directory)) {
-            std::cerr << "\"" << drivers_directory << "\"  is not a directory"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
-        }
-
-        try {
-            find_last_snapshot(drivers_directory);
-        } catch (std::runtime_error& ex) {
-            std::cerr << ex.what() << std::endl << std::endl;
-            print_help_and_exit(1);
+        if (!fs::exists(snapshot_path)) {
+            print_help_and_exit("\"" + std::string(snapshot_path) + "\"  does not exist", 1);
         }
 
         if (!vm.count("context index")) {
-            std::cerr << "The context index is mandatory. "
-                      << "You can produce it by using `races_build_index`" << std::endl 
-                      << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("The context index is mandatory. "
+                                "You can produce it by using `races_build_index`", 1);
         }
 
         if (!fs::exists(context_index_filename)) {
-            std::cerr << "\"" << context_index_filename << "\"  does not exist"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(context_index_filename)
+                                + "\"  does not exist", 1);
         }
 
         if (!fs::is_regular_file(context_index_filename)) {
-            std::cerr << "\"" << context_index_filename << "\"  is not a regular file"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(context_index_filename)
+                                + "\"  is not a regular file", 1);
         }
 
         if (!vm.count("mutational signature")) {
-            std::cerr << "The mutational signature is mandatory." << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("The mutational signature is mandatory.", 1);
         }
 
         if (!fs::exists(SBS_filename)) {
-            std::cerr << "\"" << SBS_filename << "\"  does not exist"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(SBS_filename)
+                                + "\"  does not exist", 1);
         }
 
         if (!fs::is_regular_file(SBS_filename)) {
-            std::cerr << "\"" << SBS_filename << "\"  is not a regular file"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(SBS_filename)
+                                + "\"  is not a regular file", 1);
         }
 
         if (!vm.count("reference genome")) {
-            std::cerr << "The reference genome FASTA file is mandatory." << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("The reference genome FASTA file is mandatory.", 1);
         }
 
         if (!fs::exists(ref_genome_filename)) {
-            std::cerr << "\"" << ref_genome_filename << "\"  does not exist"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(ref_genome_filename)
+                                + "\"  does not exist", 1);
         }
 
         if (!fs::is_regular_file(ref_genome_filename)) {
-            std::cerr << "\"" << ref_genome_filename << "\"  is not a regular file"
-                      << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(ref_genome_filename)
+                                + "\"  is not a regular file", 1);
         }
 
         if (vm.count("SNVs-csv")>0 && fs::exists(SNVs_csv_filename)) {
-            std::cerr << "\"" << SNVs_csv_filename << "\" already exists" << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(SNVs_csv_filename)
+                                + "\" already exists", 1);
         }
 
         if (vm.count("CNAs-csv")>0 && fs::exists(CNAs_csv_filename)) {
-            std::cerr << "\"" << CNAs_csv_filename << "\" already exists" << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("\"" + std::string(CNAs_csv_filename)
+                                + "\" already exists", 1);
         }
 
         if (coverage<0) {
-            std::cerr << "coverage must be non-negative." << std::endl << std::endl;
-            print_help_and_exit(1);
+            print_help_and_exit("coverage must be non-negative.", 1);
         }
         
         for (const auto sequencing_option : {"output-directory"}) {
             if ((coverage>0) && (vm.count(sequencing_option)==0)) {
-                std::cerr << "\"--"<< sequencing_option << "\" is mandatory when coverage differs from 0." 
-                          << std::endl << std::endl;
-                print_help_and_exit(1);
+                print_help_and_exit("\"--"+ std::string(sequencing_option) 
+                                     + "\" is mandatory when coverage differs from 0.", 1);
             }
         }
     }
 
 public:
-    void print_help_and_exit(const std::string& message, const int& err_code) const
-    { 
-        std::ostream& os = (err_code==0 ? std::cout: std::cerr);
-        
-        os << message << std::endl << std::endl;
-        
-        print_help_and_exit(err_code);
-    }
-
-    void print_help_and_exit(const int& err_code) const
-    { 
-        std::ostream& os = (err_code==0 ? std::cout: std::cerr);
-        
-        os << "Syntax: " << program_name;
-        
-        for (unsigned int i=0;i<positional_options.max_total_count(); ++i) {
-            os << " <" << positional_options.name_for_position(i) << ">"; 
-        }
-
-        os << std::endl
-           << std::endl << passengers_options
-           << std::endl << sequencing_options
-           << std::endl << generic_options 
-           << std::endl;
-
-        exit(err_code);
-    }
-
     PassengersSimulator(int argc, char* argv[]):
-        program_name(argv[0]), passengers_options("Passenger mutation simulation options"),
-        sequencing_options("Sequencing simulation options"), generic_options("Generic options"),
+        BasicExecutable(argv[0], {{"passengers", "Passenger mutation simulation options"},
+                                  {"sequencing", "Sequencing simulation options"},
+                                  {"drivers", "Driver simulation related options"},
+                                  {"generic", "Generic options"}}),
         paired_read(false), 
         insert_size(0), SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
     {
@@ -557,14 +497,14 @@ public:
 
         using namespace Races::Passengers::SequencingSimulations;
 
-        passengers_options.add_options()
+        visible_options.at("passengers").add_options()
             ("SNVs-CSV,S", po::value<std::string>(&SNVs_csv_filename),
              "the SNVs CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
              "the CNAs CSV output file")
         ;
 
-        sequencing_options.add_options()
+        visible_options.at("sequencing").add_options()
             ("coverage,c", po::value<double>(&coverage)->default_value(0.0), 
              "coverage for the simulated reads (>0 to simulate sequencing)")
             ("output-directory,d", po::value<std::string>(&seq_output_directory), 
@@ -577,36 +517,38 @@ public:
             ("write-SAM,w", "write the simulated read SAM files")
         ;
 
-        generic_options.add_options()
+        visible_options.at("drivers").add_options()
             ("epigenetic-FACS,F", "distinguish between epigenetic states")
+        ;
+
+        visible_options.at("generic").add_options()
             ("seed,s", po::value<int>(&seed)->default_value(0), 
              "random generator seed")
             ("quiet,q", "avoid output messages")
             ("help,h", "get the help")
         ;
 
-        po::options_description hidden("Hidden options");
-        hidden.add_options()
-            ("simulation file", po::value<std::string>(&simulation_filename), 
+        hidden_options.add_options()
+            ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
              "the name of the file describing the passenger mutations simulation")
-            ("driver directory", po::value<std::string>(&drivers_directory), 
-             "the driver directory")
-            ("context index", po::value<std::string>(&context_index_filename), 
+            ("driver simulation", po::value<std::filesystem::path>(&snapshot_path), 
+             "the driver simulation directory or a simulation snapshot")
+            ("context index", po::value<std::filesystem::path>(&context_index_filename), 
              "the genome context index")
-            ("mutational signature", po::value<std::string>(&SBS_filename), 
+            ("mutational signature", po::value<std::filesystem::path>(&SBS_filename), 
              "the mutational signature")
-            ("reference genome", po::value<std::string>(&ref_genome_filename), 
+            ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename), 
              "the filename of the reference genome FASTA file")
         ;
 
         po::options_description program_options;
-        program_options.add(generic_options)
-                       .add(passengers_options)
-                       .add(sequencing_options)
-                       .add(hidden);
+        for (const auto& [section_name, section]: visible_options) {
+            program_options.add(section);
+        }
+        program_options.add(hidden_options);
 
         positional_options.add("simulation file", 1);
-        positional_options.add("driver directory", 1);
+        positional_options.add("driver simulation", 1);
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
@@ -619,6 +561,10 @@ public:
             po::notify(vm);
         } catch (boost::wrapexcept<boost::program_options::unknown_option> &except) {
             print_help_and_exit(except.what(), 1);
+        }
+
+        if (vm.count("help")) {
+            print_help_and_exit(0);
         }
 
         quiet = vm.count("quiet")>0;
@@ -646,8 +592,20 @@ public:
         } catch (std::exception& except) {
             print_help_and_exit(except.what(), 1);
         }
-    
+
         validate(vm);
+
+        if (std::filesystem::is_directory(snapshot_path)) {
+            drivers_directory = snapshot_path;
+            try {
+                snapshot_path = find_last_snapshot(snapshot_path);
+            } catch (...) {
+                print_help_and_exit("\""+std::string(snapshot_path)+
+                                    "\" does not contain any snapshot", 1);
+            }
+        } else {
+            drivers_directory = snapshot_path.parent_path();
+        }
     }
 
     void run() const

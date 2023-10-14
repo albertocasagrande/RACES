@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.5
- * @date 2023-10-12
+ * @version 0.6
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,19 +65,15 @@ void termination_handling(int signal_num)
     exit(signal_num);
 }
 
-class DriverSimulator
+class DriverSimulator : public BasicExecutable
 {
-    const std::string program_name;
-    boost::program_options::options_description visible_options;
-    boost::program_options::positional_options_description positional_options;
-
-    std::string simulation_filename;
-    std::string recover_directory;
+    std::filesystem::path simulation_filename;
+    std::string snapshot_path;
     long double time_horizon;
     unsigned int frames_per_second;
     bool plot;
     bool quiet;
-    bool logging;
+    bool disable_storage;
     bool duplicate_internal_cells;
 
     static double get_rate(const nlohmann::json& rate_json)
@@ -362,34 +358,20 @@ class DriverSimulator
         simulation.duplicate_internal_cells = duplicate_internal_cells;
     }
 
-    void recover_simulation(const std::string& drivers_directory)
-    {
-        using namespace Races;
-
-        simulation = load_drivers_simulation(drivers_directory, quiet);
-    }
-
 public:
 
-    std::ostream& print_help(std::ostream& os) const
-    {
-        os << "Syntax: " << program_name;
-        
-        for (unsigned int i=0;i<positional_options.max_total_count(); ++i) {
-            os << " <" << positional_options.name_for_position(i) << ">"; 
-        }
-
-        os << std::endl << visible_options << std::endl;
-
-        return os;   
-    }
-
     DriverSimulator(int argc, char* argv[]):
-        visible_options("Options")
+        BasicExecutable(argv[0], {{"options", "Options"}})
     {
         namespace po = boost::program_options;
 
-        visible_options.add_options()
+        visible_options.at("options").add_options()
+            ("recover-simulation,r", 
+             po::value<std::string>(&snapshot_path)->default_value(""), 
+             "recover a simulation from a snapshot")
+            ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
+            ("disable-storage,d", "disable result storage")
+            ("seed,s", po::value<int>()->default_value(0), "random generator seed")
     #ifdef WITH_INDICATORS
             ("quiet,q", "disable progress bar")
     #endif // WITH_INDICATORS
@@ -399,23 +381,19 @@ public:
             ("frames-per-second,f", po::value<unsigned int>(&frames_per_second)->default_value(1), 
             "the number of frames per second")
     #endif
-            ("recover-simulation,r", 
-             po::value<std::string>(&recover_directory)->default_value(""), 
-             "recover a simulation from a directory")
-            ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
-            ("no-logging,n", "disable logging")
-            ("seed,s", po::value<int>()->default_value(0), "random generator seed")
             ("help,h", "get the help");
 
-        po::options_description hidden("Hidden options");
-        hidden.add_options()
-            ("simulation file", po::value<std::string>(&simulation_filename), 
+        hidden_options.add_options()
+            ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
             "the name of the file describing the simulation")
             ("time horizon", po::value<long double>(&time_horizon), 
             "the simulation time horizon");
 
-        po::options_description generic;
-        generic.add(visible_options).add(hidden);
+        po::options_description program_options;
+        for (const auto& [section_name, section]: visible_options) {
+            program_options.add(section);
+        }
+        program_options.add(hidden_options);
 
         positional_options.add("simulation file", 1);
         positional_options.add("time horizon", 1);
@@ -423,34 +401,27 @@ public:
         po::variables_map vm;
         try {
             po::command_line_parser parser{argc, argv};
-            po::store(parser.options(generic).positional(positional_options).run(), vm);
+            po::store(parser.options(program_options).positional(positional_options).run(), vm);
             po::notify(vm);
         } catch (boost::wrapexcept<boost::program_options::unknown_option> &except) {
-            std::cerr << except.what() << std::endl;
-            print_help(std::cerr);
-            exit(1);
+            print_help_and_exit(except.what(), 1);
         }
 
         if (vm.count("help")) {
-            print_help(std::cout);
-            exit(0);
+            print_help_and_exit(0);
         }
 
         if (!vm.count("simulation file")) {
-            std::cerr << "The simulation file is mandatory" << std::endl << std::endl;
-            print_help(std::cerr);
-            exit(1);
+            print_help_and_exit("The simulation file is mandatory", 1);
         }
 
         if (!vm.count("time horizon")) {
-            std::cerr << "The simulation time horizon is mandatory." << std::endl << std::endl;
-            print_help(std::cerr);
-            exit(1);
+            print_help_and_exit("The simulation time horizon is mandatory", 1);
         }
 
         quiet = vm.count("quiet")>0;
         plot = vm.count("plot")>0;
-        logging = (vm.count("no-logging")==0);
+        disable_storage = vm.count("disable-storage")>0;
         duplicate_internal_cells = (vm.count("border-duplications-only")==0);
     }
 
@@ -465,8 +436,12 @@ public:
             bar->set_message("Creating tissue");
         }
 
-        if (recover_directory != "") {
-            recover_simulation(recover_directory);
+        if (snapshot_path != "") {
+            if (std::filesystem::is_directory(snapshot_path)) {
+                snapshot_path = find_last_snapshot(snapshot_path);
+            }
+
+            simulation = load_drivers_simulation(snapshot_path, quiet);
         } else {
             init_simulation();
         }
@@ -491,9 +466,9 @@ public:
 #endif // WITH_SDL2
 
             if (bar != nullptr) {
-                simulation.run_up_to(time_horizon, *bar, logging);
+                simulation.run_up_to(time_horizon, *bar, disable_storage);
             } else {
-                simulation.run_up_to(time_horizon, logging);
+                simulation.run_up_to(time_horizon, disable_storage);
             }
 
 #ifdef WITH_SDL2

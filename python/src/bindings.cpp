@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -87,7 +87,7 @@ BOOST_PYTHON_MODULE(RACES)
         .def("__init__", make_constructor(SimulationWrapper::create, default_call_policies(),
                                           (arg("minutes_between_snapshot")=5, arg("random_seed")=0)))
         .def("run_up_to", &SimulationWrapper::static_run_up_to,
-             run_up_to_overloads((arg("wrapper"), arg("time"), arg("logging")=true,
+             run_up_to_overloads((arg("wrapper"), arg("time"), arg("disable_storage")=false,
                                   arg("quiet")=false, arg("plot")=false)))
         .def("get_time", make_function(&SimulationWrapper::get_time, return_value_policy<copy_const_reference>()))
         .def("add_species", &SimulationWrapper::add_species)

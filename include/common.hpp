@@ -2,8 +2,8 @@
  * @file common.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines auxiliary classes and functions for executables
- * @version 0.1
- * @date 2023-10-12
+ * @version 0.2
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,17 +28,66 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_AUX_FUNCTIONS__
-#define __RACES_AUX_FUNCTIONS__
-
+#include <map>
+#include <string>
 #include <filesystem>
+
+#include <boost/program_options.hpp>
 
 #include "simulation.hpp"
 #include "json_config.hpp"
 
-std::filesystem::path find_last_snapshot(const std::filesystem::path directory);
+/**
+ * @brief A basic class for RACES executables
+ */
+class BasicExecutable
+{
+protected:
+    const std::string program_name;         //!< The program name
+    std::map<std::string, boost::program_options::options_description> visible_options; //!< the program visible option sections
 
-Races::Drivers::Simulation::Simulation 
-load_drivers_simulation(const std::filesystem::path driver_directory, const bool quiet=false);
+    boost::program_options::options_description hidden_options;  //!< the program hidden options
+    boost::program_options::positional_options_description positional_options;  //!< the program positional options
+public:
+    /**
+     * @brief Print the program help message and exit
+     * 
+     * @param message is the message to print before the help message
+     * @param err_code is the exit code
+     */
+    void print_help_and_exit(const std::string& message, const int& err_code) const;
 
-#endif // __RACES_AUX_FUNCTIONS__
+    /**
+     * @brief Print the program help message and exit
+     * 
+     * @param err_code is the exit code
+     */
+    void print_help_and_exit(const int& err_code) const;
+
+    /**
+     * @brief Construct a new BasicExecutable object
+     * 
+     * @param program_name is the program name
+     * @param option_section_names is a list of pairs section name-description
+     */
+    BasicExecutable(const std::string& program_name, 
+                    const std::vector<std::pair<std::string,std::string>>& option_sections);
+
+    /**
+     * @brief Find the last driver simulation snapshot in a directory
+     * 
+     * @param directory is the directory containing the aimed snapshot
+     * @return the path to the last driver simulation snapshot in `directory`
+     */
+    static std::filesystem::path find_last_snapshot(const std::filesystem::path directory);
+
+    /**
+     * @brief Load a driver simulation snapshot
+     * 
+     * @param snapshot_path is the path to the snapshot to be loaded
+     * @param quiet is a Boolean flag to switch on/off (false/true) descriptive messages
+     * @return the loaded simulation snapshot
+     */
+    static Races::Drivers::Simulation::Simulation 
+    load_drivers_simulation(const std::filesystem::path snapshot_path, const bool quiet=false);
+};

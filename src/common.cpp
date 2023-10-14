@@ -2,8 +2,8 @@
  * @file common.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements auxiliary classes and functions for executables
- * @version 0.1
- * @date 2023-10-12
+ * @version 0.2
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,14 +28,49 @@
  * SOFTWARE.
  */
 
-
-#include <iostream> 
-#include <string>
+#include <iostream>
 #include <regex>
 
 #include "common.hpp"
 
-std::filesystem::path find_last_snapshot(const std::filesystem::path directory)
+void BasicExecutable::print_help_and_exit(const std::string& message, const int& err_code) const
+{ 
+    std::ostream& os = (err_code==0 ? std::cout: std::cerr);
+    
+    os << message << std::endl << std::endl;
+    
+    print_help_and_exit(err_code);
+}
+
+void BasicExecutable::print_help_and_exit(const int& err_code) const
+{ 
+    std::ostream& os = (err_code==0 ? std::cout: std::cerr);
+    
+    os << "Syntax: " << program_name;
+    
+    for (unsigned int i=0;i<positional_options.max_total_count(); ++i) {
+        os << " <" << positional_options.name_for_position(i) << ">"; 
+    }
+
+    os << std::endl << std::endl;
+
+    for (const auto& [name,option]: visible_options) {
+        os << option << std::endl;
+    }
+
+    exit(err_code);
+}
+
+BasicExecutable::BasicExecutable(const std::string& program_name,
+                                 const std::vector<std::pair<std::string, std::string>>& option_sections): 
+    program_name{program_name}, visible_options{}, hidden_options("Hidden options")
+{
+    for (const auto& [section_name, section_description]: option_sections) {
+        visible_options.insert({section_name, {section_description}});
+    }
+}
+
+std::filesystem::path BasicExecutable::find_last_snapshot(const std::filesystem::path directory)
 {
     namespace fs = std::filesystem;
 
@@ -80,11 +115,9 @@ std::filesystem::path find_last_snapshot(const std::filesystem::path directory)
 }
 
 Races::Drivers::Simulation::Simulation 
-load_drivers_simulation(const std::filesystem::path driver_directory, const bool quiet)
+BasicExecutable::load_drivers_simulation(const std::filesystem::path snapshot_path, const bool quiet)
 {
-    auto last_snapshot_path = find_last_snapshot(driver_directory);
-
-    Races::Archive::Binary::In archive(last_snapshot_path);
+    Races::Archive::Binary::In archive(snapshot_path);
 
     Races::Drivers::Simulation::Simulation simulation;
 

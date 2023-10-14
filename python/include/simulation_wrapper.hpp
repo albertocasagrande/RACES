@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -83,12 +83,12 @@ public:
      * in a graphical window.
      * 
      * @param final_time is the final simulation time
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param quiet is a flag to enable/disable the progress bar
      * @param plot is a flag to enable/disable plotting
      * @return a reference to the updated simulation
      */
-    void run_up_to(const Races::Time& final_time, const bool logging = true,
+    void run_up_to(const Races::Time& final_time, const bool disable_storage = false,
                    const bool quiet = false, const bool plot = false);
 
     /**
@@ -190,15 +190,15 @@ public:
      * @param wrapper is the simulation wrapper on which the 
      *                  computation is performed
      * @param final_time is the final simulation time
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param quiet is a flag to enable/disable the progress bar
      * @param plot is a flag to enable/disable plotting
      */
     inline static void static_run_up_to(SimulationWrapper *wrapper, const Races::Time& final_time, 
-                                 const bool logging = true, const bool quiet = false,
+                                 const bool disable_storage = false, const bool quiet = false,
                                  const bool plot = false)
     {
-        wrapper->run_up_to(final_time, logging, quiet, plot);
+        wrapper->run_up_to(final_time, disable_storage, quiet, plot);
     }
 };
 

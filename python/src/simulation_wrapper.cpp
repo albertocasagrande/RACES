@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.4
- * @date 2023-10-02
+ * @version 0.5
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,7 +73,7 @@ struct PythonCloser : public Races::Drivers::Simulation::Closer
     }
 };
 
-void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool logging,
+void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool disable_storage,
                                   const bool quiet, const bool plot)
 {
     using namespace Races::UI;
@@ -96,10 +96,10 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool logg
 
     PythonCloser closer;
     if (quiet) {
-        obj_ptr->simulation.run_up_to(final_time, plotter, bar, logging, closer);
+        obj_ptr->simulation.run_up_to(final_time, plotter, bar, disable_storage, closer);
     } else {
         bar = new ProgressBar();
-        obj_ptr->simulation.run_up_to(final_time, plotter, bar, logging, closer);
+        obj_ptr->simulation.run_up_to(final_time, plotter, bar, disable_storage, closer);
 
         delete bar;
     }

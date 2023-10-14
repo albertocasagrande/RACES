@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.15
+ * @version 0.16
  * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
@@ -273,11 +273,11 @@ public:
      * 
      * @tparam PLOT_WINDOW is the plotting window type
      * @param plotter is a tissue plotter pointer
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @return a reference to the updated simulation
      */
     template<typename PLOT_WINDOW>
-    Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging = true);
+    Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool disable_storage = false);
 
     /**
      * @brief Simulate up to the next event
@@ -288,13 +288,13 @@ public:
      * 
      * @tparam PLOT_WINDOW is the plotting window type
      * @param plotter is a tissue plotter
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @return a reference to the updated simulation
      */
     template<typename PLOT_WINDOW>
-    inline Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true)
+    inline Simulation& run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool disable_storage = false)
     {
-        return run_up_to_next_event(&plotter, logging);
+        return run_up_to_next_event(&plotter, disable_storage);
     }
 
     /**
@@ -303,12 +303,12 @@ public:
      * This method simulates a tissue up to the next 
      * event.
      * 
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @return a reference to the updated simulation
      */
-    inline Simulation& run_up_to_next_event(const bool logging = true)
+    inline Simulation& run_up_to_next_event(const bool disable_storage = false)
     {
-        return run_up_to_next_event<UI::Plot2DWindow>(nullptr, logging);
+        return run_up_to_next_event<UI::Plot2DWindow>(nullptr, disable_storage);
     }
 
     /**
@@ -326,7 +326,7 @@ public:
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter pointer
      * @param indicator is the progress indicator pointer
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
@@ -334,7 +334,7 @@ public:
              std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
                               std::is_base_of_v<Closer, CLOSER>, bool> = true>
     Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter,
-                          INDICATOR_TYPE* indicator, const bool logging = true,
+                          INDICATOR_TYPE* indicator, const bool disable_storage = false,
                           const CLOSER& closer=CLOSER())
     {
         // the tissue() call checks whether a tissue has been 
@@ -342,7 +342,7 @@ public:
         // case, it throws an std::runtime_error 
         (void)tissue();
 
-        if (logging) {
+        if (!disable_storage) {
             if (logger == nullptr) {
                 logger = new BinaryLogger();
             }
@@ -357,9 +357,9 @@ public:
         while ((plotter == nullptr || !plotter->closed()) && !closer.closing() 
             && tissue().num_of_mutated_cells()>0 && time < final_time) {
 
-            run_up_to_next_event(plotter, logging);
+            run_up_to_next_event(plotter, disable_storage);
 
-            if (logging) {
+            if (!disable_storage) {
                 snapshot_on_time(indicator);
             }
 
@@ -370,7 +370,7 @@ public:
             }
         }
 
-        if (logging) {
+        if (!disable_storage) {
             if (indicator != nullptr) {
                 indicator->set_message("Saving snapshot");
             }
@@ -399,7 +399,7 @@ public:
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter
      * @param indicator is the progress indicator pointer
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
@@ -407,10 +407,10 @@ public:
              std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
                               std::is_base_of_v<Closer, CLOSER>, bool> = true>
     inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
-                                 INDICATOR_TYPE& indicator, const bool logging = true,
+                                 INDICATOR_TYPE& indicator, const bool disable_storage = false,
                                  const CLOSER& closer=CLOSER())
     {
-        return run_up_to(final_time, &plotter, &indicator, logging, closer);
+        return run_up_to(final_time, &plotter, &indicator, disable_storage, closer);
     }
 
     /**
@@ -424,16 +424,16 @@ public:
      *              must be stopped
      * @param final_time is the final simulation time
      * @param indicator is the progress indicator
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
     template<typename INDICATOR_TYPE, class CLOSER = Closer,
              std::enable_if_t<std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, const bool logging = true,
+    inline Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, const bool disable_storage = false,
                                  const CLOSER& closer=CLOSER())
     {
-        return run_up_to<UI::Plot2DWindow, INDICATOR_TYPE, CLOSER>(final_time, nullptr, &indicator, logging, closer);
+        return run_up_to<UI::Plot2DWindow, INDICATOR_TYPE, CLOSER>(final_time, nullptr, &indicator, disable_storage, closer);
     }
 
     /**
@@ -448,17 +448,17 @@ public:
      *              must be stopped
      * @param final_time is the final simulation time
      * @param plotter is a tissue plotter
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
     template<typename PLOT_WINDOW, class CLOSER = Closer,
              std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
                               std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool logging = true,
+    inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter, const bool disable_storage = false,
                                  const CLOSER& closer=CLOSER())
     {
-        return run_up_to<PLOT_WINDOW, UI::ProgressBar, CLOSER>(final_time, &plotter, nullptr, logging, closer);
+        return run_up_to<PLOT_WINDOW, UI::ProgressBar, CLOSER>(final_time, &plotter, nullptr, disable_storage, closer);
     }
 
     /**
@@ -470,14 +470,14 @@ public:
      * @tparam CLOSER is a structure that establishes if the evaluation
      *              must be stopped
      * @param final_time is the final simulation time
-     * @param logging is a flag to enable/disable logging
+     * @param disable_storage is a flag to enable/disable result storage
      * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
     template<class CLOSER = Closer, std::enable_if_t<std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, const bool logging = true, const CLOSER& closer=CLOSER())
+    inline Simulation& run_up_to(const Time& final_time, const bool disable_storage = false, const CLOSER& closer=CLOSER())
     {
-        return run_up_to<UI::Plot2DWindow, UI::ProgressBar, CLOSER>(final_time, nullptr, nullptr, logging, closer);
+        return run_up_to<UI::Plot2DWindow, UI::ProgressBar, CLOSER>(final_time, nullptr, nullptr, disable_storage, closer);
     }
 
     /**
@@ -691,7 +691,7 @@ public:
     {
         Simulation simulation;
 
-        bool logging;
+        bool disable_storage;
 
         archive & simulation.tissues
                 & simulation.secs_between_snapshots
@@ -702,13 +702,13 @@ public:
                 & simulation.death_activation_level
                 & simulation.duplicate_internal_cells
                 & Cell::counter
-                & logging;
+                & disable_storage;
 
         simulation.init_valid_directions();
 
         simulation.last_snapshot_time = system_clock::now();
 
-        if (logging) {
+        if (!disable_storage) {
             simulation.logger = new BinaryLogger();
             archive & *(simulation.logger);
         }
@@ -746,7 +746,7 @@ void Simulation::make_snapshot(INDICATOR *indicator)
 }
 
 template<typename PLOT_WINDOW>
-Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool logging)
+Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter, const bool disable_storage)
 {
     CellEvent event = select_next_event();
 
@@ -772,7 +772,7 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
     }
 
     for (const auto& cell : affected.new_cells) {
-        if (logging) {
+        if (!disable_storage) {
             logger->record(event.type, cell, time);
         }
 
