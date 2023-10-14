@@ -12,7 +12,8 @@ Makefile
 build.ninja
 drivers_sim
 passengers_sim
-races_phylo
+phylo_builder
+tissue_sampler
 build_context_index
 sample_context_index
 RACES.so

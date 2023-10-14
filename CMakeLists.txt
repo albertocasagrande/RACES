@@ -171,7 +171,10 @@ set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
 set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp
                         ${COMMON_SOURCES})
 
-set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
+set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
+                    ${COMMON_SOURCES})
+
+set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/phylo_builder.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
                   ${COMMON_SOURCES})
@@ -189,9 +192,13 @@ add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
 target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(drivers_sim libRACES nlohmann_json::nlohmann_json)
 
-add_executable(races_phylo ${PHYLO_SOURCES})
-target_include_directories(races_phylo PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(races_phylo libRACES)
+add_executable(phylo_builder ${PHYLO_SOURCES})
+target_include_directories(phylo_builder PRIVATE ${Boost_INCLUDE_DIR})
+target_link_libraries(phylo_builder libRACES)
+
+add_executable(tissue_sampler ${TISSUE_SAMPLER})
+target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
+target_link_libraries(tissue_sampler libRACES)
 
 add_executable(build_context_index ${BUILD_INDEX_SOURCES})
 target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
