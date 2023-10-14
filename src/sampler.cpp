@@ -1,9 +1,9 @@
 /**
  * @file sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Tissue sampler class implementation
- * @version 0.3
- * @date 2023-10-02
+ * @brief Implements classes to sample cells in a tissue
+ * @version 0.4
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,7 +50,7 @@ RectangleSampler::const_iterator::const_iterator(const RectangleSampler* sampler
                                                  const Simulation::PositionInTissue& position):
     sampler(sampler), pos(position)
 {
-    if (!sampler->tissue(pos).has_driver_mutations()) {
+    while (!sampler->tissue(pos).has_driver_mutations()) {
         this->operator++();
     }
 }
