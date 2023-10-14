@@ -2,7 +2,7 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.1
+ * @version 0.2
  * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
@@ -69,6 +69,13 @@ struct BasicPositionSet
      * @throws std::runtime_error
      */
     const_iterator end() const;
+
+    /**
+     * @brief Return the number of positions in the rectangle
+     * 
+     * @return the number of positions in the rectangle
+     */
+    virtual size_t size() const = 0;
 };
 
 /**
@@ -238,6 +245,13 @@ struct RectangleSet : public BasicPositionSet
     const_iterator end() const;
 
     /**
+     * @brief Return the number of positions in the rectangle
+     * 
+     * @return the number of positions in the rectangle
+     */
+    size_t size() const;
+
+    /**
      * @brief Test whether two position rectangle sets are the same
      * 
      * @param a is the first position rectangle set to compare
@@ -253,7 +267,6 @@ struct RectangleSet : public BasicPositionSet
 
     friend RectangleSet::const_iterator;
 };
-
 
 /**
  * @brief Test whether two iterators differs
@@ -271,5 +284,17 @@ inline bool operator!=(const RectangleSet::const_iterator& a, const RectangleSet
 }   // Drivers
 
 }   // Races
+
+namespace std {
+/**
+ * @brief Write the data of a rectangle position set in a stream
+ * 
+ * @param os is the output stream
+ * @param rectangle is a rectangle position set
+ * @return a reference to the updated output stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::RectangleSet& rectangle);
+
+}   // std
 
 #endif // __RACES_POSITION_SET__

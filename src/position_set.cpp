@@ -2,7 +2,7 @@
  * @file position_set.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to represent tissue position set
- * @version 0.1
+ * @version 0.2
  * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
@@ -184,6 +184,32 @@ RectangleSet::const_iterator RectangleSet::end() const
     return ++it;
 }
 
+size_t RectangleSet::size() const
+{
+    if (upper_corner.x<lower_corner.x
+            || upper_corner.y<lower_corner.y
+            || upper_corner.z<lower_corner.z) {
+        return 0;
+    }
+
+    return ((upper_corner.x-lower_corner.x+1)
+            *(upper_corner.y-lower_corner.y+1)
+            *(upper_corner.z-lower_corner.z+1));
+}
+
 }   // Drivers
 
 }   // Races
+
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::RectangleSet& rectangle)
+{
+    os << "RectangleSet{" << rectangle.lower_corner 
+       << "," << rectangle.upper_corner << "}";
+
+    return os;
+}
+
+}   // std
