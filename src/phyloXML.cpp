@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements phyloXML stream
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -110,7 +110,7 @@ phyloXMLStream& phyloXMLStream::operator<<(const EpigeneticGenotypeId& genotype_
     os << indent_string << "<id>" << genotype_id << "</id>" << std::endl;
 
     change_indentation_level(indent_level-1);
-    os  << "</taxonomy>" << std::endl;
+    os  << indent_string << "</taxonomy>" << std::endl;
 
     return *this;
 }
