@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.10
- * @date 2023-10-02
+ * @version 0.11
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -247,8 +247,9 @@ public:
         return cells.size();
     }
 
-    template<typename SAMPLER, typename CELL_STORAGE>
-    friend PhylogeneticForest grow_forest_from(SAMPLER& sampler, CELL_STORAGE& cell_storage,
+    template<typename CELL_STORAGE>
+    friend PhylogeneticForest grow_forest_from(const std::list<CellId>& sample, 
+                                               CELL_STORAGE& cell_storage,
                                                const std::vector<EpigeneticGenotype>& genotypes);
 };
 
@@ -259,16 +260,15 @@ public:
  * The sample cells are the leaves of the forest and 
  * their ancestors are loaded from a cell storage.
  * 
- * @tparam CELL_SAMPLE is the cell sample type 
  * @tparam CELL_STORAGE is the type of the cell storage
- * @param sample is the cell sample
+ * @param sample is the cell id sample
  * @param cell_storage is the cell storage
  * @param genotypes is the vector of epigenetic genotypes
  * @return the phylogenetic forest obtained by using the 
  *       cells in `sample` as leafs and recovering 
  */
-template<typename CELL_SAMPLE, typename CELL_STORAGE>
-PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_storage,
+template<typename CELL_STORAGE>
+PhylogeneticForest grow_forest_from(const std::list<CellId>& sample, CELL_STORAGE& cell_storage,
                                     const std::vector<EpigeneticGenotype>& genotypes)
 {
     PhylogeneticForest forest;
@@ -278,11 +278,11 @@ PhylogeneticForest grow_forest_from(CELL_SAMPLE& sample, CELL_STORAGE& cell_stor
     }
 
     std::set<CellId> parent_ids;
-    for (const auto& cell: sample) {
-        parent_ids.insert(cell.get_id());
+    for (const auto& cell_id: sample) {
+        parent_ids.insert(cell_id);
 
         // record leaves children, i.e., none
-        forest.branches[cell.get_id()] = std::set<CellId>();
+        forest.branches[cell_id] = std::set<CellId>();
     }
 
     std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());

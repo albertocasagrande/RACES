@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.1
- * @date 2023-10-02
+ * @version 0.2
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -239,8 +239,7 @@ ConfigReader::get_default_mutational_coefficients(const nlohmann::json& mutation
     return get_mutational_coefficients(mutational_coeff_json["default"]);
 }
 
-std::pair<Races::Drivers::Simulation::PositionInTissue,
-          Races::Drivers::Simulation::PositionInTissue> 
+Drivers::RectangleSet
 ConfigReader::get_sample_region(const nlohmann::json& sampler_region_json)
 {
     if (!sampler_region_json.is_object()) {
@@ -257,7 +256,6 @@ ConfigReader::get_sample_region(const nlohmann::json& sampler_region_json)
 
     using namespace Races::Drivers::Simulation;
 
-    PositionInTissue lower_corner, upper_corner;
     if (lower_vector.size()==2) {
         return {{lower_vector[0], lower_vector[1]},
                 {upper_vector[0], upper_vector[1]}};

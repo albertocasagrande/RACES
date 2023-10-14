@@ -2,8 +2,8 @@
  * @file races_phylo.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the simulator
- * @version 0.6
- * @date 2023-10-12
+ * @version 0.7
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,7 +39,6 @@
 
 #include "simulation.hpp"
 
-#include "sampler.hpp"
 #include "phylogenetic_forest.hpp"
 
 #include "phyloXML.hpp"
@@ -73,13 +72,12 @@ build_forest(const std::string& driver_directory, const nlohmann::json& simulati
     Simulation::BinaryLogger::CellReader reader(driver_directory);
 
     auto simulation = load_drivers_simulation(driver_directory, quiet);
-    const auto& tissue = simulation.tissue();
 
-    RectangleSampler sampler(tissue, sampler_region.first, sampler_region.second);
+    auto sample = simulation.sample_tissue(sampler_region);
 
-    auto genotypes = tissue.get_genotypes();
+    auto genotypes = simulation.tissue().get_genotypes();
 
-    return grow_forest_from(sampler, reader, genotypes);
+    return grow_forest_from(sample, reader, genotypes);
 }
 
 int main(int argc, char* argv[])

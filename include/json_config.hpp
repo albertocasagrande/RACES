@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.1
- * @date 2023-10-02
+ * @version 0.2
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,6 +37,7 @@
 #include <nlohmann/json.hpp>
 
 #include "simulation.hpp"
+#include "position_set.hpp"
 #include "mutation_engine.hpp"
 
 namespace Races
@@ -197,14 +198,13 @@ public:
     }
 
     /**
-     * @brief Get the sample region
+     * @brief Get the sample set
      * 
-     * @param sampler_region_json is the sample region JSON
-     * @return the pair of opposite corners in sample region 
+     * @param sample_region_json is the sample region JSON
+     * @return the rectangle position set
      */
-    static std::pair<Races::Drivers::Simulation::PositionInTissue,
-                     Races::Drivers::Simulation::PositionInTissue> 
-    get_sample_region(const nlohmann::json& sampler_region_json);
+    static Drivers::RectangleSet 
+    get_sample_region(const nlohmann::json& sample_region_json);
 
     /**
      * @brief Collect the driver mutations

@@ -173,12 +173,10 @@ set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp
 
 set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/races_phylo.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
                   ${COMMON_SOURCES})
 
 set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cpp
                            ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
                            ${COMMON_SOURCES})
 
