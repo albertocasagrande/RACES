@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.16
+ * @version 0.17
  * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
@@ -672,10 +672,10 @@ public:
                 & Cell::counter;
 
         if (logger != nullptr) {
-            archive & true
+            archive & false
                     & *logger; 
         } else {
-            archive & false;
+            archive & true;
         }
     }
 
