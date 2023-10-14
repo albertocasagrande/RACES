@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.14
- * @date 2023-10-12
+ * @version 0.15
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,6 +43,7 @@
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
 #include "timed_mutations.hpp"
+#include "position_set.hpp"
 
 #include "progress_bar.hpp"
 
@@ -625,6 +626,31 @@ public:
      */
     template<typename INDICATOR>
     void snapshot_on_time(INDICATOR *indicator);
+
+    /**
+     * @brief Sample the simulation tissue
+     * 
+     * This method samples the simulation tissue in a non-destructive way
+     * and returns a list of the identifiers of the sampled cells.
+     * 
+     * @param rectangle is the rectangle to sample
+     * @return the list of the identifiers of the sampled cells
+     */
+    std::list<CellId>
+    sample_tissue(const RectangleSet& rectangle) const;
+
+    /**
+     * @brief Sample the simulation tissue and remove the cells from it
+     * 
+     * This method samples the simulation tissue in a destructive way, 
+     * removes the cells from the tissue, and returns the 
+     * identifiers of the sampled cells.
+     * 
+     * @param rectangle is the rectangle to sample
+     * @return the list of the identifiers of the sampled cells
+     */
+    std::list<CellId>
+    sample_and_remove_tissue(const RectangleSet& rectangle);
 
     /**
      * @brief Save a simulation in an archive

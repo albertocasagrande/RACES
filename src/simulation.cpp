@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.13
- * @date 2023-10-13
+ * @version 0.14
+ * @date 2023-10-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -543,6 +543,44 @@ void Simulation::log_initial_cells()
             logger->record_initial_cell(cell);
         }
     }
+}
+
+std::list<CellId>
+Simulation::sample_tissue(const RectangleSet& rectangle) const
+{
+    std::list<CellId> sampled_ids;
+
+    for (const auto& position: rectangle) {
+        if (tissue().is_valid(position)) {
+            auto cell = tissue()(position);
+            if (cell.has_driver_mutations()) {
+                sampled_ids.push_back(static_cast<const CellInTissue&>(cell).get_id());
+            }
+        }
+    }
+
+    return sampled_ids;
+}
+
+std::list<CellId>
+Simulation::sample_and_remove_tissue(const RectangleSet& rectangle)
+{
+    std::list<CellId> sampled_id;
+
+    for (const auto& position: rectangle) {
+        if (tissue().is_valid(position)) {
+            auto cell = tissue()(position);
+            if (cell.has_driver_mutations()) {
+                auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
+
+                sampled_id.push_back(cell_in_tissue.get_id());
+                ++(statistics[cell_in_tissue.get_epigenetic_id()].lost_cells);
+                cell.erase();
+            }
+        }
+    }
+
+    return sampled_id;
 }
 
 Simulation::~Simulation()
