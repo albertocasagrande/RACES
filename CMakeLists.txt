@@ -94,7 +94,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/position_set.cpp)
 
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
@@ -116,7 +117,6 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/sampler.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
@@ -133,7 +133,8 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp)
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
