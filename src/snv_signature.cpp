@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.11
- * @date 2023-10-02
+ * @version 0.12
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -299,7 +299,10 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
 {
     std::map<std::string, MutationalSignature> result;
 
+    std::string curLocale = setlocale(LC_ALL, nullptr);
+    setlocale(LC_ALL,"C");
     auto name_signature_map = not_validated_read_from_stream(in,'\t');
+    setlocale(LC_ALL, curLocale.c_str());
     for (const auto& [name, signature]: name_signature_map) {
         try {
             result.emplace(std::string(name), MutationalSignature(signature));
