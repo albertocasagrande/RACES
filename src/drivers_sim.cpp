@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.6
- * @date 2023-10-14
+ * @version 0.7
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -368,7 +368,7 @@ public:
         visible_options.at("options").add_options()
             ("recover-simulation,r", 
              po::value<std::string>(&snapshot_path)->default_value(""), 
-             "recover a simulation from a snapshot")
+             "recover a simulation")
             ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
             ("disable-storage,d", "disable result storage")
             ("seed,s", po::value<int>()->default_value(0), "random generator seed")
@@ -437,9 +437,7 @@ public:
         }
 
         if (snapshot_path != "") {
-            if (std::filesystem::is_directory(snapshot_path)) {
-                snapshot_path = find_last_snapshot(snapshot_path);
-            }
+            snapshot_path = get_last_snapshot_path(snapshot_path, "simulation");
 
             simulation = load_drivers_simulation(snapshot_path, quiet);
         } else {

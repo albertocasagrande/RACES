@@ -2,8 +2,8 @@
  * @file common.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines auxiliary classes and functions for executables
- * @version 0.2
- * @date 2023-10-14
+ * @version 0.3
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -72,6 +72,16 @@ public:
      */
     BasicExecutable(const std::string& program_name, 
                     const std::vector<std::pair<std::string,std::string>>& option_sections);
+
+    /**
+     * @brief Find the last driver simulation snapshot path
+     * 
+     * @param simulation_dir is the simulation path provided as an executable parameter
+     * @param parameter_name is the executable parameter name
+     * @return the last simulation snapshot in the directory `simulation_dir`
+     */
+    std::filesystem::path get_last_snapshot_path(const std::string& simulation_dir,
+                                                 const std::string& parameter_name);
 
     /**
      * @brief Find the last driver simulation snapshot in a directory

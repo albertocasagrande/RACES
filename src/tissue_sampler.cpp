@@ -2,8 +2,8 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for a tool that sample the tissue
- * @version 0.1
- * @date 2023-10-14
+ * @version 0.2
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -100,8 +100,8 @@ public:
         ;
 
         hidden_options.add_options()
-            ("simulation", po::value<std::filesystem::path>(&snapshot_path), 
-            "the simulation directory/snapshot")
+            ("simulation", po::value<std::filesystem::path>(&drivers_directory), 
+            "the simulation directory")
             ("sampling-config", po::value<std::filesystem::path>(&config), 
             "the sampling simulation config")
         ;
@@ -132,17 +132,7 @@ public:
             print_help_and_exit("Missing simulation snapshot!", 1);
         }
 
-        if (std::filesystem::is_directory(snapshot_path)) {
-            drivers_directory = snapshot_path;
-            try {
-                snapshot_path = find_last_snapshot(snapshot_path);
-            } catch (...) {
-                print_help_and_exit("\"" + std::string(snapshot_path)
-                                    + "\" does not contain any snapshot", 1);
-            }
-        } else {
-            drivers_directory = snapshot_path.parent_path();
-        }
+        snapshot_path = get_last_snapshot_path(drivers_directory, "simulation");
 
         if (!vm.count("sampling-config")) {
             print_help_and_exit("Missing passenger configuration file!", 1);

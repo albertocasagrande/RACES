@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the passenger mutations simulator
- * @version 0.12
- * @date 2023-10-14
+ * @version 0.13
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -532,7 +532,7 @@ public:
             ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
              "the name of the file describing the passenger mutations simulation")
             ("driver simulation", po::value<std::filesystem::path>(&snapshot_path), 
-             "the driver simulation directory or a simulation snapshot")
+             "the driver simulation directory")
             ("context index", po::value<std::filesystem::path>(&context_index_filename), 
              "the genome context index")
             ("mutational signature", po::value<std::filesystem::path>(&SBS_filename), 
@@ -595,17 +595,7 @@ public:
 
         validate(vm);
 
-        if (std::filesystem::is_directory(snapshot_path)) {
-            drivers_directory = snapshot_path;
-            try {
-                snapshot_path = find_last_snapshot(snapshot_path);
-            } catch (...) {
-                print_help_and_exit("\""+std::string(snapshot_path)+
-                                    "\" does not contain any snapshot", 1);
-            }
-        } else {
-            drivers_directory = snapshot_path.parent_path();
-        }
+        snapshot_path = get_last_snapshot_path(snapshot_path, "driver simulation");
     }
 
     void run() const

@@ -2,8 +2,8 @@
  * @file phylo_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the simulator
- * @version 0.1
- * @date 2023-10-14
+ * @version 0.2
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -84,8 +84,8 @@ public:
             ("help,h", "get the help");
 
         hidden_options.add_options()
-            ("simulation", po::value<std::filesystem::path>(&snapshot_path), 
-            "the simulation directory/snapshot")
+            ("simulation", po::value<std::filesystem::path>(&drivers_directory), 
+            "the simulation directory")
             ("passenger-config", po::value<std::filesystem::path>(&config), 
             "the passenger simulation config")
         ;
@@ -115,13 +115,8 @@ public:
         if (!vm.count("simulation")) {
             print_help_and_exit("Missing simulation snapshot!", 1);
         }
-
-        if (std::filesystem::is_directory(snapshot_path)) {
-            drivers_directory = snapshot_path;
-            snapshot_path = find_last_snapshot(snapshot_path);
-        } else {
-            drivers_directory = snapshot_path.parent_path();
-        }
+    
+        snapshot_path = get_last_snapshot_path(drivers_directory, "simulation");
 
         if (!vm.count("passenger-config")) {
             print_help_and_exit("Missing passenger configuration file!", 1);

@@ -2,8 +2,8 @@
  * @file common.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements auxiliary classes and functions for executables
- * @version 0.2
- * @date 2023-10-14
+ * @version 0.3
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -67,6 +67,24 @@ BasicExecutable::BasicExecutable(const std::string& program_name,
 {
     for (const auto& [section_name, section_description]: option_sections) {
         visible_options.insert({section_name, {section_description}});
+    }
+}
+
+
+std::filesystem::path 
+BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
+                                        const std::string& parameter_name)
+{
+    if (!std::filesystem::is_directory(simulation_dir)) {
+        print_help_and_exit("The \"" + parameter_name + "\" parameter must be a directory", 1);
+    }
+
+    try {
+        return find_last_snapshot(simulation_dir);
+    } catch (std::exception &except) {
+        print_help_and_exit(except.what(), 1);
+
+        exit(1);
     }
 }
 
