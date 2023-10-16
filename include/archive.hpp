@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.16
- * @date 2023-10-12
+ * @version 0.17
+ * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -180,6 +180,16 @@ struct Basic
     inline std::streampos tellg()
     {
         return fs.tellg();
+    }
+
+    /**
+     * @brief Check whether the end of file has been reached
+     * 
+     * @return `true` if and only if the end of file has been reached
+     */
+    inline bool eof() const
+    {
+        return fs.eof();
     }
 
     /**
