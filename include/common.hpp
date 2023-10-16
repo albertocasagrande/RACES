@@ -2,7 +2,7 @@
  * @file common.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines auxiliary classes and functions for executables
- * @version 0.3
+ * @version 0.4
  * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
@@ -100,4 +100,26 @@ public:
      */
     static Races::Drivers::Simulation::Simulation 
     load_drivers_simulation(const std::filesystem::path snapshot_path, const bool quiet=false);
+
+    /**
+     * @brief Save sampled cell ids
+     * 
+     * @param os is the output stream
+     * @param time it the sampling time
+     * @param sampled_cell_ids is the list of sampled cell ids
+     * @param sampled_region is the sampled region
+     * @return the updated output stream
+     */
+    static std::ostream& save_sampled_ids(std::ostream& os, const Races::Time& time, 
+                                          const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                                          const Races::Drivers::RectangleSet& sampled_region);
+
+    /**
+     * @brief Load the sampled cell ids
+     * 
+     * @param sample_path is the path to a file containing the sampled cell ids
+     * @return std::list<Races::Drivers::CellId> 
+     */
+    static std::list<Races::Drivers::CellId>
+    load_sampled_ids(const std::filesystem::path sample_path);
 };

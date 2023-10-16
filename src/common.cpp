@@ -2,7 +2,7 @@
  * @file common.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements auxiliary classes and functions for executables
- * @version 0.3
+ * @version 0.4
  * @date 2023-10-16
  * 
  * @copyright Copyright (c) 2023
@@ -70,6 +70,48 @@ BasicExecutable::BasicExecutable(const std::string& program_name,
     }
 }
 
+std::ostream&
+BasicExecutable::save_sampled_ids(std::ostream& os, const Races::Time& time, 
+                              const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                              const Races::Drivers::RectangleSet& sampled_region)
+{
+    os << "# " << time
+       << " " << sampled_cell_ids.size()
+       << " " << sampled_region.size()
+       << " "<< sampled_region.lower_corner
+       << " "<< sampled_region.upper_corner << std::endl;
+
+    for (const auto& cell_id: sampled_cell_ids) {
+        os << cell_id << std::endl;
+    }
+
+    return os;
+}
+
+std::list<Races::Drivers::CellId>
+BasicExecutable::load_sampled_ids(const std::filesystem::path sample_path)
+{
+    using namespace Races::Drivers;
+
+    std::list<CellId> sample;
+
+    std::ifstream sample_is(sample_path);
+    while (!sample_is.eof()) {
+        std::string line;
+
+        std::getline(sample_is, line);
+        if (line[0] != '#' && line[0] != '\n') {
+            std::istringstream iss(line);
+
+            CellId cell_id;
+            iss >> cell_id;
+
+            sample.push_back(cell_id);
+        }
+    }
+
+    return sample;
+}
 
 std::filesystem::path 
 BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
