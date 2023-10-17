@@ -1,9 +1,9 @@
 /**
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for the passenger mutations simulator
- * @version 0.13
- * @date 2023-10-16
+ * @brief Main file for the RACES passenger mutations simulator
+ * @version 0.14
+ * @date 2023-10-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -132,26 +132,23 @@ class PassengersSimulator : public BasicExecutable
     bool quiet;
 
     Races::Drivers::PhylogeneticForest 
-    build_forest(const Races::Drivers::Simulation::Simulation& simulation,
-                 const nlohmann::json& simulation_cfg) const
+    build_forest(const Races::Drivers::Simulation::Simulation& simulation) const
     {
         using namespace Races::Drivers;
-        using ConfigReader = Races::Passengers::ConfigReader;
 
-        if (!simulation_cfg.contains("sample region")) {
-            throw std::runtime_error("The passengers simulation file must contain "
-                                        "a \"sample region\" field");
+        std::list<Races::Drivers::CellId> sampled_ids;
+        try {
+            sampled_ids = load_sampled_ids(drivers_directory);
+        } catch (...) {
+            print_help_and_exit("\""+std::string(drivers_directory)+"\" does not contain a list "
+                                + "of sampled cell. Produce it by using \"tissue_sampler\".", 1);
         }
-
-        const auto sampler_region = ConfigReader::get_sample_region(simulation_cfg["sample region"]);
 
         Simulation::BinaryLogger::CellReader reader(drivers_directory);
 
-        auto sample = simulation.sample_tissue(sampler_region);
-
         auto genotypes = simulation.tissue().get_genotypes();
 
-        return grow_forest_from(sample, reader, genotypes);
+        return grow_forest_from(sampled_ids, reader, genotypes);
     }
 
     template<typename ABSOLUTE_GENOTYPE_POSITION = uint32_t>
@@ -349,7 +346,7 @@ class PassengersSimulator : public BasicExecutable
                 epigenetic_status_classes = split_by_epigenetic_status(tissue_genotypes);
             }
 
-            forest = build_forest(drivers_simulation, simulation_cfg);
+            forest = build_forest(drivers_simulation);
 
             mutational_properties = ConfigReader::get_mutational_properties(drivers_simulation,
                                                                             simulation_cfg);
@@ -410,13 +407,18 @@ class PassengersSimulator : public BasicExecutable
             print_help_and_exit("The simulation file is mandatory", 1);
         }
     
-        if (!vm.count("driver directory")) {
-            print_help_and_exit("The driver directory is mandatory. "
+        if (!vm.count("driver simulation")) {
+            print_help_and_exit("The driver simulation directory is mandatory. "
                                 "You can produce it by using `drivers_sim`", 1);
         }
-
-        if (!fs::exists(snapshot_path)) {
-            print_help_and_exit("\"" + std::string(snapshot_path) + "\"  does not exist", 1);
+        
+        if (!fs::exists(drivers_directory)) {
+            print_help_and_exit("\"" + std::string(drivers_directory) + "\"  does not exist", 1);
+        }
+    
+        if (!vm.count("sampled cell ids")) {
+            print_help_and_exit("Missing sampled cell file! "
+                                "Use `tissue_sampler` to produce it.", 1);
         }
 
         if (!vm.count("context index")) {
@@ -531,7 +533,7 @@ public:
         hidden_options.add_options()
             ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
              "the name of the file describing the passenger mutations simulation")
-            ("driver simulation", po::value<std::filesystem::path>(&snapshot_path), 
+            ("driver simulation", po::value<std::filesystem::path>(&drivers_directory), 
              "the driver simulation directory")
             ("context index", po::value<std::filesystem::path>(&context_index_filename), 
              "the genome context index")
@@ -549,6 +551,7 @@ public:
 
         positional_options.add("simulation file", 1);
         positional_options.add("driver simulation", 1);
+        positional_options.add("sampled cell ids", 1);
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
@@ -595,7 +598,7 @@ public:
 
         validate(vm);
 
-        snapshot_path = get_last_snapshot_path(snapshot_path, "driver simulation");
+        snapshot_path = get_last_snapshot_path(drivers_directory, "driver simulation");
     }
 
     void run() const

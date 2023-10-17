@@ -1,9 +1,9 @@
 /**
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for a tool that sample the tissue
- * @version 0.2
- * @date 2023-10-16
+ * @brief Main file for the RACES tool that sample tissues
+ * @version 0.3
+ * @date 2023-10-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,8 +45,9 @@ class TissueSampler : public BasicExecutable
     std::filesystem::path config;
 
     bool remove_sample_tissue;
+    bool quiet;
 
-    void perform_sampling(std::ostream& os, const nlohmann::json& sampling_cfg, const bool quiet=true) const
+    void perform_sampling(const nlohmann::json& sampling_cfg, const bool quiet=false) const
     {
         using namespace Races::Drivers;
         using ConfigReader = Races::Passengers::ConfigReader;
@@ -60,25 +61,17 @@ class TissueSampler : public BasicExecutable
         auto simulation = load_drivers_simulation(snapshot_path, quiet);
 
         for (const auto& rectangle_json : sampling_cfg) {
-            const auto sampler_region = ConfigReader::get_sample_region(rectangle_json);
+            const auto sample_region = ConfigReader::get_sample_region(rectangle_json);
 
             std::list<Races::Drivers::CellId> sample; 
             
             if (remove_sample_tissue) {
-                sample = simulation.sample_and_remove_tissue(sampler_region);
+                sample = simulation.sample_and_remove_tissue(sample_region);
             } else {
-                sample = simulation.sample_tissue(sampler_region);
+                sample = simulation.sample_tissue(sample_region);
             }
 
-            os << "# " << simulation.get_time()
-               << " "<< sampler_region.lower_corner
-               << " "<< sampler_region.upper_corner
-               << " " << sample.size() 
-               << " " << sampler_region.size() << std::endl;
-
-            for (const auto& cell_id: sample) {
-                os << cell_id << std::endl;
-            }
+            save_sampled_ids(drivers_directory,simulation.get_time(),sample,sample_region);
         }
 
         if (remove_sample_tissue) {
@@ -96,6 +89,7 @@ public:
 
         visible_options.at("options").add_options()
             ("remove-sample,r","remove the sample from the tissue")
+            ("quiet,q", "avoid output messages")
             ("help,h", "get the help")
         ;
 
@@ -139,6 +133,7 @@ public:
         }
 
         remove_sample_tissue = (vm.count("remove-sample")>0);
+        quiet = (vm.count("quiet")>0);
     }
 
     void run() const
@@ -147,7 +142,7 @@ public:
             std::ifstream config_stream(config);
             nlohmann::json simulation_cfg = nlohmann::json::parse(config_stream);
 
-            perform_sampling(std::cout, simulation_cfg, true);
+            perform_sampling(simulation_cfg,quiet);
         } catch (std::runtime_error& ex) {
             print_help_and_exit(ex.what(), 1);
         }

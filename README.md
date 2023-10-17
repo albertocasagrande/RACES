@@ -7,12 +7,13 @@ RACES is framework for simulating cancer genomic evolution. It supports:
 -   copy-number variations
 -   mutational signature ruled SNV
 
-RACES consists in 3 main programs:
+RACES consists in 4 main programs:
 -   `build_context_index` creates an index for the mutational contexts (i.e., consecutive triplets of nucleotides) in a genome. In normal conditions, the context index for a genome must be created once for all and the resulting file can be used many times.
 -   `drivers_sim` performs cell spacial simulation by using driver mutational information. It supports epigenetic switching.
--   `passengers_sim` samples the results of `drivers_sim`, builds the phylogenetic forest for the sampled cells, and places passengers mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
-    *   produce simulated reads and generate the correspoding SAM file for them
-    *   collect SNVs and CNAs statistical data and save them in CSV files
+-   `tissue_sampler` samples the results of `drivers_sim`.
+-   `passengers_sim` builds the phylogenetic forest for the sampled cells, and places passengers mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
+    *   produce simulated reads and generate the correspoding SAM file for them;
+    *   collect SNVs and CNAs statistical data and save them in CSV files.
 
 ## Required Packages
 -   CMake

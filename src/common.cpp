@@ -2,8 +2,8 @@
  * @file common.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements auxiliary classes and functions for executables
- * @version 0.4
- * @date 2023-10-16
+ * @version 0.5
+ * @date 2023-10-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -70,11 +70,15 @@ BasicExecutable::BasicExecutable(const std::string& program_name,
     }
 }
 
-std::ostream&
-BasicExecutable::save_sampled_ids(std::ostream& os, const Races::Time& time, 
-                              const std::list<Races::Drivers::CellId>& sampled_cell_ids,
-                              const Races::Drivers::RectangleSet& sampled_region)
+void
+BasicExecutable::save_sampled_ids(const std::filesystem::path simulation_dir, 
+                                  const Races::Time& time, 
+                                  const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                                  const Races::Drivers::RectangleSet& sampled_region)
 {
+
+    std::ofstream os(simulation_dir/"sampled_ids.list", std::ofstream::app);
+
     os << "# " << time
        << " " << sampled_cell_ids.size()
        << " " << sampled_region.size()
@@ -84,18 +88,16 @@ BasicExecutable::save_sampled_ids(std::ostream& os, const Races::Time& time,
     for (const auto& cell_id: sampled_cell_ids) {
         os << cell_id << std::endl;
     }
-
-    return os;
 }
 
 std::list<Races::Drivers::CellId>
-BasicExecutable::load_sampled_ids(const std::filesystem::path sample_path)
+BasicExecutable::load_sampled_ids(const std::filesystem::path simulation_dir)
 {
     using namespace Races::Drivers;
 
     std::list<CellId> sample;
 
-    std::ifstream sample_is(sample_path);
+    std::ifstream sample_is(simulation_dir/"sampled_ids.list");
     while (!sample_is.eof()) {
         std::string line;
 
@@ -117,6 +119,10 @@ std::filesystem::path
 BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
                                         const std::string& parameter_name)
 {
+    if (!std::filesystem::exists(simulation_dir)) {
+        print_help_and_exit("\"" + simulation_dir + "\" does not exists", 1);
+    }
+
     if (!std::filesystem::is_directory(simulation_dir)) {
         print_help_and_exit("The \"" + parameter_name + "\" parameter must be a directory", 1);
     }

@@ -1,9 +1,9 @@
 /**
  * @file phylo_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for the simulator
- * @version 0.2
- * @date 2023-10-16
+ * @brief Main file for the RACES phylogenetic tree builder
+ * @version 0.3
+ * @date 2023-10-17
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,27 +45,16 @@ class PhylogeneticBuilder : public BasicExecutable
 {
     std::filesystem::path snapshot_path;
     std::filesystem::path drivers_directory;
-    std::filesystem::path config;
 
     Races::Drivers::PhylogeneticForest 
-    build_forest(const nlohmann::json& simulation_cfg, const bool quiet=true) const
+    build_forest(const std::list<Races::Drivers::CellId>& sample, const bool quiet=true) const
     {
         using namespace Races::Drivers;
-        using ConfigReader = Races::Passengers::ConfigReader;
-
-        if (!simulation_cfg.contains("sample region")) {
-            throw std::runtime_error("The passengers simulation file must contain "
-                                        "a \"sample region\" field");
-        }
-
-        const auto sampler_region = ConfigReader::get_sample_region(simulation_cfg["sample region"]);
 
         Simulation::BinaryLogger::CellReader reader(drivers_directory);
 
         auto simulation = load_drivers_simulation(snapshot_path, quiet);
-
-        auto sample = simulation.sample_tissue(sampler_region);
-
+    
         auto genotypes = simulation.tissue().get_genotypes();
 
         return grow_forest_from(sample, reader, genotypes);
@@ -86,8 +75,6 @@ public:
         hidden_options.add_options()
             ("simulation", po::value<std::filesystem::path>(&drivers_directory), 
             "the simulation directory")
-            ("passenger-config", po::value<std::filesystem::path>(&config), 
-            "the passenger simulation config")
         ;
 
         po::options_description program_options;
@@ -97,7 +84,6 @@ public:
         program_options.add(hidden_options);
 
         positional_options.add("simulation", 1);
-        positional_options.add("passenger-config", 1);
 
         po::variables_map vm;
         try {
@@ -113,23 +99,24 @@ public:
         }
 
         if (!vm.count("simulation")) {
-            print_help_and_exit("Missing simulation snapshot!", 1);
+            print_help_and_exit("Missing driver simulation directory!", 1);
         }
     
         snapshot_path = get_last_snapshot_path(drivers_directory, "simulation");
-
-        if (!vm.count("passenger-config")) {
-            print_help_and_exit("Missing passenger configuration file!", 1);
-        }
     }
 
     void run() const
     {
+        std::list<Races::Drivers::CellId> sample;
         try {
-            std::ifstream config_stream(config);
-            nlohmann::json simulation_cfg = nlohmann::json::parse(config_stream);
+            sample = load_sampled_ids(drivers_directory);
+        } catch (...) {
+            print_help_and_exit("\""+std::string(drivers_directory)+"\" does not contain a list "
+                                + "of sampled cell. Produce it by using \"tissue_sampler\".", 1);
+        }
 
-            auto forest = build_forest(simulation_cfg);
+        try {
+            auto forest = build_forest(sample);
 
             Races::Drivers::IO::phyloXMLStream os;
 
