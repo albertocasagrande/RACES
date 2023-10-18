@@ -2,8 +2,8 @@
  * @file position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,6 +33,8 @@
 
 #include <iostream>
 #include <type_traits>
+
+#include "archive.hpp"
 
 namespace Races 
 {
@@ -176,6 +178,35 @@ struct PositionInTissue {
      * @return a reference to the updated position
      */
     PositionInTissue& operator-=(const PositionDelta delta);
+
+    /**
+     * @brief Save a position in tissue in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    void save(ARCHIVE& archive) const
+    {
+        archive & x & y & z;
+    }
+
+    /**
+     * @brief Load a timed genomic mutation from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded timed genomic mutation
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static PositionInTissue load(ARCHIVE& archive)
+    {
+        PositionInTissue pos;
+
+        archive & pos.x & pos.y & pos.z;
+
+        return pos;
+    }
 };
 
 /**
