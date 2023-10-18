@@ -75,7 +75,12 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_mutations.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_mutation.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/rate_update.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/event_wrapper.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
@@ -107,7 +112,12 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/timed_mutations.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_mutation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/rate_update.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/event_wrapper.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/timed_event.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp

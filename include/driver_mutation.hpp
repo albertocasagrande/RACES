@@ -1,9 +1,9 @@
 /**
- * @file timed_mutations.hpp
+ * @file driver_mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines timed genomic mutations
- * @version 0.4
- * @date 2023-10-02
+ * @brief Defines genomic mutations
+ * @version 0.1
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,13 +28,11 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_TIMED_MUTATIONS__
-#define __RACES_TIMED_MUTATIONS__
-
-#include <functional>
+#ifndef __RACES_DRIVER_MUTATION__
+#define __RACES_DRIVER_MUTATION__
 
 #include "driver_genotype.hpp"
-#include "time.hpp"
+#include "simulation_event.hpp"
 
 namespace Races 
 {
@@ -46,66 +44,66 @@ namespace Simulation
 {
 
 /**
- * @brief A structure to represent timed driver genomic mutation
+ * @brief A structure to represent driver genomic mutation
  */
-struct TimedGenomicMutation {
+struct DriverMutation : public SimulationEvent
+{
+    using Type = SimulationEvent::Type;
+
     GenotypeId initial_id;   //!< The initial genomic genotype identifier
     GenotypeId final_id;     //!< The final genomic genotype identifier
-
-    Time time;                      //!< The mutation time
 
     /**
      * @brief A constructor
      * 
      * @param initial_id is the identifier of the initial genomic genotype
      * @param final_id is the identifier of the final genomic genotype
-     * @param time is the simulation time of the genomic mutation
      */
-    TimedGenomicMutation(const GenotypeId& initial_id, const GenotypeId& final_id, const Time& time);
+    DriverMutation(const GenotypeId& initial_id, const GenotypeId& final_id);
 
     /**
      * @brief A constructor
      * 
      * @param initial_genotype is the initial genomic genotype
      * @param final_genotype is the final genomic genotype
-     * @param time is the simulation time of the genomic mutation
      */
-    TimedGenomicMutation(const Genotype& initial_genotype, const Genotype& final_genotype, const Time& time);
+    DriverMutation(const Genotype& initial_genotype, const Genotype& final_genotype);
 
     /**
-     * @brief Save a timed genomic mutation in an archive
+     * @brief Save a genomic mutation in an archive
      * 
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
-    inline void save(ARCHIVE& archive) const
+    void save(ARCHIVE& archive) const
     {
-        archive & initial_id
-                & final_id
-                & time;
+        archive & initial_id 
+                & final_id;
     }
 
     /**
-     * @brief Load a timed genomic mutation from an archive
+     * @brief Load a genomic mutation from an archive
      * 
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded timed genomic mutation
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static TimedGenomicMutation load(ARCHIVE& archive)
+    static DriverMutation load(ARCHIVE& archive)
     {
         GenotypeId initial_id;
         GenotypeId final_id;
-        Time time;
 
-        archive & initial_id
-                & final_id
-                & time;
+        archive & initial_id 
+                & final_id;
 
-        return TimedGenomicMutation(initial_id,final_id,time);
+        return {initial_id, final_id};
     }
+
+    inline Type type() const {
+        return Type::DRIVER_MUTATION;
+    } 
 };
 
 }   // Simulation
@@ -114,14 +112,19 @@ struct TimedGenomicMutation {
 
 }   // Races
 
+/**
+ * @brief Test the equivalence between two driver mutations
+ * 
+ * @param lhs is the left-hand side of the equivalence
+ * @param rhs is the right-hand side of the equivalence
+ * @return `true` if and only if the two driver mutations represent
+ *      the same event
+ */
+inline bool operator==(const Races::Drivers::Simulation::DriverMutation& lhs,
+                       const Races::Drivers::Simulation::DriverMutation& rhs)
+{
+    return (lhs.initial_id == rhs.initial_id) 
+            && (lhs.final_id == rhs.final_id);
+}
 
-template<>
-struct std::greater<Races::Drivers::Simulation::TimedGenomicMutation> {
-    inline constexpr bool operator()(const Races::Drivers::Simulation::TimedGenomicMutation &lhs, 
-                                     const Races::Drivers::Simulation::TimedGenomicMutation &rhs) const 
-    {
-        return lhs.time > rhs.time;
-    }
-};
-
-#endif // __RACES_TIMED_MUTATIONS__
+#endif // __RACES_DRIVER_MUTATION__

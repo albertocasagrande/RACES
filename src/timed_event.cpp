@@ -1,9 +1,9 @@
 /**
- * @file timed_mutations.cpp
+ * @file timed_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements timed genomic mutations
- * @version 0.2
- * @date 2023-10-02
+ * @brief Implements timed events
+ * @version 0.1
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include "timed_mutations.hpp"
+#include "timed_event.hpp"
 
 namespace Races 
 {
@@ -39,12 +39,8 @@ namespace Drivers
 namespace Simulation
 {
 
-TimedGenomicMutation::TimedGenomicMutation(const GenotypeId& initial_id, const GenotypeId& final_id, const Time& time):
-    initial_id(initial_id), final_id(final_id), time(time)
-{}
-
-TimedGenomicMutation::TimedGenomicMutation(const Genotype& initial_genotype, const Genotype& final_genotype, const Time& time):
-    TimedGenomicMutation(initial_genotype.get_id(), final_genotype.get_id(), time)
+TimedEvent::TimedEvent(const Time& time, const SimulationEventWrapper& event):
+    SimulationEventWrapper(event), time(time)
 {}
 
 }   // Simulation
