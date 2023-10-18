@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.14
- * @date 2023-10-17
+ * @version 0.15
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -415,11 +415,6 @@ class PassengersSimulator : public BasicExecutable
         if (!fs::exists(drivers_directory)) {
             print_help_and_exit("\"" + std::string(drivers_directory) + "\"  does not exist", 1);
         }
-    
-        if (!vm.count("sampled cell ids")) {
-            print_help_and_exit("Missing sampled cell file! "
-                                "Use `tissue_sampler` to produce it.", 1);
-        }
 
         if (!vm.count("context index")) {
             print_help_and_exit("The context index is mandatory. "
@@ -482,6 +477,17 @@ class PassengersSimulator : public BasicExecutable
             if ((coverage>0) && (vm.count(sequencing_option)==0)) {
                 print_help_and_exit("\"--"+ std::string(sequencing_option) 
                                      + "\" is mandatory when coverage differs from 0.", 1);
+            }
+        }
+
+        if ((coverage>0) && std::filesystem::exists(seq_output_directory)) {
+            if (vm.count("overwrite")==0) {
+                print_help_and_exit("The output directory \""+
+                                    std::string(seq_output_directory)+"\" already exists", 1);
+            }
+
+            if (!fs::is_directory(seq_output_directory)) {
+                print_help_and_exit("\""+seq_output_directory+"\" is not a directory", 1);
             }
         }
     }
@@ -551,7 +557,6 @@ public:
 
         positional_options.add("simulation file", 1);
         positional_options.add("driver simulation", 1);
-        positional_options.add("sampled cell ids", 1);
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
