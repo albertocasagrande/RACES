@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.2
- * @date 2023-10-14
+ * @version 0.3
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -30,10 +30,9 @@
 
 #include "json_config.hpp"
 
-namespace Races
-{
+#include "timed_event.hpp"
 
-namespace Passengers 
+namespace Races
 {
 
 std::vector<Races::Drivers::Simulation::AxisPosition>
@@ -306,6 +305,157 @@ ConfigReader::get_mutational_properties(const Races::Drivers::Simulation::Simula
     return mutational_properties;
 }
 
+Races::Drivers::Simulation::TimedEvent
+get_timed_driver_mutation(const std::map<std::string, Races::Drivers::Genotype> genotypes,
+                            const nlohmann::json& timed_driver_mutation_json)
+{
+    using namespace Races::Drivers::Simulation;
+
+    ConfigReader::expecting("time", timed_driver_mutation_json, "Every timed driver mutation description");
+
+    const auto time = timed_driver_mutation_json["time"].template get<Time>();
+
+    ConfigReader::expecting("original genotype", timed_driver_mutation_json, "Every timed driver mutation description");
+
+    const auto& orig_genotype = genotypes.at(timed_driver_mutation_json["original genotype"].template get<std::string>());
+
+    ConfigReader::expecting("mutated genotype", timed_driver_mutation_json, "Every timed driver mutation description");
+
+    const auto& mutated_genotype = genotypes.at(timed_driver_mutation_json["mutated genotype"].template get<std::string>());
+    
+    SimulationEventWrapper driver_mutation({orig_genotype, mutated_genotype});
+
+    return {time, driver_mutation};
+}
+
+double get_rate(const nlohmann::json& rate_json)
+{
+    double rate = rate_json.template get<double>();
+
+    if (rate < 0) {
+        throw std::domain_error("the rate must be non-negative");
+    }
+
+    return rate;
+}
+
+Races::Drivers::CellEventType
+get_cell_event_type_by_name(const std::string& event_name)
+{
+
+    for (const auto& [type, name]: Drivers::cell_event_names) {
+        if (name == event_name) {
+            return type;
+        }
+    }
+
+    throw std::runtime_error("Unknown cell event type \""+event_name+"\"");
+}
+
+const Races::Drivers::Simulation::Species&
+find_species_by_epigenetic_name(const Races::Drivers::Simulation::Simulation& drivers_simulation,
+                                const std::string& epigenetic_name)
+{
+    for (const auto& species : drivers_simulation.tissue()) {
+        if (epigenetic_name == species.get_name()) {
+            return species;
+        }
+    }
+
+    throw std::runtime_error("Unknown species \""+epigenetic_name+"\"");
+}
+
+Races::Drivers::Simulation::TimedEvent
+get_timed_rate_update(const Races::Drivers::Simulation::Simulation& drivers_simulation,
+                      const nlohmann::json& timed_rate_update_json)
+{
+    using namespace Races::Drivers::Simulation;
+
+    const std::string descr("Every timed rate update description");
+
+    std::vector<std::string> fields{"time", "genotype", "status", "rate name", "rate"};
+
+    for (const auto& field: fields) { 
+        ConfigReader::expecting(field, timed_rate_update_json, descr);
+    }
+    const auto time = timed_rate_update_json["time"].template get<Time>();
+
+    const auto name = (timed_rate_update_json["genotype"].template get<std::string>()
+                        + timed_rate_update_json["status"].template get<std::string>());
+
+    const Species& species = find_species_by_epigenetic_name(drivers_simulation, name);
+    
+    const auto rate_name = timed_rate_update_json["rate name"].template get<std::string>();
+    Races::Drivers::CellEventType cell_event_type = get_cell_event_type_by_name(rate_name);
+
+    SimulationEventWrapper rate_update({species.get_id(), cell_event_type, 
+                                        get_rate(timed_rate_update_json["rate"])});
+
+    return {time, rate_update};
+}
+
+Races::Drivers::Simulation::TimedEvent
+get_timed_sampling(const nlohmann::json& timed_sampling_json)
+{
+    using namespace Races::Drivers::Simulation;
+
+    const std::string descr("Every timed sampling description");
+
+    std::vector<std::string> fields{"time", "sample regions"};
+
+    for (const auto& field: fields) { 
+        ConfigReader::expecting(field, timed_sampling_json, descr);
+    }
+    const auto time = timed_sampling_json["time"].template get<Time>();
+
+    bool remove_sample{false};
+
+    if (timed_sampling_json.contains("remove sample")) {
+        remove_sample = timed_sampling_json["remove sample"].template get<bool>();
+    }
+
+    const auto& sample_regions_json = timed_sampling_json["sample regions"];
+
+    if (!sample_regions_json.is_array()) {
+        throw std::runtime_error("The \"sample regions\" field in every time sampling "
+                                 "description must be an array");
+    }
+
+    std::list<Drivers::RectangleSet> sample_regions;
+    for (const auto& sample_region_json : sample_regions_json) {
+        sample_regions.push_back(ConfigReader::get_sample_region(sample_region_json));
+    }
+
+    SimulationEventWrapper sampling({sample_regions, remove_sample});
+
+    return {time, sampling};
+}
+
+Races::Drivers::Simulation::TimedEvent 
+ConfigReader::get_timed_event(const Races::Drivers::Simulation::Simulation& drivers_simulation,
+                              const std::map<std::string, Races::Drivers::Genotype> genotypes,
+                              const nlohmann::json& timed_event_json)
+{
+    (void)drivers_simulation;
+
+    expecting("type", timed_event_json, "The timed event description");
+    
+    std::string type_name =  timed_event_json["type"].template get<std::string>();
+
+    if (type_name == "driver mutation") {
+        return get_timed_driver_mutation(genotypes, timed_event_json);
+    }
+
+    if (type_name == "liveness rate update") {
+        return get_timed_rate_update(drivers_simulation, timed_event_json);
+    }
+
+    if (type_name == "sampling") {
+        return get_timed_sampling(timed_event_json);
+    }
+
+    throw std::domain_error("Unsupported timed event \""+type_name+"\"");
+}
 
 void ConfigReader::expecting(const std::string& field_name, const nlohmann::json& json, 
                              const std::string& context)
@@ -381,7 +531,5 @@ ConfigReader::get_mutational_coefficients(const nlohmann::json& mutational_coeff
 
     return mutational_coefficients;
 }
-
-}   // Passengers
 
 }   // Races

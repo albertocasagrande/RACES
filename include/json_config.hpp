@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.2
- * @date 2023-10-14
+ * @version 0.3
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,11 +39,9 @@
 #include "simulation.hpp"
 #include "position_set.hpp"
 #include "mutation_engine.hpp"
+#include "timed_event.hpp"
 
 namespace Races
-{
-
-namespace Passengers 
 {
 
 class ConfigReader
@@ -135,7 +133,7 @@ class ConfigReader
      * @param driver_properties_json is the JSON of the driver properties
      */
     static void 
-    add_driver_mutational_properties(SpeciesMutationalProperties& mutational_properties,
+    add_driver_mutational_properties(Races::Passengers::SpeciesMutationalProperties& mutational_properties,
                                      const Races::Drivers::Simulation::Simulation& drivers_simulation,
                                      const nlohmann::json& driver_properties_json);
 
@@ -232,6 +230,18 @@ public:
                               const nlohmann::json& simulation_json);
 
     /**
+     * @brief Extract a timed event from a JSON object
+     * 
+     * @param drivers_simulation is a driver simulation
+     * @param timed_event_json is the JSON of the timed event
+     * @return the time event described in `timed_event_json`
+     */
+    static Races::Drivers::Simulation::TimedEvent 
+    get_timed_event(const Races::Drivers::Simulation::Simulation& drivers_simulation,
+                    const std::map<std::string, Races::Drivers::Genotype> genotypes,
+                    const nlohmann::json& timed_event_json);
+
+    /**
      * @brief Raise an exception if a field is not available in a JSON
      * 
      * @param field_name is the aimed field name
@@ -279,8 +289,6 @@ public:
     static std::map<std::string, double>
     get_mutational_coefficients(const nlohmann::json& mutational_coefficients_json);
 };
-
-}   // Drivers
 
 }   // Races
 
