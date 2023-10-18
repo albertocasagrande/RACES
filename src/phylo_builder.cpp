@@ -2,8 +2,8 @@
  * @file phylo_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES phylogenetic tree builder
- * @version 0.3
- * @date 2023-10-17
+ * @version 0.4
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -109,7 +109,7 @@ public:
     {
         std::list<Races::Drivers::CellId> sample;
         try {
-            sample = load_sampled_ids(drivers_directory);
+            sample = Races::Drivers::Simulation::BinaryLogger::load_sampled_ids(drivers_directory);
         } catch (...) {
             print_help_and_exit("\""+std::string(drivers_directory)+"\" does not contain a list "
                                 + "of sampled cell. Produce it by using \"tissue_sampler\".", 1);

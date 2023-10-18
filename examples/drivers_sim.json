@@ -57,11 +57,46 @@
             "position": [500, 500]
         }
     ],
-    "driver mutations": [
+    "timed events": [
         {
             "time": 75,
+            "type": "sampling",
+            "remove sample": true,
+            "sample regions": [
+                { "lower corner": [450,450], "upper corner": [455,455] },
+                { "lower corner": [540,540], "upper corner": [545,545] }
+            ]
+        },
+        {
+            "time": 110,
+            "type": "sampling",
+            "remove sample": true,
+            "sample regions": [
+                { "lower corner": [450,450], "upper corner": [455,455] },
+                { "lower corner": [540,540], "upper corner": [545,545] }
+            ]
+        },
+        {
+            "time": 60,
+            "type": "driver mutation",
             "original genotype": "A",
             "mutated genotype": "B"
+        },
+        {
+            "time": 90,
+            "type": "liveness rate update",
+            "genotype": "A", 
+            "status": "-", 
+            "rate name": "death", 
+            "rate": 0.3
+        },
+        {
+            "time": 90,
+            "type": "liveness rate update",
+            "genotype": "A", 
+            "status": "+", 
+            "rate name": "death", 
+            "rate": 0.3
         }
     ],
     "death activation level": 100

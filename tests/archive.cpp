@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.11
- * @date 2023-10-02
+ * @version 0.12
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -68,7 +68,7 @@ struct ArchiveFixture {
                   .add_species(A)
                   .add_species(B)
                   .add_cell(B["-"], {250, 500})
-                  .add_genomic_mutation(B,A,50);
+                  .add_driver_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
 
@@ -253,13 +253,6 @@ bool operator==(const Races::Drivers::Simulation::Simulation& a, const Races::Dr
            a.death_activation_level==b.death_activation_level;
 }
 
-bool operator==(const Races::Drivers::Simulation::TimedGenomicMutation& a, const Races::Drivers::Simulation::TimedGenomicMutation& b)
-{
-    return (a.initial_id==b.initial_id) &&
-           (a.final_id==b.final_id) &&
-           (a.time==b.time);
-}
-
 BOOST_AUTO_TEST_CASE(binary_size_t)
 {
     basic_type_test<size_t>({3, 4, 0, 5});
@@ -351,11 +344,13 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation)
+BOOST_AUTO_TEST_CASE(binary_timed_driver_mutation)
 {
     using namespace Races::Drivers::Simulation;
 
-    std::vector<TimedGenomicMutation> to_save{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(DriverMutation(0,1))},
+                                    {3.5,SimulationEventWrapper(DriverMutation(1,7))},
+                                    {8.1,SimulationEventWrapper(DriverMutation(2,1))}};
 
     auto filename = get_a_temporary_path();
     {
@@ -370,7 +365,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation)
         Races::Archive::Binary::In i_archive(filename);
 
         for (auto& value : to_save) {
-            TimedGenomicMutation read_value = TimedGenomicMutation::load(i_archive);
+            TimedEvent read_value = TimedEvent::load(i_archive);
 
             BOOST_CHECK(read_value==value);
         }
@@ -380,17 +375,19 @@ BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation)
 }
 
 
-BOOST_AUTO_TEST_CASE(binary_timed_genomic_mutation_queue)
+BOOST_AUTO_TEST_CASE(binary_timed_driver_mutation_queue)
 {
     using namespace Races::Drivers::Simulation;
 
-    std::vector<TimedGenomicMutation> vector{{0,1,5}, {1,7,3.2}, {2, 1, 8.1}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(DriverMutation(0,1))},
+                                    {3.5,SimulationEventWrapper(DriverMutation(1,7))},
+                                    {8.1,SimulationEventWrapper(DriverMutation(2,1))}};
 
-    using PriorityQueue = std::priority_queue<TimedGenomicMutation,
-                                              std::vector<TimedGenomicMutation>,
-                                              std::greater<TimedGenomicMutation>>;
+    using PriorityQueue = std::priority_queue<TimedEvent,
+                                              std::vector<TimedEvent>,
+                                              std::greater<TimedEvent>>;
 
-    PriorityQueue queue(vector.begin(), vector.end());
+    PriorityQueue queue(to_save.begin(), to_save.end());
 
     auto filename = get_a_temporary_path();
     {

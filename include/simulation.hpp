@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.17
- * @date 2023-10-14
+ * @version 0.18
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@
 #include "plot_2D.hpp"
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
-#include "timed_mutations.hpp"
+#include "timed_event.hpp"
 #include "position_set.hpp"
 
 #include "progress_bar.hpp"
@@ -92,9 +92,9 @@ class Simulation
         std::list<Cell> lost_cells;
     };
 
-    using GenomicQueue = std::priority_queue<TimedGenomicMutation,
-                                             std::vector<TimedGenomicMutation>,
-                                             std::greater<TimedGenomicMutation>>;
+    using TimedEventQueue = std::priority_queue<TimedEvent,
+                                                std::vector<TimedEvent>,
+                                                std::greater<TimedEvent>>;
     using system_clock = std::chrono::system_clock;
 
     std::vector<Tissue> tissues;     //!< Simulated tissues
@@ -110,7 +110,7 @@ class Simulation
     Time time;                       //!< Simulation time
     std::mt19937_64 random_gen;      //!< Pseudo-random generator
 
-    GenomicQueue genomic_mutation_queue;   //!< The timed genomic mutation queue 
+    TimedEventQueue timed_event_queue;   //!< The timed event queue 
 
     std::set<EpigeneticGenotypeId> death_enabled;  //!< Species having reached the death activation level
 
@@ -213,6 +213,55 @@ class Simulation
     choose_a_cell_in_genomic_species(std::mt19937_64& generator, const Tissue& tissue,
                                      const GenotypeId& genotype_id);
 
+    /**
+     * @brief Handle a driver mutation
+     * 
+     * This method tries to handle a driver mutation during the cell event selection and 
+     * it succeeds if and only if there exists at least one cell in the origin.
+     * 
+     * @param timed_driver_mutation is the timed driver mutation to be applied
+     * @param candidate_event is the current candidate cell event
+     * @return `true` if and only if there exists at least one cell in the origin and 
+     *          the candidate cell event has been updated
+     */
+    bool handle_timed_driver_mutation(const TimedEvent& timed_driver_mutation, CellEvent& candidate_event);
+
+    /**
+     * @brief Apply a rate update
+     * 
+     * @param time_rate_update is the timed rate update to be applied
+     */
+    void handle_timed_rate_update(const TimedEvent& timed_rate_update);
+
+    /**
+     * @brief Sample the tissue
+     * 
+     * This method also update next candidate event.
+     * 
+     * @param time_sampling is the timed sampling to be applied
+     * @param candidate_event is the current candidate cell event
+     */
+    void handle_timed_sampling(const TimedEvent& time_sampling, CellEvent& candidate_event);
+
+    /**
+     * @brief Handle time event queue during cell event selection
+     * 
+     * This method handles the time event queue during the cell event selection
+     * by extracting the timed events that occurs before the candidate cell 
+     * event and applying them. If necessary (for instance when the next 
+     * time event is a driver mutation), the method also updates the
+     * candidate event.
+     * 
+     * @param candidate_event is a candidate cell event
+     */
+    void handle_timed_event_queue(CellEvent& candidate_event);
+
+    /**
+     * @brief Select a cell event among those due to cell liveness
+     * 
+     * @return a cell event among those due to cell liveness
+     */
+    CellEvent select_next_cell_event();
 public:
     size_t death_activation_level;  //!< The minimum number of cells required to activate death
 
@@ -248,7 +297,15 @@ public:
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& add_genomic_mutation(const Genotype& src, const Genotype& dst, const Time time);
+    Simulation& add_driver_mutation(const Genotype& src, const Genotype& dst, const Time time);
+
+    /**
+     * @brief Add a timed event
+     * 
+     * @param timed_event is the timed event to add 
+     * @return a reference to the updated simulation
+     */
+    Simulation& add_timed_event(const TimedEvent& timed_event);
 
     /**
      * @brief Select the next event
@@ -665,7 +722,7 @@ public:
                 & secs_between_snapshots
                 & statistics
                 & time
-                & genomic_mutation_queue
+                & timed_event_queue
                 & death_enabled
                 & death_activation_level
                 & duplicate_internal_cells
@@ -697,7 +754,7 @@ public:
                 & simulation.secs_between_snapshots
                 & simulation.statistics
                 & simulation.time
-                & simulation.genomic_mutation_queue
+                & simulation.timed_event_queue
                 & simulation.death_enabled
                 & simulation.death_activation_level
                 & simulation.duplicate_internal_cells

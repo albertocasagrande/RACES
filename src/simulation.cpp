@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.14
- * @date 2023-10-14
+ * @version 0.15
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -63,7 +63,7 @@ Simulation& Simulation::operator=(Simulation&& orig)
     std::swap(statistics, orig.statistics);
     std::swap(time, orig.time);
     std::swap(random_gen, orig.random_gen);
-    std::swap(genomic_mutation_queue, orig.genomic_mutation_queue);
+    std::swap(timed_event_queue, orig.timed_event_queue);
     std::swap(death_enabled, orig.death_enabled);
     std::swap(death_activation_level, orig.death_activation_level);
     std::swap(duplicate_internal_cells, orig.duplicate_internal_cells);
@@ -164,13 +164,102 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
     select_epigenetic_event_in_species(event, tissue, species, uni_dist, random_gen);
 }
 
-CellEvent Simulation::select_next_event()
+bool Simulation::handle_timed_driver_mutation(const TimedEvent& timed_driver_mutation, CellEvent& candidate_event)
 {
-    // the tissue() call checks whether a tissue has been 
-    // associated to the simulation and, if this is not the 
-    // case, it throws an std::runtime_error 
-    (void)tissue();
+    const auto& driver_mutation = timed_driver_mutation.get_event<DriverMutation>();
+    const auto* cell = choose_a_cell_in_genomic_species(random_gen, tissue(), driver_mutation.initial_id);
+    if (cell != nullptr) {
+        candidate_event.delay = (timed_driver_mutation.time >= time? timed_driver_mutation.time - time:0);
+        candidate_event.type = CellEventType::DRIVER_GENETIC_MUTATION;
+        candidate_event.position = Position(tissue(), *cell);
+        candidate_event.initial_genotype = cell->get_epigenetic_id();
 
+        const Species& initial_species = tissue().get_species(candidate_event.initial_genotype);
+
+        const auto& genomic_species = tissue().get_genotype_species(driver_mutation.final_id);
+        const size_t index = Genotype::signature_to_index(initial_species.get_methylation_signature());
+
+        candidate_event.final_genotype = genomic_species[index].get_id();
+
+        return true;
+    }
+
+    return false;
+}
+
+void Simulation::handle_timed_rate_update(const TimedEvent& timed_rate_update)
+{
+    const auto& rate_update = timed_rate_update.get_event<RateUpdate>();
+    Species& species = tissue().get_species(rate_update.species_id);
+    
+    species.set_rate(rate_update.event_type, rate_update.new_rate);
+}
+
+void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEvent& candidate_event)
+{
+    const auto& sampling = timed_sampling.get_event<Sampling>();
+    
+    // sample tissue
+    for (const auto& region : sampling.sample_set) {
+        std::list<CellId> sampled_ids;
+        if (sampling.remove_sample) {
+            sampled_ids = sample_and_remove_tissue(region);
+        } else {
+            sampled_ids = sample_tissue(region);
+        }
+
+        logger->save_sampled_ids(timed_sampling.time, sampled_ids, region);
+    }
+
+    // update candidate event to avoid removed regions
+    candidate_event = select_next_cell_event();
+
+    if (candidate_event.delay+time < timed_sampling.time) {
+        candidate_event.delay = 0;
+    } else {
+        candidate_event.delay -= (time - timed_sampling.time);
+    }
+
+    time = timed_sampling.time;
+}
+
+void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
+{
+    // if the timed event queue is not empty and the next time event occurs before the candidate cell event
+    while (!timed_event_queue.empty() && (timed_event_queue.top().time <= candidate_event.delay + time)) {
+        TimedEvent timed_event = timed_event_queue.top();
+
+        timed_event_queue.pop();
+
+        switch(timed_event.type) {
+            case TimedEvent::Type::DRIVER_MUTATION:
+                {
+                    auto candidate_updated = handle_timed_driver_mutation(timed_event, candidate_event);
+
+                    if (candidate_updated) {
+                        return;
+                    }
+                }
+                break;
+            case TimedEvent::Type::LIVENESS_RATE_UPDATE:
+                {
+                    handle_timed_rate_update(timed_event);
+                }
+                break;
+            case TimedEvent::Type::SAMPLING:
+                {
+                     handle_timed_sampling(timed_event, candidate_event);
+                }
+                break;
+            default:
+                std::cout << "Unsupported timed event" << std::endl;
+                exit(1);
+        }
+    }
+}
+
+CellEvent Simulation::select_next_cell_event()
+{
     std::uniform_real_distribution<double> uni_dist(0.0, 1.0);
 
     CellEvent event;
@@ -180,35 +269,19 @@ CellEvent Simulation::select_next_event()
         select_next_event_in_species(event, tissue(), death_enabled, species, uni_dist, random_gen);
     }
 
-    // update candidate event when genomic mutation is possible
-    while (!genomic_mutation_queue.empty()) {
-        const TimedGenomicMutation& genomic_mutation = genomic_mutation_queue.top();
+    return event;
+}
 
-        if (genomic_mutation.time < event.delay + time) {
-            const auto* cell = choose_a_cell_in_genomic_species(random_gen, tissue(), genomic_mutation.initial_id);
-            if (cell != nullptr) {
-                event.delay = (genomic_mutation.time >= time? genomic_mutation.time - time:0);
-                event.type = CellEventType::DRIVER_GENETIC_MUTATION;
-                event.position = Position(tissue(), *cell);
-                event.initial_genotype = cell->get_epigenetic_id();
+CellEvent Simulation::select_next_event()
+{
+    // the tissue() call checks whether a tissue has been 
+    // associated to the simulation and, if this is not the 
+    // case, it throws an std::runtime_error 
+    (void)tissue();
 
-                const Species& initial_species = tissue().get_species(event.initial_genotype);
+    CellEvent event = select_next_cell_event();
 
-                const auto& genomic_species = tissue().get_genotype_species(genomic_mutation.final_id);
-                const size_t index = Genotype::signature_to_index(initial_species.get_methylation_signature());
-
-                event.final_genotype = genomic_species[index].get_id();
-
-                genomic_mutation_queue.pop();
-
-                return event;
-            }
-        } else {
-            return event;
-        }
-
-        genomic_mutation_queue.pop();
-    }
+    handle_timed_event_queue(event);
 
     return event;
 }
@@ -458,7 +531,7 @@ Simulation::choose_a_cell_in_genomic_species(std::mt19937_64& generator, const T
 }
 
 Simulation&
-Simulation::add_genomic_mutation(const Genotype& src, const Genotype& dst, const Time time)
+Simulation::add_driver_mutation(const Genotype& src, const Genotype& dst, const Time time)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
@@ -474,9 +547,25 @@ Simulation::add_genomic_mutation(const Genotype& src, const Genotype& dst, const
         throw std::domain_error(oss.str());
     }
 
-    genomic_mutation_queue.emplace(src, dst, time);
+    DriverMutation mutation(src, dst);
 
+    timed_event_queue.emplace(time, mutation);
+
+    std::cout << "timed_event_queue.empty(): "<< timed_event_queue.empty() << std::endl;
     return *this;
+}
+
+Simulation&
+Simulation::add_timed_event(const TimedEvent& timed_event)
+{
+    // the tissue() call checks whether a tissue has been 
+    // associated to the simulation and, if this is not the 
+    // case, it throws an std::runtime_error 
+    (void)tissue();
+
+    timed_event_queue.push(timed_event);
+
+    return *this;  
 }
 
 void Simulation::init_valid_directions()

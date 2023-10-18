@@ -312,7 +312,7 @@ class TestSimulation(unittest.TestCase):
         with self.assertRaises(Exception):
             sim.add_cell(A, "-", [50, 150])
 
-    def test_add_genomic_mutation(self):
+    def test_add_driver_mutation(self):
         sim = RACES.Simulation()
 
         sim.set_tissue("Liver", [100, 100])
@@ -337,20 +337,20 @@ class TestSimulation(unittest.TestCase):
         sim.add_species(C)
 
         try:
-            sim.add_genomic_mutation(A, B, 70)
+            sim.add_driver_mutation(A, B, 70)
         except BaseException:
-            self.fail('sim.add_genomic_mutation(A, B, 70) raised'
+            self.fail('sim.add_driver_mutation(A, B, 70) raised'
                       + ' an unexpected exeception!')
 
         with self.assertRaises(Exception):
             # methylation signature incompatible
-            sim.add_genomic_mutation(A, C, 70)
+            sim.add_driver_mutation(A, C, 70)
 
         try:
             # methylation signature compatible
-            sim.add_genomic_mutation(C, B, 70)
+            sim.add_driver_mutation(C, B, 70)
         except BaseException:
-            self.fail('sim.add_genomic_mutation(C, B, 70) raised'
+            self.fail('sim.add_driver_mutation(C, B, 70) raised'
                       + ' an unexpected exeception!')
 
     def test_run_up_to(self):
@@ -371,7 +371,7 @@ class TestSimulation(unittest.TestCase):
         B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
                           RACES.CellEventType.DUPLICATE: 0.45})
         sim.add_species(B)
-        sim.add_genomic_mutation(A, B, 70)
+        sim.add_driver_mutation(A, B, 70)
 
         sim.run_up_to(100, disable_storage=True, quiet=True)
 

@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.7
- * @date 2023-10-16
+ * @version 0.8
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -264,41 +264,25 @@ class DriverSimulator : public BasicExecutable
         }
     }
 
-    static void configure_driver_mutations(const nlohmann::json& driver_mutations_json,
-                                           const std::map<std::string, Races::Drivers::Genotype> genotypes)
+    static void configure_timed_events(const nlohmann::json& timed_events_json,
+                                       const std::map<std::string, Races::Drivers::Genotype> genotypes)
     {
         using namespace Races;
         using namespace Races::Drivers;
 
-        if (!driver_mutations_json.is_array()) {
-            throw std::domain_error("The \"driver mutations\" field must contain an array");
+        if (!timed_events_json.is_array()) {
+            throw std::domain_error("The \"timed events\" field must contain an array");
         }
 
-        for (const auto& mutation_json : driver_mutations_json) {
-            if (!mutation_json.is_object()) {
-                throw std::domain_error("Every element in the \"driver mutations\" field must be an object");
+        for (const auto& timed_event_json : timed_events_json) {
+            if (!timed_event_json.is_object()) {
+                throw std::domain_error("Every element in the \"timed events\" field must be an object");
             }
 
-            if (!mutation_json.contains("time")) {
-                throw std::domain_error("Every driver mutation must contain a \"time\" field");
-            }
-            Time time = mutation_json["time"].template get<Time>();
+            Simulation::TimedEvent timed_event = ConfigReader::get_timed_event(simulation, genotypes,
+                                                                               timed_event_json);
 
-            if (time <= 0) {
-                throw std::domain_error("the mutation timing must be positive");
-            }
-
-            if (!mutation_json.contains("original genotype")) {
-                throw std::domain_error("Every driver mutation must contain a \"original genotype\" field");
-            }
-            const auto& orig_genotype = genotypes.at(mutation_json["original genotype"].template get<std::string>());
-
-            if (!mutation_json.contains("mutated genotype")) {
-                throw std::domain_error("Every driver mutation must contain a \"mutated genotype\" field");
-            }
-            const auto& mutated_genotype = genotypes.at(mutation_json["mutated genotype"].template get<std::string>());
-
-            simulation.add_genomic_mutation(orig_genotype,mutated_genotype,time);
+            simulation.add_timed_event(timed_event);
         }
     }
 
@@ -335,10 +319,9 @@ class DriverSimulator : public BasicExecutable
         }
         configure_initial_cells(simulation_cfg["initial cells"], genotypes);
 
-        if (!simulation_cfg.contains("driver mutations")) {
-            throw std::domain_error("The simulation configuration file must contain a \"driver mutations\" field");
+        if (simulation_cfg.contains("timed events")) {
+            configure_timed_events(simulation_cfg["timed events"], genotypes);
         }
-        configure_driver_mutations(simulation_cfg["driver mutations"], genotypes);
         
         if (simulation_cfg.contains("death activation level")) {
             simulation.death_activation_level = simulation_cfg["death activation level"].template get<size_t>();

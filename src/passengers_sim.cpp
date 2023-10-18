@@ -2,7 +2,7 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.15
+ * @version 0.16
  * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
@@ -135,16 +135,17 @@ class PassengersSimulator : public BasicExecutable
     build_forest(const Races::Drivers::Simulation::Simulation& simulation) const
     {
         using namespace Races::Drivers;
+        using namespace Races::Drivers::Simulation;
 
         std::list<Races::Drivers::CellId> sampled_ids;
         try {
-            sampled_ids = load_sampled_ids(drivers_directory);
+            sampled_ids = BinaryLogger::load_sampled_ids(drivers_directory);
         } catch (...) {
             print_help_and_exit("\""+std::string(drivers_directory)+"\" does not contain a list "
                                 + "of sampled cell. Produce it by using \"tissue_sampler\".", 1);
         }
 
-        Simulation::BinaryLogger::CellReader reader(drivers_directory);
+        BinaryLogger::CellReader reader(drivers_directory);
 
         auto genotypes = simulation.tissue().get_genotypes();
 

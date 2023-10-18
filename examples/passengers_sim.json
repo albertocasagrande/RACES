@@ -1,10 +1,6 @@
 {
     "comment": "An configuration example for \"passengers_sim\".",
     "number of alleles": 2,
-    "sample region": {
-        "lower corner": [450,450],
-        "upper corner": [550,550]
-    },
     "driver properties": [
         {
             "name": "A",

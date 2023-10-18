@@ -2,8 +2,8 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES tool that sample tissues
- * @version 0.3
- * @date 2023-10-17
+ * @version 0.4
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,13 +50,14 @@ class TissueSampler : public BasicExecutable
     void perform_sampling(const nlohmann::json& sampling_cfg, const bool quiet=false) const
     {
         using namespace Races::Drivers;
-        using ConfigReader = Races::Passengers::ConfigReader;
+        using namespace Races::Drivers::Simulation;
+        using ConfigReader = Races::ConfigReader;
 
         if (!sampling_cfg.is_array()) {
             throw std::runtime_error("The sampling configuration does not consist in an array");
         }
 
-        Simulation::BinaryLogger::CellReader reader(drivers_directory);
+        BinaryLogger::CellReader reader(drivers_directory);
 
         auto simulation = load_drivers_simulation(snapshot_path, quiet);
 
@@ -71,7 +72,7 @@ class TissueSampler : public BasicExecutable
                 sample = simulation.sample_tissue(sample_region);
             }
 
-            save_sampled_ids(drivers_directory,simulation.get_time(),sample,sample_region);
+            BinaryLogger::save_sampled_ids(drivers_directory,simulation.get_time(),sample,sample_region);
         }
 
         if (remove_sample_tissue) {

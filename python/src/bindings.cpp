@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.6
- * @date 2023-10-14
+ * @version 0.7
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -91,7 +91,7 @@ BOOST_PYTHON_MODULE(RACES)
                                   arg("quiet")=false, arg("plot")=false)))
         .def("get_time", make_function(&SimulationWrapper::get_time, return_value_policy<copy_const_reference>()))
         .def("add_species", &SimulationWrapper::add_species)
-        .def("add_genomic_mutation", &SimulationWrapper::add_genomic_mutation)
+        .def("add_driver_mutation", &SimulationWrapper::add_driver_mutation)
         .def("add_cell", &SimulationWrapper::add_cell)
         .def("set_tissue", &SimulationWrapper::set_tissue)
         .add_property("death_activation_level", &SimulationWrapper::get_death_activation_level, 
