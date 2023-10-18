@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.13
- * @date 2023-10-12
+ * @version 0.14
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,8 +33,10 @@
 
 #include <fstream>
 #include <filesystem>
+#include <list>
 
 #include "logger.hpp"
+#include "position_set.hpp"
 
 namespace Races 
 {
@@ -192,6 +194,31 @@ public:
     void snapshot(const Simulation& simulation);
 
     /**
+     * @brief Save sampled cell ids
+     * 
+     * @param time it the sampling time
+     * @param sampled_cell_ids is the list of sampled cell ids
+     * @param sampled_region is the sampled region
+     * @return the updated output stream
+     */
+    inline void save_sampled_ids(const Races::Time& time, 
+                                 const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                                 const Races::Drivers::RectangleSet& sampled_region) const
+    {
+        BinaryLogger::save_sampled_ids(directory, time, sampled_cell_ids, sampled_region);
+    }
+
+    /**
+     * @brief Load the sampled cell ids
+     * 
+     * @return the list of the sampled cell identifiers
+     */
+    inline std::list<Races::Drivers::CellId> load_sampled_ids() const
+    {
+        return load_sampled_ids(directory);
+    }
+
+    /**
      * @brief Flush archive data
      */
     inline void flush_archives() {
@@ -262,6 +289,29 @@ public:
 
         return logger;
     }
+
+    /**
+     * @brief Save sampled cell ids
+     * 
+     * @param simulation_dir is the path of the simulation directory
+     * @param time it the sampling time
+     * @param sampled_cell_ids is the list of sampled cell ids
+     * @param sampled_region is the sampled region
+     * @return the updated output stream
+     */
+    static void save_sampled_ids(const std::filesystem::path simulation_dir,
+                                 const Races::Time& time, 
+                                 const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                                 const Races::Drivers::RectangleSet& sampled_region);
+
+    /**
+     * @brief Load the sampled cell ids
+     * 
+     * @param simulation_dir is the path of the simulation directory
+     * @return the list of the sampled cell identifiers
+     */
+    static std::list<Races::Drivers::CellId>
+    load_sampled_ids(const std::filesystem::path simulation_dir);
 
     /**
      * @brief The destructor

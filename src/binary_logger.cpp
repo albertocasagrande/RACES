@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.16
- * @date 2023-10-12
+ * @version 0.17
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -254,6 +254,52 @@ void BinaryLogger::snapshot(const Simulation& simulation)
     Archive::Binary::Out archive(get_snapshot_path());
 
     archive & simulation;
+}
+
+
+void
+BinaryLogger::save_sampled_ids(const std::filesystem::path simulation_dir, 
+                               const Races::Time& time, 
+                               const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                               const Races::Drivers::RectangleSet& sampled_region)
+{
+
+    std::ofstream os(simulation_dir/"sampled_ids.list", std::ofstream::app);
+
+    os << "# " << time
+       << " " << sampled_cell_ids.size()
+       << " " << sampled_region.size()
+       << " "<< sampled_region.lower_corner
+       << " "<< sampled_region.upper_corner << std::endl;
+
+    for (const auto& cell_id: sampled_cell_ids) {
+        os << cell_id << std::endl;
+    }
+}
+
+std::list<Races::Drivers::CellId>
+BinaryLogger::load_sampled_ids(const std::filesystem::path simulation_dir)
+{
+    using namespace Races::Drivers;
+
+    std::list<CellId> sample;
+
+    std::ifstream sample_is(simulation_dir/"sampled_ids.list");
+    while (!sample_is.eof()) {
+        std::string line;
+
+        std::getline(sample_is, line);
+        if (line[0] != '#' && line[0] != '\n') {
+            std::istringstream iss(line);
+
+            CellId cell_id;
+            iss >> cell_id;
+
+            sample.push_back(cell_id);
+        }
+    }
+
+    return sample;
 }
 
 void BinaryLogger::reset(const std::string& output_directory)
