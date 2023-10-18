@@ -2,8 +2,8 @@
  * @file position_set.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to represent tissue position set
- * @version 0.2
- * @date 2023-10-14
+ * @version 0.3
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,9 @@ BasicPositionSet::const_iterator BasicPositionSet::end() const
 {
     throw std::runtime_error("The BasicPositionSet class must be inherited");
 }
+
+BasicPositionSet::~BasicPositionSet()
+{}
 
 RectangleSet::const_iterator::const_iterator(const RectangleSet* rectangle,
                                              const Simulation::PositionInTissue& position):

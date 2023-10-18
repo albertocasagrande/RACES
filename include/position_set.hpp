@@ -2,8 +2,8 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.2
- * @date 2023-10-14
+ * @version 0.3
+ * @date 2023-10-18
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "tissue.hpp"
+#include "archive.hpp"
 
 namespace Races
 {
@@ -76,6 +77,11 @@ struct BasicPositionSet
      * @return the number of positions in the rectangle
      */
     virtual size_t size() const = 0;
+
+    /**
+     * @brief The destroyer
+     */
+    virtual ~BasicPositionSet();
 };
 
 /**
@@ -250,6 +256,37 @@ struct RectangleSet : public BasicPositionSet
      * @return the number of positions in the rectangle
      */
     size_t size() const;
+
+    /**
+     * @brief Save a rectangle set
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    void save(ARCHIVE& archive) const
+    {
+        archive & lower_corner 
+                & upper_corner;
+    }
+
+    /**
+     * @brief Load a timed genomic mutation from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded timed genomic mutation
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static RectangleSet load(ARCHIVE& archive)
+    {
+        Simulation::PositionInTissue lower_corner, upper_corner;
+
+        archive & lower_corner
+                & upper_corner;
+
+        return {lower_corner, upper_corner};
+    }
 
     /**
      * @brief Test whether two position rectangle sets are the same
