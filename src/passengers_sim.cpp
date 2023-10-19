@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.16
- * @date 2023-10-18
+ * @version 0.17
+ * @date 2023-10-19
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -131,19 +131,45 @@ class PassengersSimulator : public BasicExecutable
     size_t bytes_per_abs_position;
     bool quiet;
 
-    Races::Drivers::PhylogeneticForest 
-    build_forest(const Races::Drivers::Simulation::Simulation& simulation) const
+    std::list<Races::Drivers::CellId>
+    get_sample_ids(const Races::Drivers::Simulation::Simulation& simulation, const nlohmann::json& simulation_cfg) const
     {
         using namespace Races::Drivers;
         using namespace Races::Drivers::Simulation;
 
-        std::list<Races::Drivers::CellId> sampled_ids;
-        try {
-            sampled_ids = BinaryLogger::load_sampled_ids(drivers_directory);
-        } catch (...) {
-            print_help_and_exit("\""+std::string(drivers_directory)+"\" does not contain a list "
-                                + "of sampled cell. Produce it by using \"tissue_sampler\".", 1);
+        std::list<CellId> sampled_ids;
+
+        if (simulation_cfg.contains("sample region")) {
+            const auto& sample_regions_json = simulation_cfg["sample region"];
+            if (!sample_regions_json.is_array()) {
+                throw std::domain_error("The \"sample region\" field must be an array.");
+            }
+
+            for (const auto& sample_region_json: sample_regions_json) {
+                auto sample_region = Races::ConfigReader::get_sample_region(sample_region_json);
+                auto sample_region_ids = simulation.sample_tissue(sample_region);
+
+                sampled_ids.splice(sampled_ids.end(), sample_region_ids);
+            }
+
+            return sampled_ids;
         }
+
+        try {
+            return BinaryLogger::load_sampled_ids(drivers_directory);
+        } catch (...) {
+            throw std::domain_error("\""+std::string(drivers_directory)+"\" does not contain a list "
+                                    + "of sampled cell. Produce it by using \"tissue_sampler\".");
+        }
+    }
+
+    Races::Drivers::PhylogeneticForest 
+    build_forest(const Races::Drivers::Simulation::Simulation& simulation, const nlohmann::json& simulation_cfg) const
+    {
+        using namespace Races::Drivers;
+        using namespace Races::Drivers::Simulation;
+
+        std::list<CellId> sampled_ids = get_sample_ids(simulation, simulation_cfg);
 
         BinaryLogger::CellReader reader(drivers_directory);
 
@@ -332,6 +358,15 @@ class PassengersSimulator : public BasicExecutable
 
         nlohmann::json simulation_cfg = get_simulation_json();
 
+
+        if (!quiet) {
+            if (simulation_cfg.contains("sample region")) {
+                std::cout << "Using \"sample region\" configuration field as sample region." << std::endl;
+            } else {
+                std::cout << "Using pre-sampled cell ids as sample." << std::endl;
+            }
+        }
+
         ReadSimulator<> read_simulator;
 
         Drivers::PhylogeneticForest forest;
@@ -347,7 +382,7 @@ class PassengersSimulator : public BasicExecutable
                 epigenetic_status_classes = split_by_epigenetic_status(tissue_genotypes);
             }
 
-            forest = build_forest(drivers_simulation);
+            forest = build_forest(drivers_simulation, simulation_cfg);
 
             mutational_properties = ConfigReader::get_mutational_properties(drivers_simulation,
                                                                             simulation_cfg);
