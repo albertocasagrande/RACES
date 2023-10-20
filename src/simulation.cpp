@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.16
+ * @version 0.17
  * @date 2023-10-20
  * 
  * @copyright Copyright (c) 2023
@@ -208,7 +208,9 @@ void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEve
             sampled_ids = sample_tissue(region);
         }
 
-        logger->save_sampled_ids(sampled_ids, timed_sampling.time, region);
+        if (logger != nullptr) {
+            logger->save_sampled_ids(sampled_ids, timed_sampling.time, region);
+        }
     }
 
     // update candidate event to avoid removed regions
