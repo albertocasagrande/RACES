@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation loggers
- * @version 0.10
- * @date 2023-10-02
+ * @version 0.11
+ * @date 2023-10-20
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,8 +43,28 @@ namespace Drivers
 namespace Simulation 
 {
 
-BasicLogger::BasicLogger()
+std::string BasicLogger::get_time_string()
+{
+    std::time_t time;
+    std::tm* info;
+    char buffer[81];
+
+    std::time(&time);
+    info = std::localtime(&time);
+
+    std::strftime(buffer,80,"%Y%m%d-%H%M%S",info);
+
+    return buffer;
+}
+
+BasicLogger::BasicLogger():
+    BasicLogger("races_"+get_time_string())
 {}
+
+BasicLogger::BasicLogger(const std::filesystem::path simulation_dir):
+    directory(simulation_dir)
+{
+}
 
 void BasicLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)
 {
@@ -65,6 +85,52 @@ void BasicLogger::record_initial_cell(const CellInTissue& cell)
 void BasicLogger::snapshot(const Simulation& simulation)
 {
     (void)simulation;
+}
+
+
+void
+BasicLogger::save_sampled_ids(const std::filesystem::path simulation_dir,
+                              const std::list<Races::Drivers::CellId>& sampled_cell_ids,
+                              const Races::Time& time,
+                              const Races::Drivers::RectangleSet& sampled_region)
+{
+
+    std::ofstream os(simulation_dir/"sampled_ids.list", std::ofstream::app);
+
+    os << "# " << time
+       << " " << sampled_cell_ids.size()
+       << " " << sampled_region.size()
+       << " "<< sampled_region.lower_corner
+       << " "<< sampled_region.upper_corner << std::endl;
+
+    for (const auto& cell_id: sampled_cell_ids) {
+        os << cell_id << std::endl;
+    }
+}
+
+std::list<Races::Drivers::CellId>
+BasicLogger::load_sampled_ids(const std::filesystem::path simulation_dir)
+{
+    using namespace Races::Drivers;
+
+    std::list<CellId> sample;
+
+    std::ifstream sample_is(simulation_dir/"sampled_ids.list");
+    while (!sample_is.eof()) {
+        std::string line;
+
+        std::getline(sample_is, line);
+        if (line[0] != '#' && line[0] != '\n') {
+            std::istringstream iss(line);
+
+            CellId cell_id;
+            iss >> cell_id;
+
+            sample.push_back(cell_id);
+        }
+    }
+
+    return sample;
 }
 
 }   // Simulation

@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.14
- * @date 2023-10-18
+ * @version 0.15
+ * @date 2023-10-20
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,6 @@
 #include <list>
 
 #include "logger.hpp"
-#include "position_set.hpp"
 
 namespace Races 
 {
@@ -55,7 +54,6 @@ namespace Simulation
  */
 struct BinaryLogger : public BasicLogger
 {
-    std::filesystem::path directory;   //!< the log directory 
     Archive::Binary::Out cell_archive; //!< the current cell output file
     size_t cells_per_file;             //!< the number of cells to be saved before changing file
     size_t cell_in_current_file;       //!< cells saved in current file
@@ -113,7 +111,7 @@ public:
          * 
          * @param directory is the directory containing the cell files
          */
-        explicit CellReader(std::filesystem::path directory);
+        explicit CellReader(const std::filesystem::path& directory);
 
         /**
          * @brief Get a timed-labelled cell from the directory
@@ -140,10 +138,10 @@ public:
     /**
      * @brief A constructor
      * 
-     * @param output_directory is the output directory name
+     * @param simulation_dir is the simulation logger directory name
      * @param cells_per_file is the number of cells per file
      */
-    explicit BinaryLogger(const std::string& output_directory, const size_t cells_per_file=1<<27);
+    explicit BinaryLogger(const std::filesystem::path simulation_dir, const size_t cells_per_file=1<<27);
 
     /**
      * @brief The copy-constructor
@@ -159,16 +157,6 @@ public:
      * @return a reference to the updated object
      */
     BinaryLogger& operator=(const BinaryLogger& orig);
-
-    /**
-     * @brief Get the log directory
-     * 
-     * @return the directory containing all the logs
-     */
-    inline const std::filesystem::path& get_directory() const
-    {
-        return directory;
-    }
 
     /**
      * @brief Record an event
@@ -192,31 +180,6 @@ public:
      * @param simulation is the simulation whose snapshot is requested
      */
     void snapshot(const Simulation& simulation);
-
-    /**
-     * @brief Save sampled cell ids
-     * 
-     * @param time it the sampling time
-     * @param sampled_cell_ids is the list of sampled cell ids
-     * @param sampled_region is the sampled region
-     * @return the updated output stream
-     */
-    inline void save_sampled_ids(const Races::Time& time, 
-                                 const std::list<Races::Drivers::CellId>& sampled_cell_ids,
-                                 const Races::Drivers::RectangleSet& sampled_region) const
-    {
-        BinaryLogger::save_sampled_ids(directory, time, sampled_cell_ids, sampled_region);
-    }
-
-    /**
-     * @brief Load the sampled cell ids
-     * 
-     * @return the list of the sampled cell identifiers
-     */
-    inline std::list<Races::Drivers::CellId> load_sampled_ids() const
-    {
-        return load_sampled_ids(directory);
-    }
 
     /**
      * @brief Flush archive data
@@ -289,29 +252,6 @@ public:
 
         return logger;
     }
-
-    /**
-     * @brief Save sampled cell ids
-     * 
-     * @param simulation_dir is the path of the simulation directory
-     * @param time it the sampling time
-     * @param sampled_cell_ids is the list of sampled cell ids
-     * @param sampled_region is the sampled region
-     * @return the updated output stream
-     */
-    static void save_sampled_ids(const std::filesystem::path simulation_dir,
-                                 const Races::Time& time, 
-                                 const std::list<Races::Drivers::CellId>& sampled_cell_ids,
-                                 const Races::Drivers::RectangleSet& sampled_region);
-
-    /**
-     * @brief Load the sampled cell ids
-     * 
-     * @param simulation_dir is the path of the simulation directory
-     * @return the list of the sampled cell identifiers
-     */
-    static std::list<Races::Drivers::CellId>
-    load_sampled_ids(const std::filesystem::path simulation_dir);
 
     /**
      * @brief The destructor

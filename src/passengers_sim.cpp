@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.17
- * @date 2023-10-19
+ * @version 0.18
+ * @date 2023-10-20
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -156,7 +156,7 @@ class PassengersSimulator : public BasicExecutable
         }
 
         try {
-            return BinaryLogger::load_sampled_ids(drivers_directory);
+            return BasicLogger::load_sampled_ids(drivers_directory);
         } catch (...) {
             throw std::domain_error("\""+std::string(drivers_directory)+"\" does not contain a list "
                                     + "of sampled cell. Produce it by using \"tissue_sampler\".");

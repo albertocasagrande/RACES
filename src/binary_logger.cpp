@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.17
- * @date 2023-10-18
+ * @version 0.18
+ * @date 2023-10-20
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,32 +47,21 @@ namespace Drivers
 namespace Simulation 
 {
 
-std::string get_time_string()
-{
-    std::time_t time;
-    std::tm* info;
-    char buffer[81];
-
-    std::time(&time);
-    info = std::localtime(&time);
-
-    std::strftime(buffer,80,"%Y%m%d-%H%M%S",info);
-
-    return buffer;
-}
-
-std::string get_directory_name(const std::string& dir_prefix)
-{
-    std::ostringstream oss;
-
-    oss << dir_prefix << "_" << get_time_string();
-
-    return oss.str();
-}
-
-
 BinaryLogger::BinaryLogger():
-    BinaryLogger(get_directory_name("races"))
+    BinaryLogger("races_"+BasicLogger::get_time_string())
+{
+}
+
+BinaryLogger::BinaryLogger(const std::filesystem::path simulation_dir, const size_t cells_per_file):
+    BasicLogger(simulation_dir), cell_archive(), 
+    cells_per_file(cells_per_file), cell_in_current_file(0), current_file_number(0)
+{
+}
+
+BinaryLogger::BinaryLogger(const BinaryLogger& orig):
+    BasicLogger(orig),  cell_archive(),
+    cells_per_file(orig.cells_per_file), cell_in_current_file(orig.cell_in_current_file), 
+    current_file_number(orig.current_file_number)
 {
 }
 
@@ -93,22 +82,9 @@ std::filesystem::path BinaryLogger::get_snapshot_path() const
 {
     std::ostringstream oss;
 
-    oss << "snapshot_" << get_time_string() << ".dat";
+    oss << "snapshot_" << BasicLogger::get_time_string() << ".dat";
 
     return directory / oss.str();
-}
-
-BinaryLogger::BinaryLogger(const std::string& output_directory, const size_t cells_per_file):
-    BasicLogger(), directory(output_directory), cell_archive(), 
-    cells_per_file(cells_per_file), cell_in_current_file(0), current_file_number(0)
-{
-}
-
-BinaryLogger::BinaryLogger(const BinaryLogger& orig):
-    BasicLogger(), directory(orig.directory),  cell_archive(),
-    cells_per_file(orig.cells_per_file), cell_in_current_file(orig.cell_in_current_file), 
-    current_file_number(orig.current_file_number)
-{
 }
 
 BinaryLogger& BinaryLogger::operator=(const BinaryLogger& orig)
@@ -132,7 +108,7 @@ std::streampos compute_bytes_per_cell(const std::filesystem::path& directory)
     return Archive::Binary::ByteCounter::bytes_required_by(cell);
 }
 
-BinaryLogger::CellReader::CellReader(std::filesystem::path directory):
+BinaryLogger::CellReader::CellReader(const std::filesystem::path& directory):
     directory(directory), bytes_per_cell(1), number_of_cells(0), cell_archive_id(0), 
     cell_archive(get_cell_archive_path(directory, 0))
 {
@@ -254,52 +230,6 @@ void BinaryLogger::snapshot(const Simulation& simulation)
     Archive::Binary::Out archive(get_snapshot_path());
 
     archive & simulation;
-}
-
-
-void
-BinaryLogger::save_sampled_ids(const std::filesystem::path simulation_dir, 
-                               const Races::Time& time, 
-                               const std::list<Races::Drivers::CellId>& sampled_cell_ids,
-                               const Races::Drivers::RectangleSet& sampled_region)
-{
-
-    std::ofstream os(simulation_dir/"sampled_ids.list", std::ofstream::app);
-
-    os << "# " << time
-       << " " << sampled_cell_ids.size()
-       << " " << sampled_region.size()
-       << " "<< sampled_region.lower_corner
-       << " "<< sampled_region.upper_corner << std::endl;
-
-    for (const auto& cell_id: sampled_cell_ids) {
-        os << cell_id << std::endl;
-    }
-}
-
-std::list<Races::Drivers::CellId>
-BinaryLogger::load_sampled_ids(const std::filesystem::path simulation_dir)
-{
-    using namespace Races::Drivers;
-
-    std::list<CellId> sample;
-
-    std::ifstream sample_is(simulation_dir/"sampled_ids.list");
-    while (!sample_is.eof()) {
-        std::string line;
-
-        std::getline(sample_is, line);
-        if (line[0] != '#' && line[0] != '\n') {
-            std::istringstream iss(line);
-
-            CellId cell_id;
-            iss >> cell_id;
-
-            sample.push_back(cell_id);
-        }
-    }
-
-    return sample;
 }
 
 void BinaryLogger::reset(const std::string& output_directory)
