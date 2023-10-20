@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.17
+ * @version 0.18
  * @date 2023-10-20
  * 
  * @copyright Copyright (c) 2023
@@ -232,6 +232,10 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
         TimedEvent timed_event = timed_event_queue.top();
 
         timed_event_queue.pop();
+
+        if (timed_event_queue.top().time != timed_event.time || timed_event_queue.top().type != timed_event.type) {
+            logger->snapshot(*this);
+        }
 
         switch(timed_event.type) {
             case TimedEvent::Type::DRIVER_MUTATION:
