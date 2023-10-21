@@ -33,7 +33,7 @@ if(${COMPILE_PYTHON_BINDINGS})
     # link
     target_link_libraries(pyRACES ${Boost_LIBRARIES} Python::Module libRACES)
 
-    execute_process(COMMAND python3 -m pytest --version
+    execute_process(COMMAND Python::Interpreter -m pytest --version
         OUTPUT_VARIABLE PYTEST_output
         ERROR_VARIABLE  PYTEST_error
         RESULT_VARIABLE PYTEST_result)
