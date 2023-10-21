@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.6
- * @date 2023-10-18
+ * @version 0.7
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,8 +73,8 @@ struct PythonCloser : public Races::Drivers::Simulation::Closer
     }
 };
 
-void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool disable_storage,
-                                  const bool quiet, const bool plot)
+void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool quiet, 
+                                  const bool plot)
 {
     using namespace Races::UI;
 
@@ -89,6 +89,8 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool disa
         plotter->set_frames_per_second(1);
     }
 #else
+    (void)plot;
+
     TissuePlotter<Plot2DWindow>* plotter{nullptr}; 
 #endif
 
@@ -96,10 +98,10 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool disa
 
     PythonCloser closer;
     if (quiet) {
-        obj_ptr->simulation.run_up_to(final_time, plotter, bar, disable_storage, closer);
+        obj_ptr->simulation.run_up_to(final_time, plotter, bar, closer);
     } else {
         bar = new ProgressBar();
-        obj_ptr->simulation.run_up_to(final_time, plotter, bar, disable_storage, closer);
+        obj_ptr->simulation.run_up_to(final_time, plotter, bar, closer);
 
         delete bar;
     }

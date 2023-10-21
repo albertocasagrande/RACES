@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.7
- * @date 2023-10-18
+ * @version 0.8
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,7 +45,7 @@ namespace RacesSim = Races::Drivers::Simulation;
 namespace RacesDrv = Races::Drivers;
 
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(run_up_to_overloads, SimulationWrapper::static_run_up_to, 2, 5)
+BOOST_PYTHON_FUNCTION_OVERLOADS(run_up_to_overloads, SimulationWrapper::static_run_up_to, 2, 4)
 
 BOOST_PYTHON_MODULE(RACES)
 {
@@ -87,14 +87,16 @@ BOOST_PYTHON_MODULE(RACES)
         .def("__init__", make_constructor(SimulationWrapper::create, default_call_policies(),
                                           (arg("minutes_between_snapshot")=5, arg("random_seed")=0)))
         .def("run_up_to", &SimulationWrapper::static_run_up_to,
-             run_up_to_overloads((arg("wrapper"), arg("time"), arg("disable_storage")=false,
-                                  arg("quiet")=false, arg("plot")=false)))
+             run_up_to_overloads((arg("wrapper"), arg("time"), arg("quiet")=false, arg("plot")=false)))
         .def("get_time", make_function(&SimulationWrapper::get_time, return_value_policy<copy_const_reference>()))
         .def("add_species", &SimulationWrapper::add_species)
         .def("add_driver_mutation", &SimulationWrapper::add_driver_mutation)
         .def("add_cell", &SimulationWrapper::add_cell)
         .def("set_tissue", &SimulationWrapper::set_tissue)
+        .def("rename_log_directory", &SimulationWrapper::rename_log_directory)
         .add_property("death_activation_level", &SimulationWrapper::get_death_activation_level, 
                       &SimulationWrapper::set_death_activation_level)
+        .add_property("storage_enabled", &SimulationWrapper::get_storage_enabled, 
+                      &SimulationWrapper::set_storage_enabled)
     ;
 }

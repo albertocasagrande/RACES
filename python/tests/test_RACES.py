@@ -373,7 +373,9 @@ class TestSimulation(unittest.TestCase):
         sim.add_species(B)
         sim.add_driver_mutation(A, B, 70)
 
-        sim.run_up_to(100, disable_storage=True, quiet=True)
+        sim.storage_enabled = False
+
+        sim.run_up_to(100, quiet=True)
 
     def test_death_activation_level(self):
         sim = RACES.Simulation()

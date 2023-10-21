@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.8
- * @date 2023-10-18
+ * @version 0.9
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -68,9 +68,12 @@ void termination_handling(int signal_num)
 class DriverSimulator : public BasicExecutable
 {
     std::filesystem::path simulation_filename;
+    std::filesystem::path logging_dir;
     std::string snapshot_path;
     long double time_horizon;
+#ifdef WITH_SDL2
     unsigned int frames_per_second;
+#endif
     bool plot;
     bool quiet;
     bool disable_storage;
@@ -353,6 +356,8 @@ public:
              po::value<std::string>(&snapshot_path)->default_value(""), 
              "recover a simulation")
             ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
+            ("log directory,o", po::value<std::filesystem::path>(&logging_dir),
+            "the directory in which all the simulation data are saved")
             ("disable-storage,d", "disable result storage")
             ("seed,s", po::value<int>()->default_value(0), "random generator seed")
     #ifdef WITH_INDICATORS
@@ -369,7 +374,7 @@ public:
         hidden_options.add_options()
             ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
             "the name of the file describing the simulation")
-            ("time horizon", po::value<long double>(&time_horizon), 
+            ("time horizon", po::value<long double>(&time_horizon),
             "the simulation time horizon");
 
         po::options_description program_options;
@@ -402,6 +407,10 @@ public:
             print_help_and_exit("The simulation time horizon is mandatory", 1);
         }
 
+        if (vm.count("log directory")) {
+            simulation.rename_log_directory(logging_dir);
+        }
+
         quiet = vm.count("quiet")>0;
         plot = vm.count("plot")>0;
         disable_storage = vm.count("disable-storage")>0;
@@ -427,6 +436,8 @@ public:
             init_simulation();
         }
 
+        simulation.storage_enabled = !disable_storage;
+
 #ifdef WITH_SDL2
         if (plot) {
 
@@ -447,9 +458,9 @@ public:
 #endif // WITH_SDL2
 
             if (bar != nullptr) {
-                simulation.run_up_to(time_horizon, *bar, disable_storage);
+                simulation.run_up_to(time_horizon, *bar);
             } else {
-                simulation.run_up_to(time_horizon, disable_storage);
+                simulation.run_up_to(time_horizon);
             }
 
 #ifdef WITH_SDL2

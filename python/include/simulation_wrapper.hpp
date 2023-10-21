@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.7
- * @date 2023-10-18
+ * @version 0.8
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -83,13 +83,12 @@ public:
      * in a graphical window.
      * 
      * @param final_time is the final simulation time
-     * @param disable_storage is a flag to enable/disable result storage
      * @param quiet is a flag to enable/disable the progress bar
      * @param plot is a flag to enable/disable plotting
      * @return a reference to the updated simulation
      */
-    void run_up_to(const Races::Time& final_time, const bool disable_storage = false,
-                   const bool quiet = false, const bool plot = false);
+    void run_up_to(const Races::Time& final_time, const bool quiet = false,
+                   const bool plot = false);
 
     /**
      * @brief Get the current simulation time
@@ -161,6 +160,36 @@ public:
     }
 
     /**
+     * @brief Rename the log directory
+     * 
+     * @param log_directory_name is the new log directory name
+     */
+    inline void rename_log_directory(const std::string& log_directory_name)
+    {
+        obj_ptr->simulation.rename_log_directory(log_directory_name);
+    }
+
+    /**
+     * @brief Establish whether the storage is enabled
+     * 
+     * @return `true` if and only if the storage is enabled
+     */
+    inline bool get_storage_enabled() const
+    {
+        return obj_ptr->simulation.storage_enabled;
+    }
+
+    /**
+     * @brief Enable/disabled the storage
+     * 
+     * @param storage_enabled is a Boolean flag to enable/disable the storage
+     */
+    inline void set_storage_enabled(const bool& storage_enabled)
+    {
+        obj_ptr->simulation.storage_enabled = storage_enabled;
+    }
+
+    /**
      * @brief Create a new `SimulationWrapper` object
      * 
      * @param minutes_between_snapshots is the number of minutes between snapshots
@@ -190,15 +219,13 @@ public:
      * @param wrapper is the simulation wrapper on which the 
      *                  computation is performed
      * @param final_time is the final simulation time
-     * @param disable_storage is a flag to enable/disable result storage
      * @param quiet is a flag to enable/disable the progress bar
      * @param plot is a flag to enable/disable plotting
      */
     inline static void static_run_up_to(SimulationWrapper *wrapper, const Races::Time& final_time, 
-                                 const bool disable_storage = false, const bool quiet = false,
-                                 const bool plot = false)
+                                 const bool quiet = false, const bool plot = false)
     {
-        wrapper->run_up_to(final_time, disable_storage, quiet, plot);
+        wrapper->run_up_to(final_time, quiet, plot);
     }
 };
 

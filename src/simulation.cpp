@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.19
+ * @version 0.20
  * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
@@ -41,8 +41,8 @@ namespace Simulation
 
 
 Simulation::Simulation(int random_seed):
-    logger(nullptr), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
-    time(0), death_activation_level(1), duplicate_internal_cells(true)
+    logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
+    time(0), death_activation_level(1), duplicate_internal_cells(true), storage_enabled(true)
 {
     random_gen.seed(random_seed);
 }
@@ -208,8 +208,8 @@ void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEve
             sampled_ids = sample_tissue(region);
         }
 
-        if (logger != nullptr) {
-            logger->save_sampled_ids(sampled_ids, timed_sampling.time, region);
+        if (storage_enabled) {
+            logger.save_sampled_ids(sampled_ids, timed_sampling.time, region);
         }
     }
 
@@ -233,8 +233,11 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
 
         timed_event_queue.pop();
 
-        if (timed_event_queue.top().time != timed_event.time || timed_event_queue.top().type != timed_event.type) {
-            logger->snapshot(*this);
+        if (storage_enabled) {
+            if (timed_event_queue.top().time != timed_event.time 
+                || timed_event_queue.top().type != timed_event.type) {
+                logger.snapshot(*this);
+            }
         }
 
         switch(timed_event.type) {
@@ -606,11 +609,7 @@ void Simulation::reset()
     
     death_enabled.clear();
 
-    if (logger != nullptr) {
-        delete logger;
-    }
-
-    logger = new BinaryLogger();
+    logger = BinaryLogger();
     
     //death_activation_level = 1;
 }
@@ -632,9 +631,11 @@ Simulation& Simulation::set_tissue(const std::string& name, const std::vector<Ax
 
 void Simulation::log_initial_cells()
 {
-    for (const auto& species: tissue()) {
-        for (const auto& cell: species) {
-            logger->record_initial_cell(cell);
+    if (storage_enabled) {
+        for (const auto& species: tissue()) {
+            for (const auto& cell: species) {
+                logger.record_initial_cell(cell);
+            }
         }
     }
 }
@@ -679,9 +680,6 @@ Simulation::sample_and_remove_tissue(const RectangleSet& rectangle)
 
 Simulation::~Simulation()
 {
-    if (logger != nullptr) {
-        delete logger;
-    }
 }
 
 }   // Simulation

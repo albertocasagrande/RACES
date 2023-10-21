@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.12
- * @date 2023-10-18
+ * @version 0.13
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -72,7 +72,7 @@ struct ArchiveFixture {
 
         simulation.death_activation_level = 100;
 
-        simulation.run_up_to(time_horizon, false);
+        simulation.run_up_to(time_horizon);
     }
 
     ~ArchiveFixture()
