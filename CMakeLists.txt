@@ -11,61 +11,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-find_package( Boost COMPONENTS program_options REQUIRED )
-
-find_package(SDL2)
-find_package(SDL2_image)
-find_package(SDL2_ttf)
-
-set(COMPILE_SDL2_CODE TRUE)
-if(${SDL2_ttf_FOUND})
-    message("SDL2_ttf found")
-elseif()
-    message("SDL2_ttf NOT found!")
-    set(COMPILE_SDL2_CODE FALSE)
-endif()
-
-if(${SDL2_image_FOUND})
-    message("SDL2_image found")
-elseif()
-    message("SDL2_image NOT found!")
-    set(COMPILE_SDL2_CODE FALSE)
-endif()
-
-find_package(Matplot++)
-
-if(${Matplot++_FOUND})
-    message("Matplot++ found")
-
-    add_compile_definitions(WITH_MATPLOT)
-elseif()
-    message("Matplot++ NOT found")
-endif()
-
-find_package(nlohmann_json 3.2.0 REQUIRED)
-
-if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
-    message("Downloading \"p-ranav/indicators\" library...")
-    file(DOWNLOAD
-        https://raw.githubusercontent.com/p-ranav/indicators/master/single_include/indicators/indicators.hpp
-        ${CMAKE_SOURCE_DIR}/include/indicators.hpp
-        STATUS DOWNLOAD_RESULT)
-    list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
-    if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
-        add_compile_definitions(WITH_INDICATORS)
-        message("done")
-        message("Using \"p-ranav/indicators\"")
-    else()
-        message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
-        message("Avoiding \"p-ranav/indicators\"")
-    endif()
-else()
-    add_compile_definitions(WITH_INDICATORS)
-    message("Using \"p-ranav/indicators\"")
-endif()
-
-include_directories(${CMAKE_SOURCE_DIR}/include)
-
 set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
@@ -146,10 +91,27 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp)
 
+find_package( Boost COMPONENTS program_options REQUIRED )
+
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
-if(${Matplot++_FOUND})
-    set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
+find_package(SDL2 QUIET)
+find_package(SDL2_image QUIET)
+find_package(SDL2_ttf QUIET)
+
+set(COMPILE_SDL2_CODE TRUE)
+if(${SDL2_ttf_FOUND})
+    message("SDL2_ttf found")
+else()
+    message("SDL2_ttf NOT found!")
+    set(COMPILE_SDL2_CODE FALSE)
+endif()
+
+if(${SDL2_image_FOUND})
+    message("SDL2_image found")
+else()
+    message("SDL2_image NOT found!")
+    set(COMPILE_SDL2_CODE FALSE)
 endif()
 
 if(${COMPILE_SDL2_CODE})
@@ -162,6 +124,45 @@ if(${COMPILE_SDL2_CODE})
 
     set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 endif()
+
+find_package(Matplot++ QUIET)
+
+if(${Matplot++_FOUND})
+    message("Matplot++ found")
+
+    add_compile_definitions(WITH_MATPLOT)
+else()
+    message("Matplot++ NOT found")
+endif()
+
+if(${Matplot++_FOUND})
+    set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
+endif()
+
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
+    message("Downloading \"p-ranav/indicators\" library...")
+    file(DOWNLOAD
+        https://raw.githubusercontent.com/p-ranav/indicators/master/single_include/indicators/indicators.hpp
+        ${CMAKE_SOURCE_DIR}/include/indicators.hpp
+        STATUS DOWNLOAD_RESULT)
+    list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
+    if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
+        add_compile_definitions(WITH_INDICATORS)
+        message("done")
+        message("Using \"p-ranav/indicators\"")
+    else()
+        message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
+        message("Avoiding \"p-ranav/indicators\"")
+    endif()
+else()
+    add_compile_definitions(WITH_INDICATORS)
+    message("Using \"p-ranav/indicators\"")
+endif()
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 
 add_library(libRACES SHARED ${RACES_SOURCES})
         
