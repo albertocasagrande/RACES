@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.15
- * @date 2023-10-20
+ * @version 0.16
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -184,7 +184,8 @@ public:
     /**
      * @brief Flush archive data
      */
-    inline void flush_archives() {
+    inline void flush_archives()
+    {
         if (cell_archive.is_open()) {
             cell_archive.flush();
         }
@@ -193,7 +194,8 @@ public:
     /**
      * @brief Close open archives
      */
-    inline void close() {
+    inline void close() override
+    {
         if (cell_archive.is_open()) {
             cell_archive.close();
         }
