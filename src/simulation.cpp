@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.18
- * @date 2023-10-20
+ * @version 0.19
+ * @date 2023-10-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -557,7 +557,6 @@ Simulation::add_driver_mutation(const Genotype& src, const Genotype& dst, const 
 
     timed_event_queue.emplace(time, mutation);
 
-    std::cout << "timed_event_queue.empty(): "<< timed_event_queue.empty() << std::endl;
     return *this;
 }
 
