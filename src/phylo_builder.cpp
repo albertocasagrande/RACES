@@ -2,8 +2,8 @@
  * @file phylo_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES phylogenetic tree builder
- * @version 0.5
- * @date 2023-10-20
+ * @version 0.6
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,7 @@
 #include <boost/program_options.hpp>
 
 #include "common.hpp"
+#include "tissue_sample.hpp"
 
 #include "phylogenetic_forest.hpp"
 
@@ -45,20 +46,6 @@ class PhylogeneticBuilder : public BasicExecutable
 {
     std::filesystem::path snapshot_path;
     std::filesystem::path drivers_directory;
-
-    Races::Drivers::PhylogeneticForest 
-    build_forest(const std::list<Races::Drivers::CellId>& sample, const bool quiet=true) const
-    {
-        using namespace Races::Drivers;
-
-        Simulation::BinaryLogger::CellReader reader(drivers_directory);
-
-        auto simulation = load_drivers_simulation(snapshot_path, quiet);
-    
-        auto genotypes = simulation.tissue().get_genotypes();
-
-        return grow_forest_from(sample, reader, genotypes);
-    }
 
 public:
 
@@ -107,16 +94,12 @@ public:
 
     void run() const
     {
-        std::list<Races::Drivers::CellId> sample;
-        try {
-            sample = Races::Drivers::Simulation::BasicLogger::load_sampled_ids(drivers_directory);
-        } catch (...) {
-            print_help_and_exit("\""+std::string(drivers_directory)+"\" does not contain a list "
-                                + "of sampled cell. Produce it by using \"tissue_sampler\".", 1);
-        }
+        using namespace Races::Drivers;
 
         try {
-            auto forest = build_forest(sample);
+            auto drivers_simulation = load_drivers_simulation(snapshot_path, true);
+            auto samples = drivers_simulation.get_logger().load_samples();
+            PhylogeneticForest forest(drivers_simulation);
 
             Races::Drivers::IO::phyloXMLStream os;
 

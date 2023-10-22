@@ -26,7 +26,8 @@ tests/assets/v3.3_SBS3_PROFILE.txt
 cell_file_info.txt
 cells_*.dat
 snapshot_*-*.dat
-sampled_ids.list
+samples.list
+samples.dat
 *.cif
 *.sam
 *.bam

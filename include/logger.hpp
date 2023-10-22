@@ -2,8 +2,8 @@
  * @file logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation loggers
- * @version 0.10
- * @date 2023-10-21
+ * @version 0.11
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@
 #include "cell.hpp"
 #include "cell_event.hpp"
 #include "time.hpp"
-#include "position_set.hpp"
+#include "tissue_sample.hpp"
 
 namespace Races 
 {
@@ -110,27 +110,14 @@ public:
     {}
 
     /**
-     * @brief Save sampled cell ids
+     * @brief Save tissue sample 
      * 
      * @param simulation_dir is the path of the simulation directory
-     * @param sampled_cell_ids is the list of sampled cell ids
-     * @param time it the sampling time
-     * @param sampled_region is the sampled region
-     * @return the updated output stream
+     * @param tissue_sample is the tissue sample to log
      */
-    static void save_sampled_ids(const std::filesystem::path simulation_dir,
-                                 const std::list<Races::Drivers::CellId>& sampled_cell_ids,
-                                 const Races::Time& time,
-                                 const Races::Drivers::RectangleSet& sampled_region);
-
-    /**
-     * @brief Load the sampled cell ids
-     * 
-     * @param simulation_dir is the path of the simulation directory
-     * @return the list of the sampled cell identifiers
-     */
-    static std::list<Races::Drivers::CellId>
-    load_sampled_ids(const std::filesystem::path simulation_dir);
+    static void 
+    save_sample(const std::filesystem::path simulation_dir,
+                const Races::Drivers::Simulation::TissueSample& tissue_sample);
 
     /**
      * @brief Close open archives
@@ -175,29 +162,15 @@ public:
     {
         return directory;
     }
-    /**
-     * @brief Save sampled cell ids
-     * 
-     * @param sampled_cell_ids is the list of sampled cell ids
-     * @param time it the sampling time
-     * @param sampled_region is the sampled region
-     * @return the updated output stream
-     */
-    inline void save_sampled_ids(const std::list<Races::Drivers::CellId>& sampled_cell_ids,
-                                 const Races::Time& time,
-                                 const Races::Drivers::RectangleSet& sampled_region) const
-    {
-        BasicLogger::save_sampled_ids(directory, sampled_cell_ids, time, sampled_region);
-    }
 
     /**
-     * @brief Load the sampled cell ids
+     * @brief Save tissue sample 
      * 
-     * @return the list of the sampled cell identifiers
+     * @param tissue_sample is the tissue sample to log
      */
-    inline std::list<Races::Drivers::CellId> load_sampled_ids() const
+    inline void save_sample(const Races::Drivers::Simulation::TissueSample& tissue_sample) const
     {
-        return BasicLogger::load_sampled_ids(directory);
+        BasicLogger::save_sample(directory, tissue_sample);
     }
 };
 

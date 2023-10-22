@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.11
- * @date 2023-10-14
+ * @version 0.12
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -57,6 +57,65 @@ class PhylogeneticForest
     std::map<CellId, std::set<CellId>> branches;    //!< The descendant branches
 
     std::map<EpigeneticGenotypeId, GenotypeId> genotype_map;    //!< A map associating every epigenetic genotype to the corresponding genotype id 
+
+    /**
+     * @brief Grow a forest from a sample of cells
+     * 
+     * This function grows a forest from a sample of cells.
+     * The sample cells are the leaves of the forest and 
+     * their ancestors are loaded from a cell storage.
+     * 
+     * @tparam CELL_STORAGE is the type of the cell storage
+     * @param sample_ids is the cell id sample
+     * @param cell_storage is the cell storage
+     * @param genotypes is the vector of epigenetic genotypes
+     */
+    template<typename CELL_STORAGE>
+    void grow_forest_from(const std::list<CellId>& sample, 
+                          CELL_STORAGE& cell_storage,
+                          const std::vector<EpigeneticGenotype>& genotypes)
+    {
+        clear();
+
+        for (const auto& epigenetic_genotype: genotypes) {
+            genotype_map[epigenetic_genotype.get_id()] = epigenetic_genotype.get_genomic_id();
+        }
+
+        std::set<CellId> parent_ids;
+        for (const auto& cell_id: sample) {
+            parent_ids.insert(cell_id);
+
+            // record leaves children, i.e., none
+            branches[cell_id] = std::set<CellId>();
+        }
+
+        std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());
+
+        while (!queue.empty()) {
+            auto cell = cell_storage[queue.top()];
+
+            queue.pop();
+            parent_ids.erase(cell.get_id());
+
+            // if the cell is not an initial cell
+            if (cell.get_id()!=cell.get_parent_id()) {
+
+                // the cell id is not in the queue
+                if (parent_ids.count(cell.get_parent_id())==0) {
+
+                    // add its id to the queue
+                    queue.push(cell.get_parent_id());
+                    parent_ids.insert(cell.get_parent_id());
+                }
+                branches[cell.get_parent_id()].insert(cell.get_id());
+            } else {
+                // it is a root
+                roots.insert(cell.get_id());
+            }
+
+            cells.insert(std::make_pair(cell.get_id(),cell));
+        }
+    }
 public:
 
     /**
@@ -208,6 +267,25 @@ public:
     PhylogeneticForest();
 
     /**
+     * @brief Construct a phylogenetic forest by using a tissue sample of a simulation
+     * 
+     * This method builds a phylogenetic forest by using clone simulation 
+     * pre-sampled cells as leaves.
+     * 
+     * @param simulation is a simulation
+     */
+    PhylogeneticForest(const Simulation::Simulation& simulation);
+
+    /**
+     * @brief Construct a phylogenetic forest by using a tissue sample of a simulation
+     * 
+     * @param simulation is a simulation
+     * @param tissue_samples is a list of tissue samples coming from the simulation
+     */
+    PhylogeneticForest(const Simulation::Simulation& simulation,
+                       const std::list<Simulation::TissueSample>& tissue_samples);
+
+    /**
      * @brief Get a constant node with the given id
      * 
      * @param cell_id is the id of the aimed cell node
@@ -247,73 +325,11 @@ public:
         return cells.size();
     }
 
-    template<typename CELL_STORAGE>
-    friend PhylogeneticForest grow_forest_from(const std::list<CellId>& sample, 
-                                               CELL_STORAGE& cell_storage,
-                                               const std::vector<EpigeneticGenotype>& genotypes);
+    /**
+     * @brief Clear the forest
+     */
+    void clear();
 };
-
-/**
- * @brief Grow a forest from a sample of cells
- * 
- * This function grows a forest from a sample of cells.
- * The sample cells are the leaves of the forest and 
- * their ancestors are loaded from a cell storage.
- * 
- * @tparam CELL_STORAGE is the type of the cell storage
- * @param sample is the cell id sample
- * @param cell_storage is the cell storage
- * @param genotypes is the vector of epigenetic genotypes
- * @return the phylogenetic forest obtained by using the 
- *       cells in `sample` as leafs and recovering 
- */
-template<typename CELL_STORAGE>
-PhylogeneticForest grow_forest_from(const std::list<CellId>& sample, CELL_STORAGE& cell_storage,
-                                    const std::vector<EpigeneticGenotype>& genotypes)
-{
-    PhylogeneticForest forest;
-
-    for (const auto& epigenetic_genotype: genotypes) {
-        forest.genotype_map[epigenetic_genotype.get_id()] = epigenetic_genotype.get_genomic_id();
-    }
-
-    std::set<CellId> parent_ids;
-    for (const auto& cell_id: sample) {
-        parent_ids.insert(cell_id);
-
-        // record leaves children, i.e., none
-        forest.branches[cell_id] = std::set<CellId>();
-    }
-
-    std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());
-
-    while (!queue.empty()) {
-        auto cell = cell_storage[queue.top()];
-
-        queue.pop();
-        parent_ids.erase(cell.get_id());
-
-        // if the cell is not an initial cell
-        if (cell.get_id()!=cell.get_parent_id()) {
-
-            // the cell id is not in the queue
-            if (parent_ids.count(cell.get_parent_id())==0) {
-
-                // add its id to the queue
-                queue.push(cell.get_parent_id());
-                parent_ids.insert(cell.get_parent_id());
-            }
-            forest.branches[cell.get_parent_id()].insert(cell.get_id());
-        } else {
-            // it is a root
-            forest.roots.insert(cell.get_id());
-        }
-
-        forest.cells.insert(std::make_pair(cell.get_id(),cell));
-    }
-
-    return forest;
-}
 
 }   // Drivers
 

@@ -2,8 +2,8 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES tool that sample tissues
- * @version 0.5
- * @date 2023-10-20
+ * @version 0.6
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -64,7 +64,7 @@ class TissueSampler : public BasicExecutable
         for (const auto& rectangle_json : sampling_cfg) {
             const auto sample_region = ConfigReader::get_sample_region(rectangle_json);
 
-            std::list<Races::Drivers::CellId> sample; 
+            TissueSample sample;
             
             if (remove_sample_tissue) {
                 sample = simulation.sample_and_remove_tissue(sample_region);
@@ -72,7 +72,7 @@ class TissueSampler : public BasicExecutable
                 sample = simulation.sample_tissue(sample_region);
             }
 
-            BasicLogger::save_sampled_ids(drivers_directory,sample,simulation.get_time(),sample_region);
+            BinaryLogger::save_sample(drivers_directory,sample);
         }
 
         if (remove_sample_tissue) {

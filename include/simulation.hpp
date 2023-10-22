@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.19
- * @date 2023-10-21
+ * @version 0.20
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,7 +43,9 @@
 #include "tissue_plotter.hpp"
 #include "statistics.hpp"
 #include "timed_event.hpp"
-#include "position_set.hpp"
+#include "tissue_sample.hpp"
+
+#include "phylogenetic_forest.hpp"
 
 #include "progress_bar.hpp"
 
@@ -684,27 +686,33 @@ public:
     /**
      * @brief Sample the simulation tissue
      * 
-     * This method samples the simulation tissue in a non-destructive way
-     * and returns a list of the identifiers of the sampled cells.
+     * This method samples the simulation tissue in a non-destructive way.
      * 
      * @param rectangle is the rectangle to sample
-     * @return the list of the identifiers of the sampled cells
+     * @return the sample of the tissue in `rectangle`
      */
-    std::list<CellId>
-    sample_tissue(const RectangleSet& rectangle) const;
+    TissueSample sample_tissue(const RectangleSet& rectangle) const;
 
     /**
      * @brief Sample the simulation tissue and remove the cells from it
      * 
-     * This method samples the simulation tissue in a destructive way, 
-     * removes the cells from the tissue, and returns the 
-     * identifiers of the sampled cells.
+     * This method samples the simulation tissue in a destructive way and 
+     * removes the cells from the tissue.
      * 
      * @param rectangle is the rectangle to sample
-     * @return the list of the identifiers of the sampled cells
+     * @return the sample of the tissue in `rectangle`
      */
-    std::list<CellId>
-    sample_and_remove_tissue(const RectangleSet& rectangle);
+    TissueSample sample_and_remove_tissue(const RectangleSet& rectangle);
+
+    /**
+     * @brief Get the simulation logger
+     * 
+     * @return a constant reference to the simulation logger
+     */
+    inline const BinaryLogger& get_logger() const
+    {
+        return logger;
+    }
 
     /**
      * @brief Save a simulation in an archive

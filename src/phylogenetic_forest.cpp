@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic trees
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -30,12 +30,13 @@
 
 #include "phylogenetic_forest.hpp"
 
+#include "simulation.hpp"
+
 namespace Races
 {
 
 namespace Drivers 
 {
-
 
 PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, const CellId cell_id):
     forest(const_cast<PhylogeneticForest*>(forest)), cell_id(cell_id)
@@ -67,6 +68,26 @@ PhylogeneticForest::node PhylogeneticForest::get_node(const CellId& cell_id)
 
 PhylogeneticForest::PhylogeneticForest()
 {}
+
+PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation):
+    PhylogeneticForest(simulation, simulation.get_logger().load_samples())
+{}
+
+PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation,
+                                       const std::list<Simulation::TissueSample>& tissue_samples)
+{
+    Simulation::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
+
+    auto genotypes = simulation.tissue().get_genotypes();
+
+    std::list<CellId> cell_ids;
+    for (auto sample_it = tissue_samples.begin(); sample_it != tissue_samples.end(); ++sample_it) {
+        cell_ids.insert(cell_ids.end(), sample_it->get_cell_ids().begin(), 
+                        sample_it->get_cell_ids().end());
+    }
+
+    grow_forest_from(cell_ids, reader, genotypes);
+}
 
 PhylogeneticForest::const_node PhylogeneticForest::const_node::parent() const
 {
@@ -147,6 +168,14 @@ std::vector<PhylogeneticForest::node> PhylogeneticForest::get_roots()
     }
 
     return nodes;
+}
+
+void PhylogeneticForest::clear()
+{
+    cells.clear();
+    roots.clear();
+    branches.clear();
+    genotype_map.clear();
 }
 
 }   // Drivers
