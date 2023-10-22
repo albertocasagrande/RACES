@@ -2,8 +2,8 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.3
- * @date 2023-10-18
+ * @version 0.4
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -89,8 +89,8 @@ struct BasicPositionSet
  */
 struct RectangleSet : public BasicPositionSet
 {
-    const Simulation::PositionInTissue lower_corner;  //!< The lower corner in the hyper-rectangle
-    const Simulation::PositionInTissue upper_corner;  //!< The upper corner in the hyper-rectangle
+    Simulation::PositionInTissue lower_corner;  //!< The lower corner in the hyper-rectangle
+    Simulation::PositionInTissue upper_corner;  //!< The upper corner in the hyper-rectangle
 
     /**
      * @brief Constant iterators for the sample cells

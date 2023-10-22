@@ -1,0 +1,195 @@
+/**
+ * @file tissue_sample.hpp
+ * @author Alberto Casagrande (alberto.casagrande@uniud.it)
+ * @brief Defines tissue samples
+ * @version 0.1
+ * @date 2023-10-23
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ * MIT License
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#ifndef __RACES_TISSUE_SAMPLE__
+#define __RACES_TISSUE_SAMPLE__
+
+#include <iostream>
+
+#include <list>
+
+#include "position_set.hpp"
+#include "cell.hpp"
+#include "time.hpp"
+
+namespace Races
+{
+
+namespace Drivers
+{
+
+namespace Simulation
+{
+
+/**
+ * @brief A class to represent tissue samples
+ */
+class TissueSample
+{
+    Races::Time time;   //!< The sampling time
+    Races::Drivers::RectangleSet region;  //!< The sampled region
+    std::list<Races::Drivers::CellId> cell_ids;   //!< The list of cell identifier
+
+public:
+
+    /**
+     * @brief An empty constructor
+     */
+    TissueSample();
+
+    /**
+     * @brief Construct a new cell sample
+     * 
+     * @param time is the sampling time
+     * @param region is the sampled region
+     */
+    TissueSample(const Races::Time& time, const Races::Drivers::RectangleSet& region);
+
+    /**
+     * @brief Construct a new cell sample
+     * 
+     * @param time is the sampling time
+     * @param region is the sampled region
+     * @param cell_ids is a list of the identifiers of the sample cells
+     */
+    TissueSample(const Races::Time& time, const Races::Drivers::RectangleSet& region,
+                 const std::list<Races::Drivers::CellId>& cell_ids);
+
+    /**
+     * @brief Add a cell id among those in the sample
+     * 
+     * @param cell_id is the cell id to be added in the sample
+     */
+    void add_cell_id(const Races::Drivers::CellId& cell_id);
+
+    /**
+     * @brief Get the sampling time
+     * 
+     * @return a constant reference to the sampling time
+     */
+    inline const Races::Time& get_time() const
+    {
+        return time;
+    }
+
+    /**
+     * @brief Get the sampled region
+     * 
+     * @return a constant reference to the sampled region
+     */
+    inline const Races::Drivers::RectangleSet& get_region() const
+    {
+        return region;
+    }
+
+    /**
+     * @brief Get the list of the sampled cell identifiers
+     * 
+     * @return a constant reference to the list of the sampled cell identifiers
+     */
+    inline const std::list<Races::Drivers::CellId>& get_cell_ids() const
+    {
+        return cell_ids;
+    }
+
+    /**
+     * @brief Get the number of cells in the sample
+     * 
+     * @return the number of cells in the sample
+     */
+    inline size_t total_cells_in_sample() const 
+    {
+        return region.size();
+    }
+
+    /**
+     * @brief Get the number of normal cell in the sample
+     * 
+     * @return the number of normal cell in the sample 
+     */
+    inline size_t normal_cells_in_sample() const
+    {
+        return total_cells_in_sample() - cell_ids.size();
+    }
+
+    /**
+     * @brief Save a tissue sample in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & time
+                & region
+                & cell_ids;
+    }
+
+    /**
+     * @brief Load a tissue sample from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the tissue sample
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static TissueSample load(ARCHIVE& archive)
+    {
+        Time time;
+
+        archive & time;
+
+        RectangleSet region = RectangleSet::load(archive);
+
+        TissueSample tissue_sample(time, region);
+
+        archive & tissue_sample.cell_ids;
+
+        return tissue_sample;
+    }
+};
+
+}   // Simulation
+
+}   // Drivers
+
+}   // Races
+
+/**
+ * @brief Write the tissue sample in an output stream
+ * 
+ * @param os is the output stream
+ * @param tissue_sample is the cell sample to be streamed
+ * @return a reference to the updated output stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::TissueSample& tissue_sample);
+
+#endif // __RACES_TISSUE_SAMPLE__
