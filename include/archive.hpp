@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.17
- * @date 2023-10-16
+ * @version 0.18
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -306,6 +306,17 @@ struct In : public Basic
         fs.seekg(pos);
 
         return *this;
+    }
+
+    /**
+     * @brief Test whether end of the archive has been reached
+     * 
+     * @return `true` if and only if the end of the input archive
+     *       has been reached
+     */
+    inline bool eof()
+    {
+        return (fs && fs.peek() == EOF); 
     }
 
     /**
