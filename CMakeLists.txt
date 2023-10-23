@@ -46,7 +46,9 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/position_set.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/position_set.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
 
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
@@ -91,7 +93,9 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp)
 
 find_package( Boost COMPONENTS program_options REQUIRED )
 
@@ -188,12 +192,9 @@ set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
                     ${COMMON_SOURCES})
 
 set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/phylo_builder.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
                   ${COMMON_SOURCES})
 
 set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
                            ${COMMON_SOURCES})
 
 set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
