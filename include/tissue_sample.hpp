@@ -2,7 +2,7 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.1
+ * @version 0.2
  * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
@@ -48,11 +48,16 @@ namespace Drivers
 namespace Simulation
 {
 
+using TissueSampleId = uint8_t;
+
 /**
  * @brief A class to represent tissue samples
  */
 class TissueSample
 {
+    static TissueSampleId counter;   //!< A counter for the non-null samples
+
+    TissueSampleId  id;   //!< The sample identifier
     Races::Time time;   //!< The sampling time
     Races::Drivers::RectangleSet region;  //!< The sampled region
     std::list<Races::Drivers::CellId> cell_ids;   //!< The list of cell identifier
@@ -88,6 +93,16 @@ public:
      * @param cell_id is the cell id to be added in the sample
      */
     void add_cell_id(const Races::Drivers::CellId& cell_id);
+
+    /**
+     * @brief Get the sampled region
+     *
+     * @return a constant reference to the sampled region
+     */
+    inline const TissueSampleId& get_id() const
+    {
+        return id;
+    }
 
     /**
      * @brief Get the sampling time
@@ -150,6 +165,7 @@ public:
     {
         archive & time
                 & region
+                & id
                 & cell_ids;
     }
 
@@ -170,6 +186,12 @@ public:
         RectangleSet region = RectangleSet::load(archive);
 
         TissueSample tissue_sample(time, region);
+
+        archive & tissue_sample.id;
+
+        if (tissue_sample.id+1>TissueSample::counter) {
+            TissueSample::counter = tissue_sample.id+1;
+        }
 
         archive & tissue_sample.cell_ids;
 

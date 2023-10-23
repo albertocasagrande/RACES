@@ -2,7 +2,7 @@
  * @file tissue_sample.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements tissue samples
- * @version 0.1
+ * @version 0.2
  * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
@@ -39,9 +39,10 @@ namespace Drivers
 namespace Simulation
 {
 
+TissueSampleId TissueSample::counter = 0;
 
 TissueSample::TissueSample():
-    TissueSample(0,{{0,0},{0,0}})
+    id(0), time(0), region({{0,0},{0,0}})
 {}
 
 TissueSample::TissueSample(const Time& time,
@@ -50,8 +51,8 @@ TissueSample::TissueSample(const Time& time,
 {}
 
 TissueSample::TissueSample(const Time& time, const RectangleSet& region,
-                       const std::list<Races::Drivers::CellId>& cell_ids):
-    time(time), region(region), cell_ids(cell_ids)
+                           const std::list<Races::Drivers::CellId>& cell_ids):
+    id(counter++), time(time), region(region), cell_ids(cell_ids)
 {}
 
 void TissueSample::add_cell_id(const Races::Drivers::CellId& cell_id)
