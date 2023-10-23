@@ -1,8 +1,8 @@
 /**
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements classes and function for phylogenetic trees
- * @version 0.7
+ * @brief Implements classes and function for phylogenetic forests
+ * @version 0.8
  * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
@@ -74,8 +74,15 @@ PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation)
 {}
 
 PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation,
-                                       const std::list<Simulation::TissueSample>& tissue_samples)
+                                       const std::list<Simulation::TissueSample>& tissue_samples):
+    samples(tissue_samples.begin(),tissue_samples.end())
 {
+    for (const auto& sample: samples) {
+        for (const auto& cell_id: sample.get_cell_ids()) {
+            coming_from.insert(std::make_pair(cell_id, &sample));
+        }
+    }
+
     Simulation::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
 
     auto genotypes = simulation.tissue().get_genotypes();
@@ -96,6 +103,21 @@ PhylogeneticForest::const_node PhylogeneticForest::const_node::parent() const
     }
 
     return PhylogeneticForest::const_node(forest, forest->cells.at(cell_id).get_parent_id());
+}
+
+const Simulation::TissueSample& PhylogeneticForest::const_node::get_sample() const
+{
+    if (forest==nullptr) {
+        throw std::runtime_error("The forest node has not been initialized");
+    }
+
+    auto found = forest->coming_from.find(cell_id);
+
+    if (found == forest->coming_from.end()) {
+        throw std::domain_error("The node does not correspond to a sampled cell");
+    }
+
+    return *(found->second);
 }
 
 std::vector<PhylogeneticForest::const_node> PhylogeneticForest::const_node::children() const

@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.12
+ * @version 0.13
  * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
@@ -57,6 +57,9 @@ class PhylogeneticForest
     std::map<CellId, std::set<CellId>> branches;    //!< The descendant branches
 
     std::map<EpigeneticGenotypeId, GenotypeId> genotype_map;    //!< A map associating every epigenetic genotype to the corresponding genotype id 
+
+    std::vector<Simulation::TissueSample> samples;  //!< The vector of the samples that produced the forest
+    std::map<CellId, Simulation::TissueSample const *> coming_from;       //!< The map associating each leaf to sample which it comes from
 
     /**
      * @brief Grow a forest from a sample of cells
@@ -196,6 +199,16 @@ public:
         }
 
         /**
+         * @brief Get the sample that collected the cell 
+         * 
+         * @return the sample that collected the identifier 
+         *      of this node in the tissue
+         * @throw `std::domain_error` when the node is not 
+         *      a leaf
+         */
+        const Simulation::TissueSample& get_sample() const;
+
+        /**
          * @brief Get the node epigenetic genotype id
          * 
          * @return the node epigenetic genotype id
@@ -316,13 +329,24 @@ public:
     std::vector<node> get_roots();
 
     /**
-     * @brief Get the number of forrest nodes
+     * @brief Get the number of forest nodes
      * 
-     * @return the number of forrest nodes 
+     * @return the number of forest nodes 
      */
     inline size_t num_of_nodes() const
     {
         return cells.size();
+    }
+
+    /**
+     * @brief Get the tissue samples that produced the forest
+     * 
+     * @return a constant reference to a vector of tissue samples 
+     *      that produced the phylogenetic forest
+     */
+    inline const std::vector<Simulation::TissueSample>& get_samples() const
+    {
+        return samples;
     }
 
     /**
