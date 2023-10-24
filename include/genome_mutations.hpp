@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.12
- * @date 2023-10-02
+ * @version 0.13
+ * @date 2023-10-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,6 +41,7 @@
 #include "cna.hpp"
 
 #include "cell.hpp"
+#include "tissue_sample.hpp"
 
 #include "progress_bar.hpp"
 
@@ -469,6 +470,21 @@ struct CellGenomeMutations : public Drivers::Cell, public GenomeMutations
      * @param chromosomes is the vector of genome chromosomes
      */
     explicit CellGenomeMutations(const Drivers::Cell& cell, const GenomeMutations& genome_mutations);    
+};
+
+/**
+ * @brief A structure representing the genome mutations of a tissue sample
+ */
+struct SampleGenomeMutations : public Drivers::Simulation::TissueSample
+{
+    std::list<CellGenomeMutations> mutations;   //!< The list of cell genome mutations
+
+    /**
+     * @brief A constructor
+     * 
+     * @param sample is the tissue sample whose cell mutations is represented
+     */
+    SampleGenomeMutations(const Drivers::Simulation::TissueSample& sample);
 };
 
 }   // Passengers
