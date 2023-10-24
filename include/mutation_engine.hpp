@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.13
- * @date 2023-10-02
+ * @version 0.14
+ * @date 2023-10-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -54,109 +54,81 @@ namespace Passengers
 {
 
 /**
- * @brief SNV statistics
- */
-struct SNVStatistics
-{
-    size_t mutated_alleles;            //!< Number of mutated alleles
-    size_t num_of_cells;               //!< Total number of cells containing the SNV
-    size_t num_of_non_filtered_cells;  //!< Number of non-filtered cells containing the SNV
-};
-
-/**
  * @brief Mutation Statistics
  */
-struct MutationStatistics
+class MutationStatistics
 {
-    size_t num_of_cells;                 //!< Number of recorded cells
-    size_t num_of_non_filtered_cells;    //!< Number of recorded non-filtered cells
+    /**
+     * @brief SNV statistics
+     */
+    struct SNVStatistics
+    {
+        size_t mutated_alleles;            //!< Number of mutated alleles
+        size_t num_of_cells;               //!< Total number of cells containing the SNV
 
-    std::map<SNV, SNVStatistics> SNVs;      //!< SNVs
-    std::list<CopyNumberAlteration> CNAs;   //!< CNAs
+        /**
+         * @brief The empty constructor
+         */
+        SNVStatistics();
+    };
 
+    struct SampleMutationStatistics
+    {
+        size_t num_of_cells;          //!< Number of recorded cells
+
+        std::map<SNV, SNVStatistics> SNVs;      //!< SNVs
+        std::list<CopyNumberAlteration> CNAs;   //!< CNAs
+
+        /**
+         * @brief The empty constructor
+         */
+        SampleMutationStatistics();
+    };
+
+    SampleMutationStatistics overall_statistics;    //!< Overall statistics
+    std::map<std::string, SampleMutationStatistics> sample_statistics;  //!< Statistics per sample
+
+public:
     /**
      * @brief The empty constructor
      */
     MutationStatistics();
 
     /**
-     * @brief Record the SVNs in a cell genome
+     * @brief Record the SVNs of a cell genome
      * 
-     * @tparam FILTER is the type of the cell filter
+     * @param sample_name is the name of the sample from which the cell has 
+     *          been extracted
      * @param cell_mutations are the mutations of the cell whose statistics
      *          is about to be recorded
-     * @param filter is a cell filter based on its epigenetic genotype identifier
      * @return a reference to the updated object
      */
-    template<typename FILTER, 
-             std::enable_if_t<std::is_base_of_v<Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId>, FILTER>, bool> = true>
-    MutationStatistics& record(const CellGenomeMutations& cell_mutations, const FILTER& filter)
-    {
-        std::set<SNV> in_cell;
-
-        auto filtered = filter.filtered(cell_mutations.get_epigenetic_id());
-
-        // for all chromosomes
-        for (const auto& [chr_id, chromosome]: cell_mutations.get_chromosomes()) {
-
-            for (const auto& cna : chromosome.get_CNAs()) {
-                CNAs.push_back(cna);
-            }
-
-            // for all chromosome alleles
-            for (const auto& [allele_id, allele]: chromosome.get_alleles()) {
-
-                // for all fragments in the allele
-                for (const auto& [fragment_pos, fragment]: allele.get_fragments()) {
-
-                    // for all SNVs in the fragment
-                    for (const auto& [snv_pos, snv]: fragment.get_SNVs()) {
-
-                        auto it = SNVs.find(snv);
-
-                        if (it != SNVs.end()) {
-                            if (!filtered) {
-                                ++(it->second.mutated_alleles);
-                            }
-                        } else {
-                            size_t mutated_alleles = (filter.filtered(cell_mutations.get_epigenetic_id()) ? 0 : 1);
-
-                            SNVs.insert({snv, {mutated_alleles, 0, 0}});
-                        }
-
-                        in_cell.insert(snv);
-                    }
-                }
-            }
-        }
-
-        ++num_of_cells;
-        for (const auto& snv : in_cell) {
-            ++(SNVs[snv].num_of_cells);
-        }
-        if (!filtered) {
-            ++num_of_non_filtered_cells;
-
-            for (const auto& snv : in_cell) {
-                ++(SNVs[snv].num_of_non_filtered_cells);
-            }
-        }
-    
-        return *this;
-    }
+    MutationStatistics& record(const std::string& sample_name,
+                               const CellGenomeMutations& cell_mutations);
 
     /**
-     * @brief Record the SVNs in a cell genome
+     * @brief Record the SVNs in a list of sample genomic mutations
      * 
-     * @param cell_mutations are the mutations of the cell whose statistics
-     *          is about to be recorded
+     * @param[in] mutations_list is a list of sample mutations
+     * @param[in,out] progress_bar is a progress bar pointer
      * @return a reference to the updated object
      */
-    inline MutationStatistics& record(const CellGenomeMutations& cell_mutations)
-    {
-        Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId> filter;
+    MutationStatistics& 
+    record(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list,
+           UI::ProgressBar* progress_bar=nullptr);
 
-        return this->record(cell_mutations, filter);
+    /**
+     * @brief Record the SVNs in a list of sample genomic mutations
+     * 
+     * @param[in] mutations_list is a list of sample mutations
+     * @param[in,out] progress_bar is a progress bar pointer
+     * @return a reference to the updated object
+     */
+    inline MutationStatistics& 
+    record(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list,
+           UI::ProgressBar& progress_bar)
+    {
+        return record(mutations_list, &progress_bar);
     }
 
     /**
@@ -475,15 +447,22 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the mutations on the genome of a phylogenetic forest node
+     * @brief Place the mutations on the genomes of a phylogenetic forest node
      * 
-     * @param[in,out] leaves_mutations is the list of genomic mutations of the phylogenetic forest leaves
+     * This method recursively places the mutations on the nodes of a phylogenetic
+     * forest. All the genome mutations associated to the forest leaves are 
+     * collected and saved in a container that partition them according 
+     * to the cell sample. 
+     * 
+     * @param[in,out] sample_mutation_map is a map associating tissue sample ids to 
+     *              the corresponding sample genomic mutations
      * @param[in] node is a phylogenetic tree node representing a cell
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
-    void place_mutations(std::list<CellGenomeMutations>& leaves_mutations,
+    void place_mutations(std::map<Drivers::Simulation::TissueSampleId, 
+                                  SampleGenomeMutations*>& sample_mutation_map,
                          const Drivers::PhylogeneticForest::const_node& node,
                          const GenomeMutations& ancestor_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
@@ -508,10 +487,13 @@ class MutationEngine
         }
 
         if (node.is_leaf()) {
-            leaves_mutations.push_back(cell_mutations);
+            auto& node_sample = node.get_sample();
+            auto& sample_genomic_mutations = *(sample_mutation_map.at(node_sample.get_id()));
+            sample_genomic_mutations.mutations.push_back(cell_mutations);
         } else {
             for (const auto child: node.children()) {
-                place_mutations(leaves_mutations, child, cell_mutations, visited_nodes, progress_bar);
+                place_mutations(sample_mutation_map, child, cell_mutations,
+                                visited_nodes, progress_bar);
             }
         }
 
@@ -612,37 +594,44 @@ public:
     }
 
     /**
-     * @brief Place genomic mutations on the leaves of a phylogenetic forest
+     * @brief Place genomic mutations on a phylogenetic forest
      * 
      * @param forest is a phylogenetic forest
      * @param progress_bar is a progress bar pointer
-     * @return the list of genomic mutations of `forest`'s leaves
+     * @return the list of genomic mutations of the `forest`'s samples
      */
-    std::list<CellGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
-                                                   UI::ProgressBar *progress_bar=nullptr)
+    std::list<SampleGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
+                                                     UI::ProgressBar *progress_bar=nullptr)
     {
+        using namespace Races::Drivers::Simulation;
         using namespace Races::Passengers;
 
         GenomeMutations mutations(context_index, num_of_alleles);
 
-        std::list<CellGenomeMutations> leaves_mutations;
-        size_t visited_node = 0;
-        for (const auto& root: forest.get_roots()) {
-            place_mutations(leaves_mutations, root, mutations, visited_node, progress_bar);
+        std::list<SampleGenomeMutations> sample_mutations;
+        std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
+        for (const auto& sample: forest.get_samples()) {
+            sample_mutations.push_back(SampleGenomeMutations(sample));
+            sample_mutation_map.insert({sample.get_id(), &(sample_mutations.back())});
         }
 
-        return leaves_mutations;
+        size_t visited_node = 0;
+        for (const auto& root: forest.get_roots()) {
+            place_mutations(sample_mutation_map, root, mutations, visited_node, progress_bar);
+        }
+
+        return sample_mutations;
     }
 
     /**
-     * @brief Place genomic mutations on the leaves of a phylogenetic forest
+     * @brief Place genomic mutations on a phylogenetic forest
      * 
      * @param forest is a phylogenetic forest
      * @param progress_bar is a progress bar pointer
-     * @return the list of genomic mutations of `forest`'s leaves
+     * @return the list of genomic mutations of the `forest`'s samples
      */
-    inline std::list<CellGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
-                                                          UI::ProgressBar &progress_bar)
+    inline std::list<SampleGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
+                                                            UI::ProgressBar &progress_bar)
     {
         return place_mutations(forest, &progress_bar);
     }

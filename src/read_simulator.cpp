@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-10-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,6 +29,7 @@
  */
 
 #include <string>
+#include <regex>
 
 #include "read_simulator.hpp"
 
@@ -41,7 +42,7 @@ namespace Passengers
 namespace SequencingSimulations
 {
 
-void Statistics::GroupStatistics::increase_coverage(const ChromosomeId& chromosome_id, const ChrPosition& begin_pos, const size_t& read_size)
+void Statistics::SampleStatistics::increase_coverage(const ChromosomeId& chromosome_id, const ChrPosition& begin_pos, const size_t& read_size)
 {
     auto& chr_coverage = coverage[chromosome_id];
 
@@ -50,7 +51,7 @@ void Statistics::GroupStatistics::increase_coverage(const ChromosomeId& chromoso
     }
 }
 
-void Statistics::GroupStatistics::increase_SNV_occurrences(const SNV& snv)
+void Statistics::SampleStatistics::increase_SNV_occurrences(const SNV& snv)
 {
     auto SNV_occ_it = SNV_occurrences.find(snv);
 
@@ -63,22 +64,13 @@ void Statistics::GroupStatistics::increase_SNV_occurrences(const SNV& snv)
     ++(SNV_occ_it->second);
 }
 
-Statistics::GroupStatistics Statistics::get_total() const
+Statistics::SampleStatistics Statistics::get_total() const
 {
-    Statistics::GroupStatistics total;
+    Statistics::SampleStatistics total;
 
-    for (const auto& [group_name, statistics]: group_statistics) {
+    for (const auto& [sample_name, statistics]: sample_statistics) {
         for (const auto& [chr_id, coverage]: statistics.coverage) {
             total.add_chromosome(chr_id, coverage.size());
-
-            auto& total_coverage = total.coverage[chr_id];
-
-            auto total_it = total_coverage.begin();
-            auto coverage_it = coverage.begin();
-
-            for (; total_it != total_coverage.end(); ++total_it,++coverage_it) {
-                *total_it += *coverage_it;
-            }
         }
 
         for (const auto& [snv, occurrences]: statistics.SNV_occurrences) {
@@ -91,7 +83,42 @@ Statistics::GroupStatistics Statistics::get_total() const
         }
     }
 
+    for (const auto& [snv, occurrences]: total.SNV_occurrences) {
+        for (const auto& [sample_name, statistics]: sample_statistics) {
+            auto& total_chr_coverage = total.coverage.at(snv.chr_id);
+            const auto& sample_chr_coverage = statistics.coverage.at(snv.chr_id);
+
+            total_chr_coverage[snv.position] += sample_chr_coverage[snv.position];
+        }
+    }
+
     return total;
+}
+
+const uint16_t& Statistics::SampleStatistics::find_coverage(const GenomicPosition& position) const
+{
+    auto it = coverage.find(position.chr_id);
+    if (it == coverage.end()) {
+        throw std::runtime_error("Unknown chromosome "+std::to_string(position.chr_id));
+    }
+    return it->second[position.position];
+}
+
+void print_sample_data_about(std::ofstream& os, const Statistics::SampleStatistics& statistics, 
+                             const SNV& snv, const char separator='\t')
+{
+    const auto& coverage = statistics.find_coverage(snv);
+
+    auto found = statistics.SNV_occurrences.find(snv);
+    if (found != statistics.SNV_occurrences.end()) {
+        const auto& occurrences = found->second;
+
+        os << separator << occurrences
+           << separator << coverage 
+           << separator << (static_cast<double>(occurrences)/coverage);
+    } else {
+        os << separator << "0" << separator << coverage << separator << "0";
+    }
 }
 
 void Statistics::save_VAF_csv(const std::filesystem::path& filename) const
@@ -104,70 +131,43 @@ void Statistics::save_VAF_csv(const std::filesystem::path& filename) const
         << "ref" << separator << "alt" << separator
         << "type" << separator << "context" << separator << "cause";
     
-    Statistics::GroupStatistics total;
-    if (group_statistics.size()>1) {
-        total = get_total();
-
-        os << separator << "group coverage" << separator  << "group VAF"
-           << separator << "total coverage" << separator << "total VAF"
-           << separator << "total occurrences" << separator << "group" << std::endl;
+    Statistics::SampleStatistics total = get_total();
+    if (sample_statistics.size()>1) {
+        for (const auto& [sample_name, statistics]: sample_statistics) {
+            os << separator << sample_name << " occurrences"
+               << separator << sample_name << " coverage" 
+               << separator << sample_name << " VAF";
+        }
+        os << separator << "total occurrences"
+           << separator << "total coverage" 
+           << separator << "total VAF" << std::endl;
     } else {
-        os << separator << "coverage" << separator  << "VAF" 
-           << separator << "occurrences" << std::endl;
+        os << separator << "occurrences"
+           << separator << "coverage" 
+           << separator << "VAF" << std::endl;
     }
 
-    for (const auto& [group_name, statistics]: group_statistics) {
-        for (const auto& [snv, occurrences]: statistics.SNV_occurrences) {
+    for (const auto& [snv, total_occurrences]: total.SNV_occurrences) {
+        os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position 
+           << separator << snv.position 
+           << separator << snv.context.get_central_nucleotide()
+           << separator << snv.mutated_base << separator << "SNV" 
+           << separator << snv.context << separator << snv.cause;
 
-            os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position 
-                << separator << snv.position 
-                << separator << snv.context.get_central_nucleotide()
-                << separator << snv.mutated_base << separator << "SNV" 
-                << separator << snv.context << separator << snv.cause;
-
-            std::vector<const decltype(statistics.coverage)*> coverage_ptr_vector = {&(statistics.coverage)};
-
-            if (group_statistics.size()>1) {
-                coverage_ptr_vector.push_back(&(total.coverage));
-            }
-
-            for (const auto coverage_ptr: coverage_ptr_vector) {
-                auto it = coverage_ptr->find(snv.chr_id);
-                if (it == coverage_ptr->end()) {
-                    throw std::runtime_error("Unknown chromosome "+std::to_string(snv.chr_id));
-                }
-                const auto& coverage_value = it->second[snv.position];
-                os << separator << static_cast<size_t>(coverage_value) << separator 
-                    << static_cast<double>(occurrences)/coverage_value;
-            }
-
-            decltype(statistics.SNV_occurrences)::const_iterator total_it;
-
-            if (group_statistics.size()>1) {
-                total_it = total.SNV_occurrences.find(snv);
-            } else {
-                total_it = statistics.SNV_occurrences.find(snv);
-            }
-
-            if (total_it == total.SNV_occurrences.end()) {
-                throw std::runtime_error("Unknown SNV");
-            }
-
-            os << separator << total_it->second;
-
-            if (group_statistics.size()>1) {
-                os << separator << group_name << std::endl;
-            } else {
-                os << std::endl;
-            }
+        for (const auto& [sample_name, statistics]: sample_statistics) {
+            print_sample_data_about(os, statistics, snv, separator);
         }
+
+        print_sample_data_about(os, total, snv, separator);
+
+        os << std::endl;
     }
 }
 
 
 #ifdef WITH_MATPLOT
 
-std::vector<double> down_sample_coverage(const std::vector<uint8_t>& coverage, const size_t& new_size=300)
+std::vector<double> down_sample_coverage(const std::vector<uint16_t>& coverage, const size_t& new_size=300)
 {
     std::vector<double> down_sampled;
     
@@ -195,14 +195,14 @@ void Statistics::save_coverage_images(const std::filesystem::path& filename, con
 {
     using namespace matplot;
 
-    size_t num_of_plots = group_statistics.size();
+    size_t num_of_plots = sample_statistics.size();
     const size_t new_size = 300;
 
     auto f = figure(true);
     f->size(1500, 1500);
 
     if (num_of_plots==1) {
-        const auto& coverage = (group_statistics.begin()->second).coverage.find(chromosome_id)->second;
+        const auto& coverage = (sample_statistics.begin()->second).coverage.find(chromosome_id)->second;
         
         std::vector<std::vector<double>> d_coverage = {down_sample_coverage(coverage, new_size)};
 
@@ -220,7 +220,7 @@ void Statistics::save_coverage_images(const std::filesystem::path& filename, con
         tiledlayout(++num_of_plots, 1);
 
         long chr_size;
-        for (const auto& [group_name, statistics]: group_statistics) {
+        for (const auto& [sample_name, statistics]: sample_statistics) {
             nexttile();
 
             const auto& coverage = statistics.coverage.find(chromosome_id)->second;
@@ -231,7 +231,8 @@ void Statistics::save_coverage_images(const std::filesystem::path& filename, con
 
             area(d_coverage);
 
-            title("Read group \""+group_name+"\"");
+            auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
+            title("Sample \""+latex_name+"\"");
 
             xticks({1, new_size/2, new_size});
             xticklabels({"0",std::to_string(chr_size/2),std::to_string(chr_size)});
@@ -270,7 +271,7 @@ std::map<SNV, std::pair<double, size_t>> get_total_occurrences(const Statistics&
 {
     std::map<SNV, std::pair<double, size_t>> total_occurrences;
 
-    for (const auto& [group_name, g_statistics]: statistics.group_statistics) {
+    for (const auto& [sample_name, g_statistics]: statistics.sample_statistics) {
         const auto& coverage = g_statistics.coverage.find(chromosome_id)->second;
         
         for (const auto& [snv, occurrences]: g_statistics.SNV_occurrences) {
@@ -294,13 +295,13 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
     using namespace matplot;
 
     size_t num_of_bins = 50;
-    size_t num_of_plots = group_statistics.size();
+    size_t num_of_plots = sample_statistics.size();
 
     auto f = figure(true);
     f->size(1500, 1500);
     
     if (num_of_plots==1) {
-        const auto& statistics = (group_statistics.begin()->second);
+        const auto& statistics = (sample_statistics.begin()->second);
         const auto& coverage = statistics.coverage.find(chromosome_id)->second;
 
         std::vector<double> VAF;
@@ -319,7 +320,7 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
         auto total_occurrences = get_total_occurrences(*this, chromosome_id);
 
         tiledlayout(++num_of_plots, 1);
-        for (const auto& [group_name, statistics]: group_statistics) {
+        for (const auto& [sample_name, statistics]: sample_statistics) {
             nexttile();
 
             const auto& coverage = statistics.coverage.find(chromosome_id)->second;
@@ -334,7 +335,7 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
             hist(VAF,num_of_bins);
 
-            title("Read group \""+group_name+"\"");
+            title("Sample \""+sample_name+"\"");
 
             ylabel("Num. of SNVs");
         }

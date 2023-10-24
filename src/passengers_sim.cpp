@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.19
- * @date 2023-10-23
+ * @version 0.20
+ * @date 2023-10-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -184,64 +184,8 @@ class PassengersSimulator : public BasicExecutable
         return Races::Passengers::MutationalSignature::read_from_stream(is);
     }
 
-    template<typename GENOME_MUTATION, typename FILTER, 
-             std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>
-                                && std::is_base_of_v<Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId>, FILTER>, bool> = true>
-    Races::Passengers::MutationStatistics 
-    collect_statistics(const std::list<GENOME_MUTATION>& cells_mutations, const FILTER& filter,
-                       const std::string& data_name="") const
-    {
-        using namespace Races;
-        using namespace Races::Passengers;
-
-        MutationStatistics statistics;
-
-        if (quiet) {
-            for (const auto& cell_mutations: cells_mutations) {
-                statistics.record(cell_mutations, filter);
-            }
-
-            return statistics;
-        }
-
-        UI::ProgressBar progress_bar;
-
-        if (data_name.size()>0) {
-            progress_bar.set_message("Collecting "+ data_name+ "'s data");
-        } else {
-            progress_bar.set_message("Collecting data");
-        }
-        size_t recorded{0};
-        for (const auto& cell_mutations: cells_mutations) {
-            statistics.record(cell_mutations, filter);
-
-            size_t percentage = 100*(++recorded)/cells_mutations.size();
-            if (percentage>progress_bar.get_progress()) {
-                progress_bar.set_progress(percentage);
-            }
-        }
-
-        if (data_name.size()>0) {
-            progress_bar.set_message(data_name+ "'s data collected");
-        } else {
-            progress_bar.set_message("Data collected");
-        }
-
-        return statistics;
-    }
-
-    template<typename GENOME_MUTATION,
-             std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>, bool> = true>
-    Races::Passengers::MutationStatistics 
-    collect_statistics(const std::list<GENOME_MUTATION>& cells_mutations) const
-    {
-        Races::BaseFilter<Races::Drivers::EpigeneticGenotypeId> filter;
-
-        return collect_statistics(cells_mutations, filter);
-    }
-
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
-    std::list<Races::Passengers::CellGenomeMutations>
+    std::list<Races::Passengers::SampleGenomeMutations>
     place_mutations(Races::Passengers::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
                     const Races::Drivers::PhylogeneticForest& forest) const
     {
@@ -267,11 +211,18 @@ class PassengersSimulator : public BasicExecutable
         return nlohmann::json::parse(simulation_stream);
     }
 
-    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>, bool> = true>
-    void process_statistics(const std::list<GENOME_MUTATION>& mutations) const
+    void process_statistics(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list) const
     {
+        using namespace Races::UI;
+        using namespace Races::Passengers;
+
         if ((SNVs_csv_filename != "") || (CNAs_csv_filename != "")) {
-            auto statistics = collect_statistics(mutations);
+
+            ProgressBar bar;
+
+            MutationStatistics statistics;
+
+            statistics.record(mutations_list, bar);
 
             if (SNVs_csv_filename != "") {
                 std::ofstream os(SNVs_csv_filename);
@@ -287,60 +238,74 @@ class PassengersSimulator : public BasicExecutable
         }
     }
 
-    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>, bool> = true>
-    void process_statistics(const std::list<GENOME_MUTATION>& mutations,
-                            const std::map<std::string, std::set<Races::Drivers::EpigeneticGenotypeId>>& epigenetic_classes) const
+    static void
+    split_epigenetic_status(std::list<Races::Passengers::SampleGenomeMutations>& FACS_samples,
+                            const Races::Passengers::SampleGenomeMutations& sample_mutations,
+                            std::map<Races::Drivers::EpigeneticGenotypeId, std::string> methylation_map)
     {
-        if ((SNVs_csv_filename != "") || (CNAs_csv_filename != "")) {
-            std::string prefix_SNVs = SNVs_csv_filename.substr(0,SNVs_csv_filename.find_last_of('.'));
-            std::string prefix_CNAs = CNAs_csv_filename.substr(0,CNAs_csv_filename.find_last_of('.'));
+        using namespace Races::Drivers;
+        using namespace Races::Drivers::Simulation;
+        using namespace Races::Passengers;
 
-            for (const auto& [signature, id_set] : epigenetic_classes) {
-                Races::FilterNotIn<Races::Drivers::EpigeneticGenotypeId> filter(id_set);
+        std::map<EpigeneticGenotypeId, SampleGenomeMutations*> meth_samples;
+        
+        for (const auto& cell_mutations : sample_mutations.mutations) {
+            auto found = meth_samples.find(cell_mutations.get_epigenetic_id());
 
-                auto statistics = collect_statistics(mutations, filter, signature);
+            if (found == meth_samples.end()) {
+                auto new_name = sample_mutations.get_name()+"_"+
+                                    methylation_map.at(cell_mutations.get_epigenetic_id());
+            
+                FACS_samples.push_back(SampleGenomeMutations(sample_mutations));
 
-                if (SNVs_csv_filename != "") {
-                    std::ofstream os(prefix_SNVs+"_"+signature+".csv");
+                FACS_samples.back().mutations.push_back(cell_mutations);
 
-                    statistics.write_SNVs_table(os);
-                }
-
-                if (CNAs_csv_filename != "") {
-                    std::ofstream os(prefix_CNAs+"_"+signature+".csv");
-
-                    statistics.write_CNAs_table(os);
-                }
+                meth_samples.insert({cell_mutations.get_epigenetic_id(), &(FACS_samples.back())});
+            } else {
+                (found->second)->mutations.push_back(cell_mutations);
             }
         }
     }
 
-    static std::map<std::string, std::set<Races::Drivers::EpigeneticGenotypeId>>
-    split_by_epigenetic_status(const std::vector<Races::Drivers::EpigeneticGenotype>& genotypes)
+    static std::list<Races::Passengers::SampleGenomeMutations>
+    split_epigenetic_status(const std::list<Races::Passengers::SampleGenomeMutations>& sample_mutations_list,
+                            const std::map<Races::Drivers::EpigeneticGenotypeId, std::string>& methylation_map)
     {
-        using namespace  Races::Drivers;
-        std::map<std::string, std::set<EpigeneticGenotypeId>> epigenetic_status_classes;
+        using namespace Races::Drivers;
+        using namespace Races::Drivers::Simulation;
 
-        for (const auto& genotype : genotypes) {
-            const auto signature = genotype.get_methylation_signature();
+        std::list<Races::Passengers::SampleGenomeMutations> FACS_samples;
 
-            const auto signature_string = Genotype::signature_to_string(signature);
-
-            epigenetic_status_classes[signature_string].insert(genotype.get_id());
+        for (const auto& sample_mutations : sample_mutations_list) {
+            split_epigenetic_status(FACS_samples, sample_mutations, methylation_map);
         }
 
-        return epigenetic_status_classes;
+        return FACS_samples;
+    }
+
+    template<typename TISSUE_SAMPLE,
+             std::enable_if_t<std::is_base_of_v<Races::Drivers::Simulation::TissueSample, TISSUE_SAMPLE>, bool> = true>
+    static std::map<Races::Time, std::list<TISSUE_SAMPLE>>
+    split_list_by_time(const std::list<TISSUE_SAMPLE>& sample_list)
+    {
+        std::map<Races::Time, std::list<TISSUE_SAMPLE>> time_map;
+
+        for (const auto& sample : sample_list) {
+            time_map[sample.get_time()].push_back(sample);
+        }
+
+        return time_map;
     }
 
     template<typename GENOME_WIDE_POSITION>
     void run_abs_position() const
     {
         using namespace Races;
+        using namespace Races::Drivers;
         using namespace Races::Passengers;
         using namespace Races::Passengers::SequencingSimulations;
 
         nlohmann::json simulation_cfg = get_simulation_json();
-
 
         if (!quiet) {
             if (simulation_cfg.contains("sample region")) {
@@ -355,14 +320,13 @@ class PassengersSimulator : public BasicExecutable
         Drivers::PhylogeneticForest forest;
         SpeciesMutationalProperties mutational_properties;
 
-        std::map<std::string, std::set<Drivers::EpigeneticGenotypeId>> epigenetic_status_classes;
+        std::map<EpigeneticGenotypeId, std::string> methylation_map;
         {
             auto drivers_simulation = load_drivers_simulation(snapshot_path, quiet);
 
-            if (epigenetic_FACS) {
-                auto tissue_genotypes = drivers_simulation.tissue().get_genotypes();
-
-                epigenetic_status_classes = split_by_epigenetic_status(tissue_genotypes);
+            for (const auto& species : drivers_simulation.tissue()) {
+                const auto& signature = species.get_methylation_signature();
+                methylation_map[species.get_id()] = Genotype::signature_to_string(signature);
             }
 
             auto samples = get_samples(drivers_simulation, simulation_cfg);
@@ -404,20 +368,19 @@ class PassengersSimulator : public BasicExecutable
 
         ConfigReader::add_timed_mutational_coefficients(engine, mutational_coeff_json);
 
-        auto leaves_mutations = place_mutations(engine, forest);
+        auto mutations_list = place_mutations(engine, forest);
+
+        if (epigenetic_FACS) {
+            mutations_list = split_epigenetic_status(mutations_list, methylation_map);
+        }
 
         if (coverage>0) {
             read_simulator.enable_SAM_writing(write_SAM);
 
-            read_simulator(leaves_mutations, coverage, epigenetic_status_classes);
+            read_simulator(mutations_list, coverage);
         }
 
-        if (epigenetic_FACS) {
-            process_statistics(leaves_mutations);
-            process_statistics(leaves_mutations, epigenetic_status_classes);
-        } else {
-            process_statistics(leaves_mutations);
-        }
+        process_statistics(mutations_list);
     }
 
     void validate(boost::program_options::variables_map vm) const
