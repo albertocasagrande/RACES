@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.2
- * @date 2023-10-23
+ * @version 0.3
+ * @date 2023-10-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -62,6 +62,15 @@ class TissueSample
     Races::Drivers::RectangleSet region;  //!< The sampled region
     std::list<Races::Drivers::CellId> cell_ids;   //!< The list of cell identifier
 
+    std::string name;   //!< Name of the sample
+
+    /**
+     * @brief Compute a standard name for the sample
+     * 
+     * @return a standard name for the sample
+     */
+    std::string get_standard_name() const;
+
 public:
 
     /**
@@ -80,11 +89,33 @@ public:
     /**
      * @brief Construct a new cell sample
      * 
+     * @param name is the sample name
+     * @param time is the sampling time
+     * @param region is the sampled region
+     */
+    TissueSample(const std::string& name, const Races::Time& time,
+                 const Races::Drivers::RectangleSet& region);
+
+    /**
+     * @brief Construct a new cell sample
+     * 
      * @param time is the sampling time
      * @param region is the sampled region
      * @param cell_ids is a list of the identifiers of the sample cells
      */
     TissueSample(const Races::Time& time, const Races::Drivers::RectangleSet& region,
+                 const std::list<Races::Drivers::CellId>& cell_ids);
+
+    /**
+     * @brief Construct a new cell sample
+     * 
+     * @param name is the sample name
+     * @param time is the sampling time
+     * @param region is the sampled region
+     * @param cell_ids is a list of the identifiers of the sample cells
+     */
+    TissueSample(const std::string& name, const Races::Time& time, 
+                 const Races::Drivers::RectangleSet& region,
                  const std::list<Races::Drivers::CellId>& cell_ids);
 
     /**
@@ -95,9 +126,19 @@ public:
     void add_cell_id(const Races::Drivers::CellId& cell_id);
 
     /**
-     * @brief Get the sampled region
+     * @brief Get the sample name
      *
-     * @return a constant reference to the sampled region
+     * @return a constant reference to the sample name
+     */
+    inline const std::string& get_name() const
+    {
+        return name;
+    }
+
+    /**
+     * @brief Get the sample id
+     *
+     * @return a constant reference to the sample id
      */
     inline const TissueSampleId& get_id() const
     {

@@ -2,8 +2,8 @@
  * @file tissue_sample.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements tissue samples
- * @version 0.2
- * @date 2023-10-23
+ * @version 0.3
+ * @date 2023-10-24
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,18 +41,40 @@ namespace Simulation
 
 TissueSampleId TissueSample::counter = 0;
 
+std::string TissueSample::get_standard_name() const
+{
+    std::ostringstream oss;
+
+    oss << "S_" << time << "_"
+        << region.lower_corner << "-"
+        << region.upper_corner; 
+
+    return oss.str();
+}
+
 TissueSample::TissueSample():
-    id(0), time(0), region({{0,0},{0,0}})
+    id(0), time(0), region({{0,0},{0,0}}), name("")
 {}
 
-TissueSample::TissueSample(const Time& time,
-                       const RectangleSet& region):
+TissueSample::TissueSample(const Time& time, const RectangleSet& region):
     TissueSample(time, region, {})
+{}
+
+TissueSample::TissueSample(const std::string& name, const Races::Time& time,
+                           const Races::Drivers::RectangleSet& region):
+    TissueSample(name, time, region, {})
 {}
 
 TissueSample::TissueSample(const Time& time, const RectangleSet& region,
                            const std::list<Races::Drivers::CellId>& cell_ids):
     id(counter++), time(time), region(region), cell_ids(cell_ids)
+{
+    name = get_standard_name();
+}
+
+TissueSample::TissueSample(const std::string& name, const Time& time, const RectangleSet& region,
+                           const std::list<Races::Drivers::CellId>& cell_ids):
+    id(counter++), time(time), region(region), cell_ids(cell_ids), name(name)
 {}
 
 void TissueSample::add_cell_id(const Races::Drivers::CellId& cell_id)
