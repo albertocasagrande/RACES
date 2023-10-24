@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.4
- * @date 2023-10-24
+ * @version 0.5
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -158,7 +158,9 @@ void Statistics::save_VAF_csv(const std::filesystem::path& filename) const
             print_sample_data_about(os, statistics, snv, separator);
         }
 
-        print_sample_data_about(os, total, snv, separator);
+        if (sample_statistics.size()>1) {
+            print_sample_data_about(os, total, snv, separator);
+        }
 
         os << std::endl;
     }
