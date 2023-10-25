@@ -139,13 +139,11 @@ if(${Matplot++_FOUND})
     message("Matplot++ found")
 
     add_compile_definitions(WITH_MATPLOT)
+    set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
 else()
     message("Matplot++ NOT found")
 endif()
 
-if(${Matplot++_FOUND})
-    set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
-endif()
 
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
@@ -171,18 +169,20 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+add_library(objlib OBJECT ${RACES_SOURCES})
+target_link_libraries(objlib ${RACES_LIBRARIES})
 
-add_library(libRACES SHARED ${RACES_SOURCES})
-        
+set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+add_library(libRACES SHARED $<TARGET_OBJECTS:objlib>)
 target_link_libraries(libRACES ${RACES_LIBRARIES})
 set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
-target_sources(libRACES PRIVATE ${RACES_SOURCES}
-                        PUBLIC FILE_SET HEADERS
-                        BASE_DIRS ${PROJECT_SOURCE_DIR}
-                        FILES ${RACES_HEADER})
 
-install(TARGETS libRACES FILE_SET HEADERS)
+add_library(libRACES_static STATIC $<TARGET_OBJECTS:objlib>)
+target_link_libraries(libRACES_static ${RACES_LIBRARIES})
+set_target_properties(libRACES_static PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
 
+install(TARGETS libRACES libRACES_static FILE_SET HEADERS)
 
 set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
