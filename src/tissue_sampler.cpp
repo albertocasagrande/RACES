@@ -2,8 +2,8 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES tool that sample tissues
- * @version 0.7
- * @date 2023-10-24
+ * @version 0.8
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@ class TissueSampler : public BasicExecutable
     std::filesystem::path drivers_directory;
     std::filesystem::path config;
 
-    bool remove_sample_tissue;
+    bool preserve_tissue;
     bool quiet;
 
     void perform_sampling(const nlohmann::json& sampling_cfg, const bool quiet=false) const
@@ -64,12 +64,12 @@ class TissueSampler : public BasicExecutable
         for (const auto& rectangle_json : sampling_cfg) {
             const auto sample_region = ConfigReader::get_sample_region(rectangle_json);
 
-            TissueSample sample = simulation.sample_tissue(sample_region, !remove_sample_tissue);
+            TissueSample sample = simulation.sample_tissue(sample_region, preserve_tissue);
 
             BinaryLogger::save_sample(drivers_directory,sample);
         }
 
-        if (remove_sample_tissue) {
+        if (preserve_tissue) {
             simulation.make_snapshot<Races::UI::ProgressBar>(nullptr);
         }
     }
@@ -83,7 +83,7 @@ public:
         (void)argc;
 
         visible_options.at("options").add_options()
-            ("remove-sample,r","remove the sample from the tissue")
+            ("preserve-tissue,p","perform a non-destructive sampling")
             ("quiet,q", "avoid output messages")
             ("help,h", "get the help")
         ;
@@ -127,7 +127,7 @@ public:
             print_help_and_exit("Missing passenger configuration file!", 1);
         }
 
-        remove_sample_tissue = (vm.count("remove-sample")>0);
+        preserve_tissue = (vm.count("preserve-tissue")>0);
         quiet = (vm.count("quiet")>0);
     }
 

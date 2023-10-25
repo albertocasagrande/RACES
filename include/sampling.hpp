@@ -2,8 +2,8 @@
  * @file sampling.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samplings
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,17 +51,16 @@ struct Sampling : public SimulationEvent
     using Type = SimulationEvent::Type;
 
     std::list<RectangleSet> sample_set; //!< The set of tissue region to be sampled
-    bool remove_sample;                 //!< The flag establishing whether the sample must be removed
+    bool preserve_tissue;               //!< The flag establishing whether the tissue must remain unchanged
 
     /**
      * @brief A constructor
      * 
      * @param sample_set is a list of rectangular region to sample
-     * @param remove_sample is a Boolean flag to establish whether the sample 
-     *          must be removed from the tissue
+     * @param preserve_tissue is a Boolean flag to establish whether the sample 
+     *          must be remove from the tissue
      */
-    Sampling(const std::list<RectangleSet>& sample_set, const bool& remove_sample=false);
-
+    Sampling(const std::list<RectangleSet>& sample_set, const bool& preserve_tissue=true);
 
     /**
      * @brief Save a timed genomic mutation in an archive
@@ -72,7 +71,7 @@ struct Sampling : public SimulationEvent
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
-        archive & sample_set & remove_sample;
+        archive & sample_set & preserve_tissue;
     }
 
     /**
@@ -86,11 +85,11 @@ struct Sampling : public SimulationEvent
     static Sampling load(ARCHIVE& archive)
     {
         std::list<RectangleSet> sample_set;
-        bool remove_sample;
+        bool preserve_tissue;
 
-        archive & sample_set & remove_sample;
+        archive & sample_set & preserve_tissue;
 
-        return {sample_set, remove_sample};
+        return {sample_set, preserve_tissue};
     }
 
     inline Type type() const {

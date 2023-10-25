@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.3
- * @date 2023-10-18
+ * @version 0.4
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -408,10 +408,10 @@ get_timed_sampling(const nlohmann::json& timed_sampling_json)
     }
     const auto time = timed_sampling_json["time"].template get<Time>();
 
-    bool remove_sample{false};
+    bool preserve_tissue{false};
 
-    if (timed_sampling_json.contains("remove sample")) {
-        remove_sample = timed_sampling_json["remove sample"].template get<bool>();
+    if (timed_sampling_json.contains("preserve tissue")) {
+        preserve_tissue = timed_sampling_json["preserve tissue"].template get<bool>();
     }
 
     const auto& sample_regions_json = timed_sampling_json["sample regions"];
@@ -426,7 +426,7 @@ get_timed_sampling(const nlohmann::json& timed_sampling_json)
         sample_regions.push_back(ConfigReader::get_sample_region(sample_region_json));
     }
 
-    SimulationEventWrapper sampling({sample_regions, remove_sample});
+    SimulationEventWrapper sampling({sample_regions, preserve_tissue});
 
     return {time, sampling};
 }

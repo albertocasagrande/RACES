@@ -61,7 +61,8 @@
         {
             "time": 75,
             "type": "sampling",
-            "remove sample": true,
+            "preserve tissue": false,
+            "comment": "The \"preserve tissue\" field is optional",
             "sample regions": [
                 { "lower corner": [450,450], "upper corner": [455,455] },
                 { "lower corner": [540,540], "upper corner": [545,545] }
@@ -70,7 +71,6 @@
         {
             "time": 110,
             "type": "sampling",
-            "remove sample": true,
             "sample regions": [
                 { "lower corner": [450,450], "upper corner": [455,455] },
                 { "lower corner": [540,540], "upper corner": [545,545] }

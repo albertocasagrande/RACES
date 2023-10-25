@@ -2,8 +2,8 @@
  * @file sampling.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements samplings
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,8 +39,8 @@ namespace Drivers
 namespace Simulation
 {
 
-Sampling::Sampling(const std::list<RectangleSet>& sample_set, const bool& remove_sample):
-    sample_set(sample_set), remove_sample(remove_sample)
+Sampling::Sampling(const std::list<RectangleSet>& sample_set, const bool& preserve_tissue):
+    sample_set{sample_set}, preserve_tissue{preserve_tissue}
 {}
 
 }   // Simulation
@@ -54,7 +54,7 @@ bool operator==(const Races::Drivers::Simulation::Sampling& lhs,
                 const Races::Drivers::Simulation::Sampling& rhs)
 {
     if (lhs.sample_set.size() != rhs.sample_set.size()
-        || lhs.remove_sample != rhs.remove_sample) {
+        || lhs.preserve_tissue != rhs.preserve_tissue) {
         return false;
     }
 
