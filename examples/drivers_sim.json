@@ -61,20 +61,40 @@
         {
             "time": 75,
             "type": "sampling",
-            "preserve tissue": false,
-            "comment": "The \"preserve tissue\" field is optional",
-            "sample regions": [
-                { "lower corner": [450,450], "upper corner": [455,455] },
-                { "lower corner": [540,540], "upper corner": [545,545] }
-            ]
+            "sample": {
+                "comment": "The \"preserve sample\" and \"same\" fields are optional",
+                "preserve sample": false,
+                "name": "T1_S0",
+                "lower corner": [450,450], 
+                "upper corner": [455,455] 
+            }
+        },
+        {
+            "time": 75,
+            "type": "sampling",
+            "sample": {
+                "name": "T1_S1",
+                "lower corner": [540,540], 
+                "upper corner": [545,545] 
+            }
         },
         {
             "time": 110,
             "type": "sampling",
-            "sample regions": [
-                { "lower corner": [450,450], "upper corner": [455,455] },
-                { "lower corner": [540,540], "upper corner": [545,545] }
-            ]
+            "sample": {
+                "name": "T2_S0",
+                "lower corner": [450,450], 
+                "upper corner": [455,455] 
+            }
+        },
+        {
+            "time": 110,
+            "type": "sampling",
+            "sample": {
+                "name": "T2_S1",
+                "lower corner": [540,540], 
+                "upper corner": [545,545] 
+            }
         },
         {
             "time": 60,

@@ -2,8 +2,8 @@
  * @file event_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a simulation event wrapper
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -82,14 +82,20 @@ struct SimulationEventWrapper
      * @brief Get the wrapped event
      * 
      * @tparam EVENT_TYPE is the type of the wrapped event
-     * @return EVENT_TYPE& 
+     * @return a reference to the wrapped event
      */
     template<typename EVENT_TYPE>
     EVENT_TYPE& get_event()
     {
         return *(std::static_pointer_cast<EVENT_TYPE>(event));
     }
-    
+
+    /**
+     * @brief Get the wrapped event
+     * 
+     * @tparam EVENT_TYPE is the type of the wrapped event
+     * @return a constant reference to the wrapped event 
+     */
     template<typename EVENT_TYPE>
     const EVENT_TYPE& get_event() const
     {

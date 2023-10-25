@@ -2,8 +2,8 @@
  * @file position_set.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to represent tissue position set
- * @version 0.3
- * @date 2023-10-18
+ * @version 0.4
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -144,6 +144,10 @@ RectangleSet::const_iterator& RectangleSet::const_iterator::operator--()
 
     return *this;
 }
+
+RectangleSet::RectangleSet():
+    RectangleSet({0,0,0})
+{}
 
 RectangleSet::RectangleSet(const Simulation::PositionInTissue& position):
     RectangleSet(position, position)

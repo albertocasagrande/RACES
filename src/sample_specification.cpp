@@ -1,8 +1,8 @@
 /**
- * @file sampling.cpp
+ * @file sample_specification.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements samplings
- * @version 0.3
+ * @brief Implements sample specification
+ * @version 0.1
  * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
@@ -28,7 +28,9 @@
  * SOFTWARE.
  */
 
-#include "sampling.hpp"
+#include <sstream>
+
+#include "sample_specification.hpp"
 
 namespace Races 
 {
@@ -39,16 +41,22 @@ namespace Drivers
 namespace Simulation
 {
 
-Sampling::Sampling(const SampleSpecification& orig):
-    SampleSpecification(orig)
+std::string SampleSpecification::get_default_name() const
+{
+    std::ostringstream oss;
+
+    oss << "S_" << region.lower_corner << "-" << region.upper_corner; 
+
+    return oss.str();
+}
+
+SampleSpecification::SampleSpecification(const RectangleSet& region, const bool& preserve_tissue):
+    name(), region(region), preserve_tissue(preserve_tissue)
 {}
 
-Sampling::Sampling(const RectangleSet& region, const bool& preserve_tissue):
-    SampleSpecification(region, preserve_tissue)
-{}
-
-Sampling::Sampling(const std::string& name, const RectangleSet& region, const bool& preserve_tissue):
-    SampleSpecification(name, region, preserve_tissue)
+SampleSpecification::SampleSpecification(const std::string& name, const RectangleSet& region,
+                                         const bool& preserve_tissue):
+    name(name), region(region), preserve_tissue(preserve_tissue)
 {}
 
 }   // Simulation

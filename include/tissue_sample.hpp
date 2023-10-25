@@ -2,7 +2,7 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.4
+ * @version 0.5
  * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
@@ -63,14 +63,6 @@ class TissueSample
     std::list<Races::Drivers::CellId> cell_ids;   //!< The list of cell identifier
 
     std::string name;   //!< Name of the sample
-
-    /**
-     * @brief Compute a standard name for the sample
-     * 
-     * @return a standard name for the sample
-     */
-    std::string get_standard_name() const;
-
 public:
 
     /**
@@ -126,6 +118,17 @@ public:
     void add_cell_id(const Races::Drivers::CellId& cell_id);
 
     /**
+     * @brief Set the sample name
+     *
+     * @param name is the new sample name
+     * @return a constant reference to the updated sample name
+     */
+    inline const std::string& set_name(const std::string& name)
+    {
+        return (this->name = name);
+    }
+
+    /**
      * @brief Get the sample name
      *
      * @return a constant reference to the sample name
@@ -134,6 +137,13 @@ public:
     {
         return name;
     }
+
+    /**
+     * @brief Compute a default name for the sample
+     * 
+     * @return a standard name for the sample
+     */
+    std::string get_default_name() const;
 
     /**
      * @brief Get the sample id

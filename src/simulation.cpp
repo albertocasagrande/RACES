@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.23
+ * @version 0.24
  * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
@@ -199,25 +199,31 @@ void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEve
 {
     const auto& sampling = timed_sampling.get_event<Sampling>();
     
-    // sample tissue
-    for (const auto& region : sampling.sample_set) {
-        TissueSample sample = sample_tissue(region, sampling.preserve_tissue);
+    const Time previous_time = time;
 
-        if (storage_enabled) {
-            logger.save_sample(sample);
-        }
+    time = timed_sampling.time;
+
+    // sample tissue
+    TissueSample sample = sample_tissue(sampling.get_region(), sampling.is_preserving_tissue());
+
+    if (sampling.get_name()=="") {
+        sample.set_name(sample.get_default_name());
+    } else {
+        sample.set_name(sampling.get_name());
+    }
+
+    if (storage_enabled) {
+        logger.save_sample(sample);
     }
 
     // update candidate event to avoid removed regions
     candidate_event = select_next_cell_event();
 
-    if (candidate_event.delay+time < timed_sampling.time) {
+    if (candidate_event.delay+previous_time < time) {
         candidate_event.delay = 0;
     } else {
-        candidate_event.delay -= (time - timed_sampling.time);
+        candidate_event.delay -= (time - previous_time);
     }
-
-    time = timed_sampling.time;
 }
 
 void Simulation::handle_timed_event_queue(CellEvent& candidate_event)

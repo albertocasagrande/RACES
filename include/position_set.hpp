@@ -2,8 +2,8 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.4
- * @date 2023-10-23
+ * @version 0.5
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -197,6 +197,11 @@ struct RectangleSet : public BasicPositionSet
 
         friend struct RectangleSet;
     };
+
+    /**
+     * @brief The empty constructor
+     */
+    RectangleSet();
 
     /**
      * @brief A punctual hyper-rectangle set constructor

@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.20
- * @date 2023-10-24
+ * @version 0.21
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -139,15 +139,23 @@ class PassengersSimulator : public BasicExecutable
 
         std::list<Races::Drivers::Simulation::TissueSample> samples;
 
-        if (simulation_cfg.contains("sample region")) {
-            const auto& sample_regions_json = simulation_cfg["sample region"];
+        if (simulation_cfg.contains("sample regions")) {
+            const auto& sample_regions_json = simulation_cfg["sample regions"];
             if (!sample_regions_json.is_array()) {
-                throw std::domain_error("The \"sample region\" field must be an array.");
+                throw std::domain_error("The \"sample regions\" field must be an array.");
             }
 
             for (const auto& sample_region_json: sample_regions_json) {
-                auto sample_region = Races::ConfigReader::get_sample_region(sample_region_json);
-                samples.push_back(simulation.sample_tissue(sample_region));
+                auto sample_specification = Races::ConfigReader::get_sample_specification(sample_region_json);
+                auto sample = simulation.sample_tissue(sample_specification.get_region());
+
+                if (sample_specification.get_name()=="") {
+                    sample.set_name(sample_specification.get_default_name());
+                } else {
+                    sample.set_name(sample_specification.get_name());
+                }
+
+                samples.push_back(sample);
             }
 
             return samples;

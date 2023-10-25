@@ -2,7 +2,7 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.4
+ * @version 0.5
  * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
@@ -238,15 +238,43 @@ ConfigReader::get_default_mutational_coefficients(const nlohmann::json& mutation
     return get_mutational_coefficients(mutational_coeff_json["default"]);
 }
 
-Drivers::RectangleSet
-ConfigReader::get_sample_region(const nlohmann::json& sampler_region_json)
+Drivers::Simulation::SampleSpecification
+ConfigReader::get_sample_specification(const nlohmann::json& sample_specification_json,
+                                       const std::string& field_name)
 {
-    if (!sampler_region_json.is_object()) {
-        throw std::runtime_error("The \"sample region\" field must be objects");
+    if (!sample_specification_json.is_object()) {
+        throw std::runtime_error("The \""+field_name+"\" field must be objects");
     }
 
-    auto lower_vector = get_corner(sampler_region_json, "lower corner");
-    auto upper_vector = get_corner(sampler_region_json, "upper corner");
+    bool preserve_tissue=false;
+    if (sample_specification_json.contains("preserve tissue")) {
+        preserve_tissue = sample_specification_json["preserve tissue"].template get<bool>();
+    }
+
+    auto region = ConfigReader::get_sample_region(sample_specification_json, field_name);
+
+    if (sample_specification_json.contains("name")) {
+        auto name = sample_specification_json["name"].template get<std::string>();
+
+        return Drivers::Simulation::SampleSpecification(name, region, preserve_tissue);
+    }
+
+    return Drivers::Simulation::SampleSpecification(region, preserve_tissue);
+}
+
+Drivers::RectangleSet
+ConfigReader::get_sample_region(const nlohmann::json& sample_region_json,
+                                const std::string& field_name)
+{
+    if (!sample_region_json.is_object()) {
+        throw std::runtime_error("The \""+field_name+"\" field must be objects");
+    }
+
+    ConfigReader::expecting("lower corner", sample_region_json, field_name.c_str());
+    ConfigReader::expecting("upper corner", sample_region_json, field_name.c_str());
+
+    auto lower_vector = get_corner(sample_region_json, "lower corner");
+    auto upper_vector = get_corner(sample_region_json, "upper corner");
 
     if (lower_vector.size() != upper_vector.size()) {
         throw std::runtime_error("The \"lower corner\" and \"upper corner\" arrays must "
@@ -401,34 +429,16 @@ get_timed_sampling(const nlohmann::json& timed_sampling_json)
 
     const std::string descr("Every timed sampling description");
 
-    std::vector<std::string> fields{"time", "sample regions"};
+    std::vector<std::string> fields{"time", "sample"};
 
     for (const auto& field: fields) { 
         ConfigReader::expecting(field, timed_sampling_json, descr);
     }
     const auto time = timed_sampling_json["time"].template get<Time>();
 
-    bool preserve_tissue{false};
+    auto sample_specification = ConfigReader::get_sample_specification(timed_sampling_json["sample"]);
 
-    if (timed_sampling_json.contains("preserve tissue")) {
-        preserve_tissue = timed_sampling_json["preserve tissue"].template get<bool>();
-    }
-
-    const auto& sample_regions_json = timed_sampling_json["sample regions"];
-
-    if (!sample_regions_json.is_array()) {
-        throw std::runtime_error("The \"sample regions\" field in every time sampling "
-                                 "description must be an array");
-    }
-
-    std::list<Drivers::RectangleSet> sample_regions;
-    for (const auto& sample_region_json : sample_regions_json) {
-        sample_regions.push_back(ConfigReader::get_sample_region(sample_region_json));
-    }
-
-    SimulationEventWrapper sampling({sample_regions, preserve_tissue});
-
-    return {time, sampling};
+    return {time, SimulationEventWrapper(sample_specification)};
 }
 
 Races::Drivers::Simulation::TimedEvent 

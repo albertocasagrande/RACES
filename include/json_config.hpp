@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.3
- * @date 2023-10-18
+ * @version 0.4
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -196,13 +196,26 @@ public:
     }
 
     /**
-     * @brief Get the sample set
+     * @brief Get a sample region
      * 
      * @param sample_region_json is the sample region JSON
+     * @param field_name is the name of the field
      * @return the rectangle position set
      */
     static Drivers::RectangleSet 
-    get_sample_region(const nlohmann::json& sample_region_json);
+    get_sample_region(const nlohmann::json& sample_region_json,
+                      const std::string& field_name="sample region");
+
+    /**
+     * @brief Get a sample specification
+     * 
+     * @param sample_specification_json is the sample specification JSON
+     * @param field_name is the name of the field
+     * @return a sample specification
+     */
+    static Drivers::Simulation::SampleSpecification
+    get_sample_specification(const nlohmann::json& sample_specification_json,
+                             const std::string& field_name="sample");
 
     /**
      * @brief Collect the driver mutations
