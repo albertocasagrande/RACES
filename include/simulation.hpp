@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.20
- * @date 2023-10-23
+ * @version 0.21
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -694,15 +694,19 @@ public:
     TissueSample sample_tissue(const RectangleSet& rectangle) const;
 
     /**
-     * @brief Sample the simulation tissue and remove the cells from it
+     * @brief Sample the simulation tissue
      * 
-     * This method samples the simulation tissue in a destructive way and 
-     * removes the cells from the tissue.
+     * This method samples the simulation tissue. The sampling 
+     * can either preserve the tissue or remove the sampled cells 
+     * having driver mutations according to the value of a 
+     * Boolean parameter (`preserve_tissue`).
      * 
      * @param rectangle is the rectangle to sample
+     * @param preserve_tissue is a Boolean flag to enable/disable 
+     *          sample removal from simulation tissue
      * @return the sample of the tissue in `rectangle`
      */
-    TissueSample sample_and_remove_tissue(const RectangleSet& rectangle);
+    TissueSample sample_tissue(const RectangleSet& rectangle, const bool& preserve_tissue=false);
 
     /**
      * @brief Get the simulation logger

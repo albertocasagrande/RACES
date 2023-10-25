@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.21
- * @date 2023-10-23
+ * @version 0.22
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -201,12 +201,7 @@ void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEve
     
     // sample tissue
     for (const auto& region : sampling.sample_set) {
-        TissueSample sample;
-        if (sampling.remove_sample) {
-            sample = sample_and_remove_tissue(region);
-        } else {
-            sample = sample_tissue(region);
-        }
+        TissueSample sample = sample_tissue(region, !sampling.remove_sample);
 
         if (storage_enabled) {
             logger.save_sample(sample);
@@ -257,7 +252,7 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
                 break;
             case TimedEvent::Type::SAMPLING:
                 {
-                     handle_timed_sampling(timed_event, candidate_event);
+                    handle_timed_sampling(timed_event, candidate_event);
                 }
                 break;
             default:
@@ -658,7 +653,7 @@ Simulation::sample_tissue(const RectangleSet& rectangle) const
 }
 
 TissueSample
-Simulation::sample_and_remove_tissue(const RectangleSet& rectangle)
+Simulation::sample_tissue(const RectangleSet& rectangle, const bool& preserve_tissue)
 {
     TissueSample sample(time, rectangle);
 
@@ -669,8 +664,10 @@ Simulation::sample_and_remove_tissue(const RectangleSet& rectangle)
                 auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
 
                 sample.add_cell_id(cell_in_tissue.get_id());
-                ++(statistics[cell_in_tissue.get_epigenetic_id()].lost_cells);
-                cell.erase();
+                if (!preserve_tissue) {
+                    ++(statistics[cell_in_tissue.get_epigenetic_id()].lost_cells);
+                    cell.erase();
+                }
             }
         }
     }
