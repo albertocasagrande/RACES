@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.5
+ * @version 0.6
  * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
@@ -233,7 +233,7 @@ void Statistics::save_coverage_images(const std::filesystem::path& filename, con
 
             area(d_coverage);
 
-            auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
+            const auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
             title("Sample \""+latex_name+"\"");
 
             xticks({1, new_size/2, new_size});
@@ -337,7 +337,8 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
             hist(VAF,num_of_bins);
 
-            title("Sample \""+sample_name+"\"");
+            const auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
+            title("Sample \""+latex_name+"\"");
 
             ylabel("Num. of SNVs");
         }
