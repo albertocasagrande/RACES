@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.3
- * @date 2023-10-24
+ * @version 0.4
+ * @date 2023-10-25
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -207,7 +207,8 @@ public:
         archive & time
                 & region
                 & id
-                & cell_ids;
+                & cell_ids
+                & name;
     }
 
     /**
@@ -234,7 +235,8 @@ public:
             TissueSample::counter = tissue_sample.id+1;
         }
 
-        archive & tissue_sample.cell_ids;
+        archive & tissue_sample.cell_ids
+                & tissue_sample.name;
 
         return tissue_sample;
     }
