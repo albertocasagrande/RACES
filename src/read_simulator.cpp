@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.6
- * @date 2023-10-25
+ * @version 0.7
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -292,6 +292,30 @@ std::map<SNV, std::pair<double, size_t>> get_total_occurrences(const Statistics&
     return total_occurrences;
 }
 
+std::vector<double> get_VAF_data(const Statistics::SampleStatistics& sample_statistics, 
+                                 const ChromosomeId& chromosome_id, const double& threshold=0.0)
+{
+    std::vector<double> VAF;
+
+    const auto found = sample_statistics.coverage.find(chromosome_id);
+    if (found == sample_statistics.coverage.end()) {
+        return VAF;
+    }
+
+    const auto& coverage = found->second;
+    for (const auto& [snv, occurrences]: sample_statistics.SNV_occurrences) {
+        if (snv.chr_id == chromosome_id) {
+            auto value = static_cast<double>(occurrences)/coverage[snv.position];
+
+            if (value > threshold) {
+                VAF.push_back(value);
+            }
+        }
+    }
+
+    return  VAF;
+}
+
 void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const ChromosomeId& chromosome_id) const
 {
     using namespace matplot;
@@ -304,15 +328,7 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
     
     if (num_of_plots==1) {
         const auto& statistics = (sample_statistics.begin()->second);
-        const auto& coverage = statistics.coverage.find(chromosome_id)->second;
-
-        std::vector<double> VAF;
-
-        for (const auto& [snv, occurrences]: statistics.SNV_occurrences) {
-            if (snv.chr_id == chromosome_id) {
-                VAF.push_back(static_cast<double>(occurrences)/coverage[snv.position]);
-            }
-        }
+        std::vector<double> VAF = get_VAF_data(statistics, chromosome_id, 0.15);
 
         hist(VAF,num_of_bins);
 
@@ -325,15 +341,7 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
         for (const auto& [sample_name, statistics]: sample_statistics) {
             nexttile();
 
-            const auto& coverage = statistics.coverage.find(chromosome_id)->second;
-
-            std::vector<double> VAF;
-
-            for (const auto& [snv, occurrences]: statistics.SNV_occurrences) {
-                if (snv.chr_id == chromosome_id) {
-                    VAF.push_back(static_cast<double>(occurrences)/coverage[snv.position]);
-                }
-            }
+            std::vector<double> VAF = get_VAF_data(statistics, chromosome_id, 0.15);
 
             hist(VAF,num_of_bins);
 
@@ -345,10 +353,9 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
         nexttile();
 
-        std::vector<double> VAF;
-        for (const auto& [snv, data]: total_occurrences) {
-            VAF.push_back(data.first/data.second);
-        }
+        Statistics::SampleStatistics total = get_total();
+
+        std::vector<double> VAF = get_VAF_data(total, chromosome_id, 0.15);
 
         hist(VAF,num_of_bins);
         title("Overall");
