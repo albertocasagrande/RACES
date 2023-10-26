@@ -177,10 +177,12 @@ set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 add_library(libRACES SHARED $<TARGET_OBJECTS:objlib>)
 target_link_libraries(libRACES ${RACES_LIBRARIES})
 set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+set_property(TARGET libRACES PROPERTY PUBLIC_HEADER ${RACES_HEADER})
 
 add_library(libRACES_static STATIC $<TARGET_OBJECTS:objlib>)
 target_link_libraries(libRACES_static ${RACES_LIBRARIES})
 set_target_properties(libRACES_static PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+set_property(TARGET libRACES_static PROPERTY PUBLIC_HEADER ${RACES_HEADER})
 
 install(TARGETS libRACES libRACES_static FILE_SET HEADERS)
 
@@ -203,6 +205,9 @@ set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
 
 
 set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
+
+if(NOT ONLY_LIBRARIES)
+message("Building executable, Python wrapper, and tests")
 
 add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
 target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
@@ -233,3 +238,6 @@ add_subdirectory(python)
 enable_testing()
 
 add_subdirectory(tests)
+else()
+message("Building exclusively RACES libraries")
+endif()
