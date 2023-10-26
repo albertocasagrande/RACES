@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.19
- * @date 2023-10-13
+ * @version 0.20
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -239,9 +239,10 @@ std::vector<EpigeneticGenotype> Tissue::get_genotypes() const
 
 const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id) const
 {
-    const auto pos_it = pos_map.find(genotype_id);
-    if (pos_it == pos_map.end()) {
-        throw std::out_of_range("the species has not been included in the tissue");
+    const auto pos_it = id_pos.find(genotype_id);
+    if (pos_it == id_pos.end()) {
+        throw std::out_of_range("Genotype identifier\""+
+                                std::to_string(static_cast<int>(genotype_id))+"\" is unknown");
     }
 
     return species[pos_it->second];
@@ -249,12 +250,47 @@ const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id) cons
 
 Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id)
 {
-    const auto pos_it = pos_map.find(genotype_id);
-    if (pos_it == pos_map.end()) {
-        throw std::out_of_range("the species has not been included in the tissue");
+    const auto pos_it = id_pos.find(genotype_id);
+    if (pos_it == id_pos.end()) {
+        throw std::out_of_range("Genotype identifier\""+
+                                std::to_string(static_cast<int>(genotype_id))+"\" is unknown");
     }
 
     return species[pos_it->second];
+}
+
+
+const Species& Tissue::get_species(const std::string& genotype_name) const
+{
+    const auto pos_it = name_pos.find(genotype_name);
+    if (pos_it == name_pos.end()) {
+        throw std::out_of_range("Genotype \""+genotype_name+"\" is unknown");
+    }
+
+    return species[pos_it->second];
+}
+
+Species& Tissue::get_species(const std::string& genotype_name)
+{
+    const auto pos_it = name_pos.find(genotype_name);
+    if (pos_it == name_pos.end()) {
+        throw std::out_of_range("Genotype \""+genotype_name+"\" is unknown");
+    }
+
+    return species[pos_it->second];
+}
+
+Tissue& Tissue::add_cell(const std::string& genotype_name, const PositionInTissue position)
+{
+    auto found = name_pos.find(genotype_name);
+
+    if (found == name_pos.end()) {
+        throw std::out_of_range("Genotype \""+genotype_name+"\" is unknown");
+    }
+
+    add_cell(species[found->second].get_id(), position);
+
+    return *this;
 }
 
 Tissue& Tissue::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
@@ -285,8 +321,15 @@ Tissue& Tissue::add_species(const Genotype& genotype)
 
     // check whether any of the epigenetic genotypes is already in the tissue
     for (const auto& e_genotype: genotype.epigenetic_genotypes()) {
-        if (pos_map.count(e_genotype.get_id())>0) {
-            throw std::runtime_error("Epigenetic genotype already in the tissue");
+        if (id_pos.count(e_genotype.get_id())>0) {
+            throw std::runtime_error("Epigenetic genotype id "
+                                     + std::to_string(static_cast<int>(e_genotype.get_id())) 
+                                     + " already in the tissue");
+        }
+        if (name_pos.count(e_genotype.get_name())>0) {
+            throw std::runtime_error("Epigenetic genotype \""
+                                     + e_genotype.get_name() 
+                                     + "\" already in the tissue");
         }
     }
 
@@ -296,7 +339,8 @@ Tissue& Tissue::add_species(const Genotype& genotype)
         // place the new species at the end of the species vector
         pos.push_back(species.size());
 
-        pos_map[e_genotype.get_id()] = species.size();
+        id_pos[e_genotype.get_id()] = species.size();
+        name_pos[e_genotype.get_name()] = species.size();
         species.push_back(Species(e_genotype));
     }
 

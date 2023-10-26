@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.22
- * @date 2023-10-13
+ * @version 0.23
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,10 +65,11 @@ class Tissue {
 
     std::string name;                               //!< The tissue name
     std::vector<Species> species;                   //!< The species in the tissue
-    std::map<EpigeneticGenotypeId, size_t> pos_map; //!< The identifier to position map
-    GenotypePosition genotope_pos;          //!< The positions of the species associated to the same genomic genotype 
+    std::map<EpigeneticGenotypeId, size_t> id_pos;  //!< The identifier to position map
+    std::map<std::string, size_t> name_pos;         //!< The name to position map
+    GenotypePosition genotope_pos;     //!< The positions of the species associated to the same genomic genotype 
     
-    uint8_t dimensions;                             //!< The number of space dimension for the tissue
+    uint8_t dimensions;   //!< The number of space dimension for the tissue
 
     std::vector<std::vector<std::vector<CellInTissue *>>> space;     //!< Space in the tissue
 
@@ -592,6 +593,22 @@ public:
     Species& get_species(const EpigeneticGenotypeId& genotype_id);
 
     /**
+     * @brief Get a tissue species by driver name
+     * 
+     * @param genotype_name is the driver genotype name
+     * @return a constant reference to the tissue species
+     */
+    const Species& get_species(const std::string& genotype_name) const;
+
+    /**
+     * @brief Get a tissue species by driver name
+     * 
+     * @param genotype_name is the driver genotype name
+     * @return a non-constant reference to the tissue species
+     */
+    Species& get_species(const std::string& genotype_name);
+
+    /**
      * @brief Add a new species to the tissue
      * 
      * @param genotype is the driver genotype of the new species
@@ -607,6 +624,15 @@ public:
      * @return a reference to the updated object
      */
     Tissue& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position);
+
+    /**
+     * @brief Add driver genotype cell
+     * 
+     * @param genotype_name is the driver genotype name of the new cell
+     * @param position is the initial position in the tissue
+     * @return a reference to the updated object
+     */
+    Tissue& add_cell(const std::string& genotype_name, const PositionInTissue position);
 
     /**
      * @brief Test whether a position is valid in a tissue
@@ -771,7 +797,10 @@ public:
 
         size_t i=0;
         for (auto& species : tissue.species) {
-            tissue.pos_map[species.get_id()] = i++;
+            tissue.id_pos[species.get_id()] = i;
+            tissue.name_pos[species.get_name()] = i;
+            ++i;
+
             for (auto& cell : species) {
                 tissue.cell_pointer(cell) = const_cast<CellInTissue*>(&cell);
             }
