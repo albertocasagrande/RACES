@@ -2,8 +2,8 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a progress bar
- * @version 0.10
- * @date 2023-10-02
+ * @version 0.11
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,7 +34,9 @@
 #include <chrono>
 #include <string>
 
-#ifdef WITH_INDICATORS
+#include "variables.hpp"
+
+#if WITH_INDICATORS
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 
@@ -67,7 +69,7 @@ class ProgressBar
 
     bool updated;             //!< the last percentage has been shown
 
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
     indicators::ProgressBar* indicator;  //!< the progress bar implementation
 #endif
 

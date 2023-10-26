@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.7
+ * @version 0.8
  * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
@@ -167,7 +167,7 @@ void Statistics::save_VAF_csv(const std::filesystem::path& filename) const
 }
 
 
-#ifdef WITH_MATPLOT
+#if WITH_MATPLOT
 
 std::vector<double> down_sample_coverage(const std::vector<uint16_t>& coverage, const size_t& new_size=300)
 {

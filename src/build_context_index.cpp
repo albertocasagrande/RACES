@@ -2,8 +2,8 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the context index
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -138,7 +138,7 @@ public:
             ("force-overwrite,f", "force overwriting output file")
             ("bytes-per-pos,b", po::value<unsigned int>(&bits_per_abs_position)->default_value(4),
             "bytes per absolute position (2, 4, or 8)")
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
             ("quiet,q", "disable output messages")
 #endif // WITH_INDICATORS
             ("help,h", "get the help");

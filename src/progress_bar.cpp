@@ -2,8 +2,8 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a progress bar
- * @version 0.9
- * @date 2023-10-02
+ * @version 0.10
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@ ProgressBar::ProgressBar():
 
 ProgressBar::ProgressBar(const bool hide):
     last_update(std::chrono::system_clock::now()), percentage(0), message(), updated(false)
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
     , indicator(nullptr)
 #endif // WITH_INDICATORS
 {
@@ -53,7 +53,7 @@ ProgressBar::ProgressBar(const bool hide):
     if (!hide) {
         hide_console_cursor();
 
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
         using namespace indicators;
 
         indicator = new indicators::ProgressBar{
@@ -77,7 +77,7 @@ ProgressBar& ProgressBar::set_message(const std::string& message)
 
     this->message = message;
 
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
     using namespace indicators;
 
     if (indicator!=nullptr && (percentage != 100 || !updated)) {
@@ -133,7 +133,7 @@ ProgressBar& ProgressBar::set_progress(const unsigned int percentage)
 
         updated = true;
 
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
         if (indicator!=nullptr) {
             indicator->set_progress(percentage);
         }
@@ -150,14 +150,14 @@ const unsigned int& ProgressBar::get_progress() const
 
 void ProgressBar::show_console_cursor()
 {
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
     indicators::show_console_cursor(true);
 #endif  // WITH_INDICATORS
 }
 
 void ProgressBar::hide_console_cursor()
 {
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
     indicators::show_console_cursor(false);
 #endif  // WITH_INDICATORS
 }
@@ -166,7 +166,7 @@ ProgressBar::~ProgressBar()
 {
     set_message(this->message);
 
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
     if (indicator != nullptr) {
         if (percentage != 100) {
             indicator->mark_as_completed();

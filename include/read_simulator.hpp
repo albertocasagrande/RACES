@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.4
- * @date 2023-10-24
+ * @version 0.5
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,8 +45,9 @@
 #include "fasta_utils.hpp"
 
 #include "progress_bar.hpp"
+#include "variables.hpp"
 
-#ifdef WITH_MATPLOT
+#if WITH_MATPLOT
 #include <matplot/matplot.h>
 #endif // WITH_MATPLOT
 
@@ -145,7 +146,7 @@ public:
      */
     void save_VAF_csv(const std::filesystem::path& filename) const;
 
-#ifdef WITH_MATPLOT
+#if WITH_MATPLOT
     /**
      * @brief Save a image representing the coverage of a chromosome
      * 
@@ -789,7 +790,7 @@ private:
 
         const std::string base_filename = "chr_"+GenomicPosition::chrtos(chr_data.chr_id);
         statistics.save_VAF_csv(output_directory/(base_filename+"_VAF.csv"));
-#ifdef WITH_MATPLOT
+#if WITH_MATPLOT
         progress_bar.update_elapsed_time();
 
         progress_bar.set_message("Saving "+base_filename+" images");

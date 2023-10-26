@@ -2,8 +2,8 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief The main source file for context index sampler
- * @version 0.7
- * @date 2023-10-02
+ * @version 0.8
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -143,7 +143,7 @@ public:
 
         visible_options.add_options()
             ("force-overwrite,f", "force overwriting output file")
-#ifdef WITH_INDICATORS
+#if WITH_INDICATORS
             ("quiet,q", "disable output messages")
 #endif // WITH_INDICATORS
             ("help,h", "get the help");

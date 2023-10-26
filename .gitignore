@@ -20,6 +20,7 @@ RACES.so
 RACES.dll
 libRACES.*
 include/indicators.hpp
+include/variables.hpp
 *.cpython*.pyc
 tests/test_*
 tests/assets/v3.3_SBS3_PROFILE.txt

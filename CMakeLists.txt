@@ -51,7 +51,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
 
-set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
+set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype_id.hpp
@@ -103,49 +104,55 @@ find_package( Boost COMPONENTS program_options REQUIRED )
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
-find_package(SDL2 QUIET)
-find_package(SDL2_image QUIET)
-find_package(SDL2_ttf QUIET)
+set(WITH_MATPLOT FALSE)
 
-set(COMPILE_SDL2_CODE TRUE)
-if(${SDL2_ttf_FOUND})
-    message("SDL2_ttf found")
+if(NOT AVOID_OPTIONAL_LIBS)
+    find_package(SDL2 QUIET)
+    find_package(SDL2_image QUIET)
+    find_package(SDL2_ttf QUIET)
+
+    set(COMPILE_SDL2_CODE TRUE)
+    if(${SDL2_ttf_FOUND})
+        message("SDL2_ttf found")
+    else()
+        message("SDL2_ttf NOT found!")
+        set(COMPILE_SDL2_CODE FALSE)
+    endif()
+
+    if(${SDL2_image_FOUND})
+        message("SDL2_image found")
+    else()
+        message("SDL2_image NOT found!")
+        set(COMPILE_SDL2_CODE FALSE)
+    endif()
+
+    if(${COMPILE_SDL2_CODE})
+        add_compile_definitions(WITH_SDL2)
+
+        include_directories(${SDL2_INCLUDE_DIRS} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+
+        set(RACES_SOURCES ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
+        set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/SDL_plot.hpp)
+
+        set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+    endif()
+
+    find_package(Matplot++ QUIET)
+
+    if(${Matplot++_FOUND})
+        message("Matplot++ found")
+
+        set(WITH_MATPLOT TRUE)
+
+        set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
+    else()
+        message("Matplot++ NOT found")
+    endif()
 else()
-    message("SDL2_ttf NOT found!")
-    set(COMPILE_SDL2_CODE FALSE)
+    message("Avoiding optional libraries")
 endif()
 
-if(${SDL2_image_FOUND})
-    message("SDL2_image found")
-else()
-    message("SDL2_image NOT found!")
-    set(COMPILE_SDL2_CODE FALSE)
-endif()
-
-if(${COMPILE_SDL2_CODE})
-    add_compile_definitions(WITH_SDL2)
-
-    include_directories(${SDL2_INCLUDE_DIRS} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-
-    set(RACES_SOURCES ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
-    set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/SDL_plot.hpp)
-
-    set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-endif()
-
-find_package(Matplot++ QUIET)
-
-if(${Matplot++_FOUND})
-    message("Matplot++ found")
-
-    add_compile_definitions(WITH_MATPLOT)
-    set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
-else()
-    message("Matplot++ NOT found")
-endif()
-
-
-find_package(nlohmann_json 3.2.0 REQUIRED)
+set(WITH_INDICATORS FALSE)
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
     message("Downloading \"p-ranav/indicators\" library...")
@@ -155,17 +162,22 @@ if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
         STATUS DOWNLOAD_RESULT)
     list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
     if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
-        add_compile_definitions(WITH_INDICATORS)
+        set(WITH_INDICATORS TRUE)
         message("done")
         message("Using \"p-ranav/indicators\"")
+
+        set(RACES_HEADER ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/include/indicators.hpp)
     else()
+        set(WITH_INDICATORS FALSE)
         message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
         message("Avoiding \"p-ranav/indicators\"")
     endif()
 else()
-    add_compile_definitions(WITH_INDICATORS)
+    set(WITH_INDICATORS TRUE)
     message("Using \"p-ranav/indicators\"")
 endif()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp @ONLY)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -186,58 +198,61 @@ set_property(TARGET libRACES_static PROPERTY PUBLIC_HEADER ${RACES_HEADER})
 
 install(TARGETS libRACES libRACES_static FILE_SET HEADERS)
 
-set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
-                   ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
-
-set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp
-                        ${COMMON_SOURCES})
-
-set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
-                    ${COMMON_SOURCES})
-
-set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/phylo_builder.cpp
-                  ${COMMON_SOURCES})
-
-set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
-                           ${COMMON_SOURCES})
-
-set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
-
-
-set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
 
 if(NOT ONLY_LIBRARIES)
-message("Building executable, Python wrapper, and tests")
+    message("Building executable, Python wrapper, and tests")
 
-add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
-target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(drivers_sim libRACES nlohmann_json::nlohmann_json)
+    find_package(nlohmann_json 3.2.0 REQUIRED)
 
-add_executable(phylo_builder ${PHYLO_SOURCES})
-target_include_directories(phylo_builder PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(phylo_builder libRACES)
+    set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
+                       ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
 
-add_executable(tissue_sampler ${TISSUE_SAMPLER})
-target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(tissue_sampler libRACES)
+    set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp
+                            ${COMMON_SOURCES})
 
-add_executable(build_context_index ${BUILD_INDEX_SOURCES})
-target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(build_context_index libRACES)
+    set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
+                        ${COMMON_SOURCES})
 
-add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
-target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(sample_context_index libRACES)
+    set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/phylo_builder.cpp
+                    ${COMMON_SOURCES})
 
-add_executable(passengers_sim ${PASSENGERS_SIM_SOURCES})
-target_include_directories(passengers_sim PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(passengers_sim libRACES)
+    set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
+                            ${COMMON_SOURCES})
 
-add_subdirectory(python)
+    set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
 
-enable_testing()
 
-add_subdirectory(tests)
+    set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
+
+    add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
+    target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(drivers_sim libRACES nlohmann_json::nlohmann_json)
+
+    add_executable(phylo_builder ${PHYLO_SOURCES})
+    target_include_directories(phylo_builder PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(phylo_builder libRACES)
+
+    add_executable(tissue_sampler ${TISSUE_SAMPLER})
+    target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(tissue_sampler libRACES nlohmann_json::nlohmann_json)
+
+    add_executable(build_context_index ${BUILD_INDEX_SOURCES})
+    target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(build_context_index libRACES)
+
+    add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
+    target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(sample_context_index libRACES)
+
+    add_executable(passengers_sim ${PASSENGERS_SIM_SOURCES})
+    target_include_directories(passengers_sim PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(passengers_sim libRACES nlohmann_json::nlohmann_json)
+
+    add_subdirectory(python)
+
+    enable_testing()
+
+    add_subdirectory(tests)
 else()
-message("Building exclusively RACES libraries")
+    message("Building exclusively RACES libraries")
 endif()

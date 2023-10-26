@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.9
- * @date 2023-10-21
+ * @version 0.10
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -360,7 +360,7 @@ public:
             "the directory in which all the simulation data are saved")
             ("disable-storage,d", "disable result storage")
             ("seed,s", po::value<int>()->default_value(0), "random generator seed")
-    #ifdef WITH_INDICATORS
+    #if WITH_INDICATORS
             ("quiet,q", "disable progress bar")
     #endif // WITH_INDICATORS
     #ifdef WITH_SDL2
