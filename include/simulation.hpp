@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.21
- * @date 2023-10-25
+ * @version 0.22
+ * @date 2023-10-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -100,6 +100,8 @@ class Simulation
     using system_clock = std::chrono::system_clock;
 
     std::vector<Tissue> tissues;     //!< Simulated tissues
+    std::map<std::string, GenotypeId> genotype_name_id; //!< A map associating the genotype name to its id
+
     BinaryLogger logger;             //!< Event logger
 
     std::vector<Direction> valid_directions;   //!< valid simulation tissue directions
@@ -301,6 +303,16 @@ public:
      * @return a reference to the updated simulation
      */
     Simulation& add_driver_mutation(const Genotype& src, const Genotype& dst, const Time time);
+
+    /**
+     * @brief Add a timed driver genomic mutation
+     * 
+     * @param src is the source driver genomic genotype name
+     * @param dst is the destination driver genomic genotype name
+     * @param time is the mutation timing
+     * @return a reference to the updated simulation
+     */
+    Simulation& add_driver_mutation(const std::string& src, const std::string& dst, const Time time);
 
     /**
      * @brief Add a timed event
@@ -552,12 +564,7 @@ public:
      * @param genotype is the driver genotype of the new species
      * @return a reference to the updated object
      */
-    inline Simulation& add_species(const Genotype& genotype)
-    {
-        tissue().add_species(genotype);
-
-        return *this;
-    }
+    Simulation& add_species(const Genotype& genotype);
 
     /**
      * @brief Add a cell to the simulated tissue
@@ -728,6 +735,7 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & tissues
+                & genotype_name_id
                 & logger
                 & secs_between_snapshots
                 & statistics
@@ -753,6 +761,7 @@ public:
         Simulation simulation;
 
         archive & simulation.tissues
+                & simulation.genotype_name_id
                 & simulation.logger
                 & simulation.secs_between_snapshots
                 & simulation.statistics

@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.25
- * @date 2023-10-26
+ * @version 0.26
+ * @date 2023-10-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -568,6 +568,30 @@ Simulation::add_driver_mutation(const Genotype& src, const Genotype& dst, const 
 }
 
 Simulation&
+Simulation::add_driver_mutation(const std::string& src, const std::string& dst, const Time time)
+{
+    // the tissue() call checks whether a tissue has been 
+    // associated to the simulation and, if this is not the 
+    // case, it throws an std::runtime_error 
+    (void)tissue();
+
+    auto found_src = genotype_name_id.find(src);
+    if (found_src == genotype_name_id.end()) {
+        throw std::out_of_range("Unknown clone name \""+src+"\"");
+    }
+    auto found_dst = genotype_name_id.find(dst);
+    if (found_dst == genotype_name_id.end()) {
+        throw std::out_of_range("Unknown clone name \""+dst+"\"");
+    }
+
+    DriverMutation mutation(found_src->second, found_dst->second);
+
+    timed_event_queue.emplace(time, mutation);
+
+    return *this;
+}
+
+Simulation&
 Simulation::add_timed_event(const TimedEvent& timed_event)
 {
     // the tissue() call checks whether a tissue has been 
@@ -616,6 +640,19 @@ void Simulation::reset()
     logger = BinaryLogger();
     
     //death_activation_level = 1;
+}
+
+Simulation& Simulation::add_species(const Genotype& genotype)
+{
+    if (genotype_name_id.count(genotype.get_name())>0) {
+        throw std::out_of_range("Genotype \""+genotype.get_name()+"\" already in the simulation");
+    }
+
+    genotype_name_id[genotype.get_name()] = genotype.get_id();
+
+    tissue().add_species(genotype);
+
+    return *this;
 }
 
 Simulation& Simulation::set_tissue(const std::string& name, const std::vector<AxisSize>& sizes)
