@@ -166,7 +166,7 @@ if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
         message("done")
         message("Using \"p-ranav/indicators\"")
 
-        set(RACES_HEADER ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/include/indicators.hpp)
+        set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/indicators.hpp)
     else()
         set(WITH_INDICATORS FALSE)
         message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
