@@ -104,7 +104,7 @@ find_package( Boost COMPONENTS program_options REQUIRED )
 
 set(RACES_LIBRARIES ${Boost_LIBRARIES})
 
-set(WITH_MATPLOT FALSE)
+set(WITH_MATPLOT false)
 
 if(NOT AVOID_OPTIONAL_LIBS)
     find_package(SDL2 QUIET)
@@ -142,7 +142,7 @@ if(NOT AVOID_OPTIONAL_LIBS)
     if(${Matplot++_FOUND})
         message("Matplot++ found")
 
-        set(WITH_MATPLOT TRUE)
+        set(WITH_MATPLOT true)
 
         set(RACES_LIBRARIES ${RACES_LIBRARIES} Matplot++::matplot)
     else()
@@ -152,7 +152,7 @@ else()
     message("Avoiding optional libraries")
 endif()
 
-set(WITH_INDICATORS FALSE)
+set(WITH_INDICATORS false)
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
     message("Downloading \"p-ranav/indicators\" library...")
@@ -162,18 +162,18 @@ if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
         STATUS DOWNLOAD_RESULT)
     list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
     if(${DOWNLOAD_RESULT_MESSAGE} STREQUAL "\"No error\"")
-        set(WITH_INDICATORS TRUE)
+        set(WITH_INDICATORS true)
         message("done")
         message("Using \"p-ranav/indicators\"")
 
         set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/indicators.hpp)
     else()
-        set(WITH_INDICATORS FALSE)
+        set(WITH_INDICATORS false)
         message("Download error: ${DOWNLOAD_RESULT_MESSAGE}")
         message("Avoiding \"p-ranav/indicators\"")
     endif()
 else()
-    set(WITH_INDICATORS TRUE)
+    set(WITH_INDICATORS true)
     message("Using \"p-ranav/indicators\"")
 endif()
 
