@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.10
- * @date 2023-10-26
+ * @version 0.11
+ * @date 2023-10-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,9 +52,7 @@ Races::UI::ProgressBar *bar;
 
 void termination_handling(int signal_num)
 {
-    if (bar != nullptr) {
-        simulation.make_snapshot(bar);
-    }
+    simulation.make_snapshot(bar);
 
     if (bar != nullptr) {
         bar->set_message("Aborted");
@@ -62,6 +60,7 @@ void termination_handling(int signal_num)
         delete bar;
     }
 
+    Races::UI::ProgressBar::show_console_cursor();
     exit(signal_num);
 }
 
