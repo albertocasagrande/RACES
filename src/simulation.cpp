@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.24
- * @date 2023-10-25
+ * @version 0.25
+ * @date 2023-10-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,9 @@ Simulation::Simulation(int random_seed):
     time(0), death_activation_level(1), duplicate_internal_cells(true), storage_enabled(true)
 {
     random_gen.seed(random_seed);
+
+    // Create a default tissue
+    set_tissue("A tissue", {1000, 1000});
 }
 
 Simulation::Simulation(Simulation&& orig):
