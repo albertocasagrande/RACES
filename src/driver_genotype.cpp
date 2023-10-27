@@ -2,8 +2,8 @@
  * @file driver.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the driver genotype representation
- * @version 0.9
- * @date 2023-10-02
+ * @version 0.10
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -91,7 +91,7 @@ EpigeneticGenotype::EpigeneticGenotype(const Genotype& genotype,
 {
     const size_t epigenetic_index = genotype.epigenetic_genotypes().size();
 
-    name = genotype.get_name() + Genotype::index_to_string(epigenetic_index, num_of_promoters);
+    name = genotype.get_name();
 
     methylation_signature = Genotype::index_to_signature(epigenetic_index, num_of_promoters);
 }
@@ -102,6 +102,11 @@ double EpigeneticGenotype::get_rate(const CellEventType& event) const
         return 0;
     }
     return event_rates.at(event);
+}
+
+std::string EpigeneticGenotype::get_epigenetic_name() const
+{
+    return name + Genotype::signature_to_string(methylation_signature);
 }
 
 Genotype::Genotype(const std::string& name,
@@ -256,7 +261,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRate
 
 std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticGenotype& genotype)
 {
-    out << "{name: \""<< genotype.get_name() << "\", id: " << genotype.get_id() 
+    out << "{name: \""<< genotype.get_epigenetic_name() << "\", id: " << genotype.get_id() 
         << ", event_rates: {";
 
     std::string sep="";

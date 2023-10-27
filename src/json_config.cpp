@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.5
- * @date 2023-10-25
+ * @version 0.6
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -385,7 +385,7 @@ find_species_by_epigenetic_name(const Races::Drivers::Simulation::Simulation& dr
                                 const std::string& epigenetic_name)
 {
     for (const auto& species : drivers_simulation.tissue()) {
-        if (epigenetic_name == species.get_name()) {
+        if (epigenetic_name == species.get_epigenetic_name()) {
             return species;
         }
     }

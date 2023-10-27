@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.13
- * @date 2023-10-21
+ * @version 0.14
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -178,7 +178,7 @@ bool operator==(const Races::Drivers::Simulation::CellInTissue& a, const Races::
 
 bool operator==(const Races::Drivers::EpigeneticGenotype& a, const Races::Drivers::EpigeneticGenotype& b)
 {
-    return (a.get_name()==b.get_name() &&
+    return (a.get_epigenetic_name()==b.get_epigenetic_name() &&
             a.get_id()==b.get_id() &&
             a.get_genomic_id()==b.get_genomic_id() &&
             a.get_rates()==b.get_rates() &&

@@ -2,7 +2,7 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.23
+ * @version 0.24
  * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
@@ -798,7 +798,7 @@ public:
         size_t i=0;
         for (auto& species : tissue.species) {
             tissue.id_pos[species.get_id()] = i;
-            tissue.name_pos[species.get_name()] = i;
+            tissue.name_pos[species.get_epigenetic_name()] = i;
             ++i;
 
             for (auto& cell : species) {

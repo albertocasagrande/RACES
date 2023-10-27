@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,7 +58,7 @@ SpeciesMutationalProperties::add_species(const Drivers::Simulation::Simulation& 
     std::map<std::string, const Drivers::Simulation::Species*> species_map;
 
     for (const auto& species : simulation.tissue()) {
-        species_map[species.get_name()] = &species;
+        species_map[species.get_epigenetic_name()] = &species;
     }
 
     for (const auto& [epigenetic_status, mu_value] : epigenetic_status_mu) {

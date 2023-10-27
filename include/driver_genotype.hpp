@@ -2,8 +2,8 @@
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines driver genotype representation
- * @version 0.13
- * @date 2023-10-02
+ * @version 0.14
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -180,14 +180,21 @@ public:
     }
 
     /**
-     * @brief Get the driver epigenetic genotype name
+     * @brief Get the driver genotype name
      * 
      * @return a constant reference to the driver genotype name
      */
-    inline const std::string& get_name() const
+    inline const std::string& get_genomic_name() const
     {
         return name;
     }
+
+    /**
+     * @brief Get the driver epigenetic genotype name
+     * 
+     * @return the driver epigenetic name
+     */
+    std::string get_epigenetic_name() const;
 
     /**
      * @brief Get the rate of an event 

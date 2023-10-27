@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.20
- * @date 2023-10-26
+ * @version 0.21
+ * @date 2023-10-28
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -326,9 +326,9 @@ Tissue& Tissue::add_species(const Genotype& genotype)
                                      + std::to_string(static_cast<int>(e_genotype.get_id())) 
                                      + " already in the tissue");
         }
-        if (name_pos.count(e_genotype.get_name())>0) {
+        if (name_pos.count(e_genotype.get_epigenetic_name())>0) {
             throw std::runtime_error("Epigenetic genotype \""
-                                     + e_genotype.get_name() 
+                                     + e_genotype.get_epigenetic_name() 
                                      + "\" already in the tissue");
         }
     }
@@ -340,7 +340,7 @@ Tissue& Tissue::add_species(const Genotype& genotype)
         pos.push_back(species.size());
 
         id_pos[e_genotype.get_id()] = species.size();
-        name_pos[e_genotype.get_name()] = species.size();
+        name_pos[e_genotype.get_epigenetic_name()] = species.size();
         species.push_back(Species(e_genotype));
     }
 
