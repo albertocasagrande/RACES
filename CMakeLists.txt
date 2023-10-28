@@ -100,10 +100,6 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp)
 
-find_package( Boost COMPONENTS program_options REQUIRED )
-
-set(RACES_LIBRARIES ${Boost_LIBRARIES})
-
 set(WITH_MATPLOT false)
 
 if(NOT AVOID_OPTIONAL_LIBS)
@@ -181,26 +177,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp.in ${CMAKE_CURR
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_library(objlib OBJECT ${RACES_SOURCES})
-target_link_libraries(objlib ${RACES_LIBRARIES})
-
-set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
-
-add_library(libRACES SHARED $<TARGET_OBJECTS:objlib>)
-target_link_libraries(libRACES ${RACES_LIBRARIES})
-set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
-set_property(TARGET libRACES PROPERTY PUBLIC_HEADER ${RACES_HEADER})
-
-add_library(libRACES_static STATIC $<TARGET_OBJECTS:objlib>)
-target_link_libraries(libRACES_static ${RACES_LIBRARIES})
-set_target_properties(libRACES_static PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
-set_property(TARGET libRACES_static PROPERTY PUBLIC_HEADER ${RACES_HEADER})
-
-install(TARGETS libRACES libRACES_static FILE_SET HEADERS)
-
-
 if(NOT ONLY_LIBRARIES)
     message("Building executable, Python wrapper, and tests")
+
+    find_package( Boost COMPONENTS program_options REQUIRED )
+
+    set(RACES_LIBRARIES ${RACES_LIBRARIES} ${Boost_LIBRARIES})
 
     find_package(nlohmann_json 3.2.0 REQUIRED)
 
@@ -256,3 +238,20 @@ if(NOT ONLY_LIBRARIES)
 else()
     message("Building exclusively RACES libraries")
 endif()
+
+add_library(objlib OBJECT ${RACES_SOURCES})
+target_link_libraries(objlib ${RACES_LIBRARIES})
+
+set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+add_library(libRACES SHARED $<TARGET_OBJECTS:objlib>)
+target_link_libraries(libRACES ${RACES_LIBRARIES})
+set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+set_property(TARGET libRACES PROPERTY PUBLIC_HEADER ${RACES_HEADER})
+
+add_library(libRACES_static STATIC $<TARGET_OBJECTS:objlib>)
+target_link_libraries(libRACES_static ${RACES_LIBRARIES})
+set_target_properties(libRACES_static PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+set_property(TARGET libRACES_static PROPERTY PUBLIC_HEADER ${RACES_HEADER})
+
+install(TARGETS libRACES libRACES_static FILE_SET HEADERS)
