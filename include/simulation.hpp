@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.23
+ * @version 0.24
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -403,7 +403,7 @@ public:
     template<class SIMULATION_TEST, typename PLOT_WINDOW, typename INDICATOR_TYPE,
              std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST> &&
                               std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW>, bool> = true>
-    Simulation& run(const SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>* plotter,
+    Simulation& run(SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>* plotter,
                     INDICATOR_TYPE* indicator)
     {
         // the tissue() call checks whether a tissue has been 
@@ -468,7 +468,7 @@ public:
     template<class SIMULATION_TEST, typename PLOT_WINDOW, typename INDICATOR_TYPE,
              std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST> &&
                               std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW>, bool> = true>
-    inline Simulation& run(const SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>& plotter,
+    inline Simulation& run(SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>& plotter,
                            INDICATOR_TYPE& indicator)
     {
         return run(done, &plotter, &indicator);
@@ -488,7 +488,7 @@ public:
      */
     template<class SIMULATION_TEST, typename INDICATOR_TYPE,
              std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST>, bool> = true>
-    inline Simulation& run(const SIMULATION_TEST& done, INDICATOR_TYPE& indicator)
+    inline Simulation& run(SIMULATION_TEST& done, INDICATOR_TYPE& indicator)
     {
         return run<SIMULATION_TEST, UI::Plot2DWindow, INDICATOR_TYPE>(done, nullptr, &indicator);
     }
@@ -509,7 +509,7 @@ public:
     template<class SIMULATION_TEST, typename PLOT_WINDOW,
              std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST> &&
                               std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW>, bool> = true>
-    inline Simulation& run(const SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>& plotter)
+    inline Simulation& run(SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>& plotter)
     {
         return run<SIMULATION_TEST, PLOT_WINDOW, UI::ProgressBar>(done, &plotter, nullptr);
     }
@@ -527,7 +527,7 @@ public:
      */
     template<class SIMULATION_TEST,
              std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST>, bool> = true>
-    inline Simulation& run(const SIMULATION_TEST& done)
+    inline Simulation& run(SIMULATION_TEST& done)
     {
         return run<SIMULATION_TEST, UI::Plot2DWindow, UI::ProgressBar>(done, nullptr, nullptr);
     }
