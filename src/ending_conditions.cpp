@@ -2,7 +2,7 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.2
+ * @version 0.3
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -101,24 +101,14 @@ EventCountTest::EventCountTest(const EpigeneticGenotypeId& src_id, const Epigene
     threshold(threshold)
 {}
 
-
 //@private
 size_t get_epigenetic_events_to(const SpeciesStatistics& s_stats, const EpigeneticGenotypeId& dst_id)
 {
     if (dst_id != std::numeric_limits<EpigeneticGenotypeId>::max()) {
-        if (s_stats.epigenetic_events.count(dst_id)==0) {
-            return 0;
-        }
-        return s_stats.epigenetic_events.at(dst_id);
+        return s_stats.num_of_epigenetic_events(dst_id);
     }
 
-    size_t num_of_events{0};
-
-    for (const auto& [id, num_of_dst_events]: s_stats.epigenetic_events) {
-        num_of_events += num_of_dst_events;
-    }
-
-    return num_of_events;
+    return s_stats.num_of_epigenetic_events();
 }
 
 size_t EventCountTest::get_event_number(const Simulation& simulation) const

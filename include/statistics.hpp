@@ -2,7 +2,7 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.10
+ * @version 0.11
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -75,6 +75,23 @@ struct SpeciesStatistics
      * @param num_of_cells is the number of cells in the species
      */
     explicit SpeciesStatistics(const size_t& num_of_cells);
+
+    /**
+     * @brief Compute the number of epigenetic event from the species
+     * 
+     * @return the number of epigenetic event from the species 
+     */
+    size_t num_of_epigenetic_events() const;
+
+    /**
+     * @brief Compute the number of epigenetic event leading to a species
+     * 
+     * @param dst_id is the identifier of the species reached by the epigenetic
+     *      events that must be counted
+     * @return the number of epigenetic event leading to the species having
+     *      `dst_id` as identifier 
+     */
+    size_t num_of_epigenetic_events(const EpigeneticGenotypeId& dst_id) const;
 
     /**
      * @brief Save species statistics in an archive

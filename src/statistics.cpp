@@ -2,7 +2,7 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.9
+ * @version 0.10
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -52,6 +52,25 @@ SpeciesStatistics::SpeciesStatistics(const size_t& num_of_cells):
     curr_cells(num_of_cells), killed_cells(0), lost_cells(0), 
     num_duplications(0)
 {}
+
+size_t SpeciesStatistics::num_of_epigenetic_events() const
+{
+    size_t num_of_events{0};
+
+    for (const auto& [id, num_of_dst_events]: epigenetic_events) {
+        num_of_events += num_of_dst_events;
+    }
+
+    return num_of_events;
+}
+
+size_t SpeciesStatistics::num_of_epigenetic_events(const EpigeneticGenotypeId& dst_id) const
+{
+    if (epigenetic_events.count(dst_id)==0) {
+        return 0;
+    }
+    return epigenetic_events.at(dst_id);
+}
 
 TissueStatistics::TissueStatistics():
     s_statistics(), sim_times(), max_stored_times(100), total_events(0)
