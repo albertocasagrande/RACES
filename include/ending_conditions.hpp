@@ -51,7 +51,7 @@ namespace Simulation
  */
 struct TimeTest : public Simulation::BasicTest
 {
-    Time threshold;
+    const Time threshold;
 
     /**
      * @brief A constructor
@@ -93,8 +93,8 @@ struct TimeTest : public Simulation::BasicTest
  */
 struct SpeciesCountTest : public Simulation::BasicTest
 {
-    EpigeneticGenotypeId species_id;
-    size_t threshold;
+    const EpigeneticGenotypeId species_id;
+    const size_t threshold;
 
     /**
      * @brief A constructor
@@ -132,8 +132,8 @@ struct SpeciesCountTest : public Simulation::BasicTest
  */
 struct GenotypeCountTest : public Simulation::BasicTest
 {
-    GenotypeId genotype_id;
-    size_t threshold;
+    const GenotypeId genotype_id;
+    const size_t threshold;
 
     /**
      * @brief A constructor
