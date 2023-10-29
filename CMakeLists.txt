@@ -173,6 +173,8 @@ if(NOT EXISTS ${CMAKE_SOURCE_DIR}/include/indicators.hpp)
 else()
     set(WITH_INDICATORS true)
     message("Using \"p-ranav/indicators\"")
+
+    set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/indicators.hpp)
 endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp @ONLY)
