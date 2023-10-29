@@ -2,7 +2,7 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.11
+ * @version 0.12
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -226,7 +226,10 @@ public:
      * @return `true` if and only if the object contains statistics for the 
      *          specified species
      */
-    bool contains_data_for(const Species& species) const; 
+    inline bool contains_data_for(const Species& species) const
+    {
+        return s_statistics.count(species.get_id())==1;
+    }
 
     /**
      * @brief Record a death
