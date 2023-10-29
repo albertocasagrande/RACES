@@ -58,7 +58,7 @@ struct TimeTest : public Simulation::BasicTest
      * 
      * @param threshold is the threshold for simulation time test
      */
-    TimeTest(const Time& threshold);
+    explicit TimeTest(const Time& threshold);
 
     /**
      * @brief Test whether the simulated time is not below the test threshold

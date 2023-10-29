@@ -59,7 +59,7 @@ struct PythonEndTest : public Races::Drivers::Simulation::TimeTest
     /**
      * @brief The empty constructor
      */
-    PythonEndTest(const Races::Time& time):
+    explicit PythonEndTest(const Races::Time& time):
         Races::Drivers::Simulation::TimeTest(time)
     {}
 
