@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.9
- * @date 2023-10-12
+ * @version 0.10
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -61,6 +61,8 @@ struct SpeciesStatistics
     size_t curr_cells;      //!< the number of cells currently in the species
     size_t killed_cells;    //!< the number of species cells that were killed
     size_t lost_cells;      //!< the number of cells that have overcome the tissue border
+    size_t num_duplications;    //!< the number of duplications in the species
+    std::map<EpigeneticGenotypeId, size_t> epigenetic_events; //!< the number of epigenetic event per species destination
 
     /**
      * @brief The empty constructor
@@ -88,7 +90,9 @@ struct SpeciesStatistics
                 & total_cells
                 & curr_cells
                 & killed_cells
-                & lost_cells;
+                & lost_cells
+                & num_duplications
+                & epigenetic_events;
     }
     
     /**
@@ -108,7 +112,9 @@ struct SpeciesStatistics
                 & stats.total_cells
                 & stats.curr_cells
                 & stats.killed_cells
-                & stats.lost_cells;
+                & stats.lost_cells
+                & stats.num_duplications
+                & stats.epigenetic_events;
 
         return stats;
     }
@@ -235,20 +241,23 @@ public:
     /**
      * @brief Record a driver mutation
      * 
-     * @param initial_id is the original driver genotype id of the mutating cell 
-     * @param final_id is the driver genotype id of the mutated cell
+     * @param src_species is the source species identifier
+     * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
-    void record_mutation(const EpigeneticGenotypeId& initial_id, const EpigeneticGenotypeId& final_id, const Time &time);
+    void record_mutation(const EpigeneticGenotypeId& src_species, const EpigeneticGenotypeId& dst_species, 
+                         const Time &time);
 
     /**
      * @brief Record a cell duplication and an epigenetic event
      * 
-     * @param genotype_id is the driver genotype id of the duplicating cell 
-     * @param epigenetic_genotype is the driver genotype id of the mutated cell
+     * @param src_species is the source species identifier
+     * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
-    void record_duplication_epigenetic_event(const EpigeneticGenotypeId& genotype_id, const EpigeneticGenotypeId& epigenetic_genotype, const Time &time);
+    void record_duplication_epigenetic_event(const EpigeneticGenotypeId& src_species, 
+                                             const EpigeneticGenotypeId& dst_species,
+                                             const Time &time);
 
     /**
      * @brief Record the last event

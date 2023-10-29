@@ -2,7 +2,7 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.1
+ * @version 0.2
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -51,7 +51,7 @@ namespace Simulation
  */
 struct TimeTest : public Simulation::BasicTest
 {
-    const Time threshold;
+    const Time threshold; //!< The time threshold
 
     /**
      * @brief A constructor
@@ -93,8 +93,8 @@ struct TimeTest : public Simulation::BasicTest
  */
 struct SpeciesCountTest : public Simulation::BasicTest
 {
-    const EpigeneticGenotypeId species_id;
-    const size_t threshold;
+    const EpigeneticGenotypeId species_id; //!< The species id
+    const size_t threshold;  //!< The size threshold
 
     /**
      * @brief A constructor
@@ -132,8 +132,8 @@ struct SpeciesCountTest : public Simulation::BasicTest
  */
 struct GenotypeCountTest : public Simulation::BasicTest
 {
-    const GenotypeId genotype_id;
-    const size_t threshold;
+    const GenotypeId genotype_id; //!< The genotype id
+    const size_t threshold;     //!< The size threshold
 
     /**
      * @brief A constructor
@@ -150,6 +150,80 @@ struct GenotypeCountTest : public Simulation::BasicTest
      * @param simulation is the considered simulation
      * @return `false` if and only if the number of cells of the 
      *          considered genotype is below the test threshold
+     */
+    bool operator()(const Simulation& simulation) const override;
+
+    /**
+     * @brief Return the percentage of the completed simulation
+     * 
+     * @param simulation is the considered simulation
+     * @return the percentage of the completed simulation
+     */
+    uint8_t percentage(const Simulation& simulation) const override;
+};
+
+/**
+ * @brief Event count test
+ * 
+ * The objects of this class have a method testing the number of 
+ * cells stochastic events occurred to a species. If this number 
+ * is below a threshold, then the test returns `false`; otherwise, 
+ * it returns `true`.
+ */
+class EventCountTest : public Simulation::BasicTest
+{
+    /**
+     * @brief Get the number of events tested by this object
+     * 
+     * @param simulation is the considered simulation
+     * @return the number of events tested by this object
+     */
+    size_t get_event_number(const Simulation& simulation) const;
+
+    const CellEventType event_type;     //!< The cell event
+    const EpigeneticGenotypeId species_id;  //!< The id of the species in which the events occurred
+    const EpigeneticGenotypeId dst_id;  //!< The id of the destination species in case of epigenetic events
+    const size_t threshold;     //!< The threshold on the number of events
+
+public:
+
+    /**
+     * @brief A constructor
+     * 
+     * Whenever `event_type` is `CellEventType::EPIGENETIC_EVENT`
+     * the built object compare the threshold and the sum of all 
+     * the epigenetic events.
+     * 
+     * @param event_type is the aimed event type
+     * @param species_id is the identifier of the species whose 
+     *          number of events is counted
+     * @param threshold is the threshold for the number of events
+     */
+    EventCountTest(const CellEventType& event_type, const EpigeneticGenotypeId& species_id, 
+                   const size_t& threshold);
+
+    /**
+     * @brief A constructor
+     * 
+     * This constructor builds an object specifically designed to 
+     * test whether the number of epigenetic event from `src_id` 
+     * to `dst_id` has reached a threshold.
+     * 
+     * @param src_id is the identifier of the source species of 
+     *          counted epigenetic events
+     * @param dst_id is the identifier of the destination species of 
+     *          counted epigenetic events
+     * @param threshold is the threshold for the number of events
+     */
+    EventCountTest(const EpigeneticGenotypeId& src_id, const EpigeneticGenotypeId& dst_id,
+                   const size_t& threshold);
+
+    /**
+     * @brief Test whether the number of cells is below the threshold
+     * 
+     * @param simulation is the considered simulation
+     * @return `false` if and only if the number of cells of the 
+     *          considered species is below the test threshold
      */
     bool operator()(const Simulation& simulation) const override;
 
