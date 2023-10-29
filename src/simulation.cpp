@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.26
- * @date 2023-10-27
+ * @version 0.27
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -97,10 +97,10 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
                                       std::uniform_real_distribution<double>& uni_dist,
                                       GENERATOR_TYPE& random_gen)
 {
-    std::list<CellEventType> event_types{CellEventType::DUPLICATE};
+    std::list<CellEventType> event_types{CellEventType::DUPLICATION};
 
     if (death_enabled.count(species.get_id())>0) {
-        event_types.push_back(CellEventType::DIE);
+        event_types.push_back(CellEventType::DEATH);
     }
 
     bool selected_new_event = false;

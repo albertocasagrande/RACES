@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.24
+ * @version 0.25
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -813,10 +813,10 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
     EventAffectedCells affected;
 
     switch(event.type) {
-        case CellEventType::DIE:
+        case CellEventType::DEATH:
             affected = simulate_death(event.position);
             break;
-        case CellEventType::DUPLICATE:
+        case CellEventType::DUPLICATION:
             affected = simulate_duplication(event.position);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:

@@ -2,8 +2,8 @@
  * @file cell_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell events
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,8 +40,8 @@ namespace Drivers
 {
 
 std::map<CellEventType, std::string> cell_event_names = {
-    {CellEventType::DIE, "death"},
-    {CellEventType::DUPLICATE, "duplication"},
+    {CellEventType::DEATH, "death"},
+    {CellEventType::DUPLICATION, "duplication"},
     {CellEventType::EPIGENETIC_EVENT, "epigenetic mutation"},
     {CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT, 
         "duplication and epigenetic mutation"},

@@ -54,16 +54,16 @@ struct ArchiveFixture {
         using namespace Races::Drivers;
         
         Genotype A("A",{{0.01,0.01}});
-        A["-"].set_rates({{CellEventType::DIE, 0.1},
-                          {CellEventType::DUPLICATE, 0.3}});
-        A["+"].set_rates({{CellEventType::DIE, 0.1},
-                          {CellEventType::DUPLICATE, 0.45}});
+        A["-"].set_rates({{CellEventType::DEATH, 0.1},
+                          {CellEventType::DUPLICATION, 0.3}});
+        A["+"].set_rates({{CellEventType::DEATH, 0.1},
+                          {CellEventType::DUPLICATION, 0.45}});
     
         Genotype B("B",{{0.01,0.01}});
-        B["-"].set_rates({{CellEventType::DIE, 0.1},
-                          {CellEventType::DUPLICATE, 0.2}});
-        B["+"].set_rates({{CellEventType::DIE, 0.01},
-                          {CellEventType::DUPLICATE, 0.02}});
+        B["-"].set_rates({{CellEventType::DEATH, 0.1},
+                          {CellEventType::DUPLICATION, 0.2}});
+        B["+"].set_rates({{CellEventType::DEATH, 0.01},
+                          {CellEventType::DUPLICATION, 0.02}});
 
         simulation.set_tissue("Liver", {1000,1000})
                   .add_species(A)
@@ -426,14 +426,14 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
     using namespace Races::Drivers;
     
     Genotype to_save("A",{{0.01,0.01},{0.01,0.01}});
-    to_save["--"].set_rates({{CellEventType::DIE, 0.1},
-                             {CellEventType::DUPLICATE, 0.3}});
-    to_save["+-"].set_rates({{CellEventType::DIE, 0.1},
-                             {CellEventType::DUPLICATE, 0.45}});
-    to_save["-+"].set_rates({{CellEventType::DIE, 0.1},
-                             {CellEventType::DUPLICATE, 0.2}});
-    to_save["+-"].set_rates({{CellEventType::DIE, 0.01},
-                             {CellEventType::DUPLICATE, 0.02}});
+    to_save["--"].set_rates({{CellEventType::DEATH, 0.1},
+                             {CellEventType::DUPLICATION, 0.3}});
+    to_save["+-"].set_rates({{CellEventType::DEATH, 0.1},
+                             {CellEventType::DUPLICATION, 0.45}});
+    to_save["-+"].set_rates({{CellEventType::DEATH, 0.1},
+                             {CellEventType::DUPLICATION, 0.2}});
+    to_save["+-"].set_rates({{CellEventType::DEATH, 0.01},
+                             {CellEventType::DUPLICATION, 0.02}});
 
     auto filename = get_a_temporary_path();
     {

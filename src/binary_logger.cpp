@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.19
- * @date 2023-10-23
+ * @version 0.20
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -207,7 +207,7 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
 {
     (void)time;
 
-    if (type==CellEventType::DUPLICATE || 
+    if (type==CellEventType::DUPLICATION || 
             type==CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT ||
             type==CellEventType::DRIVER_GENETIC_MUTATION) {
 

@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.7
- * @date 2023-10-02
+ * @version 0.8
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -128,10 +128,10 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
     }
 
     switch(event.type) {
-        case CellEventType::DIE:
+        case CellEventType::DEATH:
             record_death(event.initial_genotype, time);
             break;
-        case CellEventType::DUPLICATE:
+        case CellEventType::DUPLICATION:
             record_duplication(event.initial_genotype);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:

@@ -2,7 +2,7 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.12
+ * @version 0.13
  * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
@@ -163,8 +163,8 @@ class DriverSimulator : public BasicExecutable
 
         for (const auto& type_json : genotype_json["epigenetic types"]) {
             auto& type = genotype[type_json["status"].template get<std::string>()];
-            type.set_rate(CellEventType::DIE, get_rate(type_json["death rate"]));
-            type.set_rate(CellEventType::DUPLICATE, get_rate(type_json["duplication rate"]));
+            type.set_rate(CellEventType::DEATH, get_rate(type_json["death rate"]));
+            type.set_rate(CellEventType::DUPLICATION, get_rate(type_json["duplication rate"]));
         }
 
         return genotype;

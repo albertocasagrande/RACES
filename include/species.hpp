@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.18
- * @date 2023-10-13
+ * @version 0.19
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -289,11 +289,11 @@ public:
                                       const CellEventType event_type) const
     {
         switch (event_type) {
-            case CellEventType::DIE:
+            case CellEventType::DEATH:
             case CellEventType::EPIGENETIC_EVENT:
             case CellEventType::DRIVER_GENETIC_MUTATION:
                 return choose_a_cell(generator, cells);
-            case CellEventType::DUPLICATE:
+            case CellEventType::DUPLICATION:
             case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
                 return choose_a_cell(generator, duplication_enabled);
             default:
