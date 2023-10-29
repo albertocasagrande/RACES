@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.22
- * @date 2023-10-27
+ * @version 0.23
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -60,28 +60,6 @@ namespace Drivers
  */
 namespace Simulation
 {
-
-/**
- * @brief A structure to establish if the simulation must end
- */
-struct Closer
-{
-    /**
-     * @brief The empty constructor
-     */
-    Closer()
-    {}
-
-    /**
-     * @brief Establish whether the simulation must end
-     * 
-     * @return `false`
-     */
-    inline constexpr bool closing() const
-    {
-        return false;
-    }
-};
 
 /**
  * @brief A tumor evolution simulation
@@ -266,7 +244,33 @@ class Simulation
      * @return a cell event among those due to cell liveness
      */
     CellEvent select_next_cell_event();
+
 public:
+    /**
+     * @brief Simulation test
+     */
+    struct BasicTest
+    {
+        /**
+         * @brief Test a simulation
+         * 
+         * @param simulation is the considered simulation
+         * @return a Boolean value
+         */
+        virtual bool operator()(const Simulation& simulation) const = 0;
+
+        /**
+         * @brief Return the percentage of the completed simulation
+         * 
+         * @param simulation is the considered simulation
+         * @return the percentage of the completed simulation
+         */
+        virtual uint8_t percentage(const Simulation& simulation) const = 0;
+
+        virtual ~BasicTest()
+        {}
+    };
+
     size_t death_activation_level;  //!< The minimum number of cells required to activate death
 
     bool duplicate_internal_cells; //!< A flag to enable/disable duplication in internal cells
@@ -381,28 +385,26 @@ public:
     }
 
     /**
-     * @brief Simulate a tissue up to a given time
+     * @brief Simulate a tissue
      * 
-     * This method simulates a tissue up to a given 
-     * simulated time. If the user provide a pointer 
-     * to a plotter, then the simulation is also plotted
-     * in a graphical window.
+     * This method simulates a tissue until a test on the simulation 
+     * object holds. If the user provide a pointer to a plotter, then 
+     * the simulation is also plotted in a graphical window.
      * 
+     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *              the simulation is concluded
      * @tparam PLOT_WINDOW is the plotting window type
      * @tparam INDICATOR_TYPE is the progress indicator type
-     * @tparam CLOSER is a structure that establishes if the evaluation
-     *              must be stopped
-     * @param final_time is the final simulation time
+     * @param done is a test verifying whether the simulation has come to an end
      * @param plotter is a tissue plotter pointer
      * @param indicator is the progress indicator pointer
-     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, class CLOSER = Closer,
-             std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
-                              std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>* plotter,
-                          INDICATOR_TYPE* indicator, const CLOSER& closer=CLOSER())
+    template<class SIMULATION_TEST, typename PLOT_WINDOW, typename INDICATOR_TYPE,
+             std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST> &&
+                              std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW>, bool> = true>
+    Simulation& run(const SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>* plotter,
+                    INDICATOR_TYPE* indicator)
     {
         // the tissue() call checks whether a tissue has been 
         // associated to the simulation and, if this is not the 
@@ -417,8 +419,8 @@ public:
             }
         }
 
-        while ((plotter == nullptr || !plotter->closed()) && !closer.closing() 
-            && tissue().num_of_mutated_cells()>0 && time < final_time) {
+        while ((plotter == nullptr || !plotter->closed()) && !done(*this) 
+            && tissue().num_of_mutated_cells()>0) {
 
             run_up_to_next_event(plotter);
 
@@ -428,7 +430,7 @@ public:
 
 
             if (indicator != nullptr) {
-                indicator->set_progress(static_cast<size_t>(100*time/final_time),
+                indicator->set_progress(done.percentage(*this),
                                         "Cells: " + std::to_string(tissue().num_of_mutated_cells()));
             }
         }
@@ -449,93 +451,85 @@ public:
     }
 
     /**
-     * @brief Simulate a tissue up to a given time
+     * @brief Simulate a tissue
      * 
-     * This method simulates a tissue up to a given 
-     * simulated time. The simulation is also plotted
-     * in a graphical window.
-     * 
+     * This method simulates a tissue until a test on the simulation 
+     * object holds. The simulation is also plotted in a graphical window.
+     *
+     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *              the simulation is concluded
      * @tparam PLOT_WINDOW is the plotting window type
      * @tparam INDICATOR_TYPE is the progress indicator type
-     * @tparam CLOSER is a structure that establishes if the evaluation
-     *              must be stopped
-     * @param final_time is the final simulation time
+     * @param done is a test verifying whether the simulation has come to an end
      * @param plotter is a tissue plotter
      * @param indicator is the progress indicator pointer
-     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, typename INDICATOR_TYPE, typename CLOSER = Closer,
-             std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
-                              std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
-                                 INDICATOR_TYPE& indicator, const CLOSER& closer=CLOSER())
+    template<class SIMULATION_TEST, typename PLOT_WINDOW, typename INDICATOR_TYPE,
+             std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST> &&
+                              std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW>, bool> = true>
+    inline Simulation& run(const SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>& plotter,
+                           INDICATOR_TYPE& indicator)
     {
-        return run_up_to(final_time, &plotter, &indicator, closer);
+        return run(done, &plotter, &indicator);
     }
 
     /**
-     * @brief Simulate a tissue up to a given time
+     * @brief Simulate a tissue
      * 
-     * This method simulates a tissue up to a given 
-     * simulated time.
+     * This method simulates a tissue until a test on the simulation holds.
      * 
+     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *              the simulation is concluded
      * @tparam INDICATOR_TYPE is the progress indicator type
-     * @tparam CLOSER is a structure that establishes if the evaluation
-     *              must be stopped
-     * @param final_time is the final simulation time
+     * @param done is a test verifying whether the simulation has come to an end
      * @param indicator is the progress indicator
-     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename INDICATOR_TYPE, class CLOSER = Closer,
-             std::enable_if_t<std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, INDICATOR_TYPE& indicator, 
-                                 const CLOSER& closer=CLOSER())
+    template<class SIMULATION_TEST, typename INDICATOR_TYPE,
+             std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST>, bool> = true>
+    inline Simulation& run(const SIMULATION_TEST& done, INDICATOR_TYPE& indicator)
     {
-        return run_up_to<UI::Plot2DWindow, INDICATOR_TYPE, CLOSER>(final_time, nullptr, &indicator, closer);
+        return run<SIMULATION_TEST, UI::Plot2DWindow, INDICATOR_TYPE>(done, nullptr, &indicator);
     }
 
     /**
-     * @brief Simulate a tissue up to a given time
+     * @brief Simulate a tissue
      * 
-     * This method simulates a tissue up to a given 
-     * simulated time. The simulation is also plotted
-     * in a graphical window.
-     * 
+     * This method simulates a tissue until a test on the simulation 
+     * object holds. The simulation is also plotted in a graphical window.
+     *
+     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *              the simulation is concluded
      * @tparam PLOT_WINDOW is the plotting window type
-     * @tparam CLOSER is a structure that establishes if the evaluation
-     *              must be stopped
-     * @param final_time is the final simulation time
+     * @param done is a test verifying whether the simulation has come to an end
      * @param plotter is a tissue plotter
-     * @param closer is an object inherited from `Closer`
      * @return a reference to the updated simulation
      */
-    template<typename PLOT_WINDOW, class CLOSER = Closer,
-             std::enable_if_t<std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW> && 
-                              std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, UI::TissuePlotter<PLOT_WINDOW>& plotter,
-                                 const CLOSER& closer=CLOSER())
+    template<class SIMULATION_TEST, typename PLOT_WINDOW,
+             std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST> &&
+                              std::is_base_of_v<UI::Plot2DWindow, PLOT_WINDOW>, bool> = true>
+    inline Simulation& run(const SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>& plotter)
     {
-        return run_up_to<PLOT_WINDOW, UI::ProgressBar, CLOSER>(final_time, &plotter, nullptr, closer);
+        return run<SIMULATION_TEST, PLOT_WINDOW, UI::ProgressBar>(done, &plotter, nullptr);
     }
 
     /**
-     * @brief Simulate a tissue up to a given time
+     * @brief Simulate a tissue
      * 
-     * This method simulates a tissue up to a given 
-     * simulated time.
-     * 
-     * @tparam CLOSER is a structure that establishes if the evaluation
-     *              must be stopped
-     * @param final_time is the final simulation time
-     * @param closer is an object inherited from `Closer`
+     * This method simulates a tissue until a test on the simulation 
+     * object holds.
+     *
+     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *              the simulation is concluded
+     * @param done is a test verifying whether the simulation has come to an end
      * @return a reference to the updated simulation
      */
-    template<class CLOSER = Closer, std::enable_if_t<std::is_base_of_v<Closer, CLOSER>, bool> = true>
-    inline Simulation& run_up_to(const Time& final_time, const CLOSER& closer=CLOSER())
+    template<class SIMULATION_TEST,
+             std::enable_if_t<std::is_base_of_v<BasicTest, SIMULATION_TEST>, bool> = true>
+    inline Simulation& run(const SIMULATION_TEST& done)
     {
-        return run_up_to<UI::Plot2DWindow, UI::ProgressBar, CLOSER>(final_time, nullptr, nullptr, closer);
+        return run<SIMULATION_TEST, UI::Plot2DWindow, UI::ProgressBar>(done, nullptr, nullptr);
     }
 
     /**

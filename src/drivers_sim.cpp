@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.11
- * @date 2023-10-27
+ * @version 0.12
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,6 +40,7 @@
 
 #include "common.hpp"
 #include "simulation.hpp"
+#include "ending_conditions.hpp"
 #include "progress_bar.hpp"
 
 #ifdef WITH_SDL2
@@ -419,6 +420,7 @@ public:
     void run()
     {
         using namespace Races;
+        using namespace Races::Drivers::Simulation;
 
         if (!quiet) {
             UI::ProgressBar::hide_console_cursor();
@@ -437,6 +439,8 @@ public:
 
         simulation.storage_enabled = !disable_storage;
 
+        TimeTest time_test(time_horizon);
+
 #ifdef WITH_SDL2
         if (plot) {
 
@@ -445,9 +449,9 @@ public:
             plotter.set_frames_per_second(frames_per_second);
 
             if (bar != nullptr) {
-                simulation.run_up_to(time_horizon, plotter, *bar);
+                simulation.run(time_test, plotter, *bar);
             } else {
-                simulation.run_up_to(time_horizon, plotter);
+                simulation.run(time_test, plotter);
             }
 
             while (plotter.waiting_end()) {
@@ -457,9 +461,9 @@ public:
 #endif // WITH_SDL2
 
             if (bar != nullptr) {
-                simulation.run_up_to(time_horizon, *bar);
+                simulation.run(time_test, *bar);
             } else {
-                simulation.run_up_to(time_horizon);
+                simulation.run(time_test);
             }
 
 #ifdef WITH_SDL2

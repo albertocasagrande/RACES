@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.14
- * @date 2023-10-28
+ * @version 0.15
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,6 +39,7 @@
 
 #include "archive.hpp"
 #include "simulation.hpp"
+#include "ending_conditions.hpp"
 #include "logger.hpp"
 
 
@@ -72,7 +73,9 @@ struct ArchiveFixture {
 
         simulation.death_activation_level = 100;
 
-        simulation.run_up_to(time_horizon);
+        Races::Drivers::Simulation::TimeTest done(time_horizon);
+
+        simulation.run(done);
     }
 
     ~ArchiveFixture()

@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.21
- * @date 2023-10-28
+ * @version 0.22
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -66,6 +66,16 @@ Tissue::SpeciesView::const_iterator Tissue::SpeciesView::const_iterator::operato
     this->operator--();
 
     return copy;
+}
+
+size_t Tissue::SpeciesView::num_of_cells() const
+{
+    size_t num_of_cells{0};
+    for (auto species_it=begin(); species_it != end(); ++species_it) {
+        num_of_cells += species_it->num_of_cells();
+    }
+
+    return num_of_cells;
 }
 
 Tissue::CellInTissueConstantProxy::CellInTissueConstantProxy(const Tissue &tissue, const PositionInTissue position):

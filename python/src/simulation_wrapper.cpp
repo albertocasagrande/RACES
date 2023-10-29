@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.7
- * @date 2023-10-21
+ * @version 0.8
+ * @date 2023-10-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,6 +33,7 @@
 #include "progress_bar.hpp"
 #include "tissue_plotter.hpp"
 #include "simulation_wrapper.hpp"
+#include "ending_conditions.hpp"
 
 #ifdef WITH_SDL2
 #include "SDL_plot.hpp"
@@ -53,23 +54,26 @@ void SimulationWrapper::add_driver_mutation(const Races::Drivers::Genotype& src,
     obj_ptr->simulation.add_driver_mutation(src, dst, time);
 }
 
-struct PythonCloser : public Races::Drivers::Simulation::Closer
+struct PythonEndTest : public Races::Drivers::Simulation::TimeTest
 {
     /**
      * @brief The empty constructor
      */
-    PythonCloser():
-        Races::Drivers::Simulation::Closer()
+    PythonEndTest(const Races::Time& time):
+        Races::Drivers::Simulation::TimeTest(time)
     {}
 
     /**
      * @brief Establish whether the simulation must end
      * 
+     * @param simulation is the considered simulation
      * @return `true` if and only if a signal has been sent to the Python process
      */
-    inline bool closing() const
+    inline bool operator()(const Races::Drivers::Simulation::Simulation& simulation) const
     {
-        return PyErr_CheckSignals() == -1;
+        const auto super = static_cast<const Races::Drivers::Simulation::TimeTest*>(this);
+
+        return super->operator()(simulation) || PyErr_CheckSignals() == -1;
     }
 };
 
@@ -96,12 +100,12 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool quie
 
     ProgressBar* bar{nullptr};
 
-    PythonCloser closer;
+    PythonEndTest done(final_time);
     if (quiet) {
-        obj_ptr->simulation.run_up_to(final_time, plotter, bar, closer);
+        obj_ptr->simulation.run(done, plotter, bar);
     } else {
         bar = new ProgressBar();
-        obj_ptr->simulation.run_up_to(final_time, plotter, bar, closer);
+        obj_ptr->simulation.run(done, plotter, bar);
 
         delete bar;
     }

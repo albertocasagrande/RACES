@@ -16,6 +16,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
@@ -83,6 +84,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/ending_conditions.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp

@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.24
- * @date 2023-10-28
+ * @version 0.25
+ * @date 2023-10-29
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -328,6 +328,13 @@ public:
         {
             return const_iterator(species, species_pos.end());
         }
+
+        /**
+         * @brief Get the numer of cells in the species view
+         * 
+         * @return the number of cells in the species view
+         */
+        size_t num_of_cells() const;
 
         friend class Tissue;
     };
