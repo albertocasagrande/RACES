@@ -31,7 +31,7 @@ if(${COMPILE_PYTHON_BINDINGS})
     set_target_properties(pyRACES PROPERTIES OUTPUT_NAME RACES PREFIX "")
 
     # link
-    target_link_libraries(pyRACES ${Boost_LIBRARIES} Python::Module libRACES)
+    target_link_libraries(pyRACES ${Boost_LIBRARIES} Python::Module ${BUILD_LIB_TARGET})
 
     execute_process(COMMAND Python::Interpreter -m pytest --version
         OUTPUT_VARIABLE PYTEST_output

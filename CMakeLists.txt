@@ -104,7 +104,11 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
 
 set(WITH_MATPLOT false)
 
-if(NOT AVOID_OPTIONAL_LIBS)
+if(NOT USE_OPTIONAL_LIBS)
+    set(USE_OPTIONAL_LIBS TRUE)
+endif()
+
+if(${USE_OPTIONAL_LIBS})
     find_package(SDL2 QUIET)
     find_package(SDL2_image QUIET)
     find_package(SDL2_ttf QUIET)
@@ -181,7 +185,39 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp.in ${CMAKE_CURR
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-if(NOT ONLY_LIBRARIES)
+
+add_library(objlib OBJECT ${RACES_SOURCES})
+target_link_libraries(objlib ${RACES_LIBRARIES})
+
+set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+if(NOT DEFINED BUILD_STATIC_LIBS)
+    set(BUILD_STATIC_LIBS TRUE)
+endif()
+
+if(${BUILD_STATIC_LIBS})
+    set(BUILD_LIB_TARGET libRACES_static)
+    set(LIB_INSTALL_TARGETS libRACES_static)
+endif()
+
+if(NOT DEFINED BUILD_ONLY_LIBRARIES)
+    set(BUILD_ONLY_LIBRARIES FALSE)
+endif()
+
+if(NOT DEFINED BUILD_SHARED_LIBS)
+    set(BUILD_LIB_TARGET libRACES)
+    set(BUILD_SHARED_LIBS TRUE)
+endif()
+
+if(${BUILD_SHARED_LIBS})
+    set(LIB_INSTALL_TARGETS libRACES ${LIB_INSTALL_TARGETS})
+endif()
+
+if((NOT ${BUILD_SHARED_LIBS}) AND (NOT ${BUILD_STATIC_LIBS}))
+    message( FATAL_ERROR "Either static or dynamic library must be built." )
+endif()
+
+if(NOT ${BUILD_ONLY_LIBRARIES})
     message("Building executable, Python wrapper, and tests")
 
     find_package( Boost COMPONENTS program_options REQUIRED )
@@ -212,27 +248,27 @@ if(NOT ONLY_LIBRARIES)
 
     add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
     target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(drivers_sim libRACES nlohmann_json::nlohmann_json)
+    target_link_libraries(drivers_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
     add_executable(phylo_builder ${PHYLO_SOURCES})
     target_include_directories(phylo_builder PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(phylo_builder libRACES)
+    target_link_libraries(phylo_builder ${BUILD_LIB_TARGET})
 
     add_executable(tissue_sampler ${TISSUE_SAMPLER})
     target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(tissue_sampler libRACES nlohmann_json::nlohmann_json)
+    target_link_libraries(tissue_sampler ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
     add_executable(build_context_index ${BUILD_INDEX_SOURCES})
     target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(build_context_index libRACES)
+    target_link_libraries(build_context_index ${BUILD_LIB_TARGET})
 
     add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
     target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(sample_context_index libRACES)
+    target_link_libraries(sample_context_index ${BUILD_LIB_TARGET})
 
     add_executable(passengers_sim ${PASSENGERS_SIM_SOURCES})
     target_include_directories(passengers_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(passengers_sim libRACES nlohmann_json::nlohmann_json)
+    target_link_libraries(passengers_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
     add_subdirectory(python)
 
@@ -243,19 +279,31 @@ else()
     message("Building exclusively RACES libraries")
 endif()
 
-add_library(objlib OBJECT ${RACES_SOURCES})
-target_link_libraries(objlib ${RACES_LIBRARIES})
+if(${BUILD_SHARED_LIBS})
+    add_library(libRACES SHARED $<TARGET_OBJECTS:objlib>)
+    target_link_libraries(libRACES ${RACES_LIBRARIES})
+    set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+endif()
 
-set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+if(${BUILD_STATIC_LIBS})
+    add_library(libRACES_static STATIC $<TARGET_OBJECTS:objlib>)
+    target_link_libraries(libRACES_static ${RACES_LIBRARIES})
+    set_target_properties(libRACES_static PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
+endif()
 
-add_library(libRACES SHARED $<TARGET_OBJECTS:objlib>)
-target_link_libraries(libRACES ${RACES_LIBRARIES})
-set_target_properties(libRACES PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
-set_property(TARGET libRACES PROPERTY PUBLIC_HEADER ${RACES_HEADER})
+if(NOT DEFINED INSTALL_HEADERS)
+    set(INSTALL_HEADERS TRUE)
+endif()
 
-add_library(libRACES_static STATIC $<TARGET_OBJECTS:objlib>)
-target_link_libraries(libRACES_static ${RACES_LIBRARIES})
-set_target_properties(libRACES_static PROPERTIES VERSION ${PROJECT_VERSION} OUTPUT_NAME RACES)
-set_property(TARGET libRACES_static PROPERTY PUBLIC_HEADER ${RACES_HEADER})
+if(${INSTALL_HEADERS})
+  if(${BUILD_SHARED_LIBS})
+    set_property(TARGET libRACES PROPERTY PUBLIC_HEADER ${RACES_HEADER})
+  endif()
 
-install(TARGETS libRACES libRACES_static FILE_SET HEADERS)
+  if(${BUILD_STATIC_LIBS})
+     set_property(TARGET libRACES_static PROPERTY PUBLIC_HEADER ${RACES_HEADER})
+  endif()
+  install(TARGETS ${LIB_INSTALL_TARGETS} FILE_SET HEADERS)
+else()
+  install(TARGETS ${LIB_INSTALL_TARGETS})
+endif()
