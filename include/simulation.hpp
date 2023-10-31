@@ -284,6 +284,14 @@ public:
     explicit Simulation(int random_seed=0);
 
     /**
+     * @brief A simulation constructor
+     * 
+     * @param log_directory is the simulation log directory
+     * @param random_seed is the simulation random seed
+     */
+    explicit Simulation(const std::filesystem::path& log_directory, int random_seed=0);
+
+    /**
      * @brief A swap constructor
      * 
      * @param orig is the original simulation

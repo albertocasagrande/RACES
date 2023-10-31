@@ -50,6 +50,16 @@ Simulation::Simulation(int random_seed):
     set_tissue("A tissue", {1000, 1000});
 }
 
+Simulation::Simulation(const std::filesystem::path& log_directory, int random_seed):
+    logger(log_directory), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
+    time(0), death_activation_level(1), duplicate_internal_cells(true), storage_enabled(true)
+{
+    random_gen.seed(random_seed);
+
+    // Create a default tissue
+    set_tissue("A tissue", {1000, 1000});
+}
+
 Simulation::Simulation(Simulation&& orig):
     Simulation()
 {
