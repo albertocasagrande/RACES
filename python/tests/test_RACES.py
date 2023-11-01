@@ -31,8 +31,8 @@ class TestCellEventType(unittest.TestCase):
 
     def test_values(self):
         self.assertEqual(RACES.CellEventType.values, {
-            0: RACES.CellEventType.DIE,
-            1: RACES.CellEventType.DUPLICATE,
+            0: RACES.CellEventType.DEATH,
+            1: RACES.CellEventType.DUPLICATION,
             2: RACES.CellEventType.EPIGENETIC_EVENT,
             3: RACES.CellEventType.DUPLICATION_AND_EPIGENETIC_EVENT,
             4: RACES.CellEventType.DRIVER_GENETIC_MUTATION
@@ -150,38 +150,38 @@ class TestGenotype(unittest.TestCase):
     def test_set_rates(self):
         A = RACES.Genotype("A", [[0.01, 0.01]])
         try:
-            A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                              RACES.CellEventType.DUPLICATE: 0.2})
+            A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                              RACES.CellEventType.DUPLICATION: 0.2})
         except BaseException:
-            self.fail('A.set_rates("-", {RACES.CellEventType.DIE: 0.1, '
-                      + 'RACES.CellEventType.DUPLICATE: 0.2})'
+            self.fail('A.set_rates("-", {RACES.CellEventType.DEATH: 0.1, '
+                      + 'RACES.CellEventType.DUPLICATION: 0.2})'
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            A.set_rates("", {RACES.CellEventType.DIE: 0.1,
-                             RACES.CellEventType.DUPLICATE: 0.2})
+            A.set_rates("", {RACES.CellEventType.DEATH: 0.1,
+                             RACES.CellEventType.DUPLICATION: 0.2})
 
         B = RACES.Genotype("B", [])
 
         try:
-            B.set_rates("", {RACES.CellEventType.DIE: 0.1,
-                             RACES.CellEventType.DUPLICATE: 0.2})
+            B.set_rates("", {RACES.CellEventType.DEATH: 0.1,
+                             RACES.CellEventType.DUPLICATION: 0.2})
         except BaseException:
-            self.fail('B.set_rates("", {RACES.CellEventType.DIE: 0.1, '
-                      + 'RACES.CellEventType.DUPLICATE: 0.2})'
+            self.fail('B.set_rates("", {RACES.CellEventType.DEATH: 0.1, '
+                      + 'RACES.CellEventType.DUPLICATION: 0.2})'
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                              RACES.CellEventType.DUPLICATE: 0.2})
+            B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                              RACES.CellEventType.DUPLICATION: 0.2})
 
     def test_get_rate(self):
         A = RACES.Genotype("A", [[0.01, 0.01]])
-        A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.2})
+        A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.2})
         try:
-            self.assertEqual(A.get_rate("-", RACES.CellEventType.DIE), 0.1)
-            self.assertEqual(A.get_rate("-", RACES.CellEventType.DUPLICATE),
+            self.assertEqual(A.get_rate("-", RACES.CellEventType.DEATH), 0.1)
+            self.assertEqual(A.get_rate("-", RACES.CellEventType.DUPLICATION),
                              0.2)
             self.assertEqual(A.get_rate("-",
                                         RACES.CellEventType.EPIGENETIC_EVENT),
@@ -191,14 +191,14 @@ class TestGenotype(unittest.TestCase):
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            self.assertEqual(A.get_rate("", RACES.CellEventType.DIE), 0.01)
+            self.assertEqual(A.get_rate("", RACES.CellEventType.DEATH), 0.01)
 
         B = RACES.Genotype("B", [])
-        B.set_rates("", {RACES.CellEventType.DIE: 0.1,
-                         RACES.CellEventType.DUPLICATE: 0.2})
+        B.set_rates("", {RACES.CellEventType.DEATH: 0.1,
+                         RACES.CellEventType.DUPLICATION: 0.2})
         try:
-            self.assertEqual(B.get_rate("", RACES.CellEventType.DIE), 0.1)
-            self.assertEqual(B.get_rate("", RACES.CellEventType.DUPLICATE),
+            self.assertEqual(B.get_rate("", RACES.CellEventType.DEATH), 0.1)
+            self.assertEqual(B.get_rate("", RACES.CellEventType.DUPLICATION),
                              0.2)
             self.assertEqual(B.get_rate("",
                                         RACES.CellEventType.EPIGENETIC_EVENT),
@@ -208,7 +208,7 @@ class TestGenotype(unittest.TestCase):
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            self.assertEqual(B.get_rate("-", RACES.CellEventType.DIE), 0.01)
+            self.assertEqual(B.get_rate("-", RACES.CellEventType.DEATH), 0.01)
 
 
 class TestSimulation(unittest.TestCase):
@@ -268,14 +268,10 @@ class TestSimulation(unittest.TestCase):
         sim = RACES.Simulation()
 
         A = RACES.Genotype("A", [[0.01, 0.01]])
-        A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.2})
-        A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
-                          RACES.CellEventType.DUPLICATE: 0.02})
-
-        with self.assertRaises(Exception):
-            # no tissue has been associated to the simulation yet
-            sim.add_species(A)
+        A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.2})
+        A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
+                          RACES.CellEventType.DUPLICATION: 0.02})
 
         sim.set_tissue("Liver", [100, 100])
 
@@ -293,10 +289,10 @@ class TestSimulation(unittest.TestCase):
         sim = RACES.Simulation()
 
         A = RACES.Genotype("A", [[0.01, 0.01]])
-        A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.2})
-        A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
-                          RACES.CellEventType.DUPLICATE: 0.02})
+        A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.2})
+        A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
+                          RACES.CellEventType.DUPLICATION: 0.02})
 
         sim.set_tissue("Liver", [100, 100])
 
@@ -318,22 +314,22 @@ class TestSimulation(unittest.TestCase):
         sim.set_tissue("Liver", [100, 100])
 
         A = RACES.Genotype("A", [[0.01, 0.01]])
-        A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.2})
-        A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
-                          RACES.CellEventType.DUPLICATE: 0.02})
+        A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.2})
+        A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
+                          RACES.CellEventType.DUPLICATION: 0.02})
         sim.add_species(A)
 
         B = RACES.Genotype("B", [[0.01, 0.01]])
-        B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.3})
-        B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.45})
+        B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.3})
+        B.set_rates("+", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.45})
         sim.add_species(B)
 
         C = RACES.Genotype("C", [])
-        C.set_rates("", {RACES.CellEventType.DIE: 0.1,
-                         RACES.CellEventType.DUPLICATE: 0.3})
+        C.set_rates("", {RACES.CellEventType.DEATH: 0.1,
+                         RACES.CellEventType.DUPLICATION: 0.3})
         sim.add_species(C)
 
         try:
@@ -359,23 +355,23 @@ class TestSimulation(unittest.TestCase):
         sim.set_tissue("Liver", [100, 100])
 
         A = RACES.Genotype("A", [[0.01, 0.01]])
-        A.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.2})
-        A.set_rates("+", {RACES.CellEventType.DIE: 0.01,
-                          RACES.CellEventType.DUPLICATE: 0.02})
+        A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.2})
+        A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
+                          RACES.CellEventType.DUPLICATION: 0.02})
         sim.add_species(A)
 
         B = RACES.Genotype("B", [[0.01, 0.01]])
-        B.set_rates("-", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.3})
-        B.set_rates("+", {RACES.CellEventType.DIE: 0.1,
-                          RACES.CellEventType.DUPLICATE: 0.45})
+        B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.3})
+        B.set_rates("+", {RACES.CellEventType.DEATH: 0.1,
+                          RACES.CellEventType.DUPLICATION: 0.45})
         sim.add_species(B)
         sim.add_driver_mutation(A, B, 70)
 
         sim.storage_enabled = False
 
-        sim.run_up_to(100, quiet=True)
+        sim.run_up_to(0, quiet=True)
 
     def test_death_activation_level(self):
         sim = RACES.Simulation()

@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.6
- * @date 2023-10-28
+ * @version 0.7
+ * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -530,7 +530,7 @@ ConfigReader::get_mutational_coefficients(const nlohmann::json& mutational_coeff
         mutational_coefficients[SBS] = fraction;
     }
     
-    if (abs(1-total)>10*std::numeric_limits<double>::epsilon()) {
+    if (std::abs(1-total)>10*std::numeric_limits<double>::epsilon()) {
         std::ostringstream oss;
 
         oss << "The sum of the \"fraction\" fields must be 1. "

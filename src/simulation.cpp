@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.27
- * @date 2023-10-29
+ * @version 0.28
+ * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -309,17 +309,26 @@ CellEvent Simulation::select_next_event()
     return event;
 }
 
+template<typename T>
+inline
+T get_min(const T v1, const size_t& v2)
+{
+    return std::min(v1, static_cast<T>(v2));
+}
+
 void enable_duplication_on_neighborhood_externals(Tissue& tissue, const PositionInTissue& position)
 {
     auto sizes = tissue.size();
     PositionInTissue pos;
     pos.x = (position.x>0?position.x-1:0);
-    for (; (pos.x < position.x+2 &&  pos.x < sizes[0]); ++pos.x) {
+    auto max_x = get_min(position.x+2, sizes[0]);
+    for (; pos.x < max_x; ++pos.x) {
         pos.y = (position.y>0?position.y-1:0);
-        for (; (pos.y < position.y+2 &&  pos.y < sizes[1]); ++pos.y) {
+        auto max_y = get_min(position.y+2, sizes[1]);
+        for (; pos.y < max_y; ++pos.y) {
             pos.z = (position.z>0?position.z-1:0);
-            for (; ((pos.z < position.z+2 &&  pos.z < sizes[2])
-                    || (sizes[2]==0 && pos.z==0)); ++pos.z) {
+            auto max_z = (sizes.size()==2?1:get_min(position.z+2, sizes[2]));
+            for (; pos.z < max_z; ++pos.z) {
                 Tissue::CellInTissueProxy cell_in_tissue = tissue(pos);
                 if (cell_in_tissue.has_driver_mutations() && cell_in_tissue.is_on_border()) {
                     cell_in_tissue.enable_duplication();

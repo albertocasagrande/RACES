@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.8
- * @date 2023-10-23
+ * @version 0.9
+ * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,9 +71,7 @@ struct PythonEndTest : public Races::Drivers::Simulation::TimeTest
      */
     inline bool operator()(const Races::Drivers::Simulation::Simulation& simulation) const
     {
-        const auto super = static_cast<const Races::Drivers::Simulation::TimeTest*>(this);
-
-        return super->operator()(simulation) || PyErr_CheckSignals() == -1;
+        return Races::Drivers::Simulation::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
     }
 };
 

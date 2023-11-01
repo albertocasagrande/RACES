@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.5
- * @date 2023-10-26
+ * @version 0.6
+ * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -981,7 +981,7 @@ private:
         }
 
         std::ifstream ref_stream(ref_genome_filename);
-        char c = ref_stream.get();
+        int c = ref_stream.get();
 
         if (c != EOF && c != '>') {
             throw std::domain_error("\""+ref_genome_filename+"\" is not a FASTA file");

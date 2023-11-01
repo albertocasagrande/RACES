@@ -2,8 +2,8 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -110,7 +110,7 @@ protected:
     static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, std::string* nucleotides,
                      FILTER& filter, UI::ProgressBar& progress_bar)
     {
-        char c = fasta_stream.get();
+        int c = fasta_stream.get();
         while (c != EOF) {
             if (c!='>') {
                 fasta_stream.unget();

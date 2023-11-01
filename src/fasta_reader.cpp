@@ -2,8 +2,8 @@
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a FASTA file reader and support structures
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@ namespace FASTA
 void SequenceInfo::filter_remaining_sequence(std::istream& fasta_stream, UI::ProgressBar& progress_bar)
 {
     size_t counter{0};
-    char c = fasta_stream.get();
+    int c = fasta_stream.get();
     while (c != EOF && c != '>') {
         std::string line;
         getline(fasta_stream, line);
