@@ -22,7 +22,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_mutation.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_mutation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/rate_update.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sample.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
@@ -64,7 +64,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_mutation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_mutation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/rate_update.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_sample.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
