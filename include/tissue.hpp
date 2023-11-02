@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.25
- * @date 2023-10-29
+ * @version 0.26
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,9 +65,9 @@ class Tissue {
 
     std::string name;                               //!< The tissue name
     std::vector<Species> species;                   //!< The species in the tissue
-    std::map<EpigeneticGenotypeId, size_t> id_pos;  //!< The identifier to position map
+    std::map<SpeciesId, size_t> id_pos;  //!< The identifier to position map
     std::map<std::string, size_t> name_pos;         //!< The name to position map
-    GenotypePosition genotope_pos;     //!< The positions of the species associated to the same genomic genotype 
+    GenotypePosition genotope_pos;     //!< The positions of the species associated to the same genotype 
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
 
@@ -492,21 +492,21 @@ public:
     /**
      * @brief A constructor for a 3D tissue
      * 
-     * @param genotypes is the vector of driver genotypes
+     * @param genotypes is the vector of genotypes
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
+    Tissue(const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
      * 
-     * @param genotypes is the vector of driver genotypes
+     * @param genotypes is the vector of genotypes
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size);
+    Tissue(const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief A constructor
@@ -539,22 +539,22 @@ public:
      * @brief A constructor for a 3D tissue
      * 
      * @param name is the tissue name
-     * @param genotypes is the vector of driver genotypes
+     * @param genotypes is the vector of genotypes
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string& name, const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
+    Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
      * 
      * @param name is the tissue name
-     * @param genotypes is the vector of driver genotypes
+     * @param genotypes is the vector of genotypes
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::string& name, const std::vector<Genotype>& genotypes, const AxisSize x_size, const AxisSize y_size);
+    Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief Get the initial iterator for the tissue species
@@ -581,65 +581,65 @@ public:
      * 
      * @return the vector of the tissue genotypes 
      */
-    std::vector<EpigeneticGenotype> get_genotypes() const;
+    std::vector<SpeciesProperties> get_genotypes() const;
 
     /**
      * @brief Get a tissue species by driver identifier
      * 
-     * @param genotype_id is the driver genotype identifier
+     * @param species_id is the genotype identifier
      * @return a constant reference to the tissue species
      */
-    const Species& get_species(const EpigeneticGenotypeId& genotype_id) const;
+    const Species& get_species(const SpeciesId& species_id) const;
 
     /**
      * @brief Get a tissue species by driver identifier
      * 
-     * @param genotype_id is the driver genotype identifier
+     * @param species_id is the genotype identifier
      * @return a non-constant reference to the tissue species
      */
-    Species& get_species(const EpigeneticGenotypeId& genotype_id);
+    Species& get_species(const SpeciesId& species_id);
 
     /**
      * @brief Get a tissue species by driver name
      * 
-     * @param genotype_name is the driver genotype name
+     * @param species_name is the species name
      * @return a constant reference to the tissue species
      */
-    const Species& get_species(const std::string& genotype_name) const;
+    const Species& get_species(const std::string& species_name) const;
 
     /**
      * @brief Get a tissue species by driver name
      * 
-     * @param genotype_name is the driver genotype name
+     * @param species_name is the genotype name
      * @return a non-constant reference to the tissue species
      */
-    Species& get_species(const std::string& genotype_name);
+    Species& get_species(const std::string& species_name);
 
     /**
      * @brief Add a new species to the tissue
      * 
-     * @param genotype is the driver genotype of the new species
+     * @param genotype is the genotype of the new species
      * @return a reference to the updated object
      */
-    Tissue& add_species(const Genotype& genotype);
+    Tissue& add_species(const GenotypeProperties& genotype);
 
     /**
-     * @brief Add driver genotype cell
+     * @brief Add a cell
      * 
-     * @param genotype_id is the driver genotype identifier of the new cell
+     * @param species_id is the species identifier of the new cell
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    Tissue& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position);
+    Tissue& add_cell(const SpeciesId& species_id, const PositionInTissue position);
 
     /**
-     * @brief Add driver genotype cell
+     * @brief Add genotype cell
      * 
-     * @param genotype_name is the driver genotype name of the new cell
+     * @param species_name is the species name of the new cell
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    Tissue& add_cell(const std::string& genotype_name, const PositionInTissue position);
+    Tissue& add_cell(const std::string& species_name, const PositionInTissue position);
 
     /**
      * @brief Test whether a position is valid in a tissue
@@ -688,10 +688,10 @@ public:
     size_t num_of_mutated_cells() const;
 
     /**
-     * @brief Get an iterator over the species having the same genomic genotype
+     * @brief Get an iterator over the species having the same genotype
      * 
-     * @param genotype_id is the identifier of the genomic genotype whose species are aimed 
-     * @return an interator over the tissue's species having `genotype_id` as genomic
+     * @param genotype_id is the identifier of the genotype whose species are aimed 
+     * @return an interator over the tissue's species having `genotype_id` as
      *       genotype identifier
      */
     inline SpeciesView get_genotype_species(const GenotypeId& genotype_id) const
@@ -805,7 +805,7 @@ public:
         size_t i=0;
         for (auto& species : tissue.species) {
             tissue.id_pos[species.get_id()] = i;
-            tissue.name_pos[species.get_epigenetic_name()] = i;
+            tissue.name_pos[species.get_name()] = i;
             ++i;
 
             for (auto& cell : species) {

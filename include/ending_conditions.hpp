@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.2
- * @date 2023-10-29
+ * @version 0.3
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -93,7 +93,7 @@ struct TimeTest : public Simulation::BasicTest
  */
 struct SpeciesCountTest : public Simulation::BasicTest
 {
-    const EpigeneticGenotypeId species_id; //!< The species id
+    const SpeciesId species_id; //!< The species id
     const size_t threshold;  //!< The size threshold
 
     /**
@@ -103,7 +103,7 @@ struct SpeciesCountTest : public Simulation::BasicTest
      *          number of cells is counted
      * @param threshold is the threshold for the count test
      */
-    SpeciesCountTest(const EpigeneticGenotypeId& species_id, const size_t& threshold);
+    SpeciesCountTest(const SpeciesId& species_id, const size_t& threshold);
 
     /**
      * @brief Test whether the number of cells is below the threshold
@@ -180,10 +180,10 @@ class EventCountTest : public Simulation::BasicTest
      */
     size_t get_event_number(const Simulation& simulation) const;
 
-    const CellEventType event_type;     //!< The cell event
-    const EpigeneticGenotypeId species_id;  //!< The id of the species in which the events occurred
-    const EpigeneticGenotypeId dst_id;  //!< The id of the destination species in case of epigenetic events
-    const size_t threshold;     //!< The threshold on the number of events
+    const CellEventType event_type; //!< The cell event
+    const SpeciesId species_id;     //!< The id of the species in which the events occurred
+    const SpeciesId dst_id;         //!< The id of the destination species in case of epigenetic events
+    const size_t threshold;         //!< The threshold on the number of events
 
 public:
 
@@ -199,7 +199,7 @@ public:
      *          number of events is counted
      * @param threshold is the threshold for the number of events
      */
-    EventCountTest(const CellEventType& event_type, const EpigeneticGenotypeId& species_id, 
+    EventCountTest(const CellEventType& event_type, const SpeciesId& species_id, 
                    const size_t& threshold);
 
     /**
@@ -215,7 +215,7 @@ public:
      *          counted epigenetic events
      * @param threshold is the threshold for the number of events
      */
-    EventCountTest(const EpigeneticGenotypeId& src_id, const EpigeneticGenotypeId& dst_id,
+    EventCountTest(const SpeciesId& src_id, const SpeciesId& dst_id,
                    const size_t& threshold);
 
     /**

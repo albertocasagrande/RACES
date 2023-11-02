@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.22
- * @date 2023-10-29
+ * @version 0.23
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -92,7 +92,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
     // erase the cell in the current position
     erase();
 
-    Species& species = tissue.get_species(cell.get_epigenetic_id());
+    Species& species = tissue.get_species(cell.get_species_id());
 
     // if the new cell is already in its species
     if (species.contains(cell.get_id())) {
@@ -119,7 +119,7 @@ void Tissue::CellInTissueProxy::erase()
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
         // remove the cell from its species
-        Species& former_species = tissue.get_species(space_ptr->get_epigenetic_id());
+        Species& former_species = tissue.get_species(space_ptr->get_species_id());
         former_species.erase(space_ptr->get_id());
 
         space_ptr = nullptr;
@@ -142,7 +142,7 @@ void Tissue::CellInTissueProxy::switch_duplication(const bool duplication_on)
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
         // switch duplication behaviour of the cell
-        Species& species = tissue.get_species(space_ptr->get_epigenetic_id());
+        Species& species = tissue.get_species(space_ptr->get_species_id());
         species.switch_duplication_for(space_ptr->get_id(), duplication_on);
     }
 }
@@ -185,7 +185,7 @@ Tissue::Tissue(const std::string& name, const AxisSize x_size, const AxisSize y_
 {
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<Genotype>& genotypes,
+Tissue::Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes,
                const AxisSize  x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue(name, {x_size, y_size, z_size})
 {
@@ -194,7 +194,7 @@ Tissue::Tissue(const std::string& name, const std::vector<Genotype>& genotypes,
     }
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<Genotype>& genotypes, 
+Tissue::Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes, 
                const AxisSize x_size, const AxisSize y_size):
     Tissue(name, {x_size, y_size})
 {
@@ -213,13 +213,13 @@ Tissue::Tissue(const AxisSize x_size, const AxisSize y_size, const AxisSize z_si
 {
 }
 
-Tissue::Tissue(const std::vector<Genotype>& genotypes,
+Tissue::Tissue(const std::vector<GenotypeProperties>& genotypes,
                const AxisSize x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue("", genotypes, x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<Genotype>& genotypes,
+Tissue::Tissue(const std::vector<GenotypeProperties>& genotypes,
                const AxisSize  x_size, const AxisSize  y_size):
     Tissue("", genotypes, x_size, y_size)
 {
@@ -236,9 +236,9 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-std::vector<EpigeneticGenotype> Tissue::get_genotypes() const
+std::vector<SpeciesProperties> Tissue::get_genotypes() const
 {
-    std::vector<EpigeneticGenotype> genotypes;
+    std::vector<SpeciesProperties> genotypes;
 
     for (const auto& species: *this) {
         genotypes.push_back(species);
@@ -247,63 +247,55 @@ std::vector<EpigeneticGenotype> Tissue::get_genotypes() const
     return genotypes;
 }
 
-const Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id) const
+const Species& Tissue::get_species(const SpeciesId& species_id) const
 {
-    const auto pos_it = id_pos.find(genotype_id);
+    const auto pos_it = id_pos.find(species_id);
     if (pos_it == id_pos.end()) {
         throw std::out_of_range("Genotype identifier\""+
-                                std::to_string(static_cast<int>(genotype_id))+"\" is unknown");
+                                std::to_string(static_cast<int>(species_id))+"\" is unknown");
     }
 
     return species[pos_it->second];
 }
 
-Species& Tissue::get_species(const EpigeneticGenotypeId& genotype_id)
+Species& Tissue::get_species(const SpeciesId& species_id)
 {
-    const auto pos_it = id_pos.find(genotype_id);
+    const auto pos_it = id_pos.find(species_id);
     if (pos_it == id_pos.end()) {
         throw std::out_of_range("Genotype identifier\""+
-                                std::to_string(static_cast<int>(genotype_id))+"\" is unknown");
+                                std::to_string(static_cast<int>(species_id))+"\" is unknown");
     }
 
     return species[pos_it->second];
 }
 
 
-const Species& Tissue::get_species(const std::string& genotype_name) const
+const Species& Tissue::get_species(const std::string& species_name) const
 {
-    const auto pos_it = name_pos.find(genotype_name);
+    const auto pos_it = name_pos.find(species_name);
     if (pos_it == name_pos.end()) {
-        throw std::out_of_range("Genotype \""+genotype_name+"\" is unknown");
+        throw std::out_of_range("Species \""+species_name+"\" is unknown");
     }
 
     return species[pos_it->second];
 }
 
-Species& Tissue::get_species(const std::string& genotype_name)
+Species& Tissue::get_species(const std::string& species_name)
 {
-    const auto pos_it = name_pos.find(genotype_name);
+    const auto pos_it = name_pos.find(species_name);
     if (pos_it == name_pos.end()) {
-        throw std::out_of_range("Genotype \""+genotype_name+"\" is unknown");
+        throw std::out_of_range("Species \""+species_name+"\" is unknown");
     }
 
     return species[pos_it->second];
 }
 
-Tissue& Tissue::add_cell(const std::string& genotype_name, const PositionInTissue position)
+Tissue& Tissue::add_cell(const std::string& species_name, const PositionInTissue position)
 {
-    auto found = name_pos.find(genotype_name);
-
-    if (found == name_pos.end()) {
-        throw std::out_of_range("Genotype \""+genotype_name+"\" is unknown");
-    }
-
-    add_cell(species[found->second].get_id(), position);
-
-    return *this;
+    return add_cell(get_species(species_name).get_id(), position);
 }
 
-Tissue& Tissue::add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue position)
+Tissue& Tissue::add_cell(const SpeciesId& species_id, const PositionInTissue position)
 {
     if (!is_valid(position)) {
         throw std::runtime_error("The position is not in the tissue");
@@ -315,43 +307,43 @@ Tissue& Tissue::add_cell(const EpigeneticGenotypeId& genotype_id, const Position
         throw std::runtime_error("The position has been already taken");
     }
 
-    Species& species = get_species(genotype_id);
+    Species& species = get_species(species_id);
 
-    cell = species.add(CellInTissue(genotype_id, position));
+    cell = species.add(CellInTissue(species_id, position));
 
     return *this;
 }
 
-Tissue& Tissue::add_species(const Genotype& genotype)
+Tissue& Tissue::add_species(const GenotypeProperties& genotype)
 {
     // check whether the genotype is already in the tissue
     if (genotope_pos.count(genotype.get_id())>0) {
-        throw std::runtime_error("Genomic genotype already in the tissue");
+        throw std::runtime_error("Genotype already in the tissue");
     }
 
-    // check whether any of the epigenetic genotypes is already in the tissue
-    for (const auto& e_genotype: genotype.epigenetic_genotypes()) {
-        if (id_pos.count(e_genotype.get_id())>0) {
-            throw std::runtime_error("Epigenetic genotype id "
-                                     + std::to_string(static_cast<int>(e_genotype.get_id())) 
+    // check whether any of the species is already in the tissue
+    for (const auto& species: genotype.get_species()) {
+        if (id_pos.count(species.get_id())>0) {
+            throw std::runtime_error("Species id "
+                                     + std::to_string(static_cast<int>(species.get_id())) 
                                      + " already in the tissue");
         }
-        if (name_pos.count(e_genotype.get_epigenetic_name())>0) {
-            throw std::runtime_error("Epigenetic genotype \""
-                                     + e_genotype.get_epigenetic_name() 
+        if (name_pos.count(species.get_name())>0) {
+            throw std::runtime_error("Species \""
+                                     + species.get_name() 
                                      + "\" already in the tissue");
         }
     }
 
     // insert the genotypes in the tissue 
     auto& pos = genotope_pos[genotype.get_id()];
-    for (const auto& e_genotype: genotype.epigenetic_genotypes()) {
+    for (const auto& in_species: genotype.get_species()) {
         // place the new species at the end of the species vector
         pos.push_back(species.size());
 
-        id_pos[e_genotype.get_id()] = species.size();
-        name_pos[e_genotype.get_epigenetic_name()] = species.size();
-        species.push_back(Species(e_genotype));
+        id_pos[in_species.get_id()] = species.size();
+        name_pos[in_species.get_name()] = species.size();
+        species.push_back(Species(in_species));
     }
 
     return *this;
@@ -401,7 +393,7 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
     if (to_be_moved!=nullptr) {
         lost_cell.push_back(*to_be_moved);
 
-        Species &species = get_species(to_be_moved->get_epigenetic_id());
+        Species &species = get_species(to_be_moved->get_species_id());
 
         species.erase(to_be_moved->get_id());
     }

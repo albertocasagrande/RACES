@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.13
- * @date 2023-10-23
+ * @version 0.14
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -56,7 +56,7 @@ class PhylogeneticForest
 
     std::map<CellId, std::set<CellId>> branches;    //!< The descendant branches
 
-    std::map<EpigeneticGenotypeId, GenotypeId> genotype_map;    //!< A map associating every epigenetic genotype to the corresponding genotype id 
+    std::map<SpeciesId, GenotypeId> genotype_map;    //!< A map associating every species to the corresponding genotype id 
 
     std::vector<Simulation::TissueSample> samples;  //!< The vector of the samples that produced the forest
     std::map<CellId, Simulation::TissueSample const *> coming_from;       //!< The map associating each leaf to sample which it comes from
@@ -71,17 +71,17 @@ class PhylogeneticForest
      * @tparam CELL_STORAGE is the type of the cell storage
      * @param sample_ids is the cell id sample
      * @param cell_storage is the cell storage
-     * @param genotypes is the vector of epigenetic genotypes
+     * @param genotypes is the vector of species
      */
     template<typename CELL_STORAGE>
     void grow_forest_from(const std::list<CellId>& sample, 
                           CELL_STORAGE& cell_storage,
-                          const std::vector<EpigeneticGenotype>& genotypes)
+                          const std::vector<SpeciesProperties>& genotypes)
     {
         clear();
 
         for (const auto& epigenetic_genotype: genotypes) {
-            genotype_map[epigenetic_genotype.get_id()] = epigenetic_genotype.get_genomic_id();
+            genotype_map[epigenetic_genotype.get_id()] = epigenetic_genotype.get_genotype_id();
         }
 
         std::set<CellId> parent_ids;
@@ -209,13 +209,13 @@ public:
         const Simulation::TissueSample& get_sample() const;
 
         /**
-         * @brief Get the node epigenetic genotype id
+         * @brief Get the node species id
          * 
-         * @return the node epigenetic genotype id
+         * @return the node species id
          */
-        inline EpigeneticGenotypeId get_epigenetic_id() const
+        inline SpeciesId get_species_id() const
         {
-            return forest->cells.at(cell_id).get_epigenetic_id();
+            return forest->cells.at(cell_id).get_species_id();
         }
 
         /**

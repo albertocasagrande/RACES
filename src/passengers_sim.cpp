@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.21
- * @date 2023-10-25
+ * @version 0.22
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -249,26 +249,26 @@ class PassengersSimulator : public BasicExecutable
     static void
     split_epigenetic_status(std::list<Races::Passengers::SampleGenomeMutations>& FACS_samples,
                             const Races::Passengers::SampleGenomeMutations& sample_mutations,
-                            std::map<Races::Drivers::EpigeneticGenotypeId, std::string> methylation_map)
+                            std::map<Races::Drivers::SpeciesId, std::string> methylation_map)
     {
         using namespace Races::Drivers;
         using namespace Races::Drivers::Simulation;
         using namespace Races::Passengers;
 
-        std::map<EpigeneticGenotypeId, SampleGenomeMutations*> meth_samples;
+        std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
         
         for (const auto& cell_mutations : sample_mutations.mutations) {
-            auto found = meth_samples.find(cell_mutations.get_epigenetic_id());
+            auto found = meth_samples.find(cell_mutations.get_species_id());
 
             if (found == meth_samples.end()) {
                 auto new_name = sample_mutations.get_name()+"_"+
-                                    methylation_map.at(cell_mutations.get_epigenetic_id());
+                                    methylation_map.at(cell_mutations.get_species_id());
             
                 FACS_samples.push_back(SampleGenomeMutations(sample_mutations));
 
                 FACS_samples.back().mutations.push_back(cell_mutations);
 
-                meth_samples.insert({cell_mutations.get_epigenetic_id(), &(FACS_samples.back())});
+                meth_samples.insert({cell_mutations.get_species_id(), &(FACS_samples.back())});
             } else {
                 (found->second)->mutations.push_back(cell_mutations);
             }
@@ -277,7 +277,7 @@ class PassengersSimulator : public BasicExecutable
 
     static std::list<Races::Passengers::SampleGenomeMutations>
     split_epigenetic_status(const std::list<Races::Passengers::SampleGenomeMutations>& sample_mutations_list,
-                            const std::map<Races::Drivers::EpigeneticGenotypeId, std::string>& methylation_map)
+                            const std::map<Races::Drivers::SpeciesId, std::string>& methylation_map)
     {
         using namespace Races::Drivers;
         using namespace Races::Drivers::Simulation;
@@ -326,15 +326,15 @@ class PassengersSimulator : public BasicExecutable
         ReadSimulator<> read_simulator;
 
         Drivers::PhylogeneticForest forest;
-        SpeciesMutationalProperties mutational_properties;
+        MutationalProperties mutational_properties;
 
-        std::map<EpigeneticGenotypeId, std::string> methylation_map;
+        std::map<SpeciesId, std::string> methylation_map;
         {
             auto drivers_simulation = load_drivers_simulation(snapshot_path, quiet);
 
             for (const auto& species : drivers_simulation.tissue()) {
                 const auto& signature = species.get_methylation_signature();
-                methylation_map[species.get_id()] = Genotype::signature_to_string(signature);
+                methylation_map[species.get_id()] = GenotypeProperties::signature_to_string(signature);
             }
 
             auto samples = get_samples(drivers_simulation, simulation_cfg);

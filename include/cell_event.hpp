@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.9
- * @date 2023-10-29
+ * @version 0.10
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,8 +71,8 @@ struct CellEvent
 {
     CellEventType type;                     //!< event type
     Position position;                      //!< event position
-    EpigeneticGenotypeId initial_genotype;  //!< genotype of the cell on which event occurs
-    EpigeneticGenotypeId final_genotype;    //!< final genotype for mutational events
+    SpeciesId initial_species;   //!< species of the cell on which event occurs
+    SpeciesId final_species;     //!< final species for mutational events
     Time delay;                             //!< event delay
 
     /**

@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.19
- * @date 2023-10-29
+ * @version 0.20
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,9 +58,9 @@ class Tissue;
 /**
  * @brief Cell species
  * 
- * This class represents the set of cells having the same driver genotype.
+ * This class represents the set of cells having the same genotype.
  */
-class Species: public EpigeneticGenotype {
+class Species: public SpeciesProperties {
     /**
      * @brief A map from cell ids to the corresponding pointers
      */
@@ -211,9 +211,9 @@ public:
     /**
      * @brief A constructor
      * 
-     * @param genotype is the epigenetic genotype of the species
+     * @param genotype is the species of the species
      */
-    explicit Species(const EpigeneticGenotype& genotype);
+    explicit Species(const SpeciesProperties& genotype);
 
     /**
      * @brief A copy constructor
@@ -412,7 +412,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
-        archive & static_cast<const EpigeneticGenotype &>(*this);
+        archive & static_cast<const SpeciesProperties &>(*this);
 
         archive & last_insertion_time;
 
@@ -439,7 +439,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static Species load(ARCHIVE& archive)
     {
-        auto genotype = EpigeneticGenotype::load(archive);
+        auto genotype = SpeciesProperties::load(archive);
         Species species(genotype);
 
         archive & species.last_insertion_time;
@@ -499,7 +499,7 @@ namespace std
  * @param species is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::Species& species);
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesProperties& species);
 
 }   // std
 

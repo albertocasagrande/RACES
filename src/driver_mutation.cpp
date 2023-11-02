@@ -2,8 +2,8 @@
  * @file driver_mutation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements driver genomic mutations
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,8 +43,8 @@ DriverMutation::DriverMutation(const GenotypeId& initial_id, const GenotypeId& f
     initial_id(initial_id), final_id(final_id)
 {}
 
-DriverMutation::DriverMutation(const Genotype& initial_genotype,
-                               const Genotype& final_genotype):
+DriverMutation::DriverMutation(const GenotypeProperties& initial_genotype,
+                               const GenotypeProperties& final_genotype):
     DriverMutation(initial_genotype.get_id(), final_genotype.get_id())
 {}
 

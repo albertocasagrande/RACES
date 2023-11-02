@@ -2,8 +2,8 @@
  * @file genotype.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Genotype`
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-std::shared_ptr<Races::Drivers::Genotype>
+std::shared_ptr<Races::Drivers::GenotypeProperties>
 GenotypeWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
 {
     using namespace Races::Drivers;
@@ -60,10 +60,12 @@ GenotypeWrapper::create(std::string const& name, boost::python::list const& epig
         }
     }
 
-    return std::make_shared<Genotype>(name, c_epigenetic_rates);
+    return std::make_shared<GenotypeProperties>(name, c_epigenetic_rates);
 }
 
-void GenotypeWrapper::set_rates(Races::Drivers::Genotype *genotype, const std::string& methylation_signature, boost::python::dict const& rates)
+void GenotypeWrapper::set_rates(Races::Drivers::GenotypeProperties *genotype, 
+                                const std::string& methylation_signature,
+                                boost::python::dict const& rates)
 {
     using namespace Races::Drivers;
 

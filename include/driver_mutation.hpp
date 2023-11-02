@@ -2,8 +2,8 @@
  * @file driver_mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic mutations
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,24 +50,24 @@ struct DriverMutation : public SimulationEvent
 {
     using Type = SimulationEvent::Type;
 
-    GenotypeId initial_id;   //!< The initial genomic genotype identifier
-    GenotypeId final_id;     //!< The final genomic genotype identifier
+    GenotypeId initial_id;   //!< The initial genotype identifier
+    GenotypeId final_id;     //!< The final genotype identifier
 
     /**
      * @brief A constructor
      * 
-     * @param initial_id is the identifier of the initial genomic genotype
-     * @param final_id is the identifier of the final genomic genotype
+     * @param initial_id is the identifier of the initial genotype
+     * @param final_id is the identifier of the final genotype
      */
     DriverMutation(const GenotypeId& initial_id, const GenotypeId& final_id);
 
     /**
      * @brief A constructor
      * 
-     * @param initial_genotype is the initial genomic genotype
-     * @param final_genotype is the final genomic genotype
+     * @param initial_genotype is the initial genotype
+     * @param final_genotype is the final genotype
      */
-    DriverMutation(const Genotype& initial_genotype, const Genotype& final_genotype);
+    DriverMutation(const GenotypeProperties& initial_genotype, const GenotypeProperties& final_genotype);
 
     /**
      * @brief Save a genomic mutation in an archive

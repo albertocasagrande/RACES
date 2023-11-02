@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.19
- * @date 2023-10-02
+ * @version 0.20
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -67,7 +67,7 @@ protected:
 
     Time birth_time;                     //!< Cell birth time
 
-    EpigeneticGenotypeId epigenetic_id;  //!< cell species reference
+    SpeciesId species_id;  //!< cell species reference
 
     /**
      * @brief The empty constructor
@@ -78,26 +78,26 @@ public:
     /**
      * @brief Create a new cell with no passenger mutations
      * 
-     * @param epigenetic_id is the epigenetic genotype identifier
+     * @param species_id is the species identifier
      */
-    explicit Cell(const EpigeneticGenotypeId epigenetic_id);
+    explicit Cell(const SpeciesId species_id);
 
     /**
      * @brief Create a new cell
      * 
-     * @param epigenetic_id is the epigenetic genotype identifier
+     * @param species_id is the species identifier
      * @param parent_id is the parent cell identifier
      */
-    Cell(const EpigeneticGenotypeId epigenetic_id, const CellId parent_id);
+    Cell(const SpeciesId species_id, const CellId parent_id);
 
     /**
      * @brief Create a new cell
      * 
-     * @param epigenetic_id is the epigenetic genotype identifier
+     * @param species_id is the species identifier
      * @param parent_id is the parent cell identifier
      * @param birth_time is the cell birth time
      */
-    Cell(const EpigeneticGenotypeId epigenetic_id, const CellId parent_id, const Time birth_time);
+    Cell(const SpeciesId species_id, const CellId parent_id, const Time birth_time);
 
     /**
      * @brief Get the cell identifier
@@ -130,13 +130,13 @@ public:
     }
 
     /**
-     * @brief Get the cell driver genotype
+     * @brief Get the cell species
      * 
-     * @return a constant reference to the cell driver genotype
+     * @return a constant reference to the cell species
      */
-    inline const EpigeneticGenotypeId& get_epigenetic_id() const
+    inline const SpeciesId& get_species_id() const
     {
-        return epigenetic_id;
+        return species_id;
     }
 
     /**
@@ -146,7 +146,7 @@ public:
      */
     inline Cell generate_descendent(const Time& time) const
     {
-        return Cell(get_epigenetic_id(), get_id(), time);
+        return Cell(get_species_id(), get_id(), time);
     }
 
     /**
@@ -161,7 +161,7 @@ public:
         archive & id 
                 & parent
                 & birth_time
-                & epigenetic_id;
+                & species_id;
     }
 
     /**
@@ -179,13 +179,13 @@ public:
         archive & cell.id
                 & cell.parent
                 & cell.birth_time
-                & cell.epigenetic_id;
+                & cell.species_id;
 
         return cell;
     }
 
     friend class Tissue;
-    friend class Species;
+    friend class SpeciesProperties;
     friend class Simulation::Simulation; 
 
     friend void swap(Cell& a, Cell &b);
@@ -277,7 +277,7 @@ void swap(LabelledCell<LABEL>& a, LabelledCell<LABEL> &b)
     std::swap(a.label,b.label);
 }
 
-class Species;
+class SpeciesProperties;
 
 namespace Simulation
 {
@@ -299,10 +299,10 @@ protected:
     /**
      * @brief A cell in tissue constructor
      * 
-     * @param genotype is the cell driver genotype id
+     * @param species_id is the cell species id
      * @param position is the cell position
      */
-    CellInTissue(const EpigeneticGenotypeId genotype, const PositionInTissue& position);
+    CellInTissue(const SpeciesId& species_id, const PositionInTissue& position);
 
     /**
      * @brief A cell in tissue constructor
@@ -315,7 +315,7 @@ protected:
     /**
      * @brief A cell in tissue constructor
      * 
-     * This constructor is meant to build non-driver-genotype cells.
+     * This constructor is meant to build wild-type cells.
      * 
      * @param position is the cell position
      */
@@ -324,7 +324,7 @@ protected:
     /**
      * @brief A cell in tissue constructor
      * 
-     * This constructor is meant to build non-driver-genotype cells.
+     * This constructor is meant to build wild-type cells.
      * 
      * @param x is the x axis position in the tissue
      * @param y is the y axis position in the tissue
@@ -351,13 +351,13 @@ public:
     CellInTissue& operator=(const Cell& cell);
 
     /**
-     * @brief Test whether the cell has a driver genotype
+     * @brief Test whether the cell is a wild-type cell
      * 
-     * @return true if and only if the cell has a driver genotype
+     * @return `true` if and only if the cell is a wild-type cell
      */
     inline bool has_driver_mutations() const
     {
-        return get_epigenetic_id() != NON_DRIVER_GENOTYPE;
+        return get_species_id() != WILD_TYPE_SPECIES;
     }
 
     /**

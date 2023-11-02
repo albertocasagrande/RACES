@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a UI window to plot a tissue
- * @version 0.13
- * @date 2023-10-28
+ * @version 0.14
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -243,7 +243,7 @@ class TissuePlotter {
 
 		std::ostringstream oss;
 
-		oss << species.get_epigenetic_name() 
+		oss << species.get_name() 
 			<< ": " << species.num_of_cells() << "/" << statistics.total_cells
 			<< "/" << statistics.killed_cells << "/" << statistics.lost_cells;
 

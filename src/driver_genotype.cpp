@@ -1,9 +1,9 @@
 /**
  * @file driver.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the driver genotype representation
- * @version 0.10
- * @date 2023-10-28
+ * @brief Implements the genotype representation
+ * @version 0.11
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,8 +40,8 @@ namespace Races
 namespace Drivers
 {
 
-unsigned int EpigeneticGenotype::counter = 0;
-unsigned int Genotype::counter = 0;
+unsigned int SpeciesProperties::counter = 0;
+unsigned int GenotypeProperties::counter = 0;
 
 EpigeneticRates::EpigeneticRates(const double methylation_rate, const double demethylation_rate):
         methylation(methylation_rate), demethylation(demethylation_rate)
@@ -81,22 +81,22 @@ EpigeneticRates& EpigeneticRates::set_demethylation_rate(const double& rate)
     return *this;
 }
 
-EpigeneticGenotype::EpigeneticGenotype():
-    id(0), genomic_id(0)
+SpeciesProperties::SpeciesProperties():
+    id(0), genotype_id(0)
 {}
 
-EpigeneticGenotype::EpigeneticGenotype(const Genotype& genotype,
+SpeciesProperties::SpeciesProperties(const GenotypeProperties& genotype,
                                        const size_t num_of_promoters):
-    id(counter++), genomic_id(genotype.get_id())
+    id(counter++), genotype_id(genotype.get_id())
 {
-    const size_t epigenetic_index = genotype.epigenetic_genotypes().size();
+    const size_t epigenetic_index = genotype.get_species().size();
 
     name = genotype.get_name();
 
-    methylation_signature = Genotype::index_to_signature(epigenetic_index, num_of_promoters);
+    methylation_signature = GenotypeProperties::index_to_signature(epigenetic_index, num_of_promoters);
 }
 
-double EpigeneticGenotype::get_rate(const CellEventType& event) const
+double SpeciesProperties::get_rate(const CellEventType& event) const
 {
     if (event_rates.count(event)==0) {
         return 0;
@@ -104,24 +104,24 @@ double EpigeneticGenotype::get_rate(const CellEventType& event) const
     return event_rates.at(event);
 }
 
-std::string EpigeneticGenotype::get_epigenetic_name() const
+std::string SpeciesProperties::get_name() const
 {
-    return name + Genotype::signature_to_string(methylation_signature);
+    return name + GenotypeProperties::signature_to_string(methylation_signature);
 }
 
-Genotype::Genotype(const std::string& name,
+GenotypeProperties::GenotypeProperties(const std::string& name,
                    const std::vector<EpigeneticRates>& epigenetic_event_rates):
     id(counter++), name(name)
 {
     size_t epigenetic_mutations = 1<<epigenetic_event_rates.size();
 
     for (size_t i=0; i<epigenetic_mutations; ++i) {
-        e_genotypes.push_back(EpigeneticGenotype(*this, epigenetic_event_rates.size()));
+        species.push_back(SpeciesProperties(*this, epigenetic_event_rates.size()));
     }
 
-    for (auto& e_genotype: e_genotypes) {
-        auto e_signature = e_genotype.get_methylation_signature();
-        auto& e_rates = e_genotype.epigenetic_rates;
+    for (auto& l_species: species) {
+        auto e_signature = l_species.get_methylation_signature();
+        auto& e_rates = l_species.epigenetic_rates;
         
         for (size_t i=0; i<epigenetic_event_rates.size(); ++i) {
             // get the signature of the genotype reachable by 
@@ -134,7 +134,7 @@ Genotype::Genotype(const std::string& name,
 
             // get the identifier of the genotype reachable by 
             // methylating/demethylating the i-th promoter
-            EpigeneticGenotypeId dst_id = e_genotypes[index].get_id();
+            SpeciesId dst_id = species[index].get_id();
 
             if (e_signature[i]) {  // if the promoter is methylated
                 // a methylation event must occur
@@ -150,48 +150,48 @@ Genotype::Genotype(const std::string& name,
     }
 }
 
-Genotype::Genotype(const std::string& name):
-    Genotype(name, std::vector<EpigeneticRates>())
+GenotypeProperties::GenotypeProperties(const std::string& name):
+    GenotypeProperties(name, std::vector<EpigeneticRates>())
 {}
 
-size_t Genotype::num_of_promoters() const
+size_t GenotypeProperties::num_of_promoters() const
 {
-    if (e_genotypes.size()==0) {
+    if (species.size()==0) {
         return 0;
     }
 
-    return e_genotypes[0].get_methylation_signature().size();
+    return species[0].get_methylation_signature().size();
 }
 
-EpigeneticGenotype& Genotype::operator[](const MethylationSignature& methylation_signature)
+SpeciesProperties& GenotypeProperties::operator[](const MethylationSignature& methylation_signature)
 {
     validate_signature(methylation_signature);
 
-    return e_genotypes[Genotype::signature_to_index(methylation_signature)];
+    return species[GenotypeProperties::signature_to_index(methylation_signature)];
 }
 
-const EpigeneticGenotype& Genotype::operator[](const MethylationSignature& methylation_signature) const
+const SpeciesProperties& GenotypeProperties::operator[](const MethylationSignature& methylation_signature) const
 {
     validate_signature(methylation_signature);
 
-    return e_genotypes[Genotype::signature_to_index(methylation_signature)];
+    return species[GenotypeProperties::signature_to_index(methylation_signature)];
 }
 
-EpigeneticGenotype& Genotype::operator[](const std::string& methylation_signature)
+SpeciesProperties& GenotypeProperties::operator[](const std::string& methylation_signature)
 {
     validate_signature(methylation_signature);
 
-    return e_genotypes[Genotype::string_to_index(methylation_signature)];
+    return species[GenotypeProperties::string_to_index(methylation_signature)];
 }
 
-const EpigeneticGenotype& Genotype::operator[](const std::string& methylation_signature) const
+const SpeciesProperties& GenotypeProperties::operator[](const std::string& methylation_signature) const
 {
     validate_signature(methylation_signature);
 
-    return e_genotypes[Genotype::string_to_index(methylation_signature)];
+    return species[GenotypeProperties::string_to_index(methylation_signature)];
 }
 
-size_t Genotype::string_to_index(const std::string& methylation_signature)
+size_t GenotypeProperties::string_to_index(const std::string& methylation_signature)
 {
     size_t index=0, digit_value=(1 << methylation_signature.size());
 
@@ -205,7 +205,7 @@ size_t Genotype::string_to_index(const std::string& methylation_signature)
     return index;
 }
 
-std::string Genotype::index_to_string(const size_t& index, const size_t num_of_promoters)
+std::string GenotypeProperties::index_to_string(const size_t& index, const size_t num_of_promoters)
 {
     size_t digit_value=(1 << num_of_promoters);
     std::ostringstream oss;
@@ -218,7 +218,7 @@ std::string Genotype::index_to_string(const size_t& index, const size_t num_of_p
     return oss.str();
 }
 
-size_t Genotype::signature_to_index(const MethylationSignature& methylation_signature)
+size_t GenotypeProperties::signature_to_index(const MethylationSignature& methylation_signature)
 {
     size_t index=0, digit_value=(1 << methylation_signature.size());
 
@@ -232,7 +232,7 @@ size_t Genotype::signature_to_index(const MethylationSignature& methylation_sign
     return index;
 }
 
-MethylationSignature Genotype::index_to_signature(const size_t& index, const size_t num_of_promoters)
+MethylationSignature GenotypeProperties::index_to_signature(const size_t& index, const size_t num_of_promoters)
 {
     MethylationSignature signature;
     size_t digit_value=(1 << num_of_promoters);
@@ -259,18 +259,18 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRate
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticGenotype& genotype)
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesProperties& species)
 {
-    out << "{name: \""<< genotype.get_epigenetic_name() << "\", id: " << genotype.get_id() 
+    out << "{name: \""<< species.get_name() << "\", id: " << species.get_id() 
         << ", event_rates: {";
 
     std::string sep="";
-    for (const auto& [event, rate]: genotype.get_rates()) {
+    for (const auto& [event, rate]: species.get_rates()) {
         out << sep << Races::Drivers::cell_event_names[event] << ": " << rate;
         sep = ", ";
     }
 
-    const auto& e_rates = genotype.get_epigenetic_mutation_rates();
+    const auto& e_rates = species.get_epigenetic_mutation_rates();
     if (e_rates.size()>0) {
         out << "}, epigenetic rates: {";
         sep="";
@@ -286,20 +286,18 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticGeno
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::Genotype& genotype)
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::GenotypeProperties& genotype)
 {
     out << "{name: \"" << genotype.get_name() << "\", id: " 
-        << genotype.get_id() << ", epigenetic genotypes=[";
-
-    const auto& e_genotypes = genotype.epigenetic_genotypes();
+        << genotype.get_id() << ", species=[";
     
     std::string sep = "";
-    if (e_genotypes.size()>1) {
+    if (genotype.get_species().size()>1) {
         sep = "\n";
     }
 
-    for (const auto& e_genotype: e_genotypes) {
-        out << sep << e_genotype;
+    for (const auto& species: genotype.get_species()) {
+        out << sep << species;
         sep = ",\n";
     }
 

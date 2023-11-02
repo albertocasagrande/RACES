@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.9
- * @date 2023-11-01
+ * @version 0.10
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,7 +47,9 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::add_driver_mutation(const Races::Drivers::Genotype& src, const Races::Drivers::Genotype& dst, const Races::Time time)
+void SimulationWrapper::add_driver_mutation(const Races::Drivers::GenotypeProperties& src,
+                                            const Races::Drivers::GenotypeProperties& dst,
+                                            const Races::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
@@ -126,7 +128,7 @@ const Races::Time& SimulationWrapper::get_time() const
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_species(const Races::Drivers::Genotype& genotype)
+void SimulationWrapper::add_species(const Races::Drivers::GenotypeProperties& genotype)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
@@ -165,7 +167,7 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
 }
 
 
-void SimulationWrapper::add_cell(const Races::Drivers::Genotype& genotype, 
+void SimulationWrapper::add_cell(const Races::Drivers::GenotypeProperties& genotype, 
                                  const std::string& methylation_signature,
                                  boost::python::list const& position)
 {

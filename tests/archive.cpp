@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.15
- * @date 2023-10-29
+ * @version 0.16
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,13 +53,13 @@ struct ArchiveFixture {
     {
         using namespace Races::Drivers;
         
-        Genotype A("A",{{0.01,0.01}});
+        GenotypeProperties A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.3}});
         A["+"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.45}});
     
-        Genotype B("B",{{0.01,0.01}});
+        GenotypeProperties B("B",{{0.01,0.01}});
         B["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.2}});
         B["+"].set_rates({{CellEventType::DEATH, 0.01},
@@ -168,7 +168,7 @@ bool operator==(const Races::Drivers::Cell& a, const Races::Drivers::Cell& b)
 {
     return (a.get_id()==b.get_id() && 
             a.get_parent_id()==b.get_parent_id() &&
-            a.get_epigenetic_id()==b.get_epigenetic_id());
+            a.get_species_id()==b.get_species_id());
 }
 
 bool operator==(const Races::Drivers::Simulation::CellInTissue& a, const Races::Drivers::Simulation::CellInTissue& b)
@@ -179,16 +179,16 @@ bool operator==(const Races::Drivers::Simulation::CellInTissue& a, const Races::
             static_cast<const Simulation::PositionInTissue&>(a)==static_cast<const Simulation::PositionInTissue&>(b));
 }
 
-bool operator==(const Races::Drivers::EpigeneticGenotype& a, const Races::Drivers::EpigeneticGenotype& b)
+bool operator==(const Races::Drivers::SpeciesProperties& a, const Races::Drivers::SpeciesProperties& b)
 {
-    return (a.get_epigenetic_name()==b.get_epigenetic_name() &&
+    return (a.get_name()==b.get_name() &&
             a.get_id()==b.get_id() &&
-            a.get_genomic_id()==b.get_genomic_id() &&
+            a.get_genotype_id()==b.get_genotype_id() &&
             a.get_rates()==b.get_rates() &&
             a.get_epigenetic_mutation_rates()==b.get_epigenetic_mutation_rates());
 }
 
-inline bool operator!=(const Races::Drivers::EpigeneticGenotype& a, const Races::Drivers::EpigeneticGenotype& b)
+inline bool operator!=(const Races::Drivers::SpeciesProperties& a, const Races::Drivers::SpeciesProperties& b)
 {
     return !(a==b);
 }
@@ -197,7 +197,7 @@ bool operator==(const Races::Drivers::Simulation::Species& a, const Races::Drive
 {
     using namespace Races::Drivers;
 
-    if (static_cast<const EpigeneticGenotype&>(a)!=static_cast<const EpigeneticGenotype&>(b)) {
+    if (static_cast<const SpeciesProperties&>(a)!=static_cast<const SpeciesProperties&>(b)) {
         return false;
     }
 
@@ -220,7 +220,7 @@ bool operator==(const Races::Drivers::Simulation::Tissue& a, const Races::Driver
         return false;
     }
 
-    std::set<GenotypeId> genomic_ids;
+    std::set<GenotypeId> genotype_ids;
 
     auto a_it = a.begin(), b_it = b.begin();
 
@@ -229,12 +229,12 @@ bool operator==(const Races::Drivers::Simulation::Tissue& a, const Races::Driver
         if (*a_it != *b_it) {
             return false;
         }
-        genomic_ids.insert(a_it->get_genomic_id());
+        genotype_ids.insert(a_it->get_genotype_id());
     }
 
-    for (const auto& genomic_id : genomic_ids) {
-        auto a_view = a.get_genotype_species(genomic_id);
-        auto b_view = b.get_genotype_species(genomic_id);
+    for (const auto& genotype_id : genotype_ids) {
+        auto a_view = a.get_genotype_species(genotype_id);
+        auto b_view = b.get_genotype_species(genotype_id);
 
         auto a_it = a_view.begin(), b_it = b_view.begin();
 
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
 
             BOOST_CHECK(read_value.get_id()==value.get_id());
             BOOST_CHECK(read_value.get_parent_id()==value.get_parent_id());
-            BOOST_CHECK(read_value.get_epigenetic_id()==value.get_epigenetic_id());
+            BOOST_CHECK(read_value.get_species_id()==value.get_species_id());
         }
     }
 
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
 {
     using namespace Races::Drivers;
     
-    Genotype to_save("A",{{0.01,0.01},{0.01,0.01}});
+    GenotypeProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
     to_save["--"].set_rates({{CellEventType::DEATH, 0.1},
                              {CellEventType::DUPLICATION, 0.3}});
     to_save["+-"].set_rates({{CellEventType::DEATH, 0.1},
@@ -439,18 +439,18 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
     {
         Races::Archive::Binary::Out o_archive(filename);
 
-        for (const auto& e_genotype : to_save.epigenetic_genotypes()) {
-            o_archive & e_genotype;
+        for (const auto& species : to_save.get_species()) {
+            o_archive & species;
         }
     }
 
     {
         Races::Archive::Binary::In i_archive(filename);
 
-        for (const auto& e_genotype : to_save.epigenetic_genotypes()) {
-            EpigeneticGenotype in_genotype =  EpigeneticGenotype::load(i_archive);
+        for (const auto& species : to_save.get_species()) {
+            SpeciesProperties in_species =  SpeciesProperties::load(i_archive);
 
-            BOOST_CHECK(e_genotype==in_genotype);
+            BOOST_CHECK(species==in_species);
         }
     }
     std::filesystem::remove(filename);

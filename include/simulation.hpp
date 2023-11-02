@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.25
- * @date 2023-10-29
+ * @version 0.26
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -78,7 +78,7 @@ class Simulation
     using system_clock = std::chrono::system_clock;
 
     std::vector<Tissue> tissues;     //!< Simulated tissues
-    std::map<std::string, GenotypeId> genotype_name_id; //!< A map associating the genotype name to its id
+    std::map<std::string, GenotypeId> genotype_name2id; //!< A map associating the genotype name to its id
 
     BinaryLogger logger;             //!< Event logger
 
@@ -94,7 +94,7 @@ class Simulation
 
     TimedEventQueue timed_event_queue;   //!< The timed event queue 
 
-    std::set<EpigeneticGenotypeId> death_enabled;  //!< Species having reached the death activation level
+    std::set<SpeciesId> death_enabled;  //!< Species having reached the death activation level
 
     /**
      * @brief Simulate a cell duplication
@@ -137,7 +137,7 @@ class Simulation
      * @brief Simulate a cell mutation
      * 
      * This method simulates a mutation on a cell in tissue.
-     * If the cell in the provided position has non-driver genotype, 
+     * If the cell in the provided position has non-genotype, 
      * then nothing is done.  
      * 
      * @param position is the position of the cell that will mutate
@@ -145,7 +145,7 @@ class Simulation
      * @return list of the affected cells, i.e., a list containing 
      *      the status of the mutated cell at most
      */
-    EventAffectedCells simulate_mutation(const Position& position, const EpigeneticGenotypeId& final_id);
+    EventAffectedCells simulate_mutation(const Position& position, const SpeciesId& final_id);
 
     /**
      * @brief Simulate a duplication and an epigenetic event
@@ -162,7 +162,7 @@ class Simulation
      *      list contains only the new cell in position `position`. 
      *      In the remaining case, the returned list contains two cells
      */
-    EventAffectedCells simulate_duplication_epigenetic_event(const Position& position, const EpigeneticGenotypeId& final_id);
+    EventAffectedCells simulate_duplication_epigenetic_event(const Position& position, const SpeciesId& final_id);
 
     /**
      * @brief Record tissue initial cells in log
@@ -178,22 +178,20 @@ class Simulation
     void init_valid_directions();
 
     /**
-     * @brief Randomly select a cell among those having a specified genomic genotype
+     * @brief Randomly select a cell among those having a specified genotype
      * 
      * @param generator is a random number generator
      * @param tissue is the tissue in which cell must be choosen
-     * @param genotype_id is the identifier of the genomic genotype that must have 
+     * @param genotype_id is the identifier of the genotype that must have 
      *          the selected cell
-     * @return whenever the targeted genomic species contain at least 
-     *        one cell, a pointer to a randomly selected cell whose 
-     *        driver genomic genotype identifier is `genotype_id`. 
-     *        If otherwise there are no cells whose driver genomic 
-     *        genotype identifier is `genotype_id`, this method 
-     *        returns `nullptr`
+     * @return whenever the set of cells having `genotype_id` as genotype 
+     *         identifier is not empty, a pointer to a randomly selected 
+     *         cell in it. If, otherwise, the set is empty, this method 
+     *         returns `nullptr`
      */
     static const CellInTissue*
-    choose_a_cell_in_genomic_species(std::mt19937_64& generator, const Tissue& tissue,
-                                     const GenotypeId& genotype_id);
+    choose_a_cell_by_genotype(std::mt19937_64& generator, const Tissue& tissue,
+                              const GenotypeId& genotype_id);
 
     /**
      * @brief Handle a driver mutation
@@ -309,18 +307,19 @@ public:
     /**
      * @brief Add a timed driver genomic mutation
      * 
-     * @param src is the source driver genomic genotype
-     * @param dst is the destination driver genomic genotype
+     * @param src is the source genotype
+     * @param dst is the destination genotype
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& add_driver_mutation(const Genotype& src, const Genotype& dst, const Time time);
+    Simulation& add_driver_mutation(const GenotypeProperties& src, 
+                                    const GenotypeProperties& dst, const Time time);
 
     /**
      * @brief Add a timed driver genomic mutation
      * 
-     * @param src is the source driver genomic genotype name
-     * @param dst is the destination driver genomic genotype name
+     * @param src is the source genotype name
+     * @param dst is the destination genotype name
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
@@ -563,33 +562,34 @@ public:
     /**
      * @brief Add a new species to the tissue
      * 
-     * @param genotype is the driver genotype of the new species
+     * @param genotype_properties is the genotype properties of the new species
      * @return a reference to the updated object
      */
-    Simulation& add_species(const Genotype& genotype);
+    Simulation& add_species(const GenotypeProperties& genotype_properties);
 
     /**
      * @brief Add a cell to the simulated tissue
      * 
-     * @param genotype is the driver genotype of the new cell
+     * @param species_properties is the species properties of the new cell
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    inline Simulation& add_cell(const EpigeneticGenotype& genotype, const PositionInTissue& position)
+    inline Simulation& add_cell(const SpeciesProperties& species_properties,
+                                const PositionInTissue& position)
     {
-        return add_cell(genotype.get_id(), position);
+        return add_cell(species_properties.get_id(), position);
     }
 
     /**
      * @brief Add a cell to the simulated tissue
      * 
-     * @param genotype_id is the driver genotype identifier of the new cell
+     * @param species_id is the species identifier of the new cell
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    inline Simulation& add_cell(const EpigeneticGenotypeId& genotype_id, const PositionInTissue& position)
+    inline Simulation& add_cell(const SpeciesId& species_id, const PositionInTissue& position)
     {
-        tissue().add_cell(genotype_id, position);
+        tissue().add_cell(species_id, position);
 
         return *this;
     }
@@ -737,7 +737,7 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & tissues
-                & genotype_name_id
+                & genotype_name2id
                 & logger
                 & secs_between_snapshots
                 & statistics
@@ -763,7 +763,7 @@ public:
         Simulation simulation;
 
         archive & simulation.tissues
-                & simulation.genotype_name_id
+                & simulation.genotype_name2id
                 & simulation.logger
                 & simulation.secs_between_snapshots
                 & simulation.statistics
@@ -828,10 +828,10 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
             affected = simulate_duplication(event.position);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            affected = simulate_duplication_epigenetic_event(event.position, event.final_genotype);
+            affected = simulate_duplication_epigenetic_event(event.position, event.final_species);
             break;
         case CellEventType::DRIVER_GENETIC_MUTATION:
-            affected = simulate_mutation(event.position, event.final_genotype);
+            affected = simulate_mutation(event.position, event.final_species);
             break;
         default:
             throw std::runtime_error("Unhandled event type");
@@ -843,7 +843,7 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
         }
 
         // if death has not been enabled yet
-        const auto species_id = cell.get_epigenetic_id();
+        const auto species_id = cell.get_species_id();
         if (death_enabled.count(species_id)==0) {
             Species& species = tissue().get_species(species_id);
             
@@ -858,7 +858,7 @@ Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plo
 
     statistics.record_event(event, time);
     for (const auto& cell: affected.lost_cells) {
-        statistics.record_lost(cell.get_epigenetic_id(), time);
+        statistics.record_lost(cell.get_species_id(), time);
     }
 
     if (plotter != nullptr && !plotter->closed()) {

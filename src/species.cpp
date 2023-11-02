@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.13
- * @date 2023-10-29
+ * @version 0.14
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@ namespace Simulation
 {
 
 Species::Species():
-    EpigeneticGenotype()
+    SpeciesProperties()
 {}
 
 void Species::reset()
@@ -55,12 +55,12 @@ void Species::reset()
     duplication_enabled.clear();
 }
 
-Species::Species(const EpigeneticGenotype& genotype):
-    EpigeneticGenotype(genotype), last_insertion_time(0)
+Species::Species(const SpeciesProperties& genotype):
+    SpeciesProperties(genotype), last_insertion_time(0)
 {}
 
 Species::Species(const Species& orig):
-    EpigeneticGenotype(orig), last_insertion_time(orig.last_insertion_time)
+    SpeciesProperties(orig), last_insertion_time(orig.last_insertion_time)
 {
     for (const auto& [cell_id, cell_ptr]: orig.cells) {
         this->add(*cell_ptr);
@@ -75,7 +75,7 @@ Species& Species::operator=(const Species& orig)
 {
     reset();
 
-    static_cast<EpigeneticGenotype&>(*this) = static_cast<EpigeneticGenotype>(orig);
+    static_cast<SpeciesProperties&>(*this) = static_cast<SpeciesProperties>(orig);
 
     last_insertion_time = orig.last_insertion_time;
 
@@ -136,7 +136,7 @@ void Species::erase(const CellId& cell_id)
 CellInTissue* Species::add(CellInTissue* cell)
 {   
     // update the genotype id
-    cell->epigenetic_id = get_id();
+    cell->species_id = get_id();
 
     // update `last_insertion_time`
     if (cell->get_birth_time()>last_insertion_time) {
@@ -151,14 +151,14 @@ CellInTissue* Species::add(CellInTissue* cell)
 
 CellInTissue* Species::add(CellInTissue&& cell)
 {
-    cell.epigenetic_id = get_id();
+    cell.species_id = get_id();
 
     return add(new CellInTissue(cell));
 }
 
 CellInTissue* Species::add(CellInTissue& cell)
 {
-    cell.epigenetic_id = get_id();
+    cell.species_id = get_id();
 
     return add(new CellInTissue(cell));
 }
@@ -253,8 +253,8 @@ Species::const_iterator Species::const_iterator::operator--(int)
 
 void swap(Species& a, Species& b)
 {
-    std::swap(static_cast<EpigeneticGenotype&>(a),
-              static_cast<EpigeneticGenotype&>(b));
+    std::swap(static_cast<SpeciesProperties&>(a),
+              static_cast<SpeciesProperties&>(b));
     std::swap(a.cells,b.cells);
     std::swap(a.duplication_enabled,b.duplication_enabled);
     std::swap(a.last_insertion_time,b.last_insertion_time);
@@ -271,7 +271,7 @@ namespace std
 
 std::ostream& operator<<(std::ostream& out, const Races::Drivers::Simulation::Species& species)
 {
-    out << "{genotype: " << static_cast<Races::Drivers::EpigeneticGenotype>(species) 
+    out << "{genotype: " << static_cast<Races::Drivers::SpeciesProperties>(species) 
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {

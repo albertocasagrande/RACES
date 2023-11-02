@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.12
- * @date 2023-10-29
+ * @version 0.13
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -62,7 +62,7 @@ struct SpeciesStatistics
     size_t killed_cells;    //!< the number of species cells that were killed
     size_t lost_cells;      //!< the number of cells that have overcome the tissue border
     size_t num_duplications;    //!< the number of duplications in the species
-    std::map<EpigeneticGenotypeId, size_t> epigenetic_events; //!< the number of epigenetic event per species destination
+    std::map<SpeciesId, size_t> epigenetic_events; //!< the number of epigenetic event per species destination
 
     /**
      * @brief The empty constructor
@@ -91,7 +91,7 @@ struct SpeciesStatistics
      * @return the number of epigenetic event leading to the species having
      *      `dst_id` as identifier 
      */
-    size_t num_of_epigenetic_events(const EpigeneticGenotypeId& dst_id) const;
+    size_t num_of_epigenetic_events(const SpeciesId& dst_id) const;
 
     /**
      * @brief Save species statistics in an archive
@@ -146,7 +146,7 @@ class TissueStatistics
 {
     using time_point = std::chrono::steady_clock::time_point;
 
-    std::map<EpigeneticGenotypeId, SpeciesStatistics> s_statistics;  //!< a map from species id to statistics
+    std::map<SpeciesId, SpeciesStatistics> s_statistics;  //!< a map from species id to statistics
     
     std::list<Time> sim_times;             //!< the simulated times of the last recorded events
     std::list<time_point> real_times;      //!< the recording times of the last events 
@@ -179,7 +179,7 @@ public:
      * @return a non-constant reference to the statistics of species having 
      *      `species_id` as identifier 
      */
-    inline SpeciesStatistics& operator[](const EpigeneticGenotypeId& species_id)
+    inline SpeciesStatistics& operator[](const SpeciesId& species_id)
     {
         return s_statistics.at(species_id);
     }
@@ -202,7 +202,7 @@ public:
      * @return a constant reference to the statistics of species having 
      *      `species_id` as identifier 
      */
-    inline const SpeciesStatistics& at(const EpigeneticGenotypeId& species_id) const
+    inline const SpeciesStatistics& at(const SpeciesId& species_id) const
     {
         return s_statistics.at(species_id);
     }
@@ -214,7 +214,7 @@ public:
      * @return `true` if and only if the object contains statistics for the 
      *          specified species
      */
-    inline bool contains_data_for(const EpigeneticGenotypeId& species_id) const
+    inline bool contains_data_for(const SpeciesId& species_id) const
     {
         return s_statistics.count(species_id)==1;
     }
@@ -234,10 +234,10 @@ public:
     /**
      * @brief Record a death
      * 
-     * @param genotype_id is the genotype id of the dying cell
+     * @param species_id is the species id of the dying cell
      * @param time is the death time
      */
-    void record_death(const EpigeneticGenotypeId& genotype_id, const Time &time);
+    void record_death(const SpeciesId& species_id, const Time &time);
 
     /**
      * @brief Record a lost cell
@@ -245,18 +245,18 @@ public:
      * A cell is lost whenever it is pushed outside the tissue border. 
      * This method record in the statistics that a cell is lost.
      * 
-     * @param genotype_id is the genotype id of the lost cell
+     * @param species_id is the species id of the lost cell
      * @param time is the time in which the lost cell has been pushed 
      *       outside the tissue border
      */
-    void record_lost(const EpigeneticGenotypeId& genotype_id, const Time &time);
+    void record_lost(const SpeciesId& species_id, const Time &time);
 
     /**
      * @brief Record a cell duplication
      * 
-     * @param genotype_id is the driver genotype id of the duplicating cell
+     * @param species_id is the species id of the duplicating cell
      */
-    void record_duplication(const EpigeneticGenotypeId& genotype_id);
+    void record_duplication(const SpeciesId& species_id);
 
     /**
      * @brief Record a driver mutation
@@ -265,7 +265,7 @@ public:
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
-    void record_mutation(const EpigeneticGenotypeId& src_species, const EpigeneticGenotypeId& dst_species, 
+    void record_mutation(const SpeciesId& src_species, const SpeciesId& dst_species, 
                          const Time &time);
 
     /**
@@ -275,8 +275,8 @@ public:
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
-    void record_duplication_epigenetic_event(const EpigeneticGenotypeId& src_species, 
-                                             const EpigeneticGenotypeId& dst_species,
+    void record_duplication_epigenetic_event(const SpeciesId& src_species, 
+                                             const SpeciesId& dst_species,
                                              const Time &time);
 
     /**

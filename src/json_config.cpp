@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.7
- * @date 2023-11-01
+ * @version 0.8
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -198,7 +198,7 @@ ConfigReader::get_fraction(const nlohmann::json& fraction_json)
 }
 
 void
-ConfigReader::add_driver_mutational_properties(Races::Passengers::SpeciesMutationalProperties& mutational_properties,
+ConfigReader::add_driver_mutational_properties(Races::Passengers::MutationalProperties& mutational_properties,
                                                const Races::Drivers::Simulation::Simulation& drivers_simulation,
                                                const nlohmann::json& driver_properties_json)
 {
@@ -308,13 +308,13 @@ ConfigReader::collect_driver_mutations(const std::string& driver_name,
     }
 }
 
-Races::Passengers::SpeciesMutationalProperties
+Races::Passengers::MutationalProperties
 ConfigReader::get_mutational_properties(const Races::Drivers::Simulation::Simulation& drivers_simulation,
                                         const nlohmann::json& simulation_json)
 {
     using namespace Races::Passengers;
 
-    SpeciesMutationalProperties mutational_properties;
+    MutationalProperties mutational_properties;
 
     expecting("driver properties", simulation_json, "The passengers simulation configuration");
 
@@ -334,7 +334,7 @@ ConfigReader::get_mutational_properties(const Races::Drivers::Simulation::Simula
 }
 
 Races::Drivers::Simulation::TimedEvent
-get_timed_driver_mutation(const std::map<std::string, Races::Drivers::Genotype> genotypes,
+get_timed_driver_mutation(const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes,
                             const nlohmann::json& timed_driver_mutation_json)
 {
     using namespace Races::Drivers::Simulation;
@@ -381,16 +381,16 @@ get_cell_event_type_by_name(const std::string& event_name)
 }
 
 const Races::Drivers::Simulation::Species&
-find_species_by_epigenetic_name(const Races::Drivers::Simulation::Simulation& drivers_simulation,
-                                const std::string& epigenetic_name)
+find_species_by_name(const Races::Drivers::Simulation::Simulation& drivers_simulation,
+                                const std::string& name)
 {
     for (const auto& species : drivers_simulation.tissue()) {
-        if (epigenetic_name == species.get_epigenetic_name()) {
+        if (name == species.get_name()) {
             return species;
         }
     }
 
-    throw std::runtime_error("Unknown species \""+epigenetic_name+"\"");
+    throw std::runtime_error("Unknown species \""+name+"\"");
 }
 
 Races::Drivers::Simulation::TimedEvent
@@ -411,7 +411,7 @@ get_timed_rate_update(const Races::Drivers::Simulation::Simulation& drivers_simu
     const auto name = (timed_rate_update_json["genotype"].template get<std::string>()
                         + timed_rate_update_json["status"].template get<std::string>());
 
-    const Species& species = find_species_by_epigenetic_name(drivers_simulation, name);
+    const Species& species = find_species_by_name(drivers_simulation, name);
     
     const auto rate_name = timed_rate_update_json["rate name"].template get<std::string>();
     Races::Drivers::CellEventType cell_event_type = get_cell_event_type_by_name(rate_name);
@@ -443,7 +443,7 @@ get_timed_sampling(const nlohmann::json& timed_sampling_json)
 
 Races::Drivers::Simulation::TimedEvent 
 ConfigReader::get_timed_event(const Races::Drivers::Simulation::Simulation& drivers_simulation,
-                              const std::map<std::string, Races::Drivers::Genotype> genotypes,
+                              const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes,
                               const nlohmann::json& timed_event_json)
 {
     (void)drivers_simulation;

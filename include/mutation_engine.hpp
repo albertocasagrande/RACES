@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.14
- * @date 2023-10-24
+ * @version 0.15
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -193,7 +193,7 @@ class MutationEngine
     std::map<Time, MutationalCoefficients> timed_mutational_coefficients;   //!< the timed mutational coefficients
     std::map<std::string, InverseCumulativeSBS> inv_cumulative_SBSs;  //!< the inverse cumulative SBS
 
-    SpeciesMutationalProperties mutational_properties;  //!< the species mutational properties
+    MutationalProperties mutational_properties;  //!< the species mutational properties
 
     /**
      * @brief Select a random value in a set
@@ -362,7 +362,7 @@ class MutationEngine
                     GenomeMutations& cell_mutations)
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
-                                          mutational_properties.at(node.get_epigenetic_id()).mu);
+                                          mutational_properties.at(node.get_species_id()).mu);
 
         // get the active SBS coefficients
         const auto& mc = get_active_mutational_coefficients(node);
@@ -432,7 +432,7 @@ class MutationEngine
                                          GenomeMutations& cell_mutations)
     {
         if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
-            const auto& driver_mp = mutational_properties.at(node.get_epigenetic_id());
+            const auto& driver_mp = mutational_properties.at(node.get_species_id());
 
             for (auto snv : driver_mp.SNVs) {
                 snv.cause = driver_mp.name;
@@ -527,14 +527,14 @@ public:
      * @param num_of_alleles is the number of alleles in wild-type cells
      * @param default_mutational_coefficients is the map of the default mutational signature coefficients
      * @param mutational_signatures is the map of the mutational signatures
-     * @param mutational_properties is the species mutational properties
+     * @param mutational_properties are the mutational properties of all the species
      * @param seed is the random generator seed
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const size_t& num_of_alleles,
                    const std::map<std::string, double>& default_mutational_coefficients,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
-                   const SpeciesMutationalProperties& mutational_properties,
+                   const MutationalProperties& mutational_properties,
                    const int& seed=0):
         generator(seed), context_index(context_index), num_of_alleles(num_of_alleles),
         mutational_properties(mutational_properties)

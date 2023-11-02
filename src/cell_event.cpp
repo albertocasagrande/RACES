@@ -2,8 +2,8 @@
  * @file cell_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell events
- * @version 0.6
- * @date 2023-10-29
+ * @version 0.7
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,7 +53,7 @@ namespace Simulation
 {
 
 CellEvent::CellEvent():
-    type(), position(), initial_genotype(), final_genotype(), delay()
+    type(), position(), initial_species(), final_species(), delay()
 {}
 
 }

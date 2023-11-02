@@ -2,8 +2,8 @@
  * @file rate_update.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines liveness rate updates
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,7 +51,7 @@ struct RateUpdate : public SimulationEvent
 {
     using Type = SimulationEvent::Type;
 
-    EpigeneticGenotypeId species_id;   //!< The involved species id
+    SpeciesId species_id;   //!< The involved species id
     CellEventType event_type;          //!< The liveness event type
     double new_rate;                   //!< The new rate
 
@@ -62,7 +62,7 @@ struct RateUpdate : public SimulationEvent
      * @param event_type is the event type whose rate is changed by the event
      * @param new_rate is the new rate for `event_type` in the species `species_id`
      */
-    RateUpdate(const EpigeneticGenotypeId& species_id, 
+    RateUpdate(const SpeciesId& species_id, 
                const CellEventType& event_type, const double& new_rate);
 
     /**
@@ -72,7 +72,7 @@ struct RateUpdate : public SimulationEvent
      * @param event_type is the event type whose rate is changed by the event
      * @param new_rate is the new rate for `event_type` in the species `species_id`
      */
-    RateUpdate(const EpigeneticGenotype& species, const CellEventType& event_type,
+    RateUpdate(const SpeciesProperties& species, const CellEventType& event_type,
                const double& new_rate);
 
     /**
@@ -99,7 +99,7 @@ struct RateUpdate : public SimulationEvent
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static RateUpdate load(ARCHIVE& archive)
     {
-        EpigeneticGenotypeId species_id;
+        SpeciesId species_id;
         CellEventType event_type;
         double new_rate;
 

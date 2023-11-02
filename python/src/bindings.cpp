@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.9
- * @date 2023-10-29
+ * @version 0.10
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -74,13 +74,13 @@ BOOST_PYTHON_MODULE(RACES)
         .def("set_demethylation_rate", &EpigeneticRatesWrapper::set_demethylation_rate)
     ;
 
-    class_<RacesDrv::Genotype, std::shared_ptr<RacesDrv::Genotype>>("Genotype", no_init)
+    class_<RacesDrv::GenotypeProperties, std::shared_ptr<RacesDrv::GenotypeProperties>>("Genotype", no_init)
         .def("__init__", make_constructor(GenotypeWrapper::create))
         .def("set_rates", &GenotypeWrapper::set_rates)
         .def("get_rate", &GenotypeWrapper::get_rate)
-        .add_property("num_of_promoters", &RacesDrv::Genotype::num_of_promoters)
-        .add_property("name", make_function(&RacesDrv::Genotype::get_name, return_value_policy<copy_const_reference>()))
-        .add_property("id", make_function(&RacesDrv::Genotype::get_id, return_value_policy<copy_const_reference>()))
+        .add_property("num_of_promoters", &RacesDrv::GenotypeProperties::num_of_promoters)
+        .add_property("name", make_function(&RacesDrv::GenotypeProperties::get_name, return_value_policy<copy_const_reference>()))
+        .add_property("id", make_function(&RacesDrv::GenotypeProperties::get_id, return_value_policy<copy_const_reference>()))
     ;
 
     class_<SimulationWrapper, std::shared_ptr<SimulationWrapper>>("Simulation", no_init)

@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.8
- * @date 2023-10-21
+ * @version 0.9
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -100,31 +100,32 @@ public:
     /**
      * @brief Add a timed driver genomic mutation
      * 
-     * @param src is the source driver genomic genotype
-     * @param dst is the destination driver genomic genotype
+     * @param src is the source genotype
+     * @param dst is the destination genotype
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void add_driver_mutation(const Races::Drivers::Genotype& src, const Races::Drivers::Genotype& dst,
+    void add_driver_mutation(const Races::Drivers::GenotypeProperties& src,
+                             const Races::Drivers::GenotypeProperties& dst,
                              const Races::Time time);
 
     /**
      * @brief Add a new species to the tissue
      * 
-     * @param genotype is the driver genotype of the new species
+     * @param genotype is the genotype of the new species
      * @return a reference to the updated object
      */
-    void add_species(const Races::Drivers::Genotype& genotype);
+    void add_species(const Races::Drivers::GenotypeProperties& genotype);
 
     /**
      * @brief Add a cell to the simulated tissue
      * 
-     * @param genotype is the driver genotype of the new cell
+     * @param genotype is the genotype of the new cell
      * @param methylation_signature is the methylation signature of the new cell
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    void add_cell(const Races::Drivers::Genotype& genotype, const std::string& methylation_signature, 
+    void add_cell(const Races::Drivers::GenotypeProperties& genotype, const std::string& methylation_signature, 
                   boost::python::list const& position);
 
     /**

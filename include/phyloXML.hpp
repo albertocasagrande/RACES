@@ -2,8 +2,8 @@
  * @file phyloXML.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines phyloXML stream
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,10 +65,10 @@ class phyloXMLStream
     /**
      * @brief Stream the cell taxonomy
      * 
-     * @param genotype_id is the cell genotype id
+     * @param species_id is the cell species id
      * @return a reference to the updated object
      */
-    phyloXMLStream& operator<<(const EpigeneticGenotypeId& genotype_id);
+    phyloXMLStream& operator<<(const SpeciesId& species_id);
 
     /**
      * @brief Stream the branch color

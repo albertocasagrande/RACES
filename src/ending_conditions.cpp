@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.3
- * @date 2023-10-29
+ * @version 0.4
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,7 +43,7 @@ TimeTest::TimeTest(const Time& threshold):
     threshold(threshold)
 {}
 
-SpeciesCountTest::SpeciesCountTest(const EpigeneticGenotypeId& species_id, const size_t& threshold):
+SpeciesCountTest::SpeciesCountTest(const SpeciesId& species_id, const size_t& threshold):
     species_id(species_id), threshold(threshold)
 {}
 
@@ -80,9 +80,9 @@ uint8_t GenotypeCountTest::percentage(const Simulation& simulation) const
 }
 
 EventCountTest::EventCountTest(const CellEventType& event_type, 
-                               const EpigeneticGenotypeId& species_id, const size_t& threshold):
+                               const SpeciesId& species_id, const size_t& threshold):
     event_type(event_type), species_id(species_id), 
-    dst_id(std::numeric_limits<EpigeneticGenotypeId>::max()), threshold(threshold)
+    dst_id(std::numeric_limits<SpeciesId>::max()), threshold(threshold)
 {
     switch(event_type) {
         case CellEventType::DEATH:
@@ -95,16 +95,16 @@ EventCountTest::EventCountTest(const CellEventType& event_type,
     }
 }
 
-EventCountTest::EventCountTest(const EpigeneticGenotypeId& src_id, const EpigeneticGenotypeId& dst_id,
+EventCountTest::EventCountTest(const SpeciesId& src_id, const SpeciesId& dst_id,
                                const size_t& threshold):
     event_type(CellEventType::EPIGENETIC_EVENT), species_id(src_id), dst_id(dst_id), 
     threshold(threshold)
 {}
 
 //@private
-size_t get_epigenetic_events_to(const SpeciesStatistics& s_stats, const EpigeneticGenotypeId& dst_id)
+size_t get_epigenetic_events_to(const SpeciesStatistics& s_stats, const SpeciesId& dst_id)
 {
-    if (dst_id != std::numeric_limits<EpigeneticGenotypeId>::max()) {
+    if (dst_id != std::numeric_limits<SpeciesId>::max()) {
         return s_stats.num_of_epigenetic_events(dst_id);
     }
 

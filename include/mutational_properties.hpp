@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.4
- * @date 2023-10-02
+ * @version 0.5
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,15 +46,15 @@ namespace Passengers
 {
 
 /**
- * @brief A class representing the passenger mutational properties of a species
+ * @brief A class representing the passenger mutational properties of all the species
  * 
  */
-class SpeciesMutationalProperties
+class MutationalProperties
 {
     /**
-     * @brief The passenger mutational properties of an epigenetic genotype
+     * @brief The passenger mutational properties of a species
      */
-    struct EpigeneticGenotypeProperties
+    struct SpeciesMutationalProperties
     {
         std::string name;                       //!< the species name
         double mu;                              //!< the species passenger mutation rate
@@ -64,7 +64,7 @@ class SpeciesMutationalProperties
         /**
          * @brief The empty constructor
          */
-        EpigeneticGenotypeProperties();
+        SpeciesMutationalProperties();
 
         /**
          * @brief A constructor
@@ -73,18 +73,18 @@ class SpeciesMutationalProperties
          * @param SNVs is the vector of species specific SNVs
          * @param CNAs is the vector of species specific CNAs
          */
-        EpigeneticGenotypeProperties(const std::string& name, const double& mu,
+        SpeciesMutationalProperties(const std::string& name, const double& mu,
                                      const std::list<SNV>& SNVs,
                                      const std::list<CopyNumberAlteration>& CNAs);
     };
 
-    std::map<Drivers::EpigeneticGenotypeId, EpigeneticGenotypeProperties> properties;  //!< the epigenetic species property map
+    std::map<Drivers::SpeciesId, SpeciesMutationalProperties> properties;  //!< the species property map
 public:
 
     /**
      * @brief The empty constructor
      */
-    SpeciesMutationalProperties();
+    MutationalProperties();
 
     /**
      * @brief Add new species mutational properties
@@ -97,7 +97,7 @@ public:
      * @param species_CNAs is a list of CNAs characterizing the species
      * @return a reference to the updated object
      */
-    SpeciesMutationalProperties& add_species(const Drivers::Simulation::Simulation& simulation,
+    MutationalProperties& add_species(const Drivers::Simulation::Simulation& simulation,
                                              const std::string& name, 
                                              const std::map<std::string, double>& epigenetic_status_id,
                                              const std::list<SNV>& species_SNVs={},
@@ -106,13 +106,13 @@ public:
     /**
      * @brief Get the properties of a species
      * 
-     * @param id is the epigenetic identifier of the species
-     * @return the mutational properties of the epigenetic species having 
-     *          `id` as id.
+     * @param species_id is the identifier of the species
+     * @return the mutational properties of the species having 
+     *          `species_id` as identifier.
      */
-    inline const SpeciesMutationalProperties::EpigeneticGenotypeProperties& at(const Drivers::EpigeneticGenotypeId& id) const
+    inline const MutationalProperties::SpeciesMutationalProperties& at(const Drivers::SpeciesId& species_id) const
     {
-        return properties.at(id);
+        return properties.at(species_id);
     }
 };
 

@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.4
- * @date 2023-10-25
+ * @version 0.5
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -128,12 +128,12 @@ class ConfigReader
     /**
      * @brief Add driver mutational properties
      * 
-     * @param mutational_properties is the species mutational properties
+     * @param mutational_properties are the mutational properties of all the species
      * @param drivers_simulation is the driver simulation
      * @param driver_properties_json is the JSON of the driver properties
      */
     static void 
-    add_driver_mutational_properties(Races::Passengers::SpeciesMutationalProperties& mutational_properties,
+    add_driver_mutational_properties(Races::Passengers::MutationalProperties& mutational_properties,
                                      const Races::Drivers::Simulation::Simulation& drivers_simulation,
                                      const nlohmann::json& driver_properties_json);
 
@@ -238,7 +238,7 @@ public:
      * @param simulation_json is the JSON of the simulation configuration
      * @return the species mutational properties
      */
-    static Races::Passengers::SpeciesMutationalProperties
+    static Races::Passengers::MutationalProperties
     get_mutational_properties(const Races::Drivers::Simulation::Simulation& drivers_simulation,
                               const nlohmann::json& simulation_json);
 
@@ -251,7 +251,7 @@ public:
      */
     static Races::Drivers::Simulation::TimedEvent 
     get_timed_event(const Races::Drivers::Simulation::Simulation& drivers_simulation,
-                    const std::map<std::string, Races::Drivers::Genotype> genotypes,
+                    const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes,
                     const nlohmann::json& timed_event_json);
 
     /**

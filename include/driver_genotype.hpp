@@ -1,9 +1,9 @@
 /**
  * @file driver_genotype.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines driver genotype representation
- * @version 0.14
- * @date 2023-10-28
+ * @brief Defines genotype representation
+ * @version 0.15
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -114,7 +114,7 @@ public:
  */
 typedef std::vector<bool> MethylationSignature;
 
-class Genotype;
+class GenotypeProperties;
 
 namespace Simulation
 {
@@ -124,65 +124,66 @@ namespace Simulation
 }   // Simulation
 
 /**
- * @brief A class to represent driver epigenetic genotype
+ * @brief A class to represent species properties
  * 
- * A driver genotype is characterized by specific genomic
- * mutations. The same driver genotype is associated to 
+ * A genotype is characterized by specific genomic (potentially 
+ * unknown) mutations. The same genotype may be associated to 
  * different rates depending on its methylation signature.
- * An driver epigenetic genotype is a driver genotype 
- * together with its methylation signature. 
+ * A species can be identified by a genotype and a methylation
+ * signature. 
  */
-class EpigeneticGenotype {
-    static unsigned int counter;                          //!< Total number of driver epigenetic genotype along the computation
+class SpeciesProperties 
+{
+    static unsigned int counter;                    //!< Total number of species along the computation
 
-    EpigeneticGenotypeId id;                              //!< Identifier
-    GenotypeId genomic_id;                                //!< Genomic genotype identifier
+    SpeciesId id;                                   //!< Identifier
+    GenotypeId genotype_id;                         //!< Genotype identifier
 
-    std::string name;                                     //!< Epigenetic genotype name
-    MethylationSignature methylation_signature;           //!< Methylation signature
+    std::string name;                               //!< Species name
+    MethylationSignature methylation_signature;     //!< Methylation signature
 
-    std::map<CellEventType, double> event_rates;          //!< Event rates
+    std::map<CellEventType, double> event_rates;    //!< Event rates
 
-    std::map<EpigeneticGenotypeId, double> epigenetic_rates;  //!< Epigenetic mutation rates 
+    std::map<SpeciesId, double> epigenetic_rates;   //!< Epigenetic mutation rates 
 
     /**
      * @brief The empty constructor
      */
-    EpigeneticGenotype();
+    SpeciesProperties();
 
     /**
      * @brief A constructor
      * 
-     * @param genotype is the genomic genotype of the new object
+     * @param genotype is the genotype of the new object
      * @param num_of_promoters is the number of methylable promoters
      */
-    EpigeneticGenotype(const Genotype& genotype,
+    SpeciesProperties(const GenotypeProperties& genotype,
                        const size_t num_of_promoters);
 public:
     /**
-     * @brief Get the driver epigenetic genotype identifier
+     * @brief Get the species identifier
      * 
      * @return a constant reference to the identifier
      */
-    inline const EpigeneticGenotypeId& get_id() const
+    inline const SpeciesId& get_id() const
     {
         return id;
     }
 
     /**
-     * @brief Get the driver genomic genotype identifier
+     * @brief Get the genotype identifier
      * 
-     * @return a constant reference to the genomic genotype identifier
+     * @return a constant reference to the genotype identifier
      */
-    inline const GenotypeId& get_genomic_id() const
+    inline const GenotypeId& get_genotype_id() const
     {
-        return genomic_id;
+        return genotype_id;
     }
 
     /**
-     * @brief Get the driver genotype name
+     * @brief Get the genotype name
      * 
-     * @return a constant reference to the driver genotype name
+     * @return a constant reference to the genotype name
      */
     inline const std::string& get_genomic_name() const
     {
@@ -190,11 +191,11 @@ public:
     }
 
     /**
-     * @brief Get the driver epigenetic genotype name
+     * @brief Get the species name
      * 
-     * @return the driver epigenetic name
+     * @return the species name
      */
-    std::string get_epigenetic_name() const;
+    std::string get_name() const;
 
     /**
      * @brief Get the rate of an event 
@@ -241,10 +242,10 @@ public:
      * @brief Get the epigenetic mutation rates
      * 
      * @return a constant reference to a map associating the identifier of 
-     *      the epigenetic genotype reachable with an epigenetic mutation and 
+     *      the species reachable with an epigenetic mutation and 
      *      its rate
      */
-    inline const std::map<EpigeneticGenotypeId, double>& get_epigenetic_mutation_rates() const
+    inline const std::map<SpeciesId, double>& get_epigenetic_mutation_rates() const
     {
         return epigenetic_rates;
     }
@@ -260,7 +261,7 @@ public:
     }
 
     /**
-     * @brief Save the epigenetic genotype in an archive
+     * @brief Save the species in an archive
      * 
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
@@ -269,7 +270,7 @@ public:
     void save(ARCHIVE& archive) const
     {
         archive & id 
-                & genomic_id 
+                & genotype_id 
                 & name 
                 & methylation_signature 
                 & event_rates
@@ -277,45 +278,46 @@ public:
     }
 
     /**
-     * @brief Load a epigenetic genotype from an archive
+     * @brief Load a species from an archive
      * 
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the loaded epigenetic genotype 
+     * @return the loaded species 
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static EpigeneticGenotype load(ARCHIVE& archive)
+    static SpeciesProperties load(ARCHIVE& archive)
     {
-        EpigeneticGenotype genotype;
+        SpeciesProperties species_properties;
 
-        archive & genotype.id 
-                & genotype.genomic_id 
-                & genotype.name 
-                & genotype.methylation_signature 
-                & genotype.event_rates
-                & genotype.epigenetic_rates;
+        archive & species_properties.id 
+                & species_properties.genotype_id 
+                & species_properties.name 
+                & species_properties.methylation_signature 
+                & species_properties.event_rates
+                & species_properties.epigenetic_rates;
 
-        if (EpigeneticGenotype::counter < static_cast<unsigned int>(genotype.id+1)) {
-            EpigeneticGenotype::counter = genotype.id+1;
+        if (SpeciesProperties::counter < static_cast<unsigned int>(species_properties.id+1)) {
+            SpeciesProperties::counter = species_properties.id+1;
         }
 
-        return genotype;
+        return species_properties;
     }
 
-    friend class Genotype;
+    friend class GenotypeProperties;
     friend class Simulation::Species;
 };
 
 /**
- * @brief Driver genotype class
+ * @brief A class representing genotype properties
  */
-class Genotype {
-    static unsigned int counter;                        //!< Total number of driver genotype along the computation
+class GenotypeProperties 
+{
+    static unsigned int counter;                        //!< Total number of genotype along the computation
 
-    EpigeneticGenotypeId id;                                //!< Identifier
+    GenotypeId id;                            //!< Identifier
     std::string name;                                   //!< Genotype name
 
-    std::vector<EpigeneticGenotype> e_genotypes;        //!< Epigenetic genotypes
+    std::vector<SpeciesProperties> species;   //!< SpeciesProperties
 
     template<typename SIGNATURE_TYPE>
     void validate_signature(const SIGNATURE_TYPE& signature) const;
@@ -325,34 +327,33 @@ public:
     /**
      * @brief A constructor
      * 
-     * This constructor builds a driver genotype and its epigenetic genotypes. 
-     * The number of epigenetic genotypes is determined by the size of the 
+     * This constructor builds a genotype and its species. 
+     * The number of species is determined by the size of the 
      * epigenetic event rate vector. Each cell of the vector correspond to 
      * a pair methylation/demethylation events for a specific target promoter.
      * Since each target promoter can be either methylated ("+") or 
-     * non-methylated ("-"), the number of epigenetic genotypes associated to
-     * a driver genotype is exponential in the number of the promoters and, 
+     * non-methylated ("-"), the number of species associated to
+     * a genotype is exponential in the number of the promoters and, 
      * as a consequence, in the number of elements in the epigenetic event 
      * rate vector.
      * 
-     * @param name is the name of the driver genotype
+     * @param name is the name of the genotype
      * @param epigenetic_event_rates is the rates of the methylation/demethylation events 
      *          on each target promoters
      */
-    Genotype(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
+    GenotypeProperties(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
 
     /**
      * @brief A constructor
      * 
-     * This constructor builds a driver genotype having one epigenetic 
-     * genotypes.
+     * This constructor builds a genotype consisting in one species.
      * 
-     * @param name is the name of the driver genotype
+     * @param name is the name of the genotype
      */
-    explicit Genotype(const std::string& name);
+    explicit GenotypeProperties(const std::string& name);
 
     /**
-     * @brief Get the driver epigenetic genotype identifier
+     * @brief Get the species identifier
      * 
      * @return a constant reference to the identifier
      */
@@ -362,9 +363,9 @@ public:
     }
 
     /**
-     * @brief Get the driver genotype name
+     * @brief Get the genotype name
      * 
-     * @return a constant reference to the driver genotype name
+     * @return a constant reference to the genotype name
      */
     inline const std::string& get_name() const
     {
@@ -372,13 +373,13 @@ public:
     }
 
     /**
-     * @brief Get the epigenetic genotypes associated to this genomic genotype
+     * @brief Get the species associated to this genotype
      * 
-     * @return a constant reference to the epigenetic genotypes
+     * @return a constant reference to the species
      */
-    inline const std::vector<EpigeneticGenotype>& epigenetic_genotypes() const
+    inline const std::vector<SpeciesProperties>& get_species() const
     {
-        return e_genotypes;
+        return species;
     }
 
     /**
@@ -389,40 +390,40 @@ public:
     size_t num_of_promoters() const;
 
     /**
-     * @brief Get the epigenetic genotype associated to a methylation signature
+     * @brief Get the species associated to a methylation signature
      * 
-     * @param methylation_signature is the methylation signature of the aimed epigenetic genotype
-     * @return a non-constant reference to the epigenetic genotype associated 
+     * @param methylation_signature is the methylation signature of the aimed species
+     * @return a non-constant reference to the species associated 
      *      to `methylation_signature`
      */
-    EpigeneticGenotype& operator[](const MethylationSignature& methylation_signature);
+    SpeciesProperties& operator[](const MethylationSignature& methylation_signature);
 
     /**
-     * @brief Get the epigenetic genotype associated to a methylation signature
+     * @brief Get the species associated to a methylation signature
      * 
-     * @param methylation_signature is the methylation signature of the aimed epigenetic genotype
-     * @return a constant reference to the epigenetic genotype associated 
+     * @param methylation_signature is the methylation signature of the aimed species
+     * @return a constant reference to the species associated 
      *      to `methylation_signature`
      */
-    const EpigeneticGenotype& operator[](const MethylationSignature& methylation_signature) const;
+    const SpeciesProperties& operator[](const MethylationSignature& methylation_signature) const;
 
     /**
-     * @brief Get the epigenetic genotype associated to a methylation signature
+     * @brief Get the species associated to a methylation signature
      * 
-     * @param methylation_signature is a string representing the signature of the aimed epigenetic genotype
-     * @return a non-constant reference to the epigenetic genotype associated 
+     * @param methylation_signature is a string representing the signature of the aimed species
+     * @return a non-constant reference to the species associated 
      *      to `methylation_signature`
      */
-    EpigeneticGenotype& operator[](const std::string& methylation_signature);
+    SpeciesProperties& operator[](const std::string& methylation_signature);
 
     /**
-     * @brief Get the epigenetic genotype associated to a methylation signature
+     * @brief Get the species associated to a methylation signature
      * 
-     * @param methylation_signature is a string representing the signature of the aimed epigenetic genotype
-     * @return a constant reference to the epigenetic genotype associated 
+     * @param methylation_signature is a string representing the signature of the aimed species
+     * @return a constant reference to the species associated 
      *      to `methylation_signature`
      */
-    const EpigeneticGenotype& operator[](const std::string& methylation_signature) const;
+    const SpeciesProperties& operator[](const std::string& methylation_signature) const;
 
     static size_t string_to_index(const std::string& methylation_signature);
     static std::string index_to_string(const size_t& index, const size_t num_of_promoters);
@@ -434,12 +435,12 @@ public:
     {
         const auto signature_index = signature_to_index(methylation_signature);
 
-        return Genotype::index_to_string(signature_index, methylation_signature.size());
+        return GenotypeProperties::index_to_string(signature_index, methylation_signature.size());
     }
 };
 
 template<typename SIGNATURE_TYPE>
-void Genotype::validate_signature(const SIGNATURE_TYPE& signature) const
+void GenotypeProperties::validate_signature(const SIGNATURE_TYPE& signature) const
 {
     const size_t promoters = num_of_promoters();
     if (signature.size()!=promoters) {
@@ -480,22 +481,22 @@ namespace std
 std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRates& epigenetic_rates);
 
 /**
- * @brief Write information about an epigenetic genotype in an output stream
+ * @brief Write information about a species in an output stream
  * 
  * @param out is the output stream
- * @param genotype is the epigenetic genotype to be streamed
+ * @param genotype is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticGenotype& genotype);
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesProperties& genotype);
 
 /**
- * @brief Write information about a genomic genotype in an output stream
+ * @brief Write information about a genotype in an output stream
  * 
  * @param out is the output stream
- * @param genotype is the genomic genotype to be streamed
+ * @param genotype is the genotype to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::Genotype& genotype);
+std::ostream& operator<<(std::ostream& out, const Races::Drivers::GenotypeProperties& genotype);
 
 }   // std
 

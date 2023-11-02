@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.4
- * @date 2023-10-28
+ * @version 0.5
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,20 +36,20 @@ namespace Races
 namespace Passengers
 {
 
-SpeciesMutationalProperties::EpigeneticGenotypeProperties::EpigeneticGenotypeProperties()
+MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties()
 {}
 
-SpeciesMutationalProperties::EpigeneticGenotypeProperties::EpigeneticGenotypeProperties(const std::string& name, const double& mu,
+MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties(const std::string& name, const double& mu,
                                                                                         const std::list<SNV>& SNVs, 
                                                                                         const std::list<CopyNumberAlteration>& CNAs):
     name(name), mu(mu), SNVs(SNVs), CNAs(CNAs)
 {}
 
-SpeciesMutationalProperties::SpeciesMutationalProperties()
+MutationalProperties::MutationalProperties()
 {}
 
-SpeciesMutationalProperties& 
-SpeciesMutationalProperties::add_species(const Drivers::Simulation::Simulation& simulation,  
+MutationalProperties& 
+MutationalProperties::add_species(const Drivers::Simulation::Simulation& simulation,  
                                          const std::string& name,
                                          const std::map<std::string, double>& epigenetic_status_mu,
                                          const std::list<SNV>& species_SNVs,
@@ -58,7 +58,7 @@ SpeciesMutationalProperties::add_species(const Drivers::Simulation::Simulation& 
     std::map<std::string, const Drivers::Simulation::Species*> species_map;
 
     for (const auto& species : simulation.tissue()) {
-        species_map[species.get_epigenetic_name()] = &species;
+        species_map[species.get_name()] = &species;
     }
 
     for (const auto& [epigenetic_status, mu_value] : epigenetic_status_mu) {
@@ -69,7 +69,7 @@ SpeciesMutationalProperties::add_species(const Drivers::Simulation::Simulation& 
             throw std::domain_error("Unknown species name: \""+full_name+"\"");
         }
 
-        Drivers::EpigeneticGenotypeId id = (species_it->second)->get_id();
+        Drivers::SpeciesId id = (species_it->second)->get_id();
 
         auto prop_it = properties.find(id);
 

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.8
- * @date 2023-10-23
+ * @version 0.9
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -137,10 +137,10 @@ std::vector<PhylogeneticForest::const_node> PhylogeneticForest::const_node::chil
 
 GenotypeId PhylogeneticForest::const_node::get_genotype_id() const
 {
-    auto genotype_it = forest->genotype_map.find(get_epigenetic_id());
+    auto genotype_it = forest->genotype_map.find(get_species_id());
     
     if (genotype_it == forest->genotype_map.end()) {
-        throw std::runtime_error("unknown epigenetic genotype");
+        throw std::runtime_error("unknown species");
     }
 
     return genotype_it->second;

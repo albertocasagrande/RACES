@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.13
- * @date 2023-10-29
+ * @version 0.14
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -112,7 +112,7 @@ class DriverSimulator : public BasicExecutable
         throw std::domain_error(oss.str());
     }
 
-    static Races::Drivers::Genotype create_genotype(const nlohmann::json& genotype_json)
+    static Races::Drivers::GenotypeProperties create_genotype(const nlohmann::json& genotype_json)
     {
         using namespace Races::Drivers;
         std::vector<EpigeneticRates> epigenetic_rates;
@@ -159,7 +159,7 @@ class DriverSimulator : public BasicExecutable
             throw std::domain_error("The genotype specification must contain a \"name\" field");
         }
 
-        Genotype genotype(genotype_json["name"].template get<std::string>(), epigenetic_rates);
+        GenotypeProperties genotype(genotype_json["name"].template get<std::string>(), epigenetic_rates);
 
         for (const auto& type_json : genotype_json["epigenetic types"]) {
             auto& type = genotype[type_json["status"].template get<std::string>()];
@@ -224,7 +224,7 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_initial_cells(const nlohmann::json& initial_cells_json,
-                                        const std::map<std::string, Races::Drivers::Genotype> genotypes)
+                                        const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes)
     {
         if (!initial_cells_json.is_array()) {
             throw std::domain_error("The \"initial cells\" field must contain an array");
@@ -258,17 +258,17 @@ class DriverSimulator : public BasicExecutable
 
             std::string epigenetic_status = genotype_json["epigenetic status"].template get<std::string>();
 
-            auto& epigenotype = genotypes.at(genotype_name)[epigenetic_status];
+            auto& species = genotypes.at(genotype_name)[epigenetic_status];
 
             if (!initial_cell_json.contains("genotype")) {
                 throw std::domain_error("Every initial cell must contain a \"position\" field");
             }
-            simulation.add_cell(epigenotype, get_position(initial_cell_json["position"]));
+            simulation.add_cell(species, get_position(initial_cell_json["position"]));
         }
     }
 
     static void configure_timed_events(const nlohmann::json& timed_events_json,
-                                       const std::map<std::string, Races::Drivers::Genotype> genotypes)
+                                       const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes)
     {
         using namespace Races;
         using namespace Races::Drivers;
@@ -296,7 +296,7 @@ class DriverSimulator : public BasicExecutable
         std::ifstream f(simulation_filename);
         nlohmann::json simulation_cfg = nlohmann::json::parse(f);
 
-        std::map<std::string, Genotype> genotypes;
+        std::map<std::string, GenotypeProperties> genotypes;
 
         if (!simulation_cfg.contains("tissue")) {
             throw std::domain_error("The simulation configuration file must contain a \"tissue\" field");

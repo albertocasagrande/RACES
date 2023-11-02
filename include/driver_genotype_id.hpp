@@ -1,9 +1,9 @@
 /**
  * @file driver_genotype_id.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines driver genotype type
- * @version 0.6
- * @date 2023-10-02
+ * @brief Defines genotype type
+ * @version 0.7
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,9 +49,9 @@ namespace Drivers
 using GenotypeId = uint16_t;
 
 /**
- * @brief The epigenetic genotype identifier type
+ * @brief The species identifier type
  */
-using EpigeneticGenotypeId = uint16_t;
+using SpeciesId = uint16_t;
 
 
 }   // Drivers
@@ -59,10 +59,10 @@ using EpigeneticGenotypeId = uint16_t;
 }   // Races
 
 /**
- * @brief An identifier for non-driver cell genotype
+ * @brief An identifier for wild-type species
  * 
- * This macro represents the genotype identifier of the wild-type cells.
+ * This macro represents the species identifier of the wild-type cells.
  */
-#define NON_DRIVER_GENOTYPE std::numeric_limits<EpigeneticGenotypeId>::max()
+#define WILD_TYPE_SPECIES std::numeric_limits<SpeciesId>::max()
 
 #endif // __RACES_DRIVER_GENOTYPE_ID__

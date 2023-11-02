@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements phyloXML stream
- * @version 0.6
- * @date 2023-10-14
+ * @version 0.7
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -102,12 +102,12 @@ phyloXMLStream& phyloXMLStream::operator<<(const UI::Color& color)
 }
 
 
-phyloXMLStream& phyloXMLStream::operator<<(const EpigeneticGenotypeId& genotype_id)
+phyloXMLStream& phyloXMLStream::operator<<(const SpeciesId& species_id)
 {
     os << indent_string << "<taxonomy>" << std::endl;
     
     change_indentation_level(indent_level+1);
-    os << indent_string << "<id>" << genotype_id << "</id>" << std::endl;
+    os << indent_string << "<id>" << species_id << "</id>" << std::endl;
 
     change_indentation_level(indent_level-1);
     os  << indent_string << "</taxonomy>" << std::endl;
@@ -136,7 +136,7 @@ phyloXMLStream& phyloXMLStream::operator<<(const PhylogeneticForest::const_node&
 
     change_indentation_level(indent_level+1);
 
-    *this << cell.get_epigenetic_id() << UI::palette[cell.get_epigenetic_id()];
+    *this << cell.get_species_id() << UI::palette[cell.get_species_id()];
 
     os << indent_string << "<name>" << cell.get_id() << "</name>" << std::endl;
 

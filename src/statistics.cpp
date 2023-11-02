@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.10
- * @date 2023-10-29
+ * @version 0.11
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -64,7 +64,7 @@ size_t SpeciesStatistics::num_of_epigenetic_events() const
     return num_of_events;
 }
 
-size_t SpeciesStatistics::num_of_epigenetic_events(const EpigeneticGenotypeId& dst_id) const
+size_t SpeciesStatistics::num_of_epigenetic_events(const SpeciesId& dst_id) const
 {
     if (epigenetic_events.count(dst_id)==0) {
         return 0;
@@ -78,9 +78,9 @@ TissueStatistics::TissueStatistics():
     assert(max_stored_times>0);
 }
 
-void TissueStatistics::record_death(const EpigeneticGenotypeId& genotype_id, const Time &time)
+void TissueStatistics::record_death(const SpeciesId& species_id, const Time &time)
 {
-    auto& s_stats = s_statistics[genotype_id];
+    auto& s_stats = s_statistics[species_id];
 
     s_stats.killed_cells += 1;
     s_stats.curr_cells -= 1;
@@ -89,9 +89,9 @@ void TissueStatistics::record_death(const EpigeneticGenotypeId& genotype_id, con
     }
 }
 
-void TissueStatistics::record_lost(const EpigeneticGenotypeId& genotype_id, const Time &time)
+void TissueStatistics::record_lost(const SpeciesId& species_id, const Time &time)
 {
-    auto& s_stats = s_statistics[genotype_id];
+    auto& s_stats = s_statistics[species_id];
 
     s_stats.lost_cells += 1;
     s_stats.curr_cells -= 1;
@@ -100,16 +100,16 @@ void TissueStatistics::record_lost(const EpigeneticGenotypeId& genotype_id, cons
     }
 }
 
-void TissueStatistics::record_duplication(const EpigeneticGenotypeId& genotype_id)
+void TissueStatistics::record_duplication(const SpeciesId& species_id)
 {
-    auto& s_stats = s_statistics[genotype_id];
+    auto& s_stats = s_statistics[species_id];
 
     s_stats.total_cells += 2;
     s_stats.curr_cells += 1;
     s_stats.num_duplications += 1;
 }
 
-void TissueStatistics::record_mutation(const EpigeneticGenotypeId& src_species, const EpigeneticGenotypeId& dst_species, const Time &time)
+void TissueStatistics::record_mutation(const SpeciesId& src_species, const SpeciesId& dst_species, const Time &time)
 {
     auto& s_stats = s_statistics[src_species];
     s_stats.curr_cells -= 1;
@@ -126,8 +126,8 @@ void TissueStatistics::record_mutation(const EpigeneticGenotypeId& src_species, 
     }
 }
 
-void TissueStatistics::record_duplication_epigenetic_event(const EpigeneticGenotypeId& src_species, 
-                                                           const EpigeneticGenotypeId& dst_species,
+void TissueStatistics::record_duplication_epigenetic_event(const SpeciesId& src_species, 
+                                                           const SpeciesId& dst_species,
                                                            const Time &time)
 {
     record_duplication(src_species);
@@ -156,18 +156,18 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
 
     switch(event.type) {
         case CellEventType::DEATH:
-            record_death(event.initial_genotype, time);
+            record_death(event.initial_species, time);
             break;
         case CellEventType::DUPLICATION:
-            record_duplication(event.initial_genotype);
+            record_duplication(event.initial_species);
             break;
         case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            record_duplication_epigenetic_event(event.initial_genotype, 
-                                                event.final_genotype, time);
+            record_duplication_epigenetic_event(event.initial_species, 
+                                                event.final_species, time);
             break;
         case CellEventType::DRIVER_GENETIC_MUTATION:
-            record_mutation(event.initial_genotype, 
-                            event.final_genotype, time);
+            record_mutation(event.initial_species, 
+                            event.final_species, time);
             break;
         default:
             throw std::runtime_error("Unsupported event type");

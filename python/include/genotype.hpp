@@ -2,8 +2,8 @@
  * @file genotype.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Genotype`
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,43 +58,43 @@ struct GenotypeWrapper
      *         `EpigeneticRates`
      * @return a shared pointer of the newly created object
      */
-    static std::shared_ptr<Races::Drivers::Genotype>
+    static std::shared_ptr<Races::Drivers::GenotypeProperties>
     create(std::string const& name, boost::python::list const& epigenetic_rates);
 
     /**
-     * @brief Set the rates of the epigenetic genotype
+     * @brief Set the rates of the species
      * 
-     * Every genomic genotype is associated to many different epigenetic genotype.
-     * The epigenetic genotype is a genomic genotype equipped with a epigenetic status
+     * Every genotype is associated to many different species.
+     * The species is a genotype equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
-     * signature (i.e., "+"/"-"). This method set the rates of an epigenetic genotype 
-     * by specifying its genomic genotype, its methylation signature, and the new 
+     * signature (i.e., "+"/"-"). This method set the rates of a species 
+     * by specifying its genotype, its methylation signature, and the new 
      * rates. 
      * 
-     * @param genotype is the genomic genotype whose rate should be set
+     * @param genotype is the genotype whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param rates are the new rates 
      */
     static
-    void set_rates(Races::Drivers::Genotype *genotype, const std::string& methylation_signature, 
+    void set_rates(Races::Drivers::GenotypeProperties *genotype, const std::string& methylation_signature, 
                 boost::python::dict const& rates);
 
     /**
-     * @brief Get the rates of the epigenetic genotype
+     * @brief Get the rates of the species
      * 
-     * Every genomic genotype is associated to many different epigenetic genotype.
-     * The epigenetic genotype is a genomic genotype equipped with a epigenetic status
+     * Every genotype is associated to many different species.
+     * The species is a genotype equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
-     * signature (i.e., "+"/"-"). This method get the rates of an epigenetic genotype 
-     * by specifying its genomic genotype, its methylation signature, and the 
+     * signature (i.e., "+"/"-"). This method get the rates of a species 
+     * by specifying its genotype, its methylation signature, and the 
      * event type.
      * 
-     * @param genotype is the genomic genotype whose rate should be set
+     * @param genotype is the genotype whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param 
      */
     inline static
-    double get_rate(const Races::Drivers::Genotype *genotype, 
+    double get_rate(const Races::Drivers::GenotypeProperties *genotype, 
                     const std::string& methylation_signature,
                     const Races::Drivers::CellEventType event_type)
     {
