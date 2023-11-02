@@ -1,8 +1,8 @@
 /**
- * @file driver_mutation.cpp
+ * @file genotype_mutation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements driver genomic mutations
- * @version 0.2
+ * @version 0.1
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include "driver_mutation.hpp"
+#include "genotype_mutation.hpp"
 
 namespace Races 
 {
@@ -39,13 +39,13 @@ namespace Drivers
 namespace Simulation
 {
 
-DriverMutation::DriverMutation(const GenotypeId& initial_id, const GenotypeId& final_id):
+GenotypeMutation::GenotypeMutation(const GenotypeId& initial_id, const GenotypeId& final_id):
     initial_id(initial_id), final_id(final_id)
 {}
 
-DriverMutation::DriverMutation(const GenotypeProperties& initial_genotype,
+GenotypeMutation::GenotypeMutation(const GenotypeProperties& initial_genotype,
                                const GenotypeProperties& final_genotype):
-    DriverMutation(initial_genotype.get_id(), final_genotype.get_id())
+    GenotypeMutation(initial_genotype.get_id(), final_genotype.get_id())
 {}
 
 

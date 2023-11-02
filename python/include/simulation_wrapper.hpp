@@ -2,7 +2,7 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.9
+ * @version 0.10
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -98,16 +98,16 @@ public:
     const Races::Time& get_time() const;
 
     /**
-     * @brief Add a timed driver genomic mutation
+     * @brief Add a timed genotype mutation
      * 
      * @param src is the source genotype
      * @param dst is the destination genotype
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void add_driver_mutation(const Races::Drivers::GenotypeProperties& src,
-                             const Races::Drivers::GenotypeProperties& dst,
-                             const Races::Time time);
+    void schedule_genotype_mutation(const Races::Drivers::GenotypeProperties& src,
+                                    const Races::Drivers::GenotypeProperties& dst,
+                                    const Races::Time time);
 
     /**
      * @brief Add a new species to the tissue

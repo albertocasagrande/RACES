@@ -2,8 +2,8 @@
  * @file event_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a simulation event wrapper
- * @version 0.2
- * @date 2023-10-25
+ * @version 0.3
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,7 +34,7 @@
 #include <memory>
 
 #include "archive.hpp"
-#include "driver_mutation.hpp"
+#include "genotype_mutation.hpp"
 #include "rate_update.hpp"
 #include "sampling.hpp"
 
@@ -60,9 +60,9 @@ struct SimulationEventWrapper
     /**
      * @brief A constructor that wraps a driver mutation event
      * 
-     * @param driver_mutation is the event to wrap
+     * @param genotype_mutation is the event to wrap
      */
-    SimulationEventWrapper(const DriverMutation& driver_mutation);
+    SimulationEventWrapper(const GenotypeMutation& genotype_mutation);
 
     /**
      * @brief A constructor that wraps a liveness rate event
@@ -114,8 +114,8 @@ struct SimulationEventWrapper
         archive & type;
 
         switch(type) {
-            case Type::DRIVER_MUTATION:
-                archive & get_event<DriverMutation>();
+            case Type::GENOTYPE_MUTATION:
+                archive & get_event<GenotypeMutation>();
                 break;
             case Type::LIVENESS_RATE_UPDATE:
                 archive & get_event<RateUpdate>();
@@ -143,9 +143,9 @@ struct SimulationEventWrapper
         archive & type;
 
         switch(type) {
-            case Type::DRIVER_MUTATION:
+            case Type::GENOTYPE_MUTATION:
                 {
-                    auto mutation = DriverMutation::load(archive);
+                    auto mutation = GenotypeMutation::load(archive);
 
                     return SimulationEventWrapper(mutation);
                 }

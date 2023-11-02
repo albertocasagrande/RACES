@@ -2,8 +2,8 @@
  * @file simulation_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a basic simulation class
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,7 +51,7 @@ struct SimulationEvent
      * @brief The simulation event types
      */
     enum class Type {
-        DRIVER_MUTATION,
+        GENOTYPE_MUTATION,
         SAMPLING,
         LIVENESS_RATE_UPDATE
     };

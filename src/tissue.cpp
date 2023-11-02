@@ -2,7 +2,7 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.23
+ * @version 0.24
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -115,7 +115,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
 void Tissue::CellInTissueProxy::erase()
 {
     // if the position already contains a cell with driver mutation
-    if (has_driver_mutations()) {
+    if (!is_wild_type()) {
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
         // remove the cell from its species
@@ -138,7 +138,7 @@ CellInTissue Tissue::CellInTissueProxy::copy_and_erase()
 void Tissue::CellInTissueProxy::switch_duplication(const bool duplication_on)
 {
     // if the position already contains a cell
-    if (has_driver_mutations()) {
+    if (!is_wild_type()) {
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
         // switch duplication behaviour of the cell

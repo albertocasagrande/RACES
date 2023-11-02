@@ -2,7 +2,7 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.5
+ * @version 0.6
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -87,11 +87,12 @@ class ConfigReader
     /**
      * @brief Add a SNV to a list
      * 
+     * @param genotype_name is the genotype name
      * @param SNVs is the list of SNV in which the read SNV should be inserted
      * @param SNV_json is the JSON of the SNV to be inserted into the list
      */
     static void
-    add_SNV(const std::string& name, std::list<Races::Passengers::SNV>& SNVs,
+    add_SNV(const std::string& genotype_name, std::list<Races::Passengers::SNV>& SNVs,
             const nlohmann::json& SNV_json);
 
     /**
@@ -104,18 +105,18 @@ class ConfigReader
     get_mutation_rates(const nlohmann::json& mutation_rates_json);
 
     /**
-     * @brief Add the driver mutations to SNV and CNA lists
+     * @brief Add the genotype mutations to SNV and CNA lists
      * 
-     * @param driver_name is the driver name
+     * @param genotype_name is the genotype name
      * @param SNVs is the list of SNVs in which the new SNVs must be inserted
      * @param CNAs is the list of CNAs in which the new CNAs must be inserted
-     * @param driver_mutation_json is the JSON of the driver mutation
+     * @param genotype_mutation_json is the JSON of the genotype mutation
      */
     static void
-    add_driver_mutation(const std::string& driver_name,
+    schedule_genotype_mutation(const std::string& genotype_name,
                         std::list<Races::Passengers::SNV>& SNVs,
                         std::list<Races::Passengers::CopyNumberAlteration>& CNAs,
-                        const nlohmann::json& driver_mutation_json);
+                        const nlohmann::json& genotype_mutation_json);
 
     /**
      * @brief Get the fraction field
@@ -126,16 +127,16 @@ class ConfigReader
     static double get_fraction(const nlohmann::json& fraction_json);
 
     /**
-     * @brief Add driver mutational properties
+     * @brief Add genotype mutational properties
      * 
      * @param mutational_properties are the mutational properties of all the species
-     * @param drivers_simulation is the driver simulation
-     * @param driver_properties_json is the JSON of the driver properties
+     * @param simulation is the simulation
+     * @param mutational_properties_json is the JSON of the properties
      */
     static void 
-    add_driver_mutational_properties(Races::Passengers::MutationalProperties& mutational_properties,
-                                     const Races::Drivers::Simulation::Simulation& drivers_simulation,
-                                     const nlohmann::json& driver_properties_json);
+    schedule_genotype_mutational_properties(Races::Passengers::MutationalProperties& mutational_properties,
+                                     const Races::Drivers::Simulation::Simulation& simulation,
+                                     const nlohmann::json& mutational_properties_json);
 
 public:
     /**
@@ -218,40 +219,41 @@ public:
                              const std::string& field_name="sample");
 
     /**
-     * @brief Collect the driver mutations
+     * @brief Collect the genotype mutations
      * 
-     * @param[in] driver_name is the driver name
-     * @param[in,out] SNVs is the list of driver SNVs
-     * @param[in,out] CNAs is the list of driver CNAs
-     * @param[in] driver_mutations_json is the JSON of driver mutations
+     * @param[in] genotype_name is the genotype name
+     * @param[in,out] SNVs is the list of genotype SNVs
+     * @param[in,out] CNAs is the list of genotype CNAs
+     * @param[in] genotype_mutations_json is the JSON of genotype mutations
      */
     static void
-    collect_driver_mutations(const std::string& driver_name,
+    collect_genotype_mutations(const std::string& genotype_name,
                              std::list<Races::Passengers::SNV>& SNVs,
                              std::list<Races::Passengers::CopyNumberAlteration>& CNAs,
-                             const nlohmann::json& driver_mutations_json);
+                             const nlohmann::json& genotype_mutations_json);
 
     /**
      * @brief Get the species mutational properties
      * 
-     * @param drivers_simulation is a driver simulation
-     * @param simulation_json is the JSON of the simulation configuration
+     * @param simulation is a simulation
+     * @param configuration_json is the JSON of the simulation configuration
      * @return the species mutational properties
      */
     static Races::Passengers::MutationalProperties
-    get_mutational_properties(const Races::Drivers::Simulation::Simulation& drivers_simulation,
-                              const nlohmann::json& simulation_json);
+    get_mutational_properties(const Races::Drivers::Simulation::Simulation& simulation,
+                              const nlohmann::json& configuration_json);
 
     /**
      * @brief Extract a timed event from a JSON object
      * 
-     * @param drivers_simulation is a driver simulation
+     * @param simulation is a simulation
+     * @param name2genotype is the map from name to genotype
      * @param timed_event_json is the JSON of the timed event
      * @return the time event described in `timed_event_json`
      */
     static Races::Drivers::Simulation::TimedEvent 
-    get_timed_event(const Races::Drivers::Simulation::Simulation& drivers_simulation,
-                    const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes,
+    get_timed_event(const Races::Drivers::Simulation::Simulation& simulation,
+                    const std::map<std::string, Races::Drivers::GenotypeProperties> name2genotype,
                     const nlohmann::json& timed_event_json);
 
     /**

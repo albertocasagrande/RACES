@@ -2,7 +2,7 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.5
+ * @version 0.6
  * @date 2023-10-02
  * 
  * @copyright Copyright (c) 2023
@@ -158,11 +158,19 @@ Position::Position():
 
 Position::Position(Tissue& tissue, const AxisPosition& x, const AxisPosition& y, const AxisPosition& z):
     PositionInTissue(x, y, z), tissue(&tissue)
-{}
+{
+    if (!tissue.is_valid(*this)) {
+        throw std::domain_error("Invalid position");
+    }
+}
 
 Position::Position(Tissue& tissue, const PositionInTissue& pos):
     PositionInTissue(pos), tissue(&tissue)
-{}
+{
+    if (!tissue.is_valid(pos)) {
+        throw std::domain_error("Invalid position");
+    }
+}
 
 }   // Simulation
 

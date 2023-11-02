@@ -2,8 +2,8 @@
  * @file simulation_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation events
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@ SimulationEvent::~SimulationEvent()
 
 const std::map<SimulationEvent::Type, const char*> simulation_event_names
 {
-    {SimulationEvent::Type::DRIVER_MUTATION, {"genomic mutation"}},
+    {SimulationEvent::Type::GENOTYPE_MUTATION, {"genomic mutation"}},
     {SimulationEvent::Type::SAMPLING, "sampling"},
     {SimulationEvent::Type::LIVENESS_RATE_UPDATE, "liveness rate update"},
 };

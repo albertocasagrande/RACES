@@ -2,7 +2,7 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.10
+ * @version 0.11
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -69,11 +69,11 @@ namespace Simulation
  */
 struct CellEvent
 {
-    CellEventType type;                     //!< event type
-    Position position;                      //!< event position
+    CellEventType type;          //!< event type
+    Position position;           //!< event position
     SpeciesId initial_species;   //!< species of the cell on which event occurs
     SpeciesId final_species;     //!< final species for mutational events
-    Time delay;                             //!< event delay
+    Time delay;                  //!< event delay
 
     /**
      * @brief The empty constructor

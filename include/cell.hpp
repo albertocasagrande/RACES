@@ -2,7 +2,7 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.20
+ * @version 0.21
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -355,9 +355,9 @@ public:
      * 
      * @return `true` if and only if the cell is a wild-type cell
      */
-    inline bool has_driver_mutations() const
+    inline bool is_wild_type() const
     {
-        return get_species_id() != WILD_TYPE_SPECIES;
+        return get_species_id() == WILD_TYPE_SPECIES;
     }
 
     /**

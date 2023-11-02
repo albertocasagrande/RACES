@@ -2,7 +2,7 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.14
+ * @version 0.15
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -285,7 +285,7 @@ class DriverSimulator : public BasicExecutable
             Simulation::TimedEvent timed_event = ConfigReader::get_timed_event(simulation, genotypes,
                                                                                timed_event_json);
 
-            simulation.add_timed_event(timed_event);
+            simulation.schedule_timed_event(timed_event);
         }
     }
 

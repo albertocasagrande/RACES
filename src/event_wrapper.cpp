@@ -2,8 +2,8 @@
  * @file event_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a simulation event wrapper
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,9 +39,9 @@ namespace Drivers
 namespace Simulation
 {
 
-SimulationEventWrapper::SimulationEventWrapper(const DriverMutation& driver_mutation):
-    type(SimulationEvent::Type::DRIVER_MUTATION),
-    event(std::make_shared<DriverMutation>(driver_mutation))
+SimulationEventWrapper::SimulationEventWrapper(const GenotypeMutation& genotype_mutation):
+    type(SimulationEvent::Type::GENOTYPE_MUTATION),
+    event(std::make_shared<GenotypeMutation>(genotype_mutation))
 {}
 
 SimulationEventWrapper::SimulationEventWrapper(const RateUpdate& rate_update):
@@ -71,10 +71,10 @@ bool operator==(const Races::Drivers::Simulation::SimulationEventWrapper& lhs,
     }
 
     switch(lhs.type) {
-        case SimulationEvent::Type::DRIVER_MUTATION:
+        case SimulationEvent::Type::GENOTYPE_MUTATION:
             {
-                const auto& m_lhs = lhs.get_event<DriverMutation>();
-                const auto& m_rhs = rhs.get_event<DriverMutation>();
+                const auto& m_lhs = lhs.get_event<GenotypeMutation>();
+                const auto& m_rhs = rhs.get_event<GenotypeMutation>();
 
                 return (m_lhs == m_rhs);
             }

@@ -2,7 +2,7 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.10
+ * @version 0.11
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -47,13 +47,13 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::add_driver_mutation(const Races::Drivers::GenotypeProperties& src,
+void SimulationWrapper::schedule_genotype_mutation(const Races::Drivers::GenotypeProperties& src,
                                             const Races::Drivers::GenotypeProperties& dst,
                                             const Races::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.add_driver_mutation(src, dst, time);
+    obj_ptr->simulation.schedule_genotype_mutation(src, dst, time);
 }
 
 struct PythonEndTest : public Races::Drivers::Simulation::TimeTest

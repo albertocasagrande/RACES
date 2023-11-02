@@ -2,7 +2,7 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.16
+ * @version 0.17
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -69,7 +69,7 @@ struct ArchiveFixture {
                   .add_species(A)
                   .add_species(B)
                   .add_cell(B["-"], {250, 500})
-                  .add_driver_mutation(B,A,50);
+                  .schedule_genotype_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
         simulation.storage_enabled = false;
@@ -348,13 +348,13 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_timed_driver_mutation)
+BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation)
 {
     using namespace Races::Drivers::Simulation;
 
-    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(DriverMutation(0,1))},
-                                    {3.5,SimulationEventWrapper(DriverMutation(1,7))},
-                                    {8.1,SimulationEventWrapper(DriverMutation(2,1))}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(GenotypeMutation(0,1))},
+                                    {3.5,SimulationEventWrapper(GenotypeMutation(1,7))},
+                                    {8.1,SimulationEventWrapper(GenotypeMutation(2,1))}};
 
     auto filename = get_a_temporary_path();
     {
@@ -379,13 +379,13 @@ BOOST_AUTO_TEST_CASE(binary_timed_driver_mutation)
 }
 
 
-BOOST_AUTO_TEST_CASE(binary_timed_driver_mutation_queue)
+BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation_queue)
 {
     using namespace Races::Drivers::Simulation;
 
-    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(DriverMutation(0,1))},
-                                    {3.5,SimulationEventWrapper(DriverMutation(1,7))},
-                                    {8.1,SimulationEventWrapper(DriverMutation(2,1))}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(GenotypeMutation(0,1))},
+                                    {3.5,SimulationEventWrapper(GenotypeMutation(1,7))},
+                                    {8.1,SimulationEventWrapper(GenotypeMutation(2,1))}};
 
     using PriorityQueue = std::priority_queue<TimedEvent,
                                               std::vector<TimedEvent>,

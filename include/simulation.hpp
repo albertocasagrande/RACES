@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.26
+ * @version 0.27
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -178,33 +178,17 @@ class Simulation
     void init_valid_directions();
 
     /**
-     * @brief Randomly select a cell among those having a specified genotype
-     * 
-     * @param generator is a random number generator
-     * @param tissue is the tissue in which cell must be choosen
-     * @param genotype_id is the identifier of the genotype that must have 
-     *          the selected cell
-     * @return whenever the set of cells having `genotype_id` as genotype 
-     *         identifier is not empty, a pointer to a randomly selected 
-     *         cell in it. If, otherwise, the set is empty, this method 
-     *         returns `nullptr`
-     */
-    static const CellInTissue*
-    choose_a_cell_by_genotype(std::mt19937_64& generator, const Tissue& tissue,
-                              const GenotypeId& genotype_id);
-
-    /**
      * @brief Handle a driver mutation
      * 
      * This method tries to handle a driver mutation during the cell event selection and 
      * it succeeds if and only if there exists at least one cell in the origin.
      * 
-     * @param timed_driver_mutation is the timed driver mutation to be applied
+     * @param timed_genotype_mutation is the timed driver mutation to be applied
      * @param candidate_event is the current candidate cell event
      * @return `true` if and only if there exists at least one cell in the origin and 
      *          the candidate cell event has been updated
      */
-    bool handle_timed_driver_mutation(const TimedEvent& timed_driver_mutation, CellEvent& candidate_event);
+    bool handle_timed_genotype_mutation(const TimedEvent& timed_genotype_mutation, CellEvent& candidate_event);
 
     /**
      * @brief Apply a rate update
@@ -305,33 +289,33 @@ public:
     Simulation& operator=(Simulation&& orig);
 
     /**
-     * @brief Add a timed driver genomic mutation
+     * @brief Schedule a timed genotype mutation
      * 
      * @param src is the source genotype
      * @param dst is the destination genotype
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& add_driver_mutation(const GenotypeProperties& src, 
-                                    const GenotypeProperties& dst, const Time time);
+    Simulation& schedule_genotype_mutation(const GenotypeProperties& src, 
+                                           const GenotypeProperties& dst, const Time time);
 
     /**
-     * @brief Add a timed driver genomic mutation
+     * @brief Schedule a timed genotype mutation
      * 
      * @param src is the source genotype name
      * @param dst is the destination genotype name
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& add_driver_mutation(const std::string& src, const std::string& dst, const Time time);
+    Simulation& schedule_genotype_mutation(const std::string& src, const std::string& dst, const Time time);
 
     /**
-     * @brief Add a timed event
+     * @brief Schedule a timed event
      * 
-     * @param timed_event is the timed event to add 
+     * @param timed_event is the timed event to schedule 
      * @return a reference to the updated simulation
      */
-    Simulation& add_timed_event(const TimedEvent& timed_event);
+    Simulation& schedule_timed_event(const TimedEvent& timed_event);
 
     /**
      * @brief Select the next event
@@ -347,12 +331,65 @@ public:
     CellEvent select_next_event();
 
     /**
+     * @brief  Simulate a genotype mutation on a position
+     * 
+     * This method simulates both the duplication of the cell in the 
+     * specified position and the birth of a cells of a different 
+     * genotype preserving the epigenetic status of the original cell. 
+     * 
+     * @param position is the position in which the 
+     * @param dst_genotype is the genotype of the mutated cell
+     * @return a reference to the updated simulation
+     */
+    Simulation& simulate_genotype_mutation(const PositionInTissue& position, const GenotypeId& dst_genotype);
+
+    /**
+     * @brief Simulate an event
+     * 
+     * This method simulates an event on the tissue. If `plotter` is not
+     * `nullptr`, then the simulation is also plotted in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param event is the event to be simulated
+     * @param plotter is a tissue plotter pointer
+     * @return a reference to the updated simulation
+     */
+    template<typename PLOT_WINDOW>
+    Simulation& simulate(const CellEvent& event, UI::TissuePlotter<PLOT_WINDOW>* plotter);
+
+    /**
+     * @brief Simulate an event
+     * 
+     * This method simulates an event on the tissue. If `plotter` is not
+     * `nullptr`, then the simulation is also plotted in a graphical window.
+     * 
+     * @tparam PLOT_WINDOW is the plotting window type
+     * @param event is the event to be simulated
+     * @param plotter is a tissue plotter pointer
+     * @return a reference to the updated simulation
+     */
+    template<typename PLOT_WINDOW>
+    inline Simulation& simulate(const CellEvent& event, UI::TissuePlotter<PLOT_WINDOW>& plotter)
+    {
+        return simulate(event, &plotter);
+    }
+
+    /**
+     * @brief Simulate an event
+     * 
+     * @param event is the event to be simulated
+     * @return a reference to the updated simulation
+     */
+    inline Simulation& simulate(const CellEvent& event)
+    {
+        return simulate<UI::Plot2DWindow>(event, nullptr);
+    }
+
+    /**
      * @brief Simulate up to the next event
      * 
-     * This method simulates a tissue up to the next 
-     * event. If the user provide a pointer to a 
-     * plotter, then the simulation is also plotted
-     * in a graphical window.
+     * This method simulates a tissue up to the next event. If `plotter` is not
+     * `nullptr`, then the simulation is also plotted in a graphical window.
      * 
      * @tparam PLOT_WINDOW is the plotting window type
      * @param plotter is a tissue plotter pointer
@@ -364,9 +401,8 @@ public:
     /**
      * @brief Simulate up to the next event
      * 
-     * This method simulates a tissue up to the next 
-     * event. The simulation is also plotted in a 
-     * graphical window.
+     * This method simulates a tissue up to the next event. The simulation is also 
+     * plotted in a graphical window.
      * 
      * @tparam PLOT_WINDOW is the plotting window type
      * @param plotter is a tissue plotter
@@ -538,6 +574,17 @@ public:
     {
         return run<SIMULATION_TEST, UI::Plot2DWindow, UI::ProgressBar>(done, nullptr, nullptr);
     }
+
+    /**
+     * @brief Randomly select a cell among those having a specified genotype
+     * 
+     * @param genotype_id is the identifier of the genotype that must have 
+     *          the selected cell
+     * @return whenever the set of cells having `genotype_id` as genotype 
+     *         identifier is not empty, a randomly selected cell in it. 
+     *         Otherwise, if the set is empty, a domain error is thrown.
+     */
+    const CellInTissue& choose_a_cell_by_genotype(const GenotypeId& genotype_id);
 
     /**
      * @brief Get the current simulation time
@@ -812,10 +859,17 @@ void Simulation::make_snapshot(INDICATOR *indicator)
 }
 
 template<typename PLOT_WINDOW>
+inline
 Simulation& Simulation::run_up_to_next_event(UI::TissuePlotter<PLOT_WINDOW>* plotter)
 {
     CellEvent event = select_next_event();
 
+    return simulate(event, plotter);
+}
+
+template<typename PLOT_WINDOW>
+Simulation& Simulation::simulate(const CellEvent& event, UI::TissuePlotter<PLOT_WINDOW>* plotter)
+{
     time += event.delay;
 
     EventAffectedCells affected;

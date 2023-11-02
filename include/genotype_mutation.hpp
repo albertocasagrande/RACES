@@ -1,8 +1,8 @@
 /**
- * @file driver_mutation.hpp
+ * @file genotype_mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic mutations
- * @version 0.2
+ * @version 0.1
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_DRIVER_MUTATION__
-#define __RACES_DRIVER_MUTATION__
+#ifndef __RACES_GENOTYPE_MUTATION__
+#define __RACES_GENOTYPE_MUTATION__
 
 #include "driver_genotype.hpp"
 #include "simulation_event.hpp"
@@ -46,7 +46,7 @@ namespace Simulation
 /**
  * @brief A structure to represent driver genomic mutation
  */
-struct DriverMutation : public SimulationEvent
+struct GenotypeMutation : public SimulationEvent
 {
     using Type = SimulationEvent::Type;
 
@@ -59,7 +59,7 @@ struct DriverMutation : public SimulationEvent
      * @param initial_id is the identifier of the initial genotype
      * @param final_id is the identifier of the final genotype
      */
-    DriverMutation(const GenotypeId& initial_id, const GenotypeId& final_id);
+    GenotypeMutation(const GenotypeId& initial_id, const GenotypeId& final_id);
 
     /**
      * @brief A constructor
@@ -67,7 +67,7 @@ struct DriverMutation : public SimulationEvent
      * @param initial_genotype is the initial genotype
      * @param final_genotype is the final genotype
      */
-    DriverMutation(const GenotypeProperties& initial_genotype, const GenotypeProperties& final_genotype);
+    GenotypeMutation(const GenotypeProperties& initial_genotype, const GenotypeProperties& final_genotype);
 
     /**
      * @brief Save a genomic mutation in an archive
@@ -90,7 +90,7 @@ struct DriverMutation : public SimulationEvent
      * @return the loaded timed genomic mutation
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static DriverMutation load(ARCHIVE& archive)
+    static GenotypeMutation load(ARCHIVE& archive)
     {
         GenotypeId initial_id;
         GenotypeId final_id;
@@ -102,7 +102,7 @@ struct DriverMutation : public SimulationEvent
     }
 
     inline Type type() const {
-        return Type::DRIVER_MUTATION;
+        return Type::GENOTYPE_MUTATION;
     } 
 };
 
@@ -120,11 +120,11 @@ struct DriverMutation : public SimulationEvent
  * @return `true` if and only if the two driver mutations represent
  *      the same event
  */
-inline bool operator==(const Races::Drivers::Simulation::DriverMutation& lhs,
-                       const Races::Drivers::Simulation::DriverMutation& rhs)
+inline bool operator==(const Races::Drivers::Simulation::GenotypeMutation& lhs,
+                       const Races::Drivers::Simulation::GenotypeMutation& rhs)
 {
     return (lhs.initial_id == rhs.initial_id) 
             && (lhs.final_id == rhs.final_id);
 }
 
-#endif // __RACES_DRIVER_MUTATION__
+#endif // __RACES_GENOTYPE_MUTATION__

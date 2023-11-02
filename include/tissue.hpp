@@ -2,7 +2,7 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.26
+ * @version 0.27
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -359,13 +359,13 @@ public:
     public:
 
         /**
-         * @brief Test whether the referenced cell has a driver mutation
+         * @brief Test whether the referenced cell is of wild-type cell
          * 
-         * @return `true` if and only if the referenced cell has a driver mutation 
+         * @return `true` if and only if the referenced cell is of wild-type cell
          */
-        inline bool has_driver_mutations() const
+        inline bool is_wild_type() const
         {
-            return tissue.cell_pointer(position)!=nullptr;
+            return tissue.cell_pointer(position)==nullptr;
         }
 
         /**
@@ -376,7 +376,7 @@ public:
          */
         bool is_on_border() const
         {
-            if (!has_driver_mutations()) {
+            if (is_wild_type()) {
                 return false;
             }
 
@@ -419,7 +419,7 @@ public:
                 return *ptr;
             }
 
-            throw std::runtime_error("Non-driver mutated cell");
+            throw std::runtime_error("Wild-type cell");
         }
 
         friend class Tissue;

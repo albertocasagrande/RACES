@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.29
+ * @version 0.30
  * @date 2023-11-02
  * 
  * @copyright Copyright (c) 2023
@@ -177,27 +177,99 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
     select_epigenetic_event_in_species(event, tissue, species, uni_dist, random_gen);
 }
 
-bool Simulation::handle_timed_driver_mutation(const TimedEvent& timed_driver_mutation, CellEvent& candidate_event)
+/**
+ * @brief Randomly select a cell among those having a specified genotype
+ * 
+ * @param generator is a random number generator
+ * @param tissue is the tissue in which cell must be choosen
+ * @param genotype_id is the identifier of the genotype that must have 
+ *          the selected cell
+ * @return whenever the set of cells having `genotype_id` as genotype 
+ *         identifier is not empty, a pointer to a randomly selected 
+ *         cell in it. If, otherwise, the set is empty, this method 
+ *         returns `nullptr`
+ */
+const CellInTissue&
+Simulation::choose_a_cell_by_genotype(const GenotypeId& genotype_id)
 {
-    const auto& driver_mutation = timed_driver_mutation.get_event<DriverMutation>();
-    const auto* cell = choose_a_cell_by_genotype(random_gen, tissue(), driver_mutation.initial_id);
-    if (cell != nullptr) {
-        candidate_event.delay = (timed_driver_mutation.time >= time? timed_driver_mutation.time - time:0);
-        candidate_event.type = CellEventType::DRIVER_GENETIC_MUTATION;
-        candidate_event.position = Position(tissue(), *cell);
-        candidate_event.initial_species = cell->get_species_id();
+    std::vector<size_t> num_of_cells;
 
-        const Species& initial_species = tissue().get_species(candidate_event.initial_species);
+    size_t total = 0;
 
-        const auto& genomic_species = tissue().get_genotype_species(driver_mutation.final_id);
-        const size_t index = GenotypeProperties::signature_to_index(initial_species.get_methylation_signature());
-
-        candidate_event.final_species = genomic_species[index].get_id();
-
-        return true;
+    const auto& species = tissue().get_genotype_species(genotype_id);
+    for (const auto& S : species) {
+        total += S.num_of_cells();
+        num_of_cells.push_back(total);
     }
 
-    return false;
+    if (total == 0) {
+        throw std::runtime_error("No cell available for the genotype "+std::to_string(genotype_id));
+    }
+
+    std::uniform_int_distribution<size_t> distribution(1,total);
+    const size_t value = distribution(random_gen);
+
+    size_t i=0;
+    while (value > num_of_cells[i]) {
+        ++i;
+    }
+
+    return species[i].choose_a_cell(random_gen);
+}
+
+/**
+ * @brief Create a genotype mutation event
+ * 
+ * @param tissue is the tissue in which the event will occurs
+ * @param position is the position of the parent cell that will give birth to the mutated cell
+ * @param final_id is the genotype identifier of the mutated cell
+ * @param delay is the delay of the mutation with respect to the current simulation clock
+ * @return the created cell event 
+ */
+CellEvent create_genotype_mutation_event(Tissue& tissue, const PositionInTissue& position,
+                                         const GenotypeId& final_id, const Time& delay)
+{
+    CellEvent event;
+
+    event.delay = delay;
+    event.type = CellEventType::DRIVER_GENETIC_MUTATION;
+    event.position = Position(tissue, position);
+    event.initial_species = static_cast<const CellInTissue&>(tissue(position)).get_species_id();
+
+    const Species& initial_species = tissue.get_species(event.initial_species);
+
+    const auto& genomic_species = tissue.get_genotype_species(final_id);
+    const size_t index = GenotypeProperties::signature_to_index(initial_species.get_methylation_signature());
+
+    event.final_species = genomic_species[index].get_id();
+
+    return event;
+}
+
+bool Simulation::handle_timed_genotype_mutation(const TimedEvent& timed_genotype_mutation, CellEvent& candidate_event)
+{
+    const auto& genotype_mutation = timed_genotype_mutation.get_event<GenotypeMutation>();
+
+    try {
+        const auto& cell = choose_a_cell_by_genotype(genotype_mutation.initial_id);
+
+        auto delay = (timed_genotype_mutation.time>=time >= time ? 
+                        timed_genotype_mutation.time-time : 0);
+        candidate_event = create_genotype_mutation_event(tissue(), cell, genotype_mutation.final_id, delay);
+
+        return true;
+    } catch (std::runtime_error&) {
+        return false;
+    }
+}
+
+Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& position, const GenotypeId& dst_genotype)
+{
+    auto mutation_event = create_genotype_mutation_event(tissue(), position, dst_genotype, 0);
+
+    simulate(mutation_event);
+
+    return *this;
 }
 
 void Simulation::handle_timed_rate_update(const TimedEvent& timed_rate_update)
@@ -255,9 +327,9 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
         }
 
         switch(timed_event.type) {
-            case TimedEvent::Type::DRIVER_MUTATION:
+            case TimedEvent::Type::GENOTYPE_MUTATION:
                 {
-                    auto candidate_updated = handle_timed_driver_mutation(timed_event, candidate_event);
+                    auto candidate_updated = handle_timed_genotype_mutation(timed_event, candidate_event);
 
                     if (candidate_updated) {
                         return;
@@ -330,7 +402,7 @@ void enable_duplication_on_neighborhood_externals(Tissue& tissue, const Position
             auto max_z = (sizes.size()==2?1:get_min(position.z+2, sizes[2]));
             for (; pos.z < max_z; ++pos.z) {
                 Tissue::CellInTissueProxy cell_in_tissue = tissue(pos);
-                if (cell_in_tissue.has_driver_mutations() && cell_in_tissue.is_on_border()) {
+                if (!cell_in_tissue.is_wild_type() && cell_in_tissue.is_on_border()) {
                     cell_in_tissue.enable_duplication();
                 }
             }                     
@@ -343,7 +415,7 @@ Simulation::simulate_death(const Position& position)
 {
     auto cell = (*(position.tissue))(position);
 
-    if (!cell.has_driver_mutations()) {
+    if (cell.is_wild_type()) {
         return {{},{}};
     }
 
@@ -461,7 +533,7 @@ void disable_duplication_on_neighborhood_internals(Tissue& tissue, const Positio
             for (; ((pos.z < position.z+2 &&  pos.z < sizes[2])
                     || (sizes[2]==0 && pos.z==0)); ++pos.z) {
                 Tissue::CellInTissueProxy cell_in_tissue = tissue(pos);
-                if (cell_in_tissue.has_driver_mutations() && !cell_in_tissue.is_on_border()) {
+                if (!cell_in_tissue.is_wild_type() && !cell_in_tissue.is_on_border()) {
                     cell_in_tissue.disable_duplication();
                 }
             }                     
@@ -475,7 +547,7 @@ Simulation::simulate_duplication(const Position& position)
     Tissue& tissue = *(position.tissue);
     EventAffectedCells affected;
 
-    if (!tissue(position).has_driver_mutations()) {
+    if (tissue(position).is_wild_type()) {
         return affected;
     }
 
@@ -534,36 +606,8 @@ Simulation::simulate_duplication_epigenetic_event(const Position& position, cons
     return affected;
 }
 
-const CellInTissue*
-Simulation::choose_a_cell_by_genotype(std::mt19937_64& generator, const Tissue& tissue, const GenotypeId& genotype_id)
-{
-    std::vector<size_t> num_of_cells;
-
-    size_t total = 0;
-
-    const auto& species = tissue.get_genotype_species(genotype_id);
-    for (const auto& S : species) {
-        total += S.num_of_cells();
-        num_of_cells.push_back(total);
-    }
-
-    if (total == 0) {
-        return nullptr;
-    }
-
-    std::uniform_int_distribution<size_t> distribution(1,total);
-    const size_t value = distribution(generator);
-
-    size_t i=0;
-    while (value > num_of_cells[i]) {
-        ++i;
-    }
-
-    return &(species[i].choose_a_cell(generator));
-}
-
 Simulation&
-Simulation::add_driver_mutation(const GenotypeProperties& src, const GenotypeProperties& dst, const Time time)
+Simulation::schedule_genotype_mutation(const GenotypeProperties& src, const GenotypeProperties& dst, const Time time)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
@@ -579,7 +623,7 @@ Simulation::add_driver_mutation(const GenotypeProperties& src, const GenotypePro
         throw std::domain_error(oss.str());
     }
 
-    DriverMutation mutation(src, dst);
+    GenotypeMutation mutation(src, dst);
 
     timed_event_queue.emplace(time, mutation);
 
@@ -587,7 +631,7 @@ Simulation::add_driver_mutation(const GenotypeProperties& src, const GenotypePro
 }
 
 Simulation&
-Simulation::add_driver_mutation(const std::string& src, const std::string& dst, const Time time)
+Simulation::schedule_genotype_mutation(const std::string& src, const std::string& dst, const Time time)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
@@ -603,7 +647,7 @@ Simulation::add_driver_mutation(const std::string& src, const std::string& dst, 
         throw std::out_of_range("Unknown clone name \""+dst+"\"");
     }
 
-    DriverMutation mutation(found_src->second, found_dst->second);
+    GenotypeMutation mutation(found_src->second, found_dst->second);
 
     timed_event_queue.emplace(time, mutation);
 
@@ -611,7 +655,7 @@ Simulation::add_driver_mutation(const std::string& src, const std::string& dst, 
 }
 
 Simulation&
-Simulation::add_timed_event(const TimedEvent& timed_event)
+Simulation::schedule_timed_event(const TimedEvent& timed_event)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
@@ -708,7 +752,7 @@ Simulation::sample_tissue(const RectangleSet& rectangle) const
     for (const auto& position: rectangle) {
         if (tissue().is_valid(position)) {
             auto cell = tissue()(position);
-            if (cell.has_driver_mutations()) {
+            if (!cell.is_wild_type()) {
                 sample.add_cell_id(static_cast<const CellInTissue&>(cell).get_id());
             }
         }
@@ -725,7 +769,7 @@ Simulation::sample_tissue(const RectangleSet& rectangle, const bool& preserve_ti
     for (const auto& position: rectangle) {
         if (tissue().is_valid(position)) {
             auto cell = tissue()(position);
-            if (cell.has_driver_mutations()) {
+            if (!cell.is_wild_type()) {
                 auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
 
                 sample.add_cell_id(cell_in_tissue.get_id());
