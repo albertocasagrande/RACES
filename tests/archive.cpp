@@ -72,6 +72,7 @@ struct ArchiveFixture {
                   .add_driver_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
+        simulation.storage_enabled = false;
 
         Races::Drivers::Simulation::TimeTest done(time_horizon);
 
