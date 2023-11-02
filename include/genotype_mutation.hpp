@@ -3,7 +3,7 @@
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic mutations
  * @version 0.1
- * @date 2023-11-02
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,7 +31,7 @@
 #ifndef __RACES_GENOTYPE_MUTATION__
 #define __RACES_GENOTYPE_MUTATION__
 
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 #include "simulation_event.hpp"
 
 namespace Races 

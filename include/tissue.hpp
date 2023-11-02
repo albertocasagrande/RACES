@@ -577,11 +577,11 @@ public:
     }
 
     /**
-     * @brief Get the tissue genotypes
+     * @brief Get the tissue species properties
      * 
-     * @return the vector of the tissue genotypes 
+     * @return the vector of the tissue species properties 
      */
-    std::vector<SpeciesProperties> get_genotypes() const;
+    std::vector<SpeciesProperties> get_species_properties() const;
 
     /**
      * @brief Get a tissue species by driver identifier

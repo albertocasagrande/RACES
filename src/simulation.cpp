@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.30
- * @date 2023-11-02
+ * @version 0.31
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -238,10 +238,10 @@ CellEvent create_genotype_mutation_event(Tissue& tissue, const PositionInTissue&
 
     const Species& initial_species = tissue.get_species(event.initial_species);
 
-    const auto& genomic_species = tissue.get_genotype_species(final_id);
+    const auto& genotype_species = tissue.get_genotype_species(final_id);
     const size_t index = GenotypeProperties::signature_to_index(initial_species.get_methylation_signature());
 
-    event.final_species = genomic_species[index].get_id();
+    event.final_species = genotype_species[index].get_id();
 
     return event;
 }

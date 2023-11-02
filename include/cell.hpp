@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.21
- * @date 2023-11-02
+ * @version 0.22
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 #include "archive.hpp"
 #include "time.hpp"
 #include "position.hpp"
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 
 namespace Races
 {

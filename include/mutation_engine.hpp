@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.15
- * @date 2023-11-02
+ * @version 0.16
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@
 #include <ostream>
 
 #include "phylogenetic_forest.hpp"
-#include "driver_genotype_id.hpp"
+#include "genotype_id.hpp"
 
 #include "context_index.hpp"
 #include "genome_mutations.hpp"

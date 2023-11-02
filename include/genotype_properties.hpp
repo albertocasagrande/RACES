@@ -1,9 +1,9 @@
 /**
- * @file driver_genotype.hpp
+ * @file genotype_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines genotype representation
- * @version 0.15
- * @date 2023-11-02
+ * @brief Defines genotype properties
+ * @version 0.1
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_DRIVER_GENOTYPE__
-#define __RACES_DRIVER_GENOTYPE__
+#ifndef __RACES_GENOTYPE_PROPERTIES__
+#define __RACES_GENOTYPE_PROPERTIES__
 
 #include <map>
 #include <string>
@@ -185,7 +185,7 @@ public:
      * 
      * @return a constant reference to the genotype name
      */
-    inline const std::string& get_genomic_name() const
+    inline const std::string& get_genotype_name() const
     {
         return name;
     }
@@ -501,4 +501,4 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::GenotypeProper
 }   // std
 
 
-#endif // __RACES_DRIVER_GENOTYPE__
+#endif // __RACES_GENOTYPE_PROPERTIES__

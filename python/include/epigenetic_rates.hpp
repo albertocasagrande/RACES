@@ -2,8 +2,8 @@
  * @file epigenetic_rates.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::EpigeneticRates`
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 
 #include <boost/python.hpp>
 
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 
 
 using namespace boost::python;

@@ -1,9 +1,9 @@
 /**
- * @file driver_genotype_id.hpp
+ * @file genotype_id.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines genotype type
- * @version 0.7
- * @date 2023-11-02
+ * @brief Defines genotype ans species identifiers
+ * @version 0.1
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_DRIVER_GENOTYPE_ID__
-#define __RACES_DRIVER_GENOTYPE_ID__
+#ifndef __RACES_GENOTYPE_ID__
+#define __RACES_GENOTYPE_ID__
 
 #include <limits>
 #include <cstdint>
@@ -65,4 +65,4 @@ using SpeciesId = uint16_t;
  */
 #define WILD_TYPE_SPECIES std::numeric_limits<SpeciesId>::max()
 
-#endif // __RACES_DRIVER_GENOTYPE_ID__
+#endif // __RACES_GENOTYPE_ID__

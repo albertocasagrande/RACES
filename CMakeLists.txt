@@ -13,7 +13,7 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_genotype.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
@@ -55,8 +55,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_genotype_id.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_properties.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_id.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/position.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp

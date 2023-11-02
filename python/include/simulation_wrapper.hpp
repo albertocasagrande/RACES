@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.10
- * @date 2023-11-02
+ * @version 0.11
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 
 #include <boost/python.hpp>
 
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 #include "simulation.hpp"
 
 using namespace boost::python;

@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.24
- * @date 2023-11-02
+ * @version 0.25
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,7 +31,7 @@
 #include <random>
 
 #include "tissue.hpp"
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 
 namespace Races
 {
@@ -236,15 +236,15 @@ size_t Tissue::num_of_mutated_cells() const
     return mutated;
 }
 
-std::vector<SpeciesProperties> Tissue::get_genotypes() const
+std::vector<SpeciesProperties> Tissue::get_species_properties() const
 {
-    std::vector<SpeciesProperties> genotypes;
+    std::vector<SpeciesProperties> species_vector;
 
     for (const auto& species: *this) {
-        genotypes.push_back(species);
+        species_vector.push_back(species);
     }
 
-    return genotypes;
+    return species_vector;
 }
 
 const Species& Tissue::get_species(const SpeciesId& species_id) const

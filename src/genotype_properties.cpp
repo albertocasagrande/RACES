@@ -1,9 +1,9 @@
 /**
- * @file driver.cpp
+ * @file genotype_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the genotype representation
- * @version 0.11
- * @date 2023-11-02
+ * @brief Implements the genotype properties
+ * @version 0.1
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,7 +31,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 #include "cell_event.hpp"
 
 namespace Races 

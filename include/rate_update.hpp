@@ -2,8 +2,8 @@
  * @file rate_update.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines liveness rate updates
- * @version 0.2
- * @date 2023-11-02
+ * @version 0.3
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,7 +31,7 @@
 #ifndef __RACES_RATE_UPDATE__
 #define __RACES_RATE_UPDATE__
 
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 #include "cell_event.hpp"
 #include "simulation_event.hpp"
 

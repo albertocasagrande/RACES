@@ -85,7 +85,7 @@ PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation,
 
     Simulation::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
 
-    auto genotypes = simulation.tissue().get_genotypes();
+    auto genotypes = simulation.tissue().get_species_properties();
 
     std::list<CellId> cell_ids;
     for (auto sample_it = tissue_samples.begin(); sample_it != tissue_samples.end(); ++sample_it) {

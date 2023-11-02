@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.11
- * @date 2023-11-02
+ * @version 0.12
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,7 +34,7 @@
 #include <string>
 #include <map>
 
-#include "driver_genotype_id.hpp"
+#include "genotype_id.hpp"
 #include "position.hpp"
 #include "time.hpp"
 

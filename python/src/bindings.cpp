@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.11
- * @date 2023-11-02
+ * @version 0.12
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 #include <boost/python.hpp>
 
 #include "position.hpp" 
-#include "driver_genotype.hpp"
+#include "genotype_properties.hpp"
 
 #include "simulation_wrapper.hpp"
 #include "genotype.hpp"
