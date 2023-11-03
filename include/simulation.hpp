@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.29
+ * @version 0.30
  * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
@@ -338,10 +338,25 @@ public:
      * genotype preserving the epigenetic status of the original cell. 
      * 
      * @param position is the position in which the 
-     * @param dst_genotype is the genotype of the mutated cell
+     * @param dst_genotype_name is the name of the mutated cell genotype
      * @return a reference to the updated simulation
      */
-    Simulation& simulate_genotype_mutation(const PositionInTissue& position, const GenotypeId& dst_genotype);
+    Simulation& simulate_genotype_mutation(const PositionInTissue& position,
+                                           const std::string& dst_genotype_name);
+
+    /**
+     * @brief  Simulate a genotype mutation on a position
+     * 
+     * This method simulates both the duplication of the cell in the 
+     * specified position and the birth of a cells of a different 
+     * genotype preserving the epigenetic status of the original cell. 
+     * 
+     * @param position is the position in which the 
+     * @param dst_genotype_id is the identifier of the mutated cell genotype
+     * @return a reference to the updated simulation
+     */
+    Simulation& simulate_genotype_mutation(const PositionInTissue& position,
+                                           const GenotypeId& dst_genotype_id);
 
     /**
      * @brief Simulate an event

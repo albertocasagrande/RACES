@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.33
+ * @version 0.34
  * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
@@ -180,18 +180,6 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
     select_epigenetic_event_in_species(event, tissue, species, uni_dist, random_gen);
 }
 
-/**
- * @brief Randomly select a cell among those having a specified genotype
- * 
- * @param generator is a random number generator
- * @param tissue is the tissue in which cell must be choosen
- * @param genotype_id is the identifier of the genotype that must have 
- *          the selected cell
- * @return whenever the set of cells having `genotype_id` as genotype 
- *         identifier is not empty, a pointer to a randomly selected 
- *         cell in it. If, otherwise, the set is empty, this method 
- *         returns `nullptr`
- */
 const CellInTissue&
 Simulation::choose_cell_in(const GenotypeId& genotype_id)
 {
@@ -319,9 +307,19 @@ bool Simulation::handle_timed_genotype_mutation(const TimedEvent& timed_genotype
     }
 }
 
-Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& position, const GenotypeId& dst_genotype)
+Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& position, 
+                                                   const std::string& dst_genotype_name)
 {
-    auto mutation_event = create_genotype_mutation_event(tissue(), position, dst_genotype, 0);
+    auto dst_genotype_id = find_genotype_id(dst_genotype_name);
+
+    return simulate_genotype_mutation(position, dst_genotype_id);
+}
+
+Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& position,
+                                                   const GenotypeId& dst_genotype_id)
+{
+    auto mutation_event = create_genotype_mutation_event(tissue(), position, 
+                                                         dst_genotype_id, 0);
 
     simulate(mutation_event);
 
