@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.28
+ * @version 0.29
  * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
@@ -596,6 +596,34 @@ public:
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const std::string& genotype_name);
+
+    /**
+     * @brief Randomly select in a tissue rectangle a cell having a specified genotype
+     * 
+     * @param genotype_id is the identifier of the genotype that must contain 
+     *          the selected cell
+     * @param rectangle is the tissue rectangle in which the cell must be selected 
+     * @return whenever the set of tissue cells that have `genotype_id` as genotype 
+     *         and lay in one the positions specified by `rectangle` is not empty, 
+     *         a randomly selected cell in it. Otherwise, if the set is empty, a 
+     *         domain error is thrown.
+     */
+    const CellInTissue& choose_cell_in(const GenotypeId& genotype_id,
+                                       const RectangleSet& rectangle);
+
+    /**
+     * @brief Randomly select in a tissue rectangle a cell having a specified genotype
+     * 
+     * @param genotype_name is the name of the genotype that must contain 
+     *          the selected cell
+     * @param rectangle is the tissue rectangle in which the cell must be selected 
+     * @return whenever the set of tissue cells that have `genotype_id` as genotype 
+     *         and lay in one the positions specified by `rectangle` is not empty, 
+     *         a randomly selected cell in it. Otherwise, if the set is empty, a 
+     *         domain error is thrown.
+     */
+    const CellInTissue& choose_cell_in(const std::string& genotype_name,
+                                       const RectangleSet& rectangle);
 
     /**
      * @brief Get the current simulation time

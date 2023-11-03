@@ -2,8 +2,8 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.5
- * @date 2023-10-25
+ * @version 0.6
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -208,7 +208,7 @@ struct RectangleSet : public BasicPositionSet
      * 
      * @param position is the only position in the hyper-rectangle set
      */
-    RectangleSet(const Simulation::PositionInTissue& position);
+    explicit RectangleSet(const Simulation::PositionInTissue& position);
 
     /**
      * @brief A hyper-rectangle set constructor

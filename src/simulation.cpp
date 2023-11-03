@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.32
+ * @version 0.33
  * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
@@ -29,6 +29,9 @@
  */
 
 #include "simulation.hpp"
+
+#include <set>
+#include <list>
 
 namespace Races 
 {
@@ -222,6 +225,52 @@ const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name)
     auto genotype_id = find_genotype_id(genotype_name);
 
     return choose_cell_in(genotype_id);
+}
+
+const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
+                                               const RectangleSet& rectangle)
+{
+    std::set<SpeciesId> species_ids;
+    auto genotype_species = tissue().get_genotype_species(genotype_id);
+
+    for (const auto& species : genotype_species) {
+        species_ids.insert(species.get_id());
+    }
+
+    std::list<PositionInTissue> position_vector;
+    for (const auto& position : rectangle) {
+        if (!tissue()(position).is_wild_type()) {
+            const CellInTissue& cell = tissue()(position);
+
+            if (species_ids.count(cell.get_species_id())>0) {
+                position_vector.push_back(position);
+            }
+        }
+    }
+
+    std::uniform_int_distribution<size_t> distribution(1,position_vector.size());
+
+    auto selected = distribution(random_gen);
+
+    size_t i{0};
+    for (const auto& position: position_vector) {
+        if (++i==selected) {
+            return tissue()(position);
+        }
+    }
+
+    std::ostringstream oss;
+
+    oss <<"No cell having the specified genotype is available in " << rectangle;
+    throw std::domain_error(oss.str());
+}
+
+const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name,
+                                               const RectangleSet& rectangle)
+{
+    auto genotype_id = find_genotype_id(genotype_name);
+
+    return choose_cell_in(genotype_id, rectangle);
 }
 
 /**
