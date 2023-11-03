@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.31
+ * @version 0.32
  * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
@@ -190,7 +190,7 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
  *         returns `nullptr`
  */
 const CellInTissue&
-Simulation::choose_a_cell_by_genotype(const GenotypeId& genotype_id)
+Simulation::choose_cell_in(const GenotypeId& genotype_id)
 {
     std::vector<size_t> num_of_cells;
 
@@ -215,6 +215,13 @@ Simulation::choose_a_cell_by_genotype(const GenotypeId& genotype_id)
     }
 
     return species[i].choose_a_cell(random_gen);
+}
+
+const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name)
+{
+    auto genotype_id = find_genotype_id(genotype_name);
+
+    return choose_cell_in(genotype_id);
 }
 
 /**
@@ -251,7 +258,7 @@ bool Simulation::handle_timed_genotype_mutation(const TimedEvent& timed_genotype
     const auto& genotype_mutation = timed_genotype_mutation.get_event<GenotypeMutation>();
 
     try {
-        const auto& cell = choose_a_cell_by_genotype(genotype_mutation.initial_id);
+        const auto& cell = choose_cell_in(genotype_mutation.initial_id);
 
         auto delay = (timed_genotype_mutation.time>=time >= time ? 
                         timed_genotype_mutation.time-time : 0);
@@ -630,6 +637,16 @@ Simulation::schedule_genotype_mutation(const GenotypeProperties& src, const Geno
     return *this;
 }
 
+GenotypeId Simulation::find_genotype_id(const std::string& genotype_name) const
+{
+    auto found_genotype = genotype_name2id.find(genotype_name);
+    if (found_genotype == genotype_name2id.end()) {
+        throw std::out_of_range("Unknown genotype name \""+genotype_name+"\"");
+    }
+
+    return found_genotype->second;
+}
+
 Simulation&
 Simulation::schedule_genotype_mutation(const std::string& src, const std::string& dst, const Time time)
 {
@@ -638,16 +655,10 @@ Simulation::schedule_genotype_mutation(const std::string& src, const std::string
     // case, it throws an std::runtime_error 
     (void)tissue();
 
-    auto found_src = genotype_name2id.find(src);
-    if (found_src == genotype_name2id.end()) {
-        throw std::out_of_range("Unknown clone name \""+src+"\"");
-    }
-    auto found_dst = genotype_name2id.find(dst);
-    if (found_dst == genotype_name2id.end()) {
-        throw std::out_of_range("Unknown clone name \""+dst+"\"");
-    }
+    auto src_id = find_genotype_id(src);
+    auto dst_id = find_genotype_id(dst);
 
-    GenotypeMutation mutation(found_src->second, found_dst->second);
+    GenotypeMutation mutation(src_id, dst_id);
 
     timed_event_queue.emplace(time, mutation);
 

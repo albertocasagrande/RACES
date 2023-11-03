@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.27
- * @date 2023-11-02
+ * @version 0.28
+ * @date 2023-11-03
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -578,13 +578,24 @@ public:
     /**
      * @brief Randomly select a cell among those having a specified genotype
      * 
-     * @param genotype_id is the identifier of the genotype that must have 
+     * @param genotype_id is the identifier of the genotype that must contain 
      *          the selected cell
      * @return whenever the set of cells having `genotype_id` as genotype 
      *         identifier is not empty, a randomly selected cell in it. 
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
-    const CellInTissue& choose_a_cell_by_genotype(const GenotypeId& genotype_id);
+    const CellInTissue& choose_cell_in(const GenotypeId& genotype_id);
+
+    /**
+     * @brief Randomly select a cell among those having a specified genotype
+     * 
+     * @param genotype_name is the name of the genotype that must contain 
+     *          the selected cell
+     * @return whenever the set of cells having `genotype_id` as genotype 
+     *         identifier is not empty, a randomly selected cell in it. 
+     *         Otherwise, if the set is empty, a domain error is thrown.
+     */
+    const CellInTissue& choose_cell_in(const std::string& genotype_name);
 
     /**
      * @brief Get the current simulation time
@@ -773,6 +784,14 @@ public:
     {
         return logger;
     }
+
+    /**
+     * @brief Find a genotype id by name
+     * 
+     * @param genotype_name is the name of the genotype whose id is aimed
+     * @return the genotype id of the genotype called `genotype_name
+     */
+    GenotypeId find_genotype_id(const std::string& genotype_name) const;
 
     /**
      * @brief Save a simulation in an archive
