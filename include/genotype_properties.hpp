@@ -2,8 +2,8 @@
  * @file genotype_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genotype properties
- * @version 0.1
- * @date 2023-11-03
+ * @version 0.2
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -239,13 +239,13 @@ public:
     }
 
     /**
-     * @brief Get the epigenetic mutation rates
+     * @brief Get the epigenetic switch rates
      * 
      * @return a constant reference to a map associating the identifier of 
-     *      the species reachable with an epigenetic mutation and 
+     *      the species reachable with an epigenetic switch and 
      *      its rate
      */
-    inline const std::map<SpeciesId, double>& get_epigenetic_mutation_rates() const
+    inline const std::map<SpeciesId, double>& get_epigenetic_switch_rates() const
     {
         return epigenetic_rates;
     }

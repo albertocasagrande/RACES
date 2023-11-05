@@ -2,7 +2,7 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.28
+ * @version 0.29
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -67,7 +67,7 @@ class Tissue {
     std::vector<Species> species;                   //!< The species in the tissue
     std::map<SpeciesId, size_t> id_pos;  //!< The identifier to position map
     std::map<std::string, size_t> name_pos;         //!< The name to position map
-    GenotypePosition genotope_pos;     //!< The positions of the species associated to the same genotype 
+    GenotypePosition genotype_pos;     //!< The positions of the species associated to the same genotype 
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
 
@@ -698,7 +698,7 @@ public:
      */
     inline SpeciesView get_genotype_species(const GenotypeId& genotype_id) const
     {
-        return SpeciesView(species, genotope_pos.at(genotype_id));
+        return SpeciesView(species, genotype_pos.at(genotype_id));
     }
 
     /**
@@ -781,7 +781,7 @@ public:
         archive & size()
                 & name
                 & species
-                & genotope_pos;
+                & genotype_pos;
     }
 
     /**
@@ -802,7 +802,7 @@ public:
 
         archive & tissue.name
                 & tissue.species
-                & tissue.genotope_pos;
+                & tissue.genotype_pos;
 
         size_t i=0;
         for (auto& species : tissue.species) {

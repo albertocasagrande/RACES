@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.11
- * @date 2023-11-02
+ * @version 0.12
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -109,7 +109,7 @@ void TissueStatistics::record_duplication(const SpeciesId& species_id)
     s_stats.num_duplications += 1;
 }
 
-void TissueStatistics::record_mutation(const SpeciesId& src_species, const SpeciesId& dst_species, const Time &time)
+void TissueStatistics::record_species_change(const SpeciesId& src_species, const SpeciesId& dst_species, const Time &time)
 {
     auto& s_stats = s_statistics[src_species];
     s_stats.curr_cells -= 1;
@@ -126,12 +126,19 @@ void TissueStatistics::record_mutation(const SpeciesId& src_species, const Speci
     }
 }
 
-void TissueStatistics::record_duplication_epigenetic_event(const SpeciesId& src_species, 
-                                                           const SpeciesId& dst_species,
-                                                           const Time &time)
+void TissueStatistics::record_duplication_and_species_change(const SpeciesId& src_species,
+                                                             const SpeciesId& dst_species,
+                                                             const Time &time)
 {
     record_duplication(src_species);
-    record_mutation(src_species, dst_species, time);
+    record_species_change(src_species, dst_species, time);
+}
+
+void TissueStatistics::record_epigenetic_switch(const SpeciesId& src_species, 
+                                                const SpeciesId& dst_species,
+                                                const Time &time)
+{
+    record_duplication_and_species_change(src_species, dst_species, time);
 
     auto& src_stats = s_statistics[src_species];
 
@@ -161,13 +168,13 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
         case CellEventType::DUPLICATION:
             record_duplication(event.initial_species);
             break;
-        case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            record_duplication_epigenetic_event(event.initial_species, 
-                                                event.final_species, time);
+        case CellEventType::EPIGENETIC_SWITCH:
+            record_epigenetic_switch(event.initial_species, 
+                                     event.final_species, time);
             break;
-        case CellEventType::DRIVER_GENETIC_MUTATION:
-            record_mutation(event.initial_species, 
-                            event.final_species, time);
+        case CellEventType::GENOTYPE_MUTATION:
+            record_genotype_mutation(event.initial_species, 
+                                     event.final_species, time);
             break;
         default:
             throw std::runtime_error("Unsupported event type");

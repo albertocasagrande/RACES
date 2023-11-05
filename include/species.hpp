@@ -2,7 +2,7 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.22
+ * @version 0.23
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -295,11 +295,10 @@ public:
     {
         switch (event_type) {
             case CellEventType::DEATH:
-            case CellEventType::EPIGENETIC_EVENT:
-            case CellEventType::DRIVER_GENETIC_MUTATION:
                 return choose_a_cell(generator, cells);
             case CellEventType::DUPLICATION:
-            case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
+            case CellEventType::GENOTYPE_MUTATION:
+            case CellEventType::EPIGENETIC_SWITCH:
                 return choose_a_cell(generator, duplication_enabled);
             default:
                 throw std::domain_error("Unsupported event type");

@@ -2,7 +2,7 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.26
+ * @version 0.27
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -251,7 +251,7 @@ const Species& Tissue::get_species(const SpeciesId& species_id) const
 {
     const auto pos_it = id_pos.find(species_id);
     if (pos_it == id_pos.end()) {
-        throw std::out_of_range("Genotype identifier\""+
+        throw std::out_of_range("Species identifier \""+
                                 std::to_string(static_cast<int>(species_id))+"\" is unknown");
     }
 
@@ -262,7 +262,7 @@ Species& Tissue::get_species(const SpeciesId& species_id)
 {
     const auto pos_it = id_pos.find(species_id);
     if (pos_it == id_pos.end()) {
-        throw std::out_of_range("Genotype identifier\""+
+        throw std::out_of_range("Species identifier \""+
                                 std::to_string(static_cast<int>(species_id))+"\" is unknown");
     }
 
@@ -317,7 +317,7 @@ Tissue& Tissue::add_cell(const SpeciesId& species_id, const PositionInTissue pos
 Tissue& Tissue::add_species(const GenotypeProperties& genotype)
 {
     // check whether the genotype is already in the tissue
-    if (genotope_pos.count(genotype.get_id())>0) {
+    if (genotype_pos.count(genotype.get_id())>0) {
         throw std::runtime_error("Genotype already in the tissue");
     }
 
@@ -336,7 +336,7 @@ Tissue& Tissue::add_species(const GenotypeProperties& genotype)
     }
 
     // insert the genotypes in the tissue 
-    auto& pos = genotope_pos[genotype.get_id()];
+    auto& pos = genotype_pos[genotype.get_id()];
     for (const auto& in_species: genotype.get_species()) {
         // place the new species at the end of the species vector
         pos.push_back(species.size());
@@ -346,7 +346,6 @@ Tissue& Tissue::add_species(const GenotypeProperties& genotype)
         name_pos[in_species.get_name()] = species.size();
         if (genotype.get_id() != 3) {
             species.push_back(Species(in_species));
-std::cout << "species.back(): " << species.back() << std::endl;
         }
     }
 

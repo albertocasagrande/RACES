@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.17
- * @date 2023-11-02
+ * @version 0.18
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -186,7 +186,7 @@ bool operator==(const Races::Drivers::SpeciesProperties& a, const Races::Drivers
             a.get_id()==b.get_id() &&
             a.get_genotype_id()==b.get_genotype_id() &&
             a.get_rates()==b.get_rates() &&
-            a.get_epigenetic_mutation_rates()==b.get_epigenetic_mutation_rates());
+            a.get_epigenetic_switch_rates()==b.get_epigenetic_switch_rates());
 }
 
 inline bool operator!=(const Races::Drivers::SpeciesProperties& a, const Races::Drivers::SpeciesProperties& b)

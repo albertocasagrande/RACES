@@ -2,7 +2,7 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.15
+ * @version 0.16
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -99,11 +99,10 @@ size_t Species::num_of_cells_available_for(const CellEventType& event_type) cons
 {
     switch(event_type) {
         case CellEventType::DEATH:
-        case CellEventType::EPIGENETIC_EVENT:
-        case CellEventType::DRIVER_GENETIC_MUTATION:
             return cells.size();
         case CellEventType::DUPLICATION:
-        case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
+        case CellEventType::EPIGENETIC_SWITCH:
+        case CellEventType::GENOTYPE_MUTATION:
             return duplication_enabled.size();
         default:
             throw std::domain_error("Unsupported event type");

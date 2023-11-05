@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.12
- * @date 2023-11-03
+ * @version 0.13
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,9 +51,8 @@ namespace Drivers
 enum class CellEventType {
     DEATH,
     DUPLICATION,
-    EPIGENETIC_EVENT,
-    DUPLICATION_AND_EPIGENETIC_EVENT,
-    DRIVER_GENETIC_MUTATION
+    EPIGENETIC_SWITCH,
+    GENOTYPE_MUTATION
 };
 
 /**

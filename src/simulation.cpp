@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.34
- * @date 2023-11-03
+ * @version 0.35
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -147,7 +147,7 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
 
     bool selected_new_event = false;
     // Deal with possible epigenetic events whenever admitted
-    for (const auto& [dst_id, event_rate]: species.get_epigenetic_mutation_rates()) {
+    for (const auto& [dst_id, event_rate]: species.get_epigenetic_switch_rates()) {
         const Time r_value = uni_dist(random_gen);
         const Time candidate_delay = -log(r_value) / (num_of_cells * event_rate);
         
@@ -159,7 +159,7 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
     }
 
     if (selected_new_event) {
-        event.type = CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT;
+        event.type = CellEventType::EPIGENETIC_SWITCH;
         event.position = Position(tissue, species.choose_a_cell(random_gen, event.type));
         event.initial_species = species.get_id();
     }
@@ -276,7 +276,7 @@ CellEvent create_genotype_mutation_event(Tissue& tissue, const PositionInTissue&
     CellEvent event;
 
     event.delay = delay;
-    event.type = CellEventType::DRIVER_GENETIC_MUTATION;
+    event.type = CellEventType::GENOTYPE_MUTATION;
     event.position = Position(tissue, position);
     event.initial_species = static_cast<const CellInTissue&>(tissue(position)).get_species_id();
 
@@ -637,7 +637,7 @@ Simulation::simulate_duplication(const Position& position)
 }
 
 typename Simulation::EventAffectedCells 
-Simulation::simulate_duplication_epigenetic_event(const Position& position, const SpeciesId& final_id)
+Simulation::simulate_duplication_and_mutation_event(const Position& position, const SpeciesId& final_id)
 {
     Tissue& tissue = *(position.tissue);
 
@@ -769,9 +769,9 @@ Simulation& Simulation::add_species(const GenotypeProperties& genotype)
         throw std::out_of_range("Genotype \""+genotype.get_name()+"\" already in the simulation");
     }
 
-    genotype_name2id[genotype.get_name()] = genotype.get_id();
-
     tissue().add_species(genotype);
+
+    genotype_name2id[genotype.get_name()] = genotype.get_id();
 
     return *this;
 }

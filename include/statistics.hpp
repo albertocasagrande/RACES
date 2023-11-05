@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.13
- * @date 2023-11-02
+ * @version 0.14
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -155,6 +155,16 @@ class TissueStatistics
 
     size_t total_events;                   //!< number of recorded events
     time_point first_event_time;           //!< first recoded event time
+
+    /**
+     * @brief Record a species change
+     * 
+     * @param src_species is the source species identifier
+     * @param dst_species is the destination species identifier
+     * @param time is the epigenetic event time
+     */
+    void record_species_change(const SpeciesId& src_species,
+                               const SpeciesId& dst_species, const Time &time);
 public:
     /**
      * @brief An empty constructor
@@ -259,25 +269,40 @@ public:
     void record_duplication(const SpeciesId& species_id);
 
     /**
-     * @brief Record a driver mutation
+     * @brief Record a genotype mutation
      * 
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
-     * @param time is the epigenetic event time
+     * @param time is the epigenetic switch time
      */
-    void record_mutation(const SpeciesId& src_species, const SpeciesId& dst_species, 
-                         const Time &time);
+    inline
+    void record_genotype_mutation(const SpeciesId& src_species, 
+                                  const SpeciesId& dst_species,
+                                  const Time &time)
+    {
+        record_duplication_and_species_change(src_species, dst_species, time);
+    }
 
     /**
-     * @brief Record a cell duplication and an epigenetic event
+     * @brief Record an epigenetic switch
+     * 
+     * @param src_species is the source species identifier
+     * @param dst_species is the destination species identifier
+     * @param time is the epigenetic switch time
+     */
+    void record_epigenetic_switch(const SpeciesId& src_species, const SpeciesId& dst_species,
+                                  const Time &time);
+
+    /**
+     * @brief Record a duplication and a species change
      * 
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
-    void record_duplication_epigenetic_event(const SpeciesId& src_species, 
-                                             const SpeciesId& dst_species,
-                                             const Time &time);
+    void record_duplication_and_species_change(const SpeciesId& src_species,
+                                               const SpeciesId& dst_species, 
+                                               const Time &time);
 
     /**
      * @brief Record the last event

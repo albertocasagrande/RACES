@@ -33,9 +33,8 @@ class TestCellEventType(unittest.TestCase):
         self.assertEqual(RACES.CellEventType.values, {
             0: RACES.CellEventType.DEATH,
             1: RACES.CellEventType.DUPLICATION,
-            2: RACES.CellEventType.EPIGENETIC_EVENT,
-            3: RACES.CellEventType.DUPLICATION_AND_EPIGENETIC_EVENT,
-            4: RACES.CellEventType.DRIVER_GENETIC_MUTATION
+            2: RACES.CellEventType.EPIGENETIC_SWITCH,
+            3: RACES.CellEventType.GENOTYPE_MUTATION
         })
 
 
@@ -184,7 +183,7 @@ class TestGenotype(unittest.TestCase):
             self.assertEqual(A.get_rate("-", RACES.CellEventType.DUPLICATION),
                              0.2)
             self.assertEqual(A.get_rate("-",
-                                        RACES.CellEventType.EPIGENETIC_EVENT),
+                                        RACES.CellEventType.EPIGENETIC_SWITCH),
                              0.0)
         except BaseException:
             self.fail('RACES.Genotype.set_rate() '
@@ -201,7 +200,7 @@ class TestGenotype(unittest.TestCase):
             self.assertEqual(B.get_rate("", RACES.CellEventType.DUPLICATION),
                              0.2)
             self.assertEqual(B.get_rate("",
-                                        RACES.CellEventType.EPIGENETIC_EVENT),
+                                        RACES.CellEventType.EPIGENETIC_SWITCH),
                              0.0)
         except BaseException:
             self.fail('RACES.Genotype.set_rate() '

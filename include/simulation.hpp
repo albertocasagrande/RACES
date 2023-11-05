@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.30
- * @date 2023-11-03
+ * @version 0.31
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -148,13 +148,14 @@ class Simulation
     EventAffectedCells simulate_mutation(const Position& position, const SpeciesId& final_id);
 
     /**
-     * @brief Simulate a duplication and an epigenetic event
+     * @brief Simulate a duplication and a mutation event
      * 
      * This method simulates the duplication of a cell in the 
-     * tissue and applies an epigenetic event to one of the children.
+     * tissue and applies a mutation event on the children in 
+     * the provided position.
      * 
      * @param position is the position of the cell to be duplicate
-     * @param final_id is the resulting genotype identifier of the cell
+     * @param final_id is the resulting species identifier of the cell
      * @return list of the affected cells. Whenever the specified position 
      *      is not in the tissue or does not correspond to a driver 
      *      mutation, the returned list is empty. If one of the two 
@@ -162,7 +163,8 @@ class Simulation
      *      list contains only the new cell in position `position`. 
      *      In the remaining case, the returned list contains two cells
      */
-    EventAffectedCells simulate_duplication_epigenetic_event(const Position& position, const SpeciesId& final_id);
+    EventAffectedCells simulate_duplication_and_mutation_event(const Position& position, 
+                                                               const SpeciesId& final_id);
 
     /**
      * @brief Record tissue initial cells in log
@@ -943,11 +945,9 @@ Simulation& Simulation::simulate(const CellEvent& event, UI::TissuePlotter<PLOT_
         case CellEventType::DUPLICATION:
             affected = simulate_duplication(event.position);
             break;
-        case CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT:
-            affected = simulate_duplication_epigenetic_event(event.position, event.final_species);
-            break;
-        case CellEventType::DRIVER_GENETIC_MUTATION:
-            affected = simulate_mutation(event.position, event.final_species);
+        case CellEventType::EPIGENETIC_SWITCH:
+        case CellEventType::GENOTYPE_MUTATION:
+            affected = simulate_duplication_and_mutation_event(event.position, event.final_species);
             break;
         default:
             throw std::runtime_error("Unhandled event type");

@@ -2,8 +2,8 @@
  * @file genotype_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the genotype properties
- * @version 0.1
- * @date 2023-11-03
+ * @version 0.2
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -113,9 +113,9 @@ GenotypeProperties::GenotypeProperties(const std::string& name,
                    const std::vector<EpigeneticRates>& epigenetic_event_rates):
     id(counter++), name(name)
 {
-    size_t epigenetic_mutations = 1<<epigenetic_event_rates.size();
+    size_t epigenetic_switches = 1<<epigenetic_event_rates.size();
 
-    for (size_t i=0; i<epigenetic_mutations; ++i) {
+    for (size_t i=0; i<epigenetic_switches; ++i) {
         species.push_back(SpeciesProperties(*this, epigenetic_event_rates.size()));
     }
 
@@ -270,7 +270,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesPropert
         sep = ", ";
     }
 
-    const auto& e_rates = species.get_epigenetic_mutation_rates();
+    const auto& e_rates = species.get_epigenetic_switch_rates();
     if (e_rates.size()>0) {
         out << "}, epigenetic rates: {";
         sep="";

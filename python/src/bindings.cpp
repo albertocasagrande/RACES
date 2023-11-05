@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.12
- * @date 2023-11-03
+ * @version 0.13
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -60,9 +60,8 @@ BOOST_PYTHON_MODULE(RACES)
     enum_<RacesDrv::CellEventType>("CellEventType")
         .value("DEATH", RacesDrv::CellEventType::DEATH)
         .value("DUPLICATION", RacesDrv::CellEventType::DUPLICATION)
-        .value("EPIGENETIC_EVENT", RacesDrv::CellEventType::EPIGENETIC_EVENT)
-        .value("DUPLICATION_AND_EPIGENETIC_EVENT", RacesDrv::CellEventType::DUPLICATION_AND_EPIGENETIC_EVENT)
-        .value("DRIVER_GENETIC_MUTATION", RacesDrv::CellEventType::DRIVER_GENETIC_MUTATION)
+        .value("EPIGENETIC_SWITCH", RacesDrv::CellEventType::EPIGENETIC_SWITCH)
+        .value("GENOTYPE_MUTATION", RacesDrv::CellEventType::GENOTYPE_MUTATION)
     ;
 
     class_<RacesDrv::EpigeneticRates, std::shared_ptr<RacesDrv::EpigeneticRates>>("EpigeneticRates", init<double, double>())
