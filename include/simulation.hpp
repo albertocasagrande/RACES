@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.31
+ * @version 0.32
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -663,12 +663,12 @@ public:
     }
 
     /**
-     * @brief Add a new species to the tissue
+     * @brief Add a genotype to the tissue
      * 
-     * @param genotype_properties is the genotype properties of the new species
+     * @param genotype_properties is the genotype properties of the genotype
      * @return a reference to the updated object
      */
-    Simulation& add_species(const GenotypeProperties& genotype_properties);
+    Simulation& add_genotype(const GenotypeProperties& genotype_properties);
 
     /**
      * @brief Add a cell to the simulated tissue

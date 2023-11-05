@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.5
- * @date 2023-11-02
+ * @version 0.6
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -87,19 +87,19 @@ public:
     MutationalProperties();
 
     /**
-     * @brief Add new species mutational properties
+     * @brief Add a genotype mutational properties
      * 
      * @param simulation is a driver tissue simulation
-     * @param name is the name of the mutational properties genotype
-     * @param epigenetic_status_id is a map from epigenomic status to 
+     * @param name is the name of the genotype
+     * @param epigenetic_rates is a map from epigenomic status to 
      *          passenger mutational rate
      * @param species_SNVs is a list of SNVs characterizing the species
      * @param species_CNAs is a list of CNAs characterizing the species
      * @return a reference to the updated object
      */
-    MutationalProperties& add_species(const Drivers::Simulation::Simulation& simulation,
+    MutationalProperties& add_genotype(const Drivers::Simulation::Simulation& simulation,
                                              const std::string& name, 
-                                             const std::map<std::string, double>& epigenetic_status_id,
+                                             const std::map<std::string, double>& epigenetic_rates,
                                              const std::list<SNV>& species_SNVs={},
                                              const std::list<CopyNumberAlteration>& species_CNAs={});
 

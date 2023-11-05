@@ -2,7 +2,7 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.29
+ * @version 0.30
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -71,7 +71,7 @@ class Tissue {
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
 
-    using TissueSpace = std::vector<std::vector<std::vector<std::shared_ptr<CellInTissue>>>>;
+    using TissueSpace = std::vector<std::vector<std::vector<CellInTissue*>>>;
 
     TissueSpace space;     //!< Space in the tissue
 
@@ -86,7 +86,7 @@ class Tissue {
      * @return a non-constant reference to a pointer to the cell 
      *          in `position`
      */
-    inline std::shared_ptr<CellInTissue>& cell_pointer(const PositionInTissue& position)
+    inline CellInTissue*& cell_pointer(const PositionInTissue& position)
     {
         return this->space[position.x][position.y][position.z];
     }
@@ -102,11 +102,33 @@ class Tissue {
      * @return a constant reference to a pointer to the cell 
      *          in `position`
      */
-    inline const std::shared_ptr<CellInTissue> cell_pointer(const PositionInTissue& position) const
+    inline const CellInTissue* cell_pointer(const PositionInTissue& position) const
     {
         return this->space[position.x][position.y][position.z];
     }
 
+    /**
+     * @brief Register the species cells in the tissue space
+     * 
+     * This method records the species cells in the tissue space by 
+     * copying each cell pointer in the cell position in the space.
+     * This method must be called when either:
+     * 1. we want to add the cells of newly added species to the tissue 
+     * 2. the species vector has been resized and we want to 
+     *    re-register the cell memory locations
+     */
+    void register_species_cells();
+
+    /**
+     * @brief Add a genotype species to the tissue species
+     * 
+     * This method add genotype species to the tissue species, but do not 
+     * register their cells into tissue space
+     * 
+     * @param genotype_properties is the genotype properties of the genotype
+     * @return a reference to the updated object
+     */
+    Tissue& add_genotype_species(const GenotypeProperties& genotype_properties);
 public:
 
     /**
@@ -618,12 +640,12 @@ public:
     Species& get_species(const std::string& species_name);
 
     /**
-     * @brief Add a new species to the tissue
+     * @brief Add a genotype to the tissue
      * 
-     * @param genotype is the genotype of the new species
+     * @param genotype_properties is the genotype properties of the genotype
      * @return a reference to the updated object
      */
-    Tissue& add_species(const GenotypeProperties& genotype);
+    Tissue& add_genotype(const GenotypeProperties& genotype_properties);
 
     /**
      * @brief Add a cell
@@ -809,12 +831,9 @@ public:
             tissue.id_pos[species.get_id()] = i;
             tissue.name_pos[species.get_name()] = i;
             ++i;
-
-            for (auto cell_it = species.begin(); cell_it != species.end(); ++cell_it) {
-                auto& cell_ptr = cell_it.get_shared_ptr();
-                tissue.cell_pointer(*cell_it) = const_cast<std::shared_ptr<CellInTissue>&>(cell_ptr);
-            }
         }
+
+        tissue.register_species_cells();
 
         return tissue;
     }

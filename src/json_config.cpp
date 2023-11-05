@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.9
- * @date 2023-11-02
+ * @version 0.10
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -223,7 +223,7 @@ ConfigReader::schedule_genotype_mutational_properties(Races::Passengers::Mutatio
         collect_genotype_mutations(genotype_name, SNVs, CNAs, mutational_properties_json["mutations"]);
     }
     
-    mutational_properties.add_species(simulation, genotype_name, mutation_rates, SNVs, CNAs);
+    mutational_properties.add_genotype(simulation, genotype_name, mutation_rates, SNVs, CNAs);
 }
 
 std::map<std::string, double>

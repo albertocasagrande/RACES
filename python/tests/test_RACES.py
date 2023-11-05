@@ -263,7 +263,7 @@ class TestSimulation(unittest.TestCase):
 
         self.assertEqual(sim.get_time(), 0)
 
-    def test_add_species(self):
+    def test_add_genotype(self):
         sim = RACES.Simulation()
 
         A = RACES.Genotype("A", [[0.01, 0.01]])
@@ -276,13 +276,13 @@ class TestSimulation(unittest.TestCase):
 
         try:
             # now the simulation has a tissue
-            sim.add_species(A)
+            sim.add_genotype(A)
 
         except BaseException:
-            self.fail('sim.add_species(A) raised an unexpected exeception!')
+            self.fail('sim.add_genotype(A) raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            sim.add_species("A")
+            sim.add_genotype("A")
 
     def test_add_cell(self):
         sim = RACES.Simulation()
@@ -295,7 +295,7 @@ class TestSimulation(unittest.TestCase):
 
         sim.set_tissue("Liver", [100, 100])
 
-        sim.add_species(A)
+        sim.add_genotype(A)
 
         try:
             sim.add_cell(A, "-", [50, 50])
@@ -317,19 +317,19 @@ class TestSimulation(unittest.TestCase):
                           RACES.CellEventType.DUPLICATION: 0.2})
         A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
                           RACES.CellEventType.DUPLICATION: 0.02})
-        sim.add_species(A)
+        sim.add_genotype(A)
 
         B = RACES.Genotype("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.3})
         B.set_rates("+", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.45})
-        sim.add_species(B)
+        sim.add_genotype(B)
 
         C = RACES.Genotype("C", [])
         C.set_rates("", {RACES.CellEventType.DEATH: 0.1,
                          RACES.CellEventType.DUPLICATION: 0.3})
-        sim.add_species(C)
+        sim.add_genotype(C)
 
         try:
             sim.schedule_genotype_mutation(A, B, 70)
@@ -358,14 +358,14 @@ class TestSimulation(unittest.TestCase):
                           RACES.CellEventType.DUPLICATION: 0.2})
         A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
                           RACES.CellEventType.DUPLICATION: 0.02})
-        sim.add_species(A)
+        sim.add_genotype(A)
 
         B = RACES.Genotype("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.3})
         B.set_rates("+", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.45})
-        sim.add_species(B)
+        sim.add_genotype(B)
         sim.schedule_genotype_mutation(A, B, 70)
 
         sim.storage_enabled = False

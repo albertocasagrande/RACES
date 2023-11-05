@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.11
- * @date 2023-11-02
+ * @version 0.12
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -128,11 +128,11 @@ const Races::Time& SimulationWrapper::get_time() const
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_species(const Races::Drivers::GenotypeProperties& genotype)
+void SimulationWrapper::add_genotype(const Races::Drivers::GenotypeProperties& genotype)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.add_species(genotype);
+    obj_ptr->simulation.add_genotype(genotype);
 }
 
 Races::Drivers::Simulation::PositionInTissue 

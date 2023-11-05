@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.15
- * @date 2023-11-02
+ * @version 0.16
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -311,7 +311,7 @@ class DriverSimulator : public BasicExecutable
         }
         for (const auto& genotype_json: simulation_cfg["genotypes"]) {
             auto genotype = create_genotype(genotype_json);
-            simulation.add_species(genotype);
+            simulation.add_genotype(genotype);
 
             std::string genotype_name = genotype.get_name();
             genotypes.emplace(genotype_name, std::move(genotype));

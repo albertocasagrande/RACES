@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.36
+ * @version 0.37
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -763,13 +763,13 @@ void Simulation::reset()
     //death_activation_level = 1;
 }
 
-Simulation& Simulation::add_species(const GenotypeProperties& genotype)
+Simulation& Simulation::add_genotype(const GenotypeProperties& genotype)
 {
     if (genotype_name2id.count(genotype.get_name())>0) {
         throw std::out_of_range("Genotype \""+genotype.get_name()+"\" already in the simulation");
     }
 
-    tissue().add_species(genotype);
+    tissue().add_genotype(genotype);
 
     genotype_name2id[genotype.get_name()] = genotype.get_id();
 

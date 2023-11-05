@@ -2,7 +2,7 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.18
+ * @version 0.19
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -66,8 +66,8 @@ struct ArchiveFixture {
                           {CellEventType::DUPLICATION, 0.02}});
 
         simulation.set_tissue("Liver", {1000,1000})
-                  .add_species(A)
-                  .add_species(B)
+                  .add_genotype(A)
+                  .add_genotype(B)
                   .add_cell(B["-"], {250, 500})
                   .schedule_genotype_mutation(B,A,50);
 

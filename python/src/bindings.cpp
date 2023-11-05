@@ -2,7 +2,7 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.13
+ * @version 0.14
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -88,7 +88,7 @@ BOOST_PYTHON_MODULE(RACES)
         .def("run_up_to", &SimulationWrapper::static_run_up_to,
              run_up_to_overloads((arg("wrapper"), arg("time"), arg("quiet")=false, arg("plot")=false)))
         .def("get_time", make_function(&SimulationWrapper::get_time, return_value_policy<copy_const_reference>()))
-        .def("add_species", &SimulationWrapper::add_species)
+        .def("add_genotype", &SimulationWrapper::add_genotype)
         .def("schedule_genotype_mutation", &SimulationWrapper::schedule_genotype_mutation)
         .def("add_cell", &SimulationWrapper::add_cell)
         .def("set_tissue", &SimulationWrapper::set_tissue)

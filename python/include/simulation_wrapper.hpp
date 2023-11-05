@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.11
- * @date 2023-11-03
+ * @version 0.12
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -110,12 +110,12 @@ public:
                                     const Races::Time time);
 
     /**
-     * @brief Add a new species to the tissue
+     * @brief Add a genotype to the tissue
      * 
-     * @param genotype is the genotype of the new species
+     * @param genotype_properties is the genotype properties of the genotype
      * @return a reference to the updated object
      */
-    void add_species(const Races::Drivers::GenotypeProperties& genotype);
+    void add_genotype(const Races::Drivers::GenotypeProperties& genotype);
 
     /**
      * @brief Add a cell to the simulated tissue

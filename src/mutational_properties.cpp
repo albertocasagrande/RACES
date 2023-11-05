@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.5
- * @date 2023-11-02
+ * @version 0.6
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,9 +49,9 @@ MutationalProperties::MutationalProperties()
 {}
 
 MutationalProperties& 
-MutationalProperties::add_species(const Drivers::Simulation::Simulation& simulation,  
+MutationalProperties::add_genotype(const Drivers::Simulation::Simulation& simulation,  
                                          const std::string& name,
-                                         const std::map<std::string, double>& epigenetic_status_mu,
+                                         const std::map<std::string, double>& epigenetic_rates,
                                          const std::list<SNV>& species_SNVs,
                                          const std::list<CopyNumberAlteration>& species_CNAs)
 {
@@ -61,7 +61,7 @@ MutationalProperties::add_species(const Drivers::Simulation::Simulation& simulat
         species_map[species.get_name()] = &species;
     }
 
-    for (const auto& [epigenetic_status, mu_value] : epigenetic_status_mu) {
+    for (const auto& [epigenetic_status, epigenetic_rate] : epigenetic_rates) {
         auto full_name = name+epigenetic_status;
         auto species_it = species_map.find(full_name);
 
@@ -78,7 +78,7 @@ MutationalProperties::add_species(const Drivers::Simulation::Simulation& simulat
                                     "\" has been already added.");
         }
 
-        properties[id] = {full_name, mu_value, species_SNVs, species_CNAs};
+        properties[id] = {full_name, epigenetic_rate, species_SNVs, species_CNAs};
     }
 
     return *this;
