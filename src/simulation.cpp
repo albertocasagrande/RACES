@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.35
+ * @version 0.36
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -758,7 +758,7 @@ void Simulation::reset()
     
     death_enabled.clear();
 
-    logger = BinaryLogger();
+    logger = BinaryLogger(logger.get_directory());
     
     //death_activation_level = 1;
 }
@@ -778,6 +778,11 @@ Simulation& Simulation::add_species(const GenotypeProperties& genotype)
 
 Simulation& Simulation::set_tissue(const std::string& name, const std::vector<AxisSize>& sizes)
 {
+    if (time>0) {
+        std::runtime_error("The tissue properties can be exclusively changed before"
+                           "the simulation beginning");
+    }
+
     if (tissues.size()>0) {
         reset();
     }

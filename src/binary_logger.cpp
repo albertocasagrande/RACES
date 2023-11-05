@@ -2,7 +2,7 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.21
+ * @version 0.22
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -52,7 +52,7 @@ BinaryLogger::BinaryLogger():
 {
 }
 
-BinaryLogger::BinaryLogger(const std::filesystem::path simulation_dir, const size_t cells_per_file):
+BinaryLogger::BinaryLogger(const std::filesystem::path& simulation_dir, const size_t& cells_per_file):
     BasicLogger(simulation_dir), cell_archive(), 
     cells_per_file(cells_per_file), cell_in_current_file(0), current_file_number(0)
 {

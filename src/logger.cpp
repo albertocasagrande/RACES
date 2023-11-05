@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation loggers
- * @version 0.12
- * @date 2023-10-23
+ * @version 0.13
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <filesystem>
 
 #include "logger.hpp"
 #include "tissue.hpp"
@@ -61,9 +62,29 @@ BasicLogger::BasicLogger():
     BasicLogger("races_"+get_time_string())
 {}
 
-BasicLogger::BasicLogger(const std::filesystem::path simulation_dir):
-    directory(simulation_dir)
+BasicLogger::BasicLogger(const std::filesystem::path& simulation_dir)
 {
+    reset(simulation_dir);
+}
+
+void BasicLogger::reset(const std::filesystem::path& new_directory)
+{   
+    if (std::filesystem::exists(new_directory)) {
+        throw std::runtime_error("The directory \""+std::string(new_directory)+"\" already exists");
+    }
+
+    close();
+
+    directory = new_directory;
+}
+
+void BasicLogger::rename_directory(const std::filesystem::path& new_path)
+{
+    reset(new_path);
+
+    if (std::filesystem::exists(directory)) {
+        std::filesystem::rename(directory, new_path);
+    }
 }
 
 void BasicLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)

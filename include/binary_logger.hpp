@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.17
- * @date 2023-10-23
+ * @version 0.18
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -141,7 +141,7 @@ public:
      * @param simulation_dir is the simulation logger directory name
      * @param cells_per_file is the number of cells per file
      */
-    explicit BinaryLogger(const std::filesystem::path simulation_dir, const size_t cells_per_file=1<<27);
+    explicit BinaryLogger(const std::filesystem::path& simulation_dir, const size_t& cells_per_file=1<<27);
 
     /**
      * @brief The copy-constructor

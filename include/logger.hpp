@@ -2,8 +2,8 @@
  * @file logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation loggers
- * @version 0.11
- * @date 2023-10-23
+ * @version 0.12
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -78,7 +78,7 @@ public:
      * 
      * @param simulation_dir is the new simulation logging directory
      */
-    explicit BasicLogger(const std::filesystem::path simulation_dir);
+    explicit BasicLogger(const std::filesystem::path& simulation_dir);
 
     /**
      * @brief Record an event
@@ -122,36 +122,21 @@ public:
     /**
      * @brief Close open archives
      */
-    virtual void close()
-    {}
+    virtual inline void close() {}
 
     /**
      * @brief Reset the logger
      * 
      * @param new_directory is the new logger directory
      */
-    inline void reset(const std::filesystem::path new_directory)
-    {
-        close();
-
-        directory = new_directory;
-    }
+    void reset(const std::filesystem::path& new_directory);
 
     /**
      * @brief Rename the logger directory
      * 
      * @param new_path is the new path of the logger directory
      */
-    inline void rename_directory(const std::filesystem::path& new_path)
-    {
-        close();
-
-        if (std::filesystem::exists(directory)) {
-            std::filesystem::rename(directory, new_path);
-        }
-
-        directory = new_path;
-    }
+    void rename_directory(const std::filesystem::path& new_path);
 
     /**
      * @brief Get the log directory
