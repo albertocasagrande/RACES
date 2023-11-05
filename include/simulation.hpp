@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.32
+ * @version 0.33
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -834,9 +834,19 @@ public:
      * @brief Find a genotype id by name
      * 
      * @param genotype_name is the name of the genotype whose id is aimed
-     * @return the genotype id of the genotype called `genotype_name
+     * @return a constant reference to the identifier of the genotype having 
+     *         `genotype_name` as name
      */
-    GenotypeId find_genotype_id(const std::string& genotype_name) const;
+    const GenotypeId& find_genotype_id(const std::string& genotype_name) const;
+
+    /**
+     * @brief Find a genotype name by id
+     * 
+     * @param genotype_id is the identifier of the genotype whose name is aimed
+     * @return a constant reference to the name of the genotype having 
+     *         `genotype_id` as identifier
+     */
+    const std::string& find_genotype_name(const GenotypeId& genotype_id) const;
 
     /**
      * @brief Save a simulation in an archive

@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.37
+ * @version 0.38
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
@@ -684,7 +684,7 @@ Simulation::schedule_genotype_mutation(const GenotypeProperties& src, const Geno
     return *this;
 }
 
-GenotypeId Simulation::find_genotype_id(const std::string& genotype_name) const
+const GenotypeId& Simulation::find_genotype_id(const std::string& genotype_name) const
 {
     auto found_genotype = genotype_name2id.find(genotype_name);
     if (found_genotype == genotype_name2id.end()) {
@@ -692,6 +692,17 @@ GenotypeId Simulation::find_genotype_id(const std::string& genotype_name) const
     }
 
     return found_genotype->second;
+}
+
+const std::string& Simulation::find_genotype_name(const GenotypeId& genotype_id) const
+{
+    for (const auto& [name, id] : genotype_name2id) {
+        if (id == genotype_id) {
+            return name;
+        }
+    }
+
+    throw std::out_of_range("Unknown genotype id "+std::to_string(genotype_id));
 }
 
 Simulation&
