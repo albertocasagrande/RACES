@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.27
- * @date 2023-11-02
+ * @version 0.28
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,7 +71,9 @@ class Tissue {
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
 
-    std::vector<std::vector<std::vector<CellInTissue *>>> space;     //!< Space in the tissue
+    using TissueSpace = std::vector<std::vector<std::vector<std::shared_ptr<CellInTissue>>>>;
+
+    TissueSpace space;     //!< Space in the tissue
 
     /**
      * @brief Get the pointer to the cell in a position
@@ -84,7 +86,7 @@ class Tissue {
      * @return a non-constant reference to a pointer to the cell 
      *          in `position`
      */
-    inline CellInTissue*& cell_pointer(const PositionInTissue& position)
+    inline std::shared_ptr<CellInTissue>& cell_pointer(const PositionInTissue& position)
     {
         return this->space[position.x][position.y][position.z];
     }
@@ -100,7 +102,7 @@ class Tissue {
      * @return a constant reference to a pointer to the cell 
      *          in `position`
      */
-    inline const CellInTissue* cell_pointer(const PositionInTissue& position) const
+    inline const std::shared_ptr<CellInTissue> cell_pointer(const PositionInTissue& position) const
     {
         return this->space[position.x][position.y][position.z];
     }
@@ -808,8 +810,9 @@ public:
             tissue.name_pos[species.get_name()] = i;
             ++i;
 
-            for (auto& cell : species) {
-                tissue.cell_pointer(cell) = const_cast<CellInTissue*>(&cell);
+            for (auto cell_it = species.begin(); cell_it != species.end(); ++cell_it) {
+                auto& cell_ptr = cell_it.get_shared_ptr();
+                tissue.cell_pointer(*cell_it) = const_cast<std::shared_ptr<CellInTissue>&>(cell_ptr);
             }
         }
 

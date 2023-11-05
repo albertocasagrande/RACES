@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.25
- * @date 2023-11-03
+ * @version 0.26
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -96,7 +96,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
 
     // if the new cell is already in its species
     if (species.contains(cell.get_id())) {
-        auto cell_ptr = &(species(cell.get_id()));
+        auto& cell_ptr = species(cell.get_id());
 
         // reset the corresponding tissue position
         tissue.cell_pointer(*cell_ptr) = nullptr;
@@ -116,7 +116,7 @@ void Tissue::CellInTissueProxy::erase()
 {
     // if the position already contains a cell with driver mutation
     if (!is_wild_type()) {
-        CellInTissue*& space_ptr = tissue.cell_pointer(position);
+        auto& space_ptr = tissue.cell_pointer(position);
 
         // remove the cell from its species
         Species& former_species = tissue.get_species(space_ptr->get_species_id());
@@ -139,7 +139,7 @@ void Tissue::CellInTissueProxy::switch_duplication(const bool duplication_on)
 {
     // if the position already contains a cell
     if (!is_wild_type()) {
-        CellInTissue*& space_ptr = tissue.cell_pointer(position);
+        auto& space_ptr = tissue.cell_pointer(position);
 
         // switch duplication behaviour of the cell
         Species& species = tissue.get_species(space_ptr->get_species_id());
@@ -170,9 +170,9 @@ Tissue::Tissue(const std::string& name, const std::vector<AxisSize>& sizes):
         }
     }
 
-    std::vector<CellInTissue *> z_vector(z_size, nullptr);
-    std::vector<std::vector<CellInTissue *>> y_vector(sizes[1], z_vector);
-    space = std::vector<std::vector<std::vector<CellInTissue *>>>(sizes[0], y_vector);
+    std::vector<std::shared_ptr<CellInTissue>> z_vector(z_size);
+    std::vector<std::vector<std::shared_ptr<CellInTissue>>> y_vector(sizes[1], z_vector);
+    space = TissueSpace(sizes[0], y_vector);
 }
 
 Tissue::Tissue(const std::string& name, const AxisSize x_size,const AxisSize y_size, const AxisSize z_size):
@@ -301,15 +301,15 @@ Tissue& Tissue::add_cell(const SpeciesId& species_id, const PositionInTissue pos
         throw std::runtime_error("The position is not in the tissue");
     }
  
-    auto*& cell = space[position.x][position.y][position.z];
+    auto& cell_ptr = space[position.x][position.y][position.z];
 
-    if (cell!=nullptr) {
+    if (cell_ptr.get()!=nullptr) {
         throw std::runtime_error("The position has been already taken");
     }
 
     Species& species = get_species(species_id);
 
-    cell = species.add(CellInTissue(species_id, position));
+    cell_ptr = species.add(CellInTissue(species_id, position));
 
     return *this;
 }
@@ -342,8 +342,12 @@ Tissue& Tissue::add_species(const GenotypeProperties& genotype)
         pos.push_back(species.size());
 
         id_pos[in_species.get_id()] = species.size();
+
         name_pos[in_species.get_name()] = species.size();
-        species.push_back(Species(in_species));
+        if (genotype.get_id() != 3) {
+            species.push_back(Species(in_species));
+std::cout << "species.back(): " << species.back() << std::endl;
+        }
     }
 
     return *this;
@@ -377,9 +381,9 @@ std::list<Cell> Tissue::push_cells(const PositionInTissue from_position, const D
 {
     PositionDelta delta(direction);
     PositionInTissue to_position(from_position+delta);
-    CellInTissue *to_be_moved = cell_pointer(from_position);
-    while (to_be_moved!=nullptr&&is_valid(to_position)) {
-        CellInTissue* &dest_ptr = cell_pointer(to_position);
+    auto& to_be_moved = cell_pointer(from_position);
+    while (to_be_moved.get()!=nullptr && is_valid(to_position)) {
+        auto& dest_ptr = cell_pointer(to_position);
 
         std::swap(dest_ptr, to_be_moved);
 

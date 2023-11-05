@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.21
- * @date 2023-11-03
+ * @version 0.22
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -64,7 +64,7 @@ class Species: public SpeciesProperties {
     /**
      * @brief A map from cell ids to the corresponding pointers
      */
-    using CellIdToCell = std::map<CellId, CellInTissue *>;
+    using CellIdToCell = std::map<CellId, std::shared_ptr<CellInTissue>>;
 
     CellIdToCell cells;                 //!< species cells sorted by birth time/id
     CellIdToCell duplication_enabled;   //!< species cells that are duplication enabled
@@ -92,7 +92,12 @@ class Species: public SpeciesProperties {
             return *(it->second); 
         }
 
-        inline pointer operator->() 
+        inline pointer operator->() const
+        {
+            return it->second.get();
+        }
+
+        inline const std::shared_ptr<CellInTissue>& get_shared_ptr() const
         {
             return it->second;
         }
@@ -136,7 +141,7 @@ class Species: public SpeciesProperties {
      * @param cell 
      * @return Time 
      */
-    inline Time age(const CellInTissue *cell) const
+    inline Time age(const std::shared_ptr<CellInTissue>& cell) const
     {
         return last_insertion_time-cell->get_birth_time();
     }
@@ -151,7 +156,7 @@ class Species: public SpeciesProperties {
      * @param cell is a pointer to the cell to be added to the species
      * @return pointer to the added cell
      */
-    CellInTissue* add(CellInTissue* cell);
+    std::shared_ptr<CellInTissue>& add(std::shared_ptr<CellInTissue>& cell);
 
     /**
      * @brief Randomly select a cell among those in a id-cell pointer map
@@ -334,7 +339,7 @@ public:
      * @param cell is the cell to be added to the species
      * @return pointer to the added cell
      */
-    CellInTissue* add(CellInTissue&& cell);
+    std::shared_ptr<CellInTissue> add(CellInTissue&& cell);
 
     /**
      * @brief Add a cell to the species
@@ -342,7 +347,7 @@ public:
      * @param cell is the cell to be added to the species
      * @return pointer to the added cell
      */
-    CellInTissue* add(CellInTissue& cell);
+    std::shared_ptr<CellInTissue> add(CellInTissue& cell);
 
     /**
      * @brief Switch on/off the duplication of a cell
@@ -377,7 +382,7 @@ public:
      * @param cell_id is the identifier of the aimed cell
      * @return a non-constant reference to the aimed cell
      */
-    CellInTissue& operator()(const CellId& cell_id);
+    std::shared_ptr<CellInTissue>& operator()(const CellId& cell_id);
 
     /**
      * @brief Get cell by identifier
@@ -385,7 +390,7 @@ public:
      * @param cell_id is the identifier of the aimed cell
      * @return a constant reference to the aimed cell
      */
-    const CellInTissue& operator()(const CellId& cell_id) const;
+    const std::shared_ptr<CellInTissue>& operator()(const CellId& cell_id) const;
 
     /**
      * @brief Test whether a cell is already contained in a species
@@ -453,7 +458,8 @@ public:
 
             archive & *cell;
 
-            species.cells.insert({cell->get_id(), cell});
+            species.cells.insert({cell->get_id(),
+                                  std::shared_ptr<CellInTissue>(cell)});
         }
 
         // load duplicated enabled ids

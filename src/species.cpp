@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.14
- * @date 2023-11-02
+ * @version 0.15
+ * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,10 +47,6 @@ Species::Species():
 
 void Species::reset()
 {
-    for (auto& [cell_id, cell_ptr]: cells) {
-        delete cell_ptr;
-    }
-
     cells.clear();
     duplication_enabled.clear();
 }
@@ -126,14 +122,11 @@ void Species::erase(const CellId& cell_id)
     // delete it from the duplication enabled map
     duplication_enabled.erase(cell_id);
 
-    // delete the cell
-    delete cell_it->second;
-
     // remove the cell pointer
     cells.erase(cell_it);
 }
 
-CellInTissue* Species::add(CellInTissue* cell)
+std::shared_ptr<CellInTissue>& Species::add(std::shared_ptr<CellInTissue>& cell)
 {   
     // update the genotype id
     cell->species_id = get_id();
@@ -149,18 +142,24 @@ CellInTissue* Species::add(CellInTissue* cell)
     return cell;
 }
 
-CellInTissue* Species::add(CellInTissue&& cell)
+std::shared_ptr<CellInTissue> Species::add(CellInTissue&& cell)
 {
     cell.species_id = get_id();
 
-    return add(new CellInTissue(cell));
+    auto cell_ptr = std::make_shared<CellInTissue>(cell);
+    add(cell_ptr);
+
+    return cell_ptr;
 }
 
-CellInTissue* Species::add(CellInTissue& cell)
+std::shared_ptr<CellInTissue> Species::add(CellInTissue& cell)
 {
     cell.species_id = get_id();
 
-    return add(new CellInTissue(cell));
+    auto cell_ptr = std::make_shared<CellInTissue>(cell);
+    add(cell_ptr);
+
+    return cell_ptr;
 }
 
 void Species::switch_duplication_for(const CellId& cell_id,
@@ -193,7 +192,7 @@ void Species::disable_duplication_for(const CellId& cell_id)
     duplication_enabled.erase(cell_id);
 }
 
-CellInTissue& Species::operator()(const CellId& cell_id)
+std::shared_ptr<CellInTissue>& Species::operator()(const CellId& cell_id)
 {
     auto cell_it = cells.find(cell_id);
 
@@ -201,10 +200,10 @@ CellInTissue& Species::operator()(const CellId& cell_id)
         throw std::domain_error("Unknown cell "+std::to_string(cell_id));
     }
 
-    return *(cell_it->second);
+    return cell_it->second;
 }
 
-const CellInTissue& Species::operator()(const CellId& cell_id) const
+const std::shared_ptr<CellInTissue>& Species::operator()(const CellId& cell_id) const
 {
     auto cell_it = cells.find(cell_id);
 
@@ -212,7 +211,7 @@ const CellInTissue& Species::operator()(const CellId& cell_id) const
         throw std::domain_error("Unknown cell "+std::to_string(cell_id));
     }
 
-    return *(cell_it->second);
+    return cell_it->second;
 }
 
 Species::~Species()
