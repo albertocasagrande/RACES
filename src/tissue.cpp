@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.28
- * @date 2023-11-05
+ * @version 0.29
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -294,11 +294,6 @@ Species& Tissue::get_species(const std::string& species_name)
     return species[pos_it->second];
 }
 
-Tissue& Tissue::add_cell(const std::string& species_name, const PositionInTissue position)
-{
-    return add_cell(get_species(species_name).get_id(), position);
-}
-
 Tissue& Tissue::add_cell(const SpeciesId& species_id, const PositionInTissue position)
 {
     if (!is_valid(position)) {
@@ -308,7 +303,7 @@ Tissue& Tissue::add_cell(const SpeciesId& species_id, const PositionInTissue pos
     auto*& cell_ptr = space[position.x][position.y][position.z];
 
     if (cell_ptr!=nullptr) {
-        throw std::runtime_error("The position has been already taken");
+        throw std::runtime_error("The position is not free");
     }
 
     Species& species = get_species(species_id);

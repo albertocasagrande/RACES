@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.30
- * @date 2023-11-05
+ * @version 0.31
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -56,6 +56,8 @@ namespace Simulation
  * @brief The type of tissue axis sizes
  */
 using AxisSize = uint16_t;
+
+class Simulation;
 
 /**
  * @brief A class to represent tissues
@@ -129,6 +131,16 @@ class Tissue {
      * @return a reference to the updated object
      */
     Tissue& add_genotype_species(const GenotypeProperties& genotype_properties);
+
+
+    /**
+     * @brief Add a cell
+     * 
+     * @param species_id is the species identifier of the new cell
+     * @param position is the initial position in the tissue
+     * @return a reference to the updated object
+     */
+    Tissue& add_cell(const SpeciesId& species_id, const PositionInTissue position);
 public:
 
     /**
@@ -648,24 +660,6 @@ public:
     Tissue& add_genotype(const GenotypeProperties& genotype_properties);
 
     /**
-     * @brief Add a cell
-     * 
-     * @param species_id is the species identifier of the new cell
-     * @param position is the initial position in the tissue
-     * @return a reference to the updated object
-     */
-    Tissue& add_cell(const SpeciesId& species_id, const PositionInTissue position);
-
-    /**
-     * @brief Add genotype cell
-     * 
-     * @param species_name is the species name of the new cell
-     * @param position is the initial position in the tissue
-     * @return a reference to the updated object
-     */
-    Tissue& add_cell(const std::string& species_name, const PositionInTissue position);
-
-    /**
      * @brief Test whether a position is valid in a tissue
      * 
      * @param position is the position to be tested
@@ -840,6 +834,7 @@ public:
 
     template<typename TISSUE_TYPE>
     friend class BaseCellInTissueProxy;
+    friend class Simulation;
 };
 
 /**

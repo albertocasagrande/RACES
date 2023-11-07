@@ -11,96 +11,100 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
+set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_properties.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/basic_IO.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_mutation.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/rate_update.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sample.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/event_wrapper.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/event_wrapper.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_reader.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_utils.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_mutation.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_properties.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/position_set.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/phylogenetic_forest.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/plot_2D.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/position.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/position_set.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/rate_update.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sample.cpp
+)
 
-set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
+set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/archive.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_properties.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_id.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/position.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/basic_IO.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_mutation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/rate_update.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_sample.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/event_wrapper.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/timed_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/plot_2D.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/progress_bar.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/ending_conditions.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/ending_conditions.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/event_wrapper.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_reader.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_utils.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_id.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_mutation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_properties.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/plot_2D.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/position.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/progress_bar.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/rate_update.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/timed_event.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_sample.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
+)
 
 set(WITH_MATPLOT false)
 

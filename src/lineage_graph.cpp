@@ -1,8 +1,8 @@
 /**
- * @file genotype_id.hpp
+ * @file lineage_graph.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines genotype ans species identifiers
- * @version 0.2
+ * @brief Implements lineage graphs
+ * @version 0.1
  * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
@@ -28,41 +28,41 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_GENOTYPE_ID__
-#define __RACES_GENOTYPE_ID__
-
-#include <limits>
-#include <cstdint>
+#include "lineage_graph.hpp"
 
 namespace Races 
 {
 
-/**
- * @brief The namespace of classes handing drivers
- */
-namespace Drivers
+namespace Drivers 
 {
 
-/**
- * @brief The genotype identifier type
- */
-using GenotypeId = uint16_t;
+namespace Simulation 
+{
 
-/**
- * @brief The species identifier type
- */
-using SpeciesId = uint16_t;
+LineageEdge::LineageEdge():
+    ancestor(WILD_TYPE_SPECIES), progeny(WILD_TYPE_SPECIES)
+{}
 
+LineageEdge::LineageEdge(const SpeciesId& ancestor, const SpeciesId& progeny):
+    ancestor(ancestor), progeny(progeny)
+{}
+
+LineageGraph::LineageGraph()
+{}
+
+LineageGraph& LineageGraph::add_edge(const LineageEdge& edge, const Time& time)
+{
+    if (has_edge(edge)) {
+        throw std::domain_error("The edge is already present in the lineage graph.");
+    }
+
+    first_occurrence.insert({edge, time});
+
+    return *this;
+}
+
+}   // Simulation
 
 }   // Drivers
 
 }   // Races
-
-/**
- * @brief An identifier for wild-type species
- * 
- * This macro represents the species identifier of the wild-type cells.
- */
-#define WILD_TYPE_SPECIES std::numeric_limits<Races::Drivers::SpeciesId>::max()
-
-#endif // __RACES_GENOTYPE_ID__

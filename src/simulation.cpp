@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.38
- * @date 2023-11-05
+ * @version 0.39
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,6 +42,14 @@ namespace Drivers
 namespace Simulation
 {
 
+Simulation::AddedCell::AddedCell():
+    species_id(WILD_TYPE_SPECIES)
+{}
+
+Simulation::AddedCell::AddedCell(const SpeciesId& species, const PositionInTissue& position, 
+                                 const Time& time):
+    PositionInTissue(position), species_id{species}, time{time}
+{}
 
 Simulation::Simulation(int random_seed):
     logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
@@ -649,6 +657,10 @@ Simulation::simulate_duplication_and_mutation_event(const Position& position, co
 
     Cell cell = tissue(position);
 
+    if (!lineage_graph.has_edge(cell.get_species_id(), final_id)) {
+        lineage_graph.add_edge(cell.get_species_id(), final_id, time);
+    }
+
     cell.species_id = final_id;
 
     tissue(position) = cell;
@@ -763,6 +775,7 @@ void Simulation::init_valid_directions()
 void Simulation::reset()
 {
     tissues.clear();
+    added_cells.clear();
 
     statistics = TissueStatistics();
     time = 0; 
@@ -783,6 +796,20 @@ Simulation& Simulation::add_genotype(const GenotypeProperties& genotype)
     tissue().add_genotype(genotype);
 
     genotype_name2id[genotype.get_name()] = genotype.get_id();
+
+    return *this;
+}
+
+Simulation& Simulation::add_cell(const SpeciesId& species_id, const PositionInTissue& position)
+{
+    tissue().add_cell(species_id, position);
+
+    added_cells.emplace_back(species_id, position, time);
+
+    LineageEdge edge{WILD_TYPE_SPECIES, species_id};
+    if (!lineage_graph.has_edge(edge)) {
+        lineage_graph.add_edge(edge, time);
+    }
 
     return *this;
 }

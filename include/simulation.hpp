@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.33
- * @date 2023-11-05
+ * @version 0.34
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,6 +45,8 @@
 #include "timed_event.hpp"
 #include "tissue_sample.hpp"
 
+#include "lineage_graph.hpp"
+
 #include "phylogenetic_forest.hpp"
 
 #include "progress_bar.hpp"
@@ -66,6 +68,64 @@ namespace Simulation
  */
 class Simulation 
 {
+public:
+    /**
+     * @brief Information about the cells manually added to the simulation
+     */
+    struct AddedCell : public PositionInTissue
+    {
+        SpeciesId species_id;       //!< The species of the added cell
+        Time time;                  //!< The adding time
+
+        /**
+         * @brief The empty constructor
+         */
+        AddedCell();
+
+        /**
+         * @brief Construct a new `AddedCell` object
+         * 
+         * @param species_id is the identifier of the added cell
+         * @param position is the position of the added cell
+         * @param time is the adding time
+         */
+        AddedCell(const SpeciesId& species_id, const PositionInTissue& position, const Time& time);
+
+        /**
+         * @brief Save an object of the class `AddedCell` in an archive
+         * 
+         * @tparam ARCHIVE is the output archive type
+         * @param archive is the output archive
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+        inline void save(ARCHIVE& archive) const
+        {
+            archive & *(static_cast<const PositionInTissue*>(this))
+                    & species_id 
+                    & time;
+        }
+
+        /**
+         * @brief Load an object of the class `AddedCell` from an archive
+         * 
+         * @tparam ARCHIVE is the input archive type
+         * @param archive is the input archive
+         * @return the loaded object
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+        inline static AddedCell load(ARCHIVE& archive)
+        {
+            AddedCell added_cell;
+
+            archive & static_cast<PositionInTissue&>(added_cell)
+                    & added_cell.species_id
+                    & added_cell.time;
+
+            return added_cell;
+        }
+    };
+
+protected:
     struct EventAffectedCells
     {
         std::list<CellInTissue> new_cells;
@@ -79,6 +139,8 @@ class Simulation
 
     std::vector<Tissue> tissues;     //!< Simulated tissues
     std::map<std::string, GenotypeId> genotype_name2id; //!< A map associating the genotype name to its id
+
+    LineageGraph lineage_graph;     //!< The lineage graph of the simulation
 
     BinaryLogger logger;             //!< Event logger
 
@@ -95,6 +157,8 @@ class Simulation
     TimedEventQueue timed_event_queue;   //!< The timed event queue 
 
     std::set<SpeciesId> death_enabled;  //!< Species having reached the death activation level
+
+    std::list<AddedCell> added_cells;   //!< The list of the manually added cells
 
     /**
      * @brief Simulate a cell duplication
@@ -229,6 +293,18 @@ class Simulation
      */
     CellEvent select_next_cell_event();
 
+    /**
+     * @brief Performs a simulation snapshot
+     * 
+     * This method performs a simulation snapshot if the time 
+     * elapsed from the last snapshot is greater than that set 
+     * in `secs_between_snapshots`.
+     * 
+     * @tparam INDICATOR is the type of progress bar
+     * @param indicator is the progress bar
+     */
+    template<typename INDICATOR>
+    void snapshot_on_time(INDICATOR *indicator);
 public:
     /**
      * @brief Simulation test
@@ -663,6 +739,27 @@ public:
     }
 
     /**
+     * @brief Get the cells manually added to the simulation
+     * 
+     * @return a constant reference to the list of cells 
+     *          manually added to the simulation
+     */
+    inline const std::list<AddedCell>& get_added_cells() const
+    {
+        return added_cells;
+    }
+
+    /**
+     * @brief Get the simulation lineage graph
+     * 
+     * @return a constant reference to the simulation lineage graph
+     */
+    inline const LineageGraph& get_lineage_graph() const
+    {
+        return lineage_graph;
+    }
+
+    /**
      * @brief Add a genotype to the tissue
      * 
      * @param genotype_properties is the genotype properties of the genotype
@@ -690,12 +787,7 @@ public:
      * @param position is the initial position in the tissue
      * @return a reference to the updated object
      */
-    inline Simulation& add_cell(const SpeciesId& species_id, const PositionInTissue& position)
-    {
-        tissue().add_cell(species_id, position);
-
-        return *this;
-    }
+    Simulation& add_cell(const SpeciesId& species_id, const PositionInTissue& position);
 
     /**
      * @brief Set a new simulation tissue
@@ -783,19 +875,6 @@ public:
     void make_snapshot(INDICATOR *indicator);
 
     /**
-     * @brief Performs a simulation snapshot
-     * 
-     * This method performs a simulation snapshot if the time 
-     * elapsed from the last snapshot is greater than that set 
-     * in `secs_between_snapshots`.
-     * 
-     * @tparam INDICATOR is the type of progress bar
-     * @param indicator is the progress bar
-     */
-    template<typename INDICATOR>
-    void snapshot_on_time(INDICATOR *indicator);
-
-    /**
      * @brief Sample the simulation tissue
      * 
      * This method samples the simulation tissue in a non-destructive way.
@@ -858,6 +937,7 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & tissues
+                & lineage_graph
                 & genotype_name2id
                 & logger
                 & secs_between_snapshots
@@ -884,6 +964,7 @@ public:
         Simulation simulation;
 
         archive & simulation.tissues
+                & simulation.lineage_graph
                 & simulation.genotype_name2id
                 & simulation.logger
                 & simulation.secs_between_snapshots
