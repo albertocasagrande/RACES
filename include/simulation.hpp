@@ -2,7 +2,7 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.34
+ * @version 0.35
  * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
@@ -571,6 +571,8 @@ public:
             }
         }
 
+        statistics.store_current_data_in_time_series(time);
+
         if (storage_enabled) {
             if (indicator != nullptr) {
                 indicator->set_message("Saving snapshot");
@@ -757,6 +759,17 @@ public:
     inline const LineageGraph& get_lineage_graph() const
     {
         return lineage_graph;
+    }
+
+    /**
+     * @brief Get the statistical time series
+     * 
+     * @return return a constant reference to the statistics time series
+     */
+    inline const std::map<Time, std::map<SpeciesId, SpeciesStatistics>>&
+    get_statistical_time_series() const
+    {
+        return statistics.get_statistical_time_series();
     }
 
     /**

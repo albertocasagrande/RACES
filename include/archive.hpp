@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.18
- * @date 2023-10-23
+ * @version 0.19
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -937,6 +937,41 @@ ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
  * 
  * @tparam ARCHIVE is the input archive type
  * @tparam Key is the type of the map keys and it does not implement the static method `load`
+ * @tparam T is the type of the map values and it implements the static method `load`
+ * @tparam Compare is the type of the key comparator
+ * @tparam Allocator is the type of the map allocator
+ * @param archive is the input archive
+ * @param m is the object in which the map is loaded
+ * @return a reference to the updated archive 
+ */
+template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
+            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+                             !Races::Archive::has_load<Key, ARCHIVE>::value && 
+                             Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
+{
+    size_t size;
+
+    archive & size;
+
+    m.clear();
+
+    for (size_t i=0; i<size; ++i) {
+        Key key;
+
+        archive & key;
+
+        m.emplace(key, T::load(archive));
+    }
+
+    return archive;
+}
+
+/**
+ * @brief Load a map from the archive
+ * 
+ * @tparam ARCHIVE is the input archive type
+ * @tparam Key is the type of the map keys and it does not implement the static method `load`
  * @tparam T is the type of the map values and it does not implement the static method `load`
  * @tparam Compare is the type of the key comparator 
  * @tparam Allocator is the type of the map allocator
@@ -963,41 +998,6 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
         archive & key & value;
 
         m.emplace(key, value);
-    }
-
-    return archive;
-}
-
-/**
- * @brief Load a map from the archive
- * 
- * @tparam ARCHIVE is the input archive type
- * @tparam Key is the type of the map keys and it does not implement the static method `load`
- * @tparam T is the type of the map values and it implements the static method `load`
- * @tparam Compare is the type of the key comparator
- * @tparam Allocator is the type of the map allocator
- * @param archive is the input archive
- * @param m is the object in which the map is loaded
- * @return a reference to the updated archive 
- */
-template<class ARCHIVE, class Key, class T, class Compare, class Allocator, 
-            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                             !Races::Archive::has_load<Key, ARCHIVE>::value && 
-                             Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
-ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
-{
-    size_t size;
-
-    archive & size;
-
-    m.clear();
-
-    for (size_t i=0; i<size; ++i) {
-        Key key;
-
-        archive & key;
-
-        m.emplace(key, T::load(archive));
     }
 
     return archive;

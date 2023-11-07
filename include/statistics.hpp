@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.14
- * @date 2023-11-05
+ * @version 0.15
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,7 +53,6 @@ class TissueStatistics;
  */
 struct SpeciesStatistics 
 {
-
     Time rise_time;         //!< the time of the first appearance 
     Time extinction_time;   //!< the time of the last appearance
 
@@ -146,15 +145,22 @@ class TissueStatistics
 {
     using time_point = std::chrono::steady_clock::time_point;
 
-    std::map<SpeciesId, SpeciesStatistics> s_statistics;  //!< a map from species id to statistics
+    /**
+     * @brief A structure that associate a species identifier to the species statistics
+     */
+    using SpeciesMap = std::map<SpeciesId, SpeciesStatistics>;
+
+    std::map<Time, SpeciesMap> time_series; //!< The statistics time series
+
+    SpeciesMap s_statistics;                //!< The current species statistics
     
-    std::list<Time> sim_times;             //!< the simulated times of the last recorded events
-    std::list<time_point> real_times;      //!< the recording times of the last events 
+    std::list<Time> sim_times;              //!< The simulated times of the last recorded events
+    std::list<time_point> real_times;       //!< The recording times of the last events 
 
-    size_t max_stored_times;               //!< the maximum number of times to store
+    size_t max_stored_times;                //!< The maximum number of times to store
 
-    size_t total_events;                   //!< number of recorded events
-    time_point first_event_time;           //!< first recoded event time
+    size_t total_events;                    //!< The number of recorded events
+    time_point first_event_time;            //!< The first recoded event time
 
     /**
      * @brief Record a species change
@@ -165,11 +171,47 @@ class TissueStatistics
      */
     void record_species_change(const SpeciesId& src_species,
                                const SpeciesId& dst_species, const Time &time);
+
+    /**
+     * @brief Record a duplication and a species change
+     * 
+     * @param src_species is the source species identifier
+     * @param dst_species is the destination species identifier
+     * @param time is the epigenetic event time
+     */
+    void record_duplication_and_species_change(const SpeciesId& src_species,
+                                               const SpeciesId& dst_species, 
+                                               const Time &time);
+
+    /**
+     * @brief Get the time elapsed from the last time series sample
+     * 
+     * @param time is the time of the to-be-recorded event
+     * @return the time elapsed from the last time series sample
+     */
+    Time time_elapsed_from_last_time_series_sample(const Time &time) const;
+
+    /**
+     * @brief Sample the current statistics if it is needed
+     * 
+     * @param time is the time of the to-be-recorded event
+     */
+    void sample_time_series_if_needed(const Time &time);
+
 public:
+    Time time_series_sampling_time;         //!< The statistics time series sampling time
+
     /**
      * @brief An empty constructor
      */
     TissueStatistics();
+
+    /**
+     * @brief Construct a new Tissue Statistics
+     * 
+     * @param delta is the time series sampling time
+     */
+    TissueStatistics(const Time& delta);
 
     /**
      * @brief Get the statistics of a species
@@ -265,8 +307,9 @@ public:
      * @brief Record a cell duplication
      * 
      * @param species_id is the species id of the duplicating cell
+     * @param time is the duplication time
      */
-    void record_duplication(const SpeciesId& species_id);
+    void record_duplication(const SpeciesId& species_id, const Time &time);
 
     /**
      * @brief Record a genotype mutation
@@ -292,17 +335,6 @@ public:
      */
     void record_epigenetic_switch(const SpeciesId& src_species, const SpeciesId& dst_species,
                                   const Time &time);
-
-    /**
-     * @brief Record a duplication and a species change
-     * 
-     * @param src_species is the source species identifier
-     * @param dst_species is the destination species identifier
-     * @param time is the epigenetic event time
-     */
-    void record_duplication_and_species_change(const SpeciesId& src_species,
-                                               const SpeciesId& dst_species, 
-                                               const Time &time);
 
     /**
      * @brief Record the last event
@@ -359,6 +391,29 @@ public:
     }
     
     /**
+     * @brief Store current statistical data in time series
+     * 
+     * @param time is the current simulation time
+     */
+    inline void store_current_data_in_time_series(const Time &time)
+    {
+        if (time_series.count(time)==0) {
+            time_series[time] = s_statistics;
+        }
+    }
+
+    /**
+     * @brief Get the statistical time series
+     * 
+     * @return return a constant reference to the statistics time series
+     */
+    inline const std::map<Time, std::map<SpeciesId, SpeciesStatistics>>&
+    get_statistical_time_series() const
+    {
+        return time_series;
+    }
+
+    /**
      * @brief Save tissue statistics in an archive
      * 
      * @tparam ARCHIVE is the output archive type
@@ -367,7 +422,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & s_statistics
+        archive & time_series
+                & s_statistics
                 & sim_times
                 & real_times
                 & max_stored_times
@@ -387,7 +443,8 @@ public:
     {
         TissueStatistics stats;
 
-        archive & stats.s_statistics
+        archive & stats.time_series
+                & stats.s_statistics
                 & stats.sim_times
                 & stats.real_times
                 & stats.max_stored_times
