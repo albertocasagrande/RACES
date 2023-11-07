@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.4
- * @date 2023-11-05
+ * @version 0.5
+ * @date 2023-11-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -69,7 +69,7 @@ struct TimeTest : public Simulation::BasicTest
      */
     inline bool operator()(const Simulation& simulation) const override
     {
-        return threshold <= simulation.get_time();
+        return threshold < simulation.get_time();
     }
 
     /**
