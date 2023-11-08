@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.15
- * @date 2023-11-07
+ * @version 0.16
+ * @date 2023-11-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -150,7 +150,7 @@ class TissueStatistics
      */
     using SpeciesMap = std::map<SpeciesId, SpeciesStatistics>;
 
-    std::map<Time, SpeciesMap> time_series; //!< The statistics time series
+    std::map<Time, SpeciesMap> history;     //!< The statistics history
 
     SpeciesMap s_statistics;                //!< The current species statistics
     
@@ -184,22 +184,19 @@ class TissueStatistics
                                                const Time &time);
 
     /**
-     * @brief Get the time elapsed from the last time series sample
-     * 
-     * @param time is the time of the to-be-recorded event
-     * @return the time elapsed from the last time series sample
-     */
-    Time time_elapsed_from_last_time_series_sample(const Time &time) const;
-
-    /**
-     * @brief Sample the current statistics if it is needed
+     * @brief Save the current statistics if it is needed
      * 
      * @param time is the time of the to-be-recorded event
      */
-    void sample_time_series_if_needed(const Time &time);
+    inline void save_in_history_if_needed(const Time &time)
+    {
+        if (history_time_delta > 0 && time >= history_time_delta+get_last_time_in_history()) {
+            store_current_in_history(time);
+        }
+    }
 
 public:
-    Time time_series_sampling_time;         //!< The statistics time series sampling time
+    Time history_time_delta;         //!< The history sampling delta
 
     /**
      * @brief An empty constructor
@@ -209,7 +206,7 @@ public:
     /**
      * @brief Construct a new Tissue Statistics
      * 
-     * @param delta is the time series sampling time
+     * @param delta is the history sampling time
      */
     TissueStatistics(const Time& delta);
 
@@ -391,27 +388,42 @@ public:
     }
     
     /**
-     * @brief Store current statistical data in time series
+     * @brief Store current statistical data in history
      * 
      * @param time is the current simulation time
      */
-    inline void store_current_data_in_time_series(const Time &time)
+    inline void store_current_in_history(const Time &time)
     {
-        if (time_series.count(time)==0) {
-            time_series[time] = s_statistics;
+        if (history.count(time)==0 || history_time_delta == 0) {
+            history[time] = s_statistics;
         }
     }
 
     /**
-     * @brief Get the statistical time series
+     * @brief Reset the history
+     */
+    inline void clear_history()
+    {
+        history.clear();
+    }
+
+    /**
+     * @brief Get the statistical history
      * 
-     * @return return a constant reference to the statistics time series
+     * @return return a constant reference to the statistics history
      */
     inline const std::map<Time, std::map<SpeciesId, SpeciesStatistics>>&
-    get_statistical_time_series() const
+    get_history() const
     {
-        return time_series;
+        return history;
     }
+
+    /**
+     * @brief Get the last sample time
+     * 
+     * @return the last sample time
+     */
+    Time get_last_time_in_history() const;
 
     /**
      * @brief Save tissue statistics in an archive
@@ -422,7 +434,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & time_series
+        archive & history
                 & s_statistics
                 & sim_times
                 & real_times
@@ -443,7 +455,7 @@ public:
     {
         TissueStatistics stats;
 
-        archive & stats.time_series
+        archive & stats.history
                 & stats.s_statistics
                 & stats.sim_times
                 & stats.real_times

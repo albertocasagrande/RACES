@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.13
- * @date 2023-11-07
+ * @version 0.14
+ * @date 2023-11-08
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,46 +73,29 @@ size_t SpeciesStatistics::num_of_epigenetic_events(const SpeciesId& dst_id) cons
 }
 
 TissueStatistics::TissueStatistics():
-    s_statistics(), sim_times(), max_stored_times(100), total_events(0), time_series_sampling_time(1)
+    s_statistics(), sim_times(), max_stored_times(100), total_events(0), history_time_delta(0)
 {
     assert(max_stored_times>0);
 }
 
 TissueStatistics::TissueStatistics(const Time& delta):
-    s_statistics(), sim_times(), max_stored_times(100), total_events(0), time_series_sampling_time(delta)
+    s_statistics(), sim_times(), max_stored_times(100), total_events(0), history_time_delta(delta)
 {
     assert(max_stored_times>0);
 }
 
-
-Time TissueStatistics::time_elapsed_from_last_time_series_sample(const Time &time) const
+Time TissueStatistics::get_last_time_in_history() const
 {
-    if (time_series.size()==0) {
-        return time;
+    if (history.size()==0) {
+        return 0;
     }
 
-    if (time < time_series.rbegin()->first) {
-        throw std::domain_error("The provided time is earlier than the last "
-                                "time series sample time");
-    }
-    return time - time_series.rbegin()->first;
-}
-
-void TissueStatistics::sample_time_series_if_needed(const Time &time)
-{
-    if (time_elapsed_from_last_time_series_sample(time) >= time_series_sampling_time) {
-        auto last_time_slot = static_cast<size_t>(trunc(time/time_series_sampling_time))*
-                                    time_series_sampling_time;
-        if (last_time_slot == time && time > time_series_sampling_time) {
-            last_time_slot -= time_series_sampling_time;
-        }
-        store_current_data_in_time_series(last_time_slot);
-    }
+    return history.rbegin()->first;
 }
 
 void TissueStatistics::record_death(const SpeciesId& species_id, const Time &time)
 {
-    sample_time_series_if_needed(time);
+    save_in_history_if_needed(time);
 
     auto& s_stats = s_statistics[species_id];
 
@@ -125,7 +108,7 @@ void TissueStatistics::record_death(const SpeciesId& species_id, const Time &tim
 
 void TissueStatistics::record_lost(const SpeciesId& species_id, const Time &time)
 {
-    sample_time_series_if_needed(time);
+    save_in_history_if_needed(time);
 
     auto& s_stats = s_statistics[species_id];
 
@@ -138,7 +121,7 @@ void TissueStatistics::record_lost(const SpeciesId& species_id, const Time &time
 
 void TissueStatistics::record_duplication(const SpeciesId& species_id, const Time &time)
 {
-    sample_time_series_if_needed(time);
+    save_in_history_if_needed(time);
 
     auto& s_stats = s_statistics[species_id];
 
@@ -149,7 +132,7 @@ void TissueStatistics::record_duplication(const SpeciesId& species_id, const Tim
 
 void TissueStatistics::record_species_change(const SpeciesId& src_species, const SpeciesId& dst_species, const Time &time)
 {
-    sample_time_series_if_needed(time);
+    save_in_history_if_needed(time);
 
     auto& s_stats = s_statistics[src_species];
     s_stats.curr_cells -= 1;
@@ -170,7 +153,7 @@ void TissueStatistics::record_duplication_and_species_change(const SpeciesId& sr
                                                              const SpeciesId& dst_species,
                                                              const Time &time)
 {
-    sample_time_series_if_needed(time);
+    save_in_history_if_needed(time);
 
     record_duplication(src_species, time);
     record_species_change(src_species, dst_species, time);
