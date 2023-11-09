@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.14
- * @date 2023-11-08
+ * @version 0.15
+ * @date 2023-11-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -73,15 +73,16 @@ size_t SpeciesStatistics::num_of_epigenetic_events(const SpeciesId& dst_id) cons
 }
 
 TissueStatistics::TissueStatistics():
-    s_statistics(), sim_times(), max_stored_times(100), total_events(0), history_time_delta(0)
+    history_delta(0), s_statistics(), sim_times(), max_stored_times(100), total_events(0)
 {
     assert(max_stored_times>0);
 }
 
 TissueStatistics::TissueStatistics(const Time& delta):
-    s_statistics(), sim_times(), max_stored_times(100), total_events(0), history_time_delta(delta)
+    history_delta(delta), s_statistics(), sim_times(), max_stored_times(100), total_events(0)
 {
     assert(max_stored_times>0);
+    assert(history_delta>=0);
 }
 
 Time TissueStatistics::get_last_time_in_history() const
@@ -93,10 +94,22 @@ Time TissueStatistics::get_last_time_in_history() const
     return history.rbegin()->first;
 }
 
+void TissueStatistics::save_in_history_if_needed(const Time &time)
+{
+    if (history_delta == 0) {
+        return;
+    }
+
+    auto next_sample_time = get_last_time_in_history()+history_delta;
+
+    while (time >= next_sample_time) {
+        store_current_in_history(next_sample_time);
+        next_sample_time += history_delta;
+    }
+}
+
 void TissueStatistics::record_death(const SpeciesId& species_id, const Time &time)
 {
-    save_in_history_if_needed(time);
-
     auto& s_stats = s_statistics[species_id];
 
     s_stats.killed_cells += 1;
@@ -104,12 +117,12 @@ void TissueStatistics::record_death(const SpeciesId& species_id, const Time &tim
     if (s_stats.curr_cells==0) {
         s_stats.extinction_time = time;
     }
+
+    save_in_history_if_needed(time);
 }
 
 void TissueStatistics::record_lost(const SpeciesId& species_id, const Time &time)
 {
-    save_in_history_if_needed(time);
-
     auto& s_stats = s_statistics[species_id];
 
     s_stats.lost_cells += 1;
@@ -117,12 +130,12 @@ void TissueStatistics::record_lost(const SpeciesId& species_id, const Time &time
     if (s_stats.curr_cells==0) {
         s_stats.extinction_time = time;
     }
+
+    save_in_history_if_needed(time);
 }
 
-void TissueStatistics::record_duplication(const SpeciesId& species_id, const Time &time)
+void TissueStatistics::record_duplication_no_save(const SpeciesId& species_id)
 {
-    save_in_history_if_needed(time);
-
     auto& s_stats = s_statistics[species_id];
 
     s_stats.total_cells += 2;
@@ -132,8 +145,6 @@ void TissueStatistics::record_duplication(const SpeciesId& species_id, const Tim
 
 void TissueStatistics::record_species_change(const SpeciesId& src_species, const SpeciesId& dst_species, const Time &time)
 {
-    save_in_history_if_needed(time);
-
     auto& s_stats = s_statistics[src_species];
     s_stats.curr_cells -= 1;
     s_stats.total_cells -= 1;
@@ -149,16 +160,6 @@ void TissueStatistics::record_species_change(const SpeciesId& src_species, const
     }
 }
 
-void TissueStatistics::record_duplication_and_species_change(const SpeciesId& src_species,
-                                                             const SpeciesId& dst_species,
-                                                             const Time &time)
-{
-    save_in_history_if_needed(time);
-
-    record_duplication(src_species, time);
-    record_species_change(src_species, dst_species, time);
-}
-
 void TissueStatistics::record_epigenetic_switch(const SpeciesId& src_species, 
                                                 const SpeciesId& dst_species,
                                                 const Time &time)
@@ -168,6 +169,8 @@ void TissueStatistics::record_epigenetic_switch(const SpeciesId& src_species,
     auto& src_stats = s_statistics[src_species];
 
     ++(src_stats.epigenetic_events[dst_species]);
+
+    save_in_history_if_needed(time);
 }
 
 void TissueStatistics::record_event(const CellEvent& event, const Time &time)

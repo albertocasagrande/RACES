@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.16
- * @date 2023-11-08
+ * @version 0.17
+ * @date 2023-11-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -151,6 +151,7 @@ class TissueStatistics
     using SpeciesMap = std::map<SpeciesId, SpeciesStatistics>;
 
     std::map<Time, SpeciesMap> history;     //!< The statistics history
+    Time history_delta;                     //!< The history sampling delta
 
     SpeciesMap s_statistics;                //!< The current species statistics
     
@@ -161,6 +162,13 @@ class TissueStatistics
 
     size_t total_events;                    //!< The number of recorded events
     time_point first_event_time;            //!< The first recoded event time
+
+    /**
+     * @brief Record a cell duplication and avoid history saving
+     * 
+     * @param species_id is the species id of the duplicating cell
+     */
+    void record_duplication_no_save(const SpeciesId& species_id);
 
     /**
      * @brief Record a species change
@@ -179,24 +187,23 @@ class TissueStatistics
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
+    inline 
     void record_duplication_and_species_change(const SpeciesId& src_species,
                                                const SpeciesId& dst_species, 
-                                               const Time &time);
+                                               const Time &time)
+    {
+        record_duplication(src_species, time);
+        record_species_change(src_species, dst_species, time);
+    }
 
     /**
      * @brief Save the current statistics if it is needed
      * 
      * @param time is the time of the to-be-recorded event
      */
-    inline void save_in_history_if_needed(const Time &time)
-    {
-        if (history_time_delta > 0 && time >= history_time_delta+get_last_time_in_history()) {
-            store_current_in_history(time);
-        }
-    }
+    void save_in_history_if_needed(const Time &time);
 
 public:
-    Time history_time_delta;         //!< The history sampling delta
 
     /**
      * @brief An empty constructor
@@ -306,7 +313,13 @@ public:
      * @param species_id is the species id of the duplicating cell
      * @param time is the duplication time
      */
-    void record_duplication(const SpeciesId& species_id, const Time &time);
+    inline 
+    void record_duplication(const SpeciesId& species_id, const Time &time)
+    {
+        record_duplication_no_save(species_id);
+
+        save_in_history_if_needed(time);
+    }
 
     /**
      * @brief Record a genotype mutation
@@ -321,6 +334,8 @@ public:
                                   const Time &time)
     {
         record_duplication_and_species_change(src_species, dst_species, time);
+
+        save_in_history_if_needed(time);
     }
 
     /**
@@ -394,9 +409,7 @@ public:
      */
     inline void store_current_in_history(const Time &time)
     {
-        if (history.count(time)==0 || history_time_delta == 0) {
-            history[time] = s_statistics;
-        }
+        history[time] = s_statistics;
     }
 
     /**
@@ -426,6 +439,30 @@ public:
     Time get_last_time_in_history() const;
 
     /**
+     * @brief Get the history time delta
+     * 
+     * @return a constant reference to the the history time delta
+     */
+    inline const Time& get_history_delta() const
+    {
+        return history_delta;
+    }
+
+    /**
+     * @brief Set the history time delta
+     * 
+     * @param delta is the non-negative value to be set as history time delta
+     */
+    inline void set_history_delta(const Time& delta)
+    {
+        if (delta<0) {
+            throw std::domain_error("The history time delta must be non-negative");
+        }
+
+        history_delta = delta;
+    }
+
+    /**
      * @brief Save tissue statistics in an archive
      * 
      * @tparam ARCHIVE is the output archive type
@@ -435,6 +472,7 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & history
+                & history_delta
                 & s_statistics
                 & sim_times
                 & real_times
@@ -456,6 +494,7 @@ public:
         TissueStatistics stats;
 
         archive & stats.history
+                & stats.history_delta
                 & stats.s_statistics
                 & stats.sim_times
                 & stats.real_times

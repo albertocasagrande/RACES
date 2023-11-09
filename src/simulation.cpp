@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.39
- * @date 2023-11-07
+ * @version 0.40
+ * @date 2023-11-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -305,7 +305,7 @@ bool Simulation::handle_timed_genotype_mutation(const TimedEvent& timed_genotype
     try {
         const auto& cell = choose_cell_in(genotype_mutation.initial_id);
 
-        auto delay = (timed_genotype_mutation.time>=time >= time ? 
+        auto delay = (timed_genotype_mutation.time >= time ? 
                         timed_genotype_mutation.time-time : 0);
         candidate_event = create_genotype_mutation_event(tissue(), cell, genotype_mutation.final_id, delay);
 
