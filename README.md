@@ -3,7 +3,7 @@ RACES is an Advanced Cancer Evolution Simulator.
 
 RACES is framework for simulating cancer genomic evolution. It supports:
 -   cell strand competition and spacial simulations
--   epigenetic mutations
+-   epigenetic switches
 -   copy-number variations
 -   mutational signature ruled SNV
 
