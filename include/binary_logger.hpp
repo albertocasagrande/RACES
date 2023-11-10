@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.18
- * @date 2023-11-05
+ * @version 0.19
+ * @date 2023-11-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -294,6 +294,14 @@ public:
 
         return logger;
     }
+
+    /**
+     * @brief Find the path of the last snapshot in a directory
+     * 
+     * @param directory is the path of the directory in which the snapshot is searched
+     * @return the path of the the last snapshot in `directory`
+     */
+    static std::filesystem::path find_last_snapshot_in(const std::filesystem::path& directory);
 
     /**
      * @brief The destructor

@@ -2,8 +2,8 @@
  * @file common.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements auxiliary classes and functions for executables
- * @version 0.6
- * @date 2023-10-18
+ * @version 0.7
+ * @date 2023-11-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -29,8 +29,8 @@
  */
 
 #include <iostream>
-#include <regex>
 
+#include "binary_logger.hpp"
 #include "common.hpp"
 
 void BasicExecutable::print_help_and_exit(const std::string& message, const int& err_code) const
@@ -83,7 +83,7 @@ BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
     }
 
     try {
-        return find_last_snapshot(simulation_dir);
+        return Races::Drivers::Simulation::BinaryLogger::find_last_snapshot_in(simulation_dir);
     } catch (std::exception &except) {
         print_help_and_exit(except.what(), 1);
 
@@ -91,49 +91,6 @@ BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
     }
 }
 
-std::filesystem::path BasicExecutable::find_last_snapshot(const std::filesystem::path directory)
-{
-    namespace fs = std::filesystem;
-
-    if (!fs::exists(directory)) {
-        std::ostringstream oss;
-
-        oss << "The path "<< directory<< " does not exist";
-        throw std::runtime_error(oss.str());
-    }
-
-    if (!fs::is_directory(directory)) {
-        std::ostringstream oss;
-
-        oss << directory<< " is not a directory";
-        throw std::runtime_error(oss.str());
-    }
-
-    std::regex re(std::string(directory / "snapshot_\\d+-\\d+.dat"));
-
-    bool found{false};
-    std::string last;
-    for (const auto & entry : fs::directory_iterator(directory)) {
-        if (entry.is_regular_file()) {
-            const std::string e_string = entry.path();
-            if (std::regex_match(e_string, re)) {
-                if (!found || e_string.compare(last)>0) {
-                    last = e_string;
-                    found = true;
-                }
-            }
-        }
-    }
-
-    if (!found) {
-        std::ostringstream oss;
-
-        oss << "No RACES simulation snapshot in "<< directory<< "";
-        throw std::runtime_error(oss.str());
-    }
-
-    return last;
-}
 
 Races::Drivers::Simulation::Simulation 
 BasicExecutable::load_drivers_simulation(const std::filesystem::path snapshot_path, const bool quiet)

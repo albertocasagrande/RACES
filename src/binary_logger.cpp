@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.22
- * @date 2023-11-05
+ * @version 0.23
+ * @date 2023-11-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -32,6 +32,7 @@
 #include <ctime>
 #include <limits>
 #include <cmath> // log10 and ceil
+#include <regex>
 
 #include "binary_logger.hpp"
 #include "tissue.hpp"
@@ -46,6 +47,8 @@ namespace Drivers
 
 namespace Simulation 
 {
+
+std::string snapshot_prefix = "snapshot";
 
 BinaryLogger::BinaryLogger():
     BinaryLogger("races_"+BasicLogger::get_time_string())
@@ -82,9 +85,53 @@ std::filesystem::path BinaryLogger::get_snapshot_path() const
 {
     std::ostringstream oss;
 
-    oss << "snapshot_" << BasicLogger::get_time_string() << ".dat";
+    oss << snapshot_prefix << "_" << BasicLogger::get_time_string() << ".dat";
 
     return directory / oss.str();
+}
+
+std::filesystem::path BinaryLogger::find_last_snapshot_in(const std::filesystem::path& directory)
+{
+    namespace fs = std::filesystem;
+
+    if (!fs::exists(directory)) {
+        std::ostringstream oss;
+
+        oss << "The path "<< directory<< " does not exist";
+        throw std::runtime_error(oss.str());
+    }
+
+    if (!fs::is_directory(directory)) {
+        std::ostringstream oss;
+
+        oss << directory<< " is not a directory";
+        throw std::runtime_error(oss.str());
+    }
+
+    std::regex re(std::string(directory / (snapshot_prefix+"_\\d+-\\d+.dat")));
+
+    bool found{false};
+    std::string last;
+    for (const auto & entry : fs::directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            const std::string e_string = entry.path();
+            if (std::regex_match(e_string, re)) {
+                if (!found || e_string.compare(last)>0) {
+                    last = e_string;
+                    found = true;
+                }
+            }
+        }
+    }
+
+    if (!found) {
+        std::ostringstream oss;
+
+        oss << "No RACES simulation snapshot in "<< directory<< "";
+        throw std::runtime_error(oss.str());
+    }
+
+    return last;
 }
 
 BinaryLogger& BinaryLogger::operator=(const BinaryLogger& orig)

@@ -2,8 +2,8 @@
  * @file common.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines auxiliary classes and functions for executables
- * @version 0.6
- * @date 2023-10-18
+ * @version 0.7
+ * @date 2023-11-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -82,14 +82,6 @@ public:
      */
     std::filesystem::path get_last_snapshot_path(const std::string& simulation_dir,
                                                  const std::string& parameter_name);
-
-    /**
-     * @brief Find the last driver simulation snapshot in a directory
-     * 
-     * @param directory is the directory containing the aimed snapshot
-     * @return the path to the last driver simulation snapshot in `directory`
-     */
-    static std::filesystem::path find_last_snapshot(const std::filesystem::path directory);
 
     /**
      * @brief Load a driver simulation snapshot
