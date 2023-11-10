@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.36
- * @date 2023-11-08
+ * @version 0.37
+ * @date 2023-11-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -572,14 +572,7 @@ public:
         }
 
         statistics.store_current_in_history(time);
-
-        if (storage_enabled) {
-            if (indicator != nullptr) {
-                indicator->set_message("Saving snapshot");
-            }
-            logger.snapshot(*this);
-            logger.flush_archives();
-        }
+        make_snapshot(indicator);
 
         if (indicator != nullptr) {
             indicator->set_message("Cells: " + std::to_string(tissue().num_of_mutated_cells()));
@@ -1017,11 +1010,14 @@ template<typename INDICATOR>
 void Simulation::make_snapshot(INDICATOR *indicator)
 {
     last_snapshot_time = system_clock::now();
-    if (indicator != nullptr) {
-        indicator->set_message("Saving snapshot");
-    }
+
     if (storage_enabled) {
+        if (indicator != nullptr) {
+            indicator->set_message("Saving snapshot");
+        }
+
         logger.snapshot(*this);
+        logger.flush_archives();
     }
 }
 
