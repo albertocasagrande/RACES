@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.40
- * @date 2023-11-09
+ * @version 0.41
+ * @date 2023-11-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -330,6 +330,11 @@ Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& posit
                                                          dst_genotype_id, 0);
 
     simulate(mutation_event);
+
+    if (storage_enabled) {
+        logger.snapshot(*this);
+        logger.flush_archives();
+    }
 
     return *this;
 }
