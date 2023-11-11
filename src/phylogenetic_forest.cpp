@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.9
- * @date 2023-11-02
+ * @version 0.10
+ * @date 2023-11-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,42 +38,42 @@ namespace Races
 namespace Drivers 
 {
 
-PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, const CellId cell_id):
-    forest(const_cast<PhylogeneticForest*>(forest)), cell_id(cell_id)
+DescendantsForest::const_node::const_node(const DescendantsForest* forest, const CellId cell_id):
+    forest(const_cast<DescendantsForest*>(forest)), cell_id(cell_id)
 {}
 
-PhylogeneticForest::const_node PhylogeneticForest::get_node(const CellId& cell_id) const
+DescendantsForest::const_node DescendantsForest::get_node(const CellId& cell_id) const
 {
     if (cells.count(cell_id)==0) {
         throw std::runtime_error("The forest does not contain the cell "
                                  "having the specified identifier");
     }
         
-    return PhylogeneticForest::const_node(this, cell_id);
+    return DescendantsForest::const_node(this, cell_id);
 }
 
-PhylogeneticForest::node::node(PhylogeneticForest* forest, const CellId cell_id):
+DescendantsForest::node::node(DescendantsForest* forest, const CellId cell_id):
     const_node(forest, cell_id)
 {}
 
-PhylogeneticForest::node PhylogeneticForest::get_node(const CellId& cell_id)
+DescendantsForest::node DescendantsForest::get_node(const CellId& cell_id)
 {
     if (cells.count(cell_id)==0) {
         throw std::runtime_error("The forest does not contain the cell "
                                  "having the specified identifier");
     }
 
-    return PhylogeneticForest::node(this, cell_id);
+    return DescendantsForest::node(this, cell_id);
 }
 
-PhylogeneticForest::PhylogeneticForest()
+DescendantsForest::DescendantsForest()
 {}
 
-PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation):
-    PhylogeneticForest(simulation, simulation.get_logger().load_samples())
+DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation):
+    DescendantsForest(simulation, simulation.get_logger().load_samples())
 {}
 
-PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation,
+DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation,
                                        const std::list<Simulation::TissueSample>& tissue_samples):
     samples(tissue_samples.begin(),tissue_samples.end())
 {
@@ -96,16 +96,16 @@ PhylogeneticForest::PhylogeneticForest(const Simulation::Simulation& simulation,
     grow_forest_from(cell_ids, reader, genotypes);
 }
 
-PhylogeneticForest::const_node PhylogeneticForest::const_node::parent() const
+DescendantsForest::const_node DescendantsForest::const_node::parent() const
 {
     if (forest==nullptr) {
         throw std::runtime_error("The forest node has not been initialized");
     }
 
-    return PhylogeneticForest::const_node(forest, forest->cells.at(cell_id).get_parent_id());
+    return DescendantsForest::const_node(forest, forest->cells.at(cell_id).get_parent_id());
 }
 
-const Simulation::TissueSample& PhylogeneticForest::const_node::get_sample() const
+const Simulation::TissueSample& DescendantsForest::const_node::get_sample() const
 {
     if (forest==nullptr) {
         throw std::runtime_error("The forest node has not been initialized");
@@ -120,22 +120,22 @@ const Simulation::TissueSample& PhylogeneticForest::const_node::get_sample() con
     return *(found->second);
 }
 
-std::vector<PhylogeneticForest::const_node> PhylogeneticForest::const_node::children() const
+std::vector<DescendantsForest::const_node> DescendantsForest::const_node::children() const
 {
     if (forest==nullptr) {
         throw std::runtime_error("The forest node has not been initialized");
     }
 
-    std::vector<PhylogeneticForest::const_node> nodes;
+    std::vector<DescendantsForest::const_node> nodes;
 
     for (const auto& child_id: forest->branches.at(cell_id)) {
-        nodes.push_back(PhylogeneticForest::const_node(forest, child_id));
+        nodes.push_back(DescendantsForest::const_node(forest, child_id));
     }
 
     return nodes;
 }
 
-GenotypeId PhylogeneticForest::const_node::get_genotype_id() const
+GenotypeId DescendantsForest::const_node::get_genotype_id() const
 {
     auto genotype_it = forest->genotype_map.find(get_species_id());
     
@@ -146,53 +146,53 @@ GenotypeId PhylogeneticForest::const_node::get_genotype_id() const
     return genotype_it->second;
 }
 
-PhylogeneticForest::node PhylogeneticForest::node::parent()
+DescendantsForest::node DescendantsForest::node::parent()
 {
     if (forest==nullptr) {
        throw std::runtime_error("The forest node has not been initialized");
     }
 
-    return PhylogeneticForest::node(forest, forest->cells.at(cell_id).get_parent_id());
+    return DescendantsForest::node(forest, forest->cells.at(cell_id).get_parent_id());
 }
 
-std::vector<PhylogeneticForest::node> PhylogeneticForest::node::children()
+std::vector<DescendantsForest::node> DescendantsForest::node::children()
 {
     if (forest==nullptr) {
         throw std::runtime_error("The forest node has not been initialized");
     }
 
-    std::vector<PhylogeneticForest::node> nodes;
+    std::vector<DescendantsForest::node> nodes;
 
     for (const auto& child_id: forest->branches.at(cell_id)) {
-        nodes.push_back(PhylogeneticForest::node(forest, child_id));
+        nodes.push_back(DescendantsForest::node(forest, child_id));
     }
 
     return nodes;
 }
 
-std::vector<PhylogeneticForest::const_node> PhylogeneticForest::get_roots() const
+std::vector<DescendantsForest::const_node> DescendantsForest::get_roots() const
 {
-    std::vector<PhylogeneticForest::const_node> nodes;
+    std::vector<DescendantsForest::const_node> nodes;
 
     for (const auto& root_id : roots) {
-        nodes.push_back(PhylogeneticForest::const_node(this, root_id));
+        nodes.push_back(DescendantsForest::const_node(this, root_id));
     }
 
     return nodes;
 }
 
-std::vector<PhylogeneticForest::node> PhylogeneticForest::get_roots()
+std::vector<DescendantsForest::node> DescendantsForest::get_roots()
 {
-    std::vector<PhylogeneticForest::node> nodes;
+    std::vector<DescendantsForest::node> nodes;
 
     for (const auto& root_id : roots) {
-        nodes.push_back(PhylogeneticForest::node(this, root_id));
+        nodes.push_back(DescendantsForest::node(this, root_id));
     }
 
     return nodes;
 }
 
-void PhylogeneticForest::clear()
+void DescendantsForest::clear()
 {
     cells.clear();
     roots.clear();

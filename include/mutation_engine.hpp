@@ -1,9 +1,9 @@
 /**
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines a class to place passenger mutations on the nodes of a phylogenetic forest
- * @version 0.16
- * @date 2023-11-03
+ * @brief Defines a class to place passenger mutations on a descendants forest
+ * @version 0.17
+ * @date 2023-11-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -154,7 +154,7 @@ public:
  * @brief The mutation engine
  * 
  * The objects of this class place mutations on the cell genome according 
- * to a phylogenetic tree
+ * to a descendants forest
  * 
  * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
  * @tparam RANDOM_GENERATOR is the type of random generator
@@ -352,13 +352,13 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the mutations associated to a cell in the phylogenetic tree
+     * @brief Place the mutations associated to a cell in the descendants forest
      * 
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
-     * @param node is a phylogenetic tree node representing a cell
+     * @param node is a descendants forest node representing a cell
      * @param cell_mutations are the cell mutations
      */
-    void place_SNVs(const Drivers::PhylogeneticForest::const_node& node,
+    void place_SNVs(const Drivers::DescendantsForest::const_node& node,
                     GenomeMutations& cell_mutations)
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
@@ -424,11 +424,11 @@ class MutationEngine
     /**
      * @brief Place the driver specific SNVs
      * 
-     * @param node is a phylogenetic tree node representing a cell
+     * @param node is a descendants forest node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
      */
-    void place_driver_specific_mutations(const Drivers::PhylogeneticForest::const_node& node,
+    void place_driver_specific_mutations(const Drivers::DescendantsForest::const_node& node,
                                          GenomeMutations& cell_mutations)
     {
         if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
@@ -447,23 +447,23 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the mutations on the genomes of a phylogenetic forest node
+     * @brief Place the mutations on the genomes of a descendants forest node
      * 
-     * This method recursively places the mutations on the nodes of a phylogenetic
+     * This method recursively places the mutations on the nodes of a descendants
      * forest. All the genome mutations associated to the forest leaves are 
      * collected and saved in a container that partition them according 
      * to the cell sample. 
      * 
      * @param[in,out] sample_mutation_map is a map associating tissue sample ids to 
      *              the corresponding sample genomic mutations
-     * @param[in] node is a phylogenetic tree node representing a cell
+     * @param[in] node is a descendants forest node representing a cell
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
     void place_mutations(std::map<Drivers::Simulation::TissueSampleId, 
                                   SampleGenomeMutations*>& sample_mutation_map,
-                         const Drivers::PhylogeneticForest::const_node& node,
+                         const Drivers::DescendantsForest::const_node& node,
                          const GenomeMutations& ancestor_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
@@ -594,13 +594,13 @@ public:
     }
 
     /**
-     * @brief Place genomic mutations on a phylogenetic forest
+     * @brief Place genomic mutations on a descendants forest
      * 
-     * @param forest is a phylogenetic forest
+     * @param forest is a descendants forest
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
      */
-    std::list<SampleGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
+    std::list<SampleGenomeMutations> place_mutations(const Drivers::DescendantsForest& forest,
                                                      UI::ProgressBar *progress_bar=nullptr)
     {
         using namespace Races::Drivers::Simulation;
@@ -624,13 +624,13 @@ public:
     }
 
     /**
-     * @brief Place genomic mutations on a phylogenetic forest
+     * @brief Place genomic mutations on a descendants forest
      * 
-     * @param forest is a phylogenetic forest
+     * @param forest is a descendants forest
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
      */
-    inline std::list<SampleGenomeMutations> place_mutations(const Drivers::PhylogeneticForest& forest,
+    inline std::list<SampleGenomeMutations> place_mutations(const Drivers::DescendantsForest& forest,
                                                             UI::ProgressBar &progress_bar)
     {
         return place_mutations(forest, &progress_bar);

@@ -2,8 +2,8 @@
  * @file phyloXML.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines phyloXML stream
- * @version 0.6
- * @date 2023-11-02
+ * @version 0.7
+ * @date 2023-11-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,7 +49,7 @@ namespace IO
 {
 
 /**
- * @brief A phyloXML stream for PhylogeneticForest
+ * @brief A phyloXML stream for DescendantsForest
  */
 class phyloXMLStream
 {
@@ -87,20 +87,20 @@ public:
     explicit phyloXMLStream(std::ostream& os=std::cout, const std::string& indentation_symbols=" ");
 
     /**
-     * @brief  Stream a phylogenetic forest
+     * @brief  Stream a descendants forest
      * 
      * @param forest is the forest to stream
      * @return a reference to the updated object
      */
-    phyloXMLStream& operator<<(const PhylogeneticForest& forest);
+    phyloXMLStream& operator<<(const DescendantsForest& forest);
 
     /**
-     * @brief  Stream a phylogenetic forest node
+     * @brief  Stream a descendants forest node
      * 
      * @param node is the node to stream
      * @return a reference to the updated object
      */
-    phyloXMLStream& operator<<(const PhylogeneticForest::const_node& node);
+    phyloXMLStream& operator<<(const DescendantsForest::const_node& node);
 
     /**
      * @brief Close the phyloXML tag

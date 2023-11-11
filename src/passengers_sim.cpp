@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.22
- * @date 2023-11-02
+ * @version 0.23
+ * @date 2023-11-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -195,7 +195,7 @@ class PassengersSimulator : public BasicExecutable
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
     std::list<Races::Passengers::SampleGenomeMutations>
     place_mutations(Races::Passengers::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
-                    const Races::Drivers::PhylogeneticForest& forest) const
+                    const Races::Drivers::DescendantsForest& forest) const
     {
         if (quiet) {
             return engine.place_mutations(forest);
@@ -325,7 +325,7 @@ class PassengersSimulator : public BasicExecutable
 
         ReadSimulator<> read_simulator;
 
-        Drivers::PhylogeneticForest forest;
+        Drivers::DescendantsForest forest;
         MutationalProperties mutational_properties;
 
         std::map<SpeciesId, std::string> methylation_map;
@@ -339,7 +339,7 @@ class PassengersSimulator : public BasicExecutable
 
             auto samples = get_samples(drivers_simulation, simulation_cfg);
 
-            forest = Drivers::PhylogeneticForest(drivers_simulation, samples);
+            forest = Drivers::DescendantsForest(drivers_simulation, samples);
 
             mutational_properties = ConfigReader::get_mutational_properties(drivers_simulation,
                                                                             simulation_cfg);

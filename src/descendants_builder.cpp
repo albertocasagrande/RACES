@@ -1,9 +1,9 @@
 /**
- * @file phylo_builder.cpp
+ * @file descendants_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for the RACES phylogenetic tree builder
- * @version 0.6
- * @date 2023-10-23
+ * @brief Main file for the RACES descendants forest builder
+ * @version 0.1
+ * @date 2023-11-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,15 +41,14 @@
 
 #include "phyloXML.hpp"
 
-
-class PhylogeneticBuilder : public BasicExecutable
+class DescendantsBuilder : public BasicExecutable
 {
     std::filesystem::path snapshot_path;
     std::filesystem::path drivers_directory;
 
 public:
 
-    PhylogeneticBuilder(int argc, char* argv[]):
+    DescendantsBuilder(int argc, char* argv[]):
         BasicExecutable(argv[0], {{"options", "Options"}})
     {
         namespace po = boost::program_options;
@@ -99,7 +98,7 @@ public:
         try {
             auto drivers_simulation = load_drivers_simulation(snapshot_path, true);
             auto samples = drivers_simulation.get_logger().load_samples();
-            PhylogeneticForest forest(drivers_simulation);
+            DescendantsForest forest(drivers_simulation);
 
             Races::Drivers::IO::phyloXMLStream os;
 
@@ -112,7 +111,7 @@ public:
 
 int main(int argc, char* argv[])
 {
-    PhylogeneticBuilder pbuilder(argc, argv);
+    DescendantsBuilder pbuilder(argc, argv);
 
     pbuilder.run();
 

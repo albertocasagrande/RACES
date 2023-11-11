@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.14
- * @date 2023-11-02
+ * @version 0.15
+ * @date 2023-11-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,9 +46,9 @@ namespace Drivers
 {
 
 /**
- * @brief A class representing phylogenetic forests
+ * @brief A class representing descendants forests
  */
-class PhylogeneticForest
+class DescendantsForest
 {
     std::map<CellId,  Cell> cells;                  //!< The forest cell id-cell map
  
@@ -126,7 +126,7 @@ public:
      */
     class const_node 
     {
-        PhylogeneticForest* forest;         //!< A pointer to the forest
+        DescendantsForest* forest;          //!< A pointer to the forest
         CellId cell_id;                     //!< The cell id of a cell in the forest
 
         /**
@@ -135,14 +135,14 @@ public:
          * @param forest is the forest of the node
          * @param cell_id is the cell id of a cell in the forest
          */
-        const_node(const PhylogeneticForest* forest, const CellId cell_id);
+        const_node(const DescendantsForest* forest, const CellId cell_id);
     public:
         /**
          * @brief Cast to Cell
          * 
          * This method returns a constant reference to a cell. 
          * Notice that the cells in the forest should be modified 
-         * exclusively by using `PhylogeneticForest::node` methods
+         * exclusively by using `DescendantsForest::node` methods
          * 
          * @return a constant reference to a cell
          */
@@ -230,12 +230,12 @@ public:
          * 
          * @return a constant reference to the node forest
          */
-        inline const PhylogeneticForest& get_forest() const
+        inline const DescendantsForest& get_forest() const
         {
             return *forest;
         }
 
-        friend class PhylogeneticForest;
+        friend class DescendantsForest;
     };
 
     /**
@@ -244,7 +244,7 @@ public:
     class node : public const_node
     {
 
-        node(PhylogeneticForest* forest, const CellId cell_id);
+        node(DescendantsForest* forest, const CellId cell_id);
     public:
         /**
          * @brief Cast to Cell
@@ -271,31 +271,31 @@ public:
          */
         std::vector<node> children();
 
-        friend class PhylogeneticForest;
+        friend class DescendantsForest;
     };
 
     /**
      * @brief The empty constructor
      */
-    PhylogeneticForest();
+    DescendantsForest();
 
     /**
-     * @brief Construct a phylogenetic forest by using a tissue sample of a simulation
+     * @brief Construct a descendants forest by using a tissue sample of a simulation
      * 
-     * This method builds a phylogenetic forest by using clone simulation 
+     * This method builds a descendants forest by using clone simulation 
      * pre-sampled cells as leaves.
      * 
      * @param simulation is a simulation
      */
-    PhylogeneticForest(const Simulation::Simulation& simulation);
+    DescendantsForest(const Simulation::Simulation& simulation);
 
     /**
-     * @brief Construct a phylogenetic forest by using a tissue sample of a simulation
+     * @brief Construct a descendants forest by using a tissue sample of a simulation
      * 
      * @param simulation is a simulation
      * @param tissue_samples is a list of tissue samples coming from the simulation
      */
-    PhylogeneticForest(const Simulation::Simulation& simulation,
+    DescendantsForest(const Simulation::Simulation& simulation,
                        const std::list<Simulation::TissueSample>& tissue_samples);
 
     /**
@@ -342,7 +342,7 @@ public:
      * @brief Get the tissue samples that produced the forest
      * 
      * @return a constant reference to a vector of tissue samples 
-     *      that produced the phylogenetic forest
+     *      that produced the descendants forest
      */
     inline const std::vector<Simulation::TissueSample>& get_samples() const
     {

@@ -12,7 +12,7 @@ Makefile
 build.ninja
 drivers_sim
 passengers_sim
-phylo_builder
+descendants_builder
 tissue_sampler
 build_context_index
 sample_context_index

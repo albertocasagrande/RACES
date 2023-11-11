@@ -79,8 +79,6 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/phyloXML.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/phylogenetic_forest.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/plot_2D.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/position.hpp
@@ -91,12 +89,10 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/timed_event.hpp
@@ -239,7 +235,7 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
                         ${COMMON_SOURCES})
 
-    set(PHYLO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/phylo_builder.cpp
+    set(DESCENDANTS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/descendants_builder.cpp
                     ${COMMON_SOURCES})
 
     set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
@@ -254,9 +250,9 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
     target_link_libraries(drivers_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
-    add_executable(phylo_builder ${PHYLO_SOURCES})
-    target_include_directories(phylo_builder PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(phylo_builder ${BUILD_LIB_TARGET})
+    add_executable(descendants_builder ${DESCENDANTS_SOURCES})
+    target_include_directories(descendants_builder PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(descendants_builder ${BUILD_LIB_TARGET})
 
     add_executable(tissue_sampler ${TISSUE_SAMPLER})
     target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
