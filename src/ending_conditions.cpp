@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.6
- * @date 2023-11-07
+ * @version 0.7
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,7 +51,7 @@ bool SpeciesCountTest::operator()(const Simulation& simulation) const
 {
     const auto& species = simulation.tissue().get_species(species_id);
 
-    return threshold < species.num_of_cells();
+    return threshold <= species.num_of_cells();
 }
 
 uint8_t SpeciesCountTest::percentage(const Simulation& simulation) const
@@ -69,7 +69,7 @@ bool GenotypeCountTest::operator()(const Simulation& simulation) const
 {
     const auto& genotype_species = simulation.tissue().get_genotype_species(genotype_id);
 
-    return threshold < genotype_species.num_of_cells();
+    return threshold <= genotype_species.num_of_cells();
 }
 
 uint8_t GenotypeCountTest::percentage(const Simulation& simulation) const
@@ -136,7 +136,7 @@ size_t EventCountTest::get_event_number(const Simulation& simulation) const
 
 bool EventCountTest::operator()(const Simulation& simulation) const
 {
-    return threshold < get_event_number(simulation);
+    return threshold <= get_event_number(simulation);
 }
 
 uint8_t EventCountTest::percentage(const Simulation& simulation) const

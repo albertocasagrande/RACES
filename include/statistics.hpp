@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.17
- * @date 2023-11-09
+ * @version 0.18
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -347,6 +347,16 @@ public:
      */
     void record_epigenetic_switch(const SpeciesId& src_species, const SpeciesId& dst_species,
                                   const Time &time);
+
+    /**
+     * @brief Record placed cell
+     * 
+     * This method records a placed cell 
+     * 
+     * @param species_id is the species of the placed cell
+     * @param time is the placing d time
+     */
+    void record_placed_cell(const SpeciesId& species_id, const Time &time);
 
     /**
      * @brief Record the last event

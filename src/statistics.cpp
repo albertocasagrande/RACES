@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.15
- * @date 2023-11-09
+ * @version 0.16
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -171,6 +171,18 @@ void TissueStatistics::record_epigenetic_switch(const SpeciesId& src_species,
     ++(src_stats.epigenetic_events[dst_species]);
 
     save_in_history_if_needed(time);
+}
+
+void TissueStatistics::record_placed_cell(const SpeciesId& species_id, const Time &time)
+{
+    auto& species_stats = s_statistics[species_id];
+
+    if (species_stats.total_cells == 0) {
+        species_stats.rise_time = time;
+    }
+
+    ++(species_stats.curr_cells);
+    ++(species_stats.total_cells);
 }
 
 void TissueStatistics::record_event(const CellEvent& event, const Time &time)

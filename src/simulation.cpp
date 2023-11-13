@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.41
- * @date 2023-11-10
+ * @version 0.42
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -815,6 +815,8 @@ Simulation& Simulation::add_cell(const SpeciesId& species_id, const PositionInTi
     if (!lineage_graph.has_edge(edge)) {
         lineage_graph.add_edge(edge, time);
     }
+
+    statistics.record_placed_cell(species_id, time);
 
     return *this;
 }
