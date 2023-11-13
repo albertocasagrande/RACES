@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.12
- * @date 2023-11-05
+ * @version 0.13
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -118,15 +118,15 @@ public:
     void add_genotype(const Races::Drivers::GenotypeProperties& genotype);
 
     /**
-     * @brief Add a cell to the simulated tissue
+     * @brief Place a cell in the simulated tissue
      * 
      * @param genotype is the genotype of the new cell
      * @param methylation_signature is the methylation signature of the new cell
-     * @param position is the initial position in the tissue
+     * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    void add_cell(const Races::Drivers::GenotypeProperties& genotype, const std::string& methylation_signature, 
-                  boost::python::list const& position);
+    void place_cell(const Races::Drivers::GenotypeProperties& genotype, const std::string& methylation_signature, 
+                    boost::python::list const& position);
 
     /**
      * @brief Set a new simulation tissue

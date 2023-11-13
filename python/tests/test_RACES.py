@@ -284,7 +284,7 @@ class TestSimulation(unittest.TestCase):
         with self.assertRaises(Exception):
             sim.add_genotype("A")
 
-    def test_add_cell(self):
+    def test_place_cell(self):
         sim = RACES.Simulation()
 
         A = RACES.Genotype("A", [[0.01, 0.01]])
@@ -298,14 +298,14 @@ class TestSimulation(unittest.TestCase):
         sim.add_genotype(A)
 
         try:
-            sim.add_cell(A, "-", [50, 50])
+            sim.place_cell(A, "-", [50, 50])
 
         except BaseException:
-            self.fail('sim.add_cell(A, "-", [50, 50]) raised ' +
+            self.fail('sim.place_cell(A, "-", [50, 50]) raised ' +
                       'an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            sim.add_cell(A, "-", [50, 150])
+            sim.place_cell(A, "-", [50, 150])
 
     def test_schedule_genotype_mutation(self):
         sim = RACES.Simulation()

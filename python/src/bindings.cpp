@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.14
- * @date 2023-11-05
+ * @version 0.15
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -90,7 +90,7 @@ BOOST_PYTHON_MODULE(RACES)
         .def("get_time", make_function(&SimulationWrapper::get_time, return_value_policy<copy_const_reference>()))
         .def("add_genotype", &SimulationWrapper::add_genotype)
         .def("schedule_genotype_mutation", &SimulationWrapper::schedule_genotype_mutation)
-        .def("add_cell", &SimulationWrapper::add_cell)
+        .def("place_cell", &SimulationWrapper::place_cell)
         .def("set_tissue", &SimulationWrapper::set_tissue)
         .def("rename_log_directory", &SimulationWrapper::rename_log_directory)
         .add_property("death_activation_level", &SimulationWrapper::get_death_activation_level, 

@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.37
- * @date 2023-11-10
+ * @version 0.38
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -773,26 +773,26 @@ public:
     Simulation& add_genotype(const GenotypeProperties& genotype_properties);
 
     /**
-     * @brief Add a cell to the simulated tissue
+     * @brief Place a cell in the simulated tissue
      * 
      * @param species_properties is the species properties of the new cell
-     * @param position is the initial position in the tissue
+     * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    inline Simulation& add_cell(const SpeciesProperties& species_properties,
-                                const PositionInTissue& position)
+    inline Simulation& place_cell(const SpeciesProperties& species_properties,
+                                  const PositionInTissue& position)
     {
-        return add_cell(species_properties.get_id(), position);
+        return place_cell(species_properties.get_id(), position);
     }
 
     /**
-     * @brief Add a cell to the simulated tissue
+     * @brief Place a cell in the simulated tissue
      * 
      * @param species_id is the species identifier of the new cell
-     * @param position is the initial position in the tissue
+     * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    Simulation& add_cell(const SpeciesId& species_id, const PositionInTissue& position);
+    Simulation& place_cell(const SpeciesId& species_id, const PositionInTissue& position);
 
     /**
      * @brief Set a new simulation tissue

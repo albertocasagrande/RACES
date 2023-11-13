@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.42
+ * @version 0.43
  * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
@@ -805,9 +805,9 @@ Simulation& Simulation::add_genotype(const GenotypeProperties& genotype)
     return *this;
 }
 
-Simulation& Simulation::add_cell(const SpeciesId& species_id, const PositionInTissue& position)
+Simulation& Simulation::place_cell(const SpeciesId& species_id, const PositionInTissue& position)
 {
-    tissue().add_cell(species_id, position);
+    tissue().place_cell(species_id, position);
 
     added_cells.emplace_back(species_id, position, time);
 

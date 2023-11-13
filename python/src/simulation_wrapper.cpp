@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.12
- * @date 2023-11-05
+ * @version 0.13
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -167,16 +167,16 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
 }
 
 
-void SimulationWrapper::add_cell(const Races::Drivers::GenotypeProperties& genotype, 
-                                 const std::string& methylation_signature,
-                                 boost::python::list const& position)
+void SimulationWrapper::place_cell(const Races::Drivers::GenotypeProperties& genotype, 
+                                   const std::string& methylation_signature,
+                                   boost::python::list const& position)
 {
     const auto num_of_dimensions = obj_ptr->simulation.tissue().num_of_dimensions();
     auto c_position = from_Python_list_to_position(position, num_of_dimensions);
 
     {
         std::unique_lock lock(obj_ptr->s_mutex);
-        obj_ptr->simulation.add_cell(genotype[methylation_signature], c_position);
+        obj_ptr->simulation.place_cell(genotype[methylation_signature], c_position);
     }
 
 }

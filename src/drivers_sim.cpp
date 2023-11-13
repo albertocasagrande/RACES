@@ -2,8 +2,8 @@
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the driver simulator
- * @version 0.16
- * @date 2023-11-05
+ * @version 0.17
+ * @date 2023-11-13
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -263,7 +263,7 @@ class DriverSimulator : public BasicExecutable
             if (!initial_cell_json.contains("genotype")) {
                 throw std::domain_error("Every initial cell must contain a \"position\" field");
             }
-            simulation.add_cell(species, get_position(initial_cell_json["position"]));
+            simulation.place_cell(species, get_position(initial_cell_json["position"]));
         }
     }
 
