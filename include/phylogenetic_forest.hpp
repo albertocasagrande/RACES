@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.16
+ * @version 0.17
  * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
@@ -164,6 +164,40 @@ class DescendantsForest
         }
          
         grow_from(cell_ids, cell_storage);
+    }
+
+protected:
+    /**
+     * @brief Get the cell ids to cells maps
+     * 
+     * @return a constant reference to the cell ids to cells maps
+     */
+    inline const std::map<CellId, Cell>& get_cells() const
+    {
+        return cells;
+    }
+
+    /**
+     * @brief Get the name of a genotype
+     * 
+     * @param genotype_id is the identifier of the genotype whose name is aimed
+     * @return a constant reference to the name of the genotype having 
+     *          `genotype_id` as identifier
+     */
+    inline const std::string& get_genotype_name(const GenotypeId& genotype_id) const
+    {
+        return genotype_names.at(genotype_id);
+    }
+
+    /**
+     * @brief Get the map associating each leaf to the sample which it comes from
+     * 
+     * @return a constant reference to the map associating each leaf to the 
+     *      sample which it comes from
+     */
+    inline const std::map<CellId, TissueSamplePtr>& get_coming_from() const
+    {
+        return coming_from;
     }
 
     /**
