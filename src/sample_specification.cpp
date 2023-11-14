@@ -2,8 +2,8 @@
  * @file sample_specification.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sample specification
- * @version 0.1
- * @date 2023-10-25
+ * @version 0.2
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,7 @@ namespace Drivers
 namespace Simulation
 {
 
-std::string SampleSpecification::get_default_name() const
+std::string SampleSpecification::get_default_name(const RectangleSet& region)
 {
     std::ostringstream oss;
 
@@ -50,13 +50,12 @@ std::string SampleSpecification::get_default_name() const
     return oss.str();
 }
 
-SampleSpecification::SampleSpecification(const RectangleSet& region, const bool& preserve_tissue):
-    name(), region(region), preserve_tissue(preserve_tissue)
+SampleSpecification::SampleSpecification(const RectangleSet& region):
+    name(get_default_name(region)), region(region)
 {}
 
-SampleSpecification::SampleSpecification(const std::string& name, const RectangleSet& region,
-                                         const bool& preserve_tissue):
-    name(name), region(region), preserve_tissue(preserve_tissue)
+SampleSpecification::SampleSpecification(const std::string& name, const RectangleSet& region):
+    name(name), region(region)
 {}
 
 }   // Simulation

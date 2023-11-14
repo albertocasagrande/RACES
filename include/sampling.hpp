@@ -2,8 +2,8 @@
  * @file sampling.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samplings
- * @version 0.3
- * @date 2023-10-25
+ * @version 0.4
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -62,20 +62,16 @@ struct Sampling : public SampleSpecification, public SimulationEvent
      * @brief A constructor
      * 
      * @param region is a rectangular region to sample
-     * @param preserve_tissue is a Boolean flag to establish whether the sample 
-     *          must be remove from the tissue
      */
-    Sampling(const RectangleSet& region, const bool& preserve_tissue=true);
+    Sampling(const RectangleSet& region);
 
     /**
      * @brief A constructor
      * 
      * @param name is the specification name
      * @param region is a rectangular region to sample
-     * @param preserve_tissue is a Boolean flag to establish whether the sample 
-     *          must be remove from the tissue
      */
-    Sampling(const std::string& name, const RectangleSet& region, const bool& preserve_tissue=true);
+    Sampling(const std::string& name, const RectangleSet& region);
 
     inline Type type() const {
         return Type::SAMPLING;

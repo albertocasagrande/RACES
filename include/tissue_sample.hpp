@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.5
- * @date 2023-10-25
+ * @version 0.6
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,9 +58,9 @@ class TissueSample
     static TissueSampleId counter;   //!< A counter for the non-null samples
 
     TissueSampleId  id;   //!< The sample identifier
-    Races::Time time;   //!< The sampling time
-    Races::Drivers::RectangleSet region;  //!< The sampled region
-    std::list<Races::Drivers::CellId> cell_ids;   //!< The list of cell identifier
+    Races::Time time;     //!< The sampling time
+    RectangleSet region;  //!< The sampled region
+    std::list<CellId> cell_ids;   //!< The list of cell identifier
 
     std::string name;   //!< Name of the sample
 public:
@@ -137,13 +137,6 @@ public:
     {
         return name;
     }
-
-    /**
-     * @brief Compute a default name for the sample
-     * 
-     * @return a standard name for the sample
-     */
-    std::string get_default_name() const;
 
     /**
      * @brief Get the sample id

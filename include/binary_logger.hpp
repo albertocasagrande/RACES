@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.19
- * @date 2023-11-10
+ * @version 0.20
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -215,46 +215,6 @@ public:
     {
         reset(directory);
     }
-
-    /**
-     * @brief Save tissue sample 
-     * 
-     * @param tissue_sample is the tissue sample to log
-     */
-    inline void save_sample(const Races::Drivers::Simulation::TissueSample& tissue_sample) const
-    {
-        BinaryLogger::save_sample(directory, tissue_sample);
-    }
-
-    /**
-     * @brief Load the saved samples
-     * 
-     * @return the list of the saved samples
-     */
-    inline std::list<Races::Drivers::Simulation::TissueSample>
-    load_samples() const
-    {
-        return BinaryLogger::load_samples(directory);
-    }
-
-    /**
-     * @brief Save tissue sample 
-     * 
-     * @param simulation_dir is the path of the simulation directory
-     * @param tissue_sample is the tissue sample to log
-     */
-    static void 
-    save_sample(const std::filesystem::path simulation_dir,
-                const Races::Drivers::Simulation::TissueSample& tissue_sample);
-
-    /**
-     * @brief Load the saved samples
-     * 
-     * @param simulation_dir is the path of the simulation directory
-     * @return the list of the saved samples
-     */
-    static std::list<Races::Drivers::Simulation::TissueSample>
-    load_samples(const std::filesystem::path simulation_dir);
 
     /**
      * @brief Save a `BinaryLogger` in an archive

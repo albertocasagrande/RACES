@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.38
- * @date 2023-11-13
+ * @version 0.39
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -159,6 +159,8 @@ protected:
     std::set<SpeciesId> death_enabled;  //!< Species having reached the death activation level
 
     std::list<AddedCell> added_cells;   //!< The list of the manually added cells
+
+    std::list<TissueSample> samples;    //!< The list of the tissue samples
 
     /**
      * @brief Simulate a cell duplication
@@ -880,29 +882,48 @@ public:
     void make_snapshot(INDICATOR *indicator);
 
     /**
-     * @brief Sample the simulation tissue
+     * @brief Simulate tissue sampling
      * 
-     * This method samples the simulation tissue in a non-destructive way.
+     * This method simulates a tissue sampling collecting cells 
+     * data, but avoiding cell removal. The resulting sample is 
+     * not stored among those collected during the simulation.
      * 
+     * @param sample_name is the name of the sample
      * @param rectangle is the rectangle to sample
      * @return the sample of the tissue in `rectangle`
      */
-    TissueSample sample_tissue(const RectangleSet& rectangle) const;
+    TissueSample simulate_sampling(const std::string& sample_name,
+                                   const RectangleSet& rectangle) const;
 
     /**
      * @brief Sample the simulation tissue
      * 
-     * This method samples the simulation tissue. The sampling 
-     * can either preserve the tissue or remove the sampled cells 
-     * having driver mutations according to the value of a 
-     * Boolean parameter (`preserve_tissue`).
+     * This method performs a tissue sampling collecting cells 
+     * data and removing them from them the tissue. The resulting 
+     * sample is stored among those collected during the 
+     * simulation.
      * 
+     * @param sample_name is the name of the sample
      * @param rectangle is the rectangle to sample
-     * @param preserve_tissue is a Boolean flag to enable/disable 
-     *          sample removal from simulation tissue
      * @return the sample of the tissue in `rectangle`
      */
-    TissueSample sample_tissue(const RectangleSet& rectangle, const bool& preserve_tissue=false);
+    TissueSample sample_tissue(const std::string& sample_name,
+                               const RectangleSet& rectangle);
+
+    /**
+     * @brief Return all the simulation samples
+     * 
+     * This method returns all the simulation samples collected during
+     * the computation.
+     * 
+     * @return the list of all the tissue samples collected during the 
+     *      computation sorted by collection time
+     */
+    inline
+    const std::list<TissueSample>& get_tissue_samples() const
+    {
+        return samples;
+    }
 
     /**
      * @brief Get the simulation logger
@@ -953,6 +974,7 @@ public:
                 & death_activation_level
                 & duplicate_internal_cells
                 & storage_enabled
+                & samples
                 & Cell::counter;
     }
 
@@ -980,6 +1002,7 @@ public:
                 & simulation.death_activation_level
                 & simulation.duplicate_internal_cells
                 & simulation.storage_enabled
+                & simulation.samples
                 & Cell::counter;
 
         simulation.init_valid_directions();

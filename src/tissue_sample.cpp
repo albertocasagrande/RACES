@@ -2,8 +2,8 @@
  * @file tissue_sample.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements tissue samples
- * @version 0.4
- * @date 2023-10-25
+ * @version 0.5
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,17 +41,6 @@ namespace Simulation
 
 TissueSampleId TissueSample::counter = 0;
 
-std::string TissueSample::get_default_name() const
-{
-    std::ostringstream oss;
-
-    oss << "S_" << time << "_"
-        << region.lower_corner << "-"
-        << region.upper_corner; 
-
-    return oss.str();
-}
-
 TissueSample::TissueSample():
     id(0), time(0), region({{0,0},{0,0}}), name("")
 {}
@@ -68,7 +57,9 @@ TissueSample::TissueSample(const std::string& name, const Races::Time& time,
 TissueSample::TissueSample(const Time& time, const RectangleSet& region,
                            const std::list<Races::Drivers::CellId>& cell_ids):
     TissueSample("", time, region, cell_ids)
-{}
+{
+    name = "S_"+std::to_string(id);
+}
 
 TissueSample::TissueSample(const std::string& name, const Time& time, const RectangleSet& region,
                            const std::list<Races::Drivers::CellId>& cell_ids):

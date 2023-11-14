@@ -2,8 +2,8 @@
  * @file sampling.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements samplings
- * @version 0.3
- * @date 2023-10-25
+ * @version 0.4
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,12 +43,12 @@ Sampling::Sampling(const SampleSpecification& orig):
     SampleSpecification(orig)
 {}
 
-Sampling::Sampling(const RectangleSet& region, const bool& preserve_tissue):
-    SampleSpecification(region, preserve_tissue)
+Sampling::Sampling(const RectangleSet& region):
+    SampleSpecification(region)
 {}
 
-Sampling::Sampling(const std::string& name, const RectangleSet& region, const bool& preserve_tissue):
-    SampleSpecification(name, region, preserve_tissue)
+Sampling::Sampling(const std::string& name, const RectangleSet& region):
+    SampleSpecification(name, region)
 {}
 
 }   // Simulation

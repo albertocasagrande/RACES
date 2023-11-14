@@ -2,8 +2,8 @@
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES passenger mutations simulator
- * @version 0.23
- * @date 2023-11-11
+ * @version 0.24
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -147,26 +147,14 @@ class PassengersSimulator : public BasicExecutable
 
             for (const auto& sample_region_json: sample_regions_json) {
                 auto sample_specification = Races::ConfigReader::get_sample_specification(sample_region_json);
-                auto sample = simulation.sample_tissue(sample_specification.get_region());
-
-                if (sample_specification.get_name()=="") {
-                    sample.set_name(sample_specification.get_default_name());
-                } else {
-                    sample.set_name(sample_specification.get_name());
-                }
-
-                samples.push_back(sample);
+                samples.push_back(simulation.simulate_sampling(sample_specification.get_name(),
+                                                               sample_specification.get_region()));
             }
 
             return samples;
         }
 
-        try {
-            return BinaryLogger::load_samples(drivers_directory);
-        } catch (...) {
-            throw std::domain_error("\""+std::string(drivers_directory)+"\" does not contain a list "
-                                    + "of sampled cell. Produce it by using \"tissue_sampler\".");
-        }
+        return simulation.get_tissue_samples();
     }
 
     template<typename ABSOLUTE_GENOTYPE_POSITION = uint32_t>

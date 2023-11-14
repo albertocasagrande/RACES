@@ -2,8 +2,8 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES tool that sample tissues
- * @version 0.8
- * @date 2023-10-25
+ * @version 0.9
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,6 @@ class TissueSampler : public BasicExecutable
     std::filesystem::path drivers_directory;
     std::filesystem::path config;
 
-    bool preserve_tissue;
     bool quiet;
 
     void perform_sampling(const nlohmann::json& sampling_cfg, const bool quiet=false) const
@@ -61,17 +60,13 @@ class TissueSampler : public BasicExecutable
 
         auto simulation = load_drivers_simulation(snapshot_path, quiet);
 
-        for (const auto& rectangle_json : sampling_cfg) {
-            const auto sample_region = ConfigReader::get_sample_region(rectangle_json);
+        for (const auto& sample_specs_json : sampling_cfg) {
+            const auto sample_specs = ConfigReader::get_sample_specification(sample_specs_json);
 
-            TissueSample sample = simulation.sample_tissue(sample_region, preserve_tissue);
-
-            BinaryLogger::save_sample(drivers_directory,sample);
+            simulation.sample_tissue(sample_specs.get_name(), sample_specs.get_region());
         }
 
-        if (preserve_tissue) {
-            simulation.make_snapshot<Races::UI::ProgressBar>(nullptr);
-        }
+        simulation.make_snapshot<Races::UI::ProgressBar>(nullptr);
     }
 public:
 
@@ -127,7 +122,6 @@ public:
             print_help_and_exit("Missing passenger configuration file!", 1);
         }
 
-        preserve_tissue = (vm.count("preserve-tissue")>0);
         quiet = (vm.count("quiet")>0);
     }
 

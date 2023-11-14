@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.10
- * @date 2023-11-11
+ * @version 0.11
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -70,7 +70,7 @@ DescendantsForest::DescendantsForest()
 {}
 
 DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation):
-    DescendantsForest(simulation, simulation.get_logger().load_samples())
+    DescendantsForest(simulation, simulation.get_tissue_samples())
 {}
 
 DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation,

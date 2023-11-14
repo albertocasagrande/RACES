@@ -2,8 +2,8 @@
  * @file descendants_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES descendants forest builder
- * @version 0.1
- * @date 2023-11-11
+ * @version 0.3
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -97,7 +97,6 @@ public:
 
         try {
             auto drivers_simulation = load_drivers_simulation(snapshot_path, true);
-            auto samples = drivers_simulation.get_logger().load_samples();
             DescendantsForest forest(drivers_simulation);
 
             Races::Drivers::IO::phyloXMLStream os;

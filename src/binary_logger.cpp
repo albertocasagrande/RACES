@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.23
- * @date 2023-11-10
+ * @version 0.24
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -286,32 +286,6 @@ void BinaryLogger::reset(const std::string& output_directory)
     directory = output_directory;
     cell_in_current_file = 0;
     current_file_number = 0;
-}
-
-void
-BinaryLogger::save_sample(const std::filesystem::path simulation_dir,
-                          const Races::Drivers::Simulation::TissueSample& tissue_sample)
-{
-
-    Races::Archive::Binary::Out archive(simulation_dir/"samples.dat", std::ios_base::app);
-
-    archive & tissue_sample;
-}
-
-
-std::list<Races::Drivers::Simulation::TissueSample>
-BinaryLogger::load_samples(const std::filesystem::path simulation_dir)
-{
-
-    Races::Archive::Binary::In archive(simulation_dir/"samples.dat");
-
-    std::list<Races::Drivers::Simulation::TissueSample> samples;
-
-    while (!archive.eof()) {
-        samples.push_back(Races::Drivers::Simulation::TissueSample::load(archive));
-    }
-
-    return samples;
 }
 
 BinaryLogger::~BinaryLogger()

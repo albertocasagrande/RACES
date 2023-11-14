@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.10
- * @date 2023-11-05
+ * @version 0.11
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -246,20 +246,15 @@ ConfigReader::get_sample_specification(const nlohmann::json& sample_specificatio
         throw std::runtime_error("The \""+field_name+"\" field must be objects");
     }
 
-    bool preserve_tissue=false;
-    if (sample_specification_json.contains("preserve tissue")) {
-        preserve_tissue = sample_specification_json["preserve tissue"].template get<bool>();
-    }
-
     auto region = ConfigReader::get_sample_region(sample_specification_json, field_name);
 
     if (sample_specification_json.contains("name")) {
         auto name = sample_specification_json["name"].template get<std::string>();
 
-        return Drivers::Simulation::SampleSpecification(name, region, preserve_tissue);
+        return Drivers::Simulation::SampleSpecification(name, region);
     }
 
-    return Drivers::Simulation::SampleSpecification(region, preserve_tissue);
+    return Drivers::Simulation::SampleSpecification(region);
 }
 
 Drivers::RectangleSet

@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.43
- * @date 2023-11-13
+ * @version 0.44
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -78,19 +78,24 @@ Simulation::Simulation(Simulation&& orig):
 }
 
 Simulation& Simulation::operator=(Simulation&& orig)
-{
-    std::swap(logger, orig.logger);
+{               
     std::swap(tissues, orig.tissues);
-    std::swap(valid_directions, orig.valid_directions);
-    std::swap(last_snapshot_time, orig.last_snapshot_time);
+    std::swap(lineage_graph, orig.lineage_graph);
+    std::swap(genotype_name2id, orig.genotype_name2id);
+    std::swap(logger, orig.logger);
     std::swap(secs_between_snapshots, orig.secs_between_snapshots);
     std::swap(statistics, orig.statistics);
     std::swap(time, orig.time);
-    std::swap(random_gen, orig.random_gen);
     std::swap(timed_event_queue, orig.timed_event_queue);
     std::swap(death_enabled, orig.death_enabled);
     std::swap(death_activation_level, orig.death_activation_level);
     std::swap(duplicate_internal_cells, orig.duplicate_internal_cells);
+    std::swap(storage_enabled, orig.storage_enabled);
+    std::swap(samples, orig.samples);
+    
+    std::swap(valid_directions, orig.valid_directions);
+    std::swap(last_snapshot_time, orig.last_snapshot_time);
+    std::swap(random_gen, orig.random_gen);
 
     return *this;
 }
@@ -356,17 +361,7 @@ void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEve
     time = timed_sampling.time;
 
     // sample tissue
-    TissueSample sample = sample_tissue(sampling.get_region(), sampling.is_preserving_tissue());
-
-    if (sampling.get_name()=="") {
-        sample.set_name(sample.get_default_name());
-    } else {
-        sample.set_name(sampling.get_name());
-    }
-
-    if (storage_enabled) {
-        logger.save_sample(sample);
-    }
+    sample_tissue(sampling.get_name(), sampling.get_region());
 
     // update candidate event to avoid removed regions
     candidate_event = select_next_cell_event();
@@ -414,8 +409,7 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
                 }
                 break;
             default:
-                std::cout << "Unsupported timed event" << std::endl;
-                exit(1);
+                throw std::domain_error("Unsupported timed event");
         }
     }
 }
@@ -853,26 +847,9 @@ void Simulation::log_initial_cells()
 }
 
 TissueSample
-Simulation::sample_tissue(const RectangleSet& rectangle) const
+Simulation::simulate_sampling(const std::string& sample_name, const RectangleSet& rectangle) const
 {
-    TissueSample sample(time, rectangle);
-
-    for (const auto& position: rectangle) {
-        if (tissue().is_valid(position)) {
-            auto cell = tissue()(position);
-            if (!cell.is_wild_type()) {
-                sample.add_cell_id(static_cast<const CellInTissue&>(cell).get_id());
-            }
-        }
-    }
-
-    return sample;
-}
-
-TissueSample
-Simulation::sample_tissue(const RectangleSet& rectangle, const bool& preserve_tissue)
-{
-    TissueSample sample(time, rectangle);
+    TissueSample sample(sample_name, time, rectangle);
 
     for (const auto& position: rectangle) {
         if (tissue().is_valid(position)) {
@@ -881,13 +858,33 @@ Simulation::sample_tissue(const RectangleSet& rectangle, const bool& preserve_ti
                 auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
 
                 sample.add_cell_id(cell_in_tissue.get_id());
-                if (!preserve_tissue) {
-                    ++(statistics[cell_in_tissue.get_species_id()].lost_cells);
-                    cell.erase();
-                }
             }
         }
     }
+
+    return sample;
+}
+
+TissueSample
+Simulation::sample_tissue(const std::string& sample_name, const RectangleSet& rectangle)
+{
+    TissueSample sample(sample_name, time, rectangle);
+
+    for (const auto& position: rectangle) {
+        if (tissue().is_valid(position)) {
+            auto cell = tissue()(position);
+            if (!cell.is_wild_type()) {
+                auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
+
+                sample.add_cell_id(cell_in_tissue.get_id());
+
+                ++(statistics[cell_in_tissue.get_species_id()].lost_cells);
+                cell.erase();
+            }
+        }
+    }
+
+    samples.push_back(sample);
 
     return sample;
 }

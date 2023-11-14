@@ -2,8 +2,8 @@
  * @file sample_specification.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sample specification
- * @version 0.1
- * @date 2023-10-25
+ * @version 0.2
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,28 +50,22 @@ class SampleSpecification
 protected:
     std::string name;           //!< The name of the sample
     RectangleSet region;        //!< The set of tissue region to be sampled
-    bool preserve_tissue;       //!< The flag establishing whether the tissue must remain unchanged
 
 public:
     /**
      * @brief A constructor
      * 
      * @param region is a rectangular region to sample
-     * @param preserve_tissue is a Boolean flag to establish whether the sample 
-     *          must be remove from the tissue
      */
-    SampleSpecification(const RectangleSet& region, const bool& preserve_tissue=true);
+    SampleSpecification(const RectangleSet& region);
 
     /**
      * @brief A constructor
      * 
      * @param name is the specification name
      * @param region is a rectangular region to sample
-     * @param preserve_tissue is a Boolean flag to establish whether the sample 
-     *          must be remove from the tissue
      */
-    SampleSpecification(const std::string& name, const RectangleSet& region,
-                        const bool& preserve_tissue=true);
+    SampleSpecification(const std::string& name, const RectangleSet& region);
 
     /**
      * @brief Set the specification name
@@ -87,19 +81,13 @@ public:
     /**
      * @brief Get the sample specification name
      * 
+     * @param region is a rectangular region to sample
      * @return a constant reference to the sample specification name
      */
     inline const std::string& get_name() const
     {
         return name;
     }
-
-    /**
-     * @brief Get the default name for the sample specification
-     * 
-     * @return the default name for the sample specification
-     */
-    std::string get_default_name() const;
 
     /**
      * @brief Get the sample specification region
@@ -112,15 +100,12 @@ public:
     }
 
     /**
-     * @brief Check whether the sample is meant to preserve the tissue
+     * @brief Get the default sample specification name for a region
      * 
-     * @return `true` if and only if the sample is meant 
-     *          to preserve the tissue
+     * @param region is a rectangular region to sample
+     * @return the default name for the sample specification
      */
-    inline const bool& is_preserving_tissue() const
-    {
-        return preserve_tissue;
-    }
+    static std::string get_default_name(const RectangleSet& region);
 
     /**
      * @brief Save a sample specification in an archive
@@ -131,7 +116,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
-        archive & name & region & preserve_tissue;
+        archive & name & region;
     }
 
     /**
@@ -146,11 +131,10 @@ public:
     {
         std::string name;
         RectangleSet region;
-        bool preserve_tissue;
 
-        archive & name & region & preserve_tissue;
+        archive & name & region;
 
-        return {name, region, preserve_tissue};
+        return {name, region};
     }
 };
 
@@ -168,14 +152,13 @@ public:
  * @param rhs is the right-hand side of the equivalence
  * @return `true` if and only if the two sample specifications
  *      deal with the same region and they have the same 
- *      `preserve_tissue` property 
+ *      name. 
  */
 inline
 bool operator==(const Races::Drivers::Simulation::SampleSpecification& lhs, 
                 const Races::Drivers::Simulation::SampleSpecification& rhs)
 {
-    return (lhs.get_region() == rhs.get_region()
-            && lhs.is_preserving_tissue() == rhs.is_preserving_tissue());
+    return (lhs.get_name() == rhs.get_name() && lhs.get_region() == rhs.get_region());
 }
 
 #endif // __RACES_RATE_UPDATE__
