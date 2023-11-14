@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.12
- * @date 2023-10-16
+ * @version 0.13
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -270,9 +270,6 @@ std::map<std::string, std::map<MutationalType, double>> not_validated_read_from_
     std::vector<std::string> row = read_row(in,delimiter);
     while (row.size() != 0) {
         if (row.size() != name_vector.size()) {
-
-            std::cout << row.size() << std::endl;
-            std::cout << name_vector.size() << std::endl;
             std::ostringstream oss;
 
             oss << "The header and the row number " << row_number << " differ in size.";
