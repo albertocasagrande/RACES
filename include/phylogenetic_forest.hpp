@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.15
- * @date 2023-11-11
+ * @version 0.16
+ * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,9 +35,11 @@
 #include <set>
 #include <vector>
 #include <queue>
+#include <string>
 
 #include "cell.hpp"
 #include "binary_logger.hpp"
+#include "tissue_sample.hpp"
 
 namespace Races
 {
@@ -50,16 +52,34 @@ namespace Drivers
  */
 class DescendantsForest
 {
-    std::map<CellId,  Cell> cells;                  //!< The forest cell id-cell map
+    /**
+     * @brief Species data
+     * 
+     * This structure privatly stores species data.
+     */
+    struct SpeciesData
+    {
+        GenotypeId genotype_id;             //!< The species genotype id
+        MethylationSignature signature;     //!< The species signature
+
+        /**
+         * @brief The constructor
+         */
+        SpeciesData(const GenotypeId& genotype_id, const MethylationSignature& signature);
+    }; 
+
+    using TissueSamplePtr = Simulation::TissueSample const *;
+    using EdgeTail = std::set<CellId>;
  
-    std::set<CellId> roots;                         //!< The cell ids of the forest roots
+    std::set<CellId> roots;                 //!< The cell ids of the forest roots
+    std::map<CellId, Cell> cells;          //!< The forest cell id-cell map
+    std::map<CellId, EdgeTail> branches;    //!< The descendant branches
 
-    std::map<CellId, std::set<CellId>> branches;    //!< The descendant branches
-
-    std::map<SpeciesId, GenotypeId> genotype_map;    //!< A map associating every species to the corresponding genotype id 
+    std::map<SpeciesId, SpeciesData> species_data;          //!< The species id to data map
+    std::map<GenotypeId, std::string> genotype_names;       //!< The genotype id to genotype name map
 
     std::vector<Simulation::TissueSample> samples;  //!< The vector of the samples that produced the forest
-    std::map<CellId, Simulation::TissueSample const *> coming_from;       //!< The map associating each leaf to sample which it comes from
+    std::map<CellId, TissueSamplePtr> coming_from;  //!< The map associating each leaf to the sample which it comes from
 
     /**
      * @brief Grow a forest from a sample of cells
@@ -71,19 +91,10 @@ class DescendantsForest
      * @tparam CELL_STORAGE is the type of the cell storage
      * @param sample_ids is the cell id sample
      * @param cell_storage is the cell storage
-     * @param genotypes is the vector of species
      */
     template<typename CELL_STORAGE>
-    void grow_forest_from(const std::list<CellId>& sample, 
-                          CELL_STORAGE& cell_storage,
-                          const std::vector<SpeciesProperties>& genotypes)
+    void grow_from(const std::list<CellId>& sample, CELL_STORAGE& cell_storage)
     {
-        clear();
-
-        for (const auto& epigenetic_genotype: genotypes) {
-            genotype_map[epigenetic_genotype.get_id()] = epigenetic_genotype.get_genotype_id();
-        }
-
         std::set<CellId> parent_ids;
         for (const auto& cell_id: sample) {
             parent_ids.insert(cell_id);
@@ -119,6 +130,50 @@ class DescendantsForest
             cells.insert(std::make_pair(cell.get_id(),cell));
         }
     }
+
+    /**
+     * @brief Grow a forest from a list of tissue samples
+     * 
+     * This method resets a forest and grows it from a list of tissue samples and 
+     * a cell storage. The cells in the samples will be the leaves of the forest 
+     * and their ancestors are loaded from a cell storage.
+     * 
+     * @tparam CELL_STORAGE is the type of the cell storage
+     * @param tissue_samples is a list of tissue samples coming from the simulation
+     * @param cell_storage is the cell storage
+     */
+    template<typename CELL_STORAGE>
+    void grow_from(const std::list<Simulation::TissueSample>& tissue_samples, 
+                   CELL_STORAGE& cell_storage)
+    {
+        clear();
+ 
+        samples = std::vector<Simulation::TissueSample>(tissue_samples.begin(), 
+                                                        tissue_samples.end());
+ 
+        for (const auto& sample: samples) {
+            for (const auto& cell_id: sample.get_cell_ids()) {
+                coming_from.insert(std::make_pair(cell_id, &sample));
+            }
+        }
+ 
+        std::list<CellId> cell_ids;
+        for (auto sample_it = tissue_samples.begin(); sample_it != tissue_samples.end(); ++sample_it) {
+            cell_ids.insert(cell_ids.end(), sample_it->get_cell_ids().begin(), 
+                            sample_it->get_cell_ids().end());
+        }
+         
+        grow_from(cell_ids, cell_storage);
+    }
+
+    /**
+     * @brief Get the species data
+     * 
+     * @param species_id is the identifier of the aimed species
+     * @return a constant reference to the data of the species having 
+     *      `species_id` as identifier.
+     */
+    const SpeciesData& get_species_data(const SpeciesId& species_id) const;
 public:
 
     /**
@@ -191,9 +246,9 @@ public:
         /**
          * @brief Get the cell id of the node
          * 
-         * @return the cell id of the node 
+         * @return a constant reference to the cell id of the node 
          */
-        inline CellId get_id() const
+        inline const CellId& get_id() const
         {
             return cell_id;
         }
@@ -211,9 +266,9 @@ public:
         /**
          * @brief Get the node species id
          * 
-         * @return the node species id
+         * @return a constant reference to the node species id
          */
-        inline SpeciesId get_species_id() const
+        inline const SpeciesId& get_species_id() const
         {
             return forest->cells.at(cell_id).get_species_id();
         }
@@ -221,9 +276,32 @@ public:
         /**
          * @brief Get the node genotype id
          * 
-         * @return the node genotype id
+         * @return a constant reference to the node genotype id
          */
-        GenotypeId get_genotype_id() const;
+        inline const GenotypeId& get_genotype_id() const
+        {
+            return forest->get_species_data(get_species_id()).genotype_id;
+        }
+
+        /**
+         * @brief Get the node genotype name
+         * 
+         * @return a constant reference to the node genotype name
+         */
+        inline const std::string& get_genotype_name() const
+        {
+            return forest->genotype_names.at(get_genotype_id());
+        }
+
+        /**
+         * @brief Get the node methylation signature
+         * 
+         * @return a constant reference to the node methylation signature
+         */
+        inline const MethylationSignature& get_methylation_signature() const
+        {
+            return forest->get_species_data(get_species_id()).signature;
+        }
 
         /**
          * @brief Get the node forest
@@ -296,7 +374,7 @@ public:
      * @param tissue_samples is a list of tissue samples coming from the simulation
      */
     DescendantsForest(const Simulation::Simulation& simulation,
-                       const std::list<Simulation::TissueSample>& tissue_samples);
+                      const std::list<Simulation::TissueSample>& tissue_samples);
 
     /**
      * @brief Get a constant node with the given id

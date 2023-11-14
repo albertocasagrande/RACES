@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.11
+ * @version 0.12
  * @date 2023-11-14
  * 
  * @copyright Copyright (c) 2023
@@ -28,6 +28,8 @@
  * SOFTWARE.
  */
 
+#include <set>
+
 #include "phylogenetic_forest.hpp"
 
 #include "simulation.hpp"
@@ -37,6 +39,10 @@ namespace Races
 
 namespace Drivers 
 {
+
+DescendantsForest::SpeciesData::SpeciesData(const GenotypeId& genotype_id, const MethylationSignature& signature):
+    genotype_id(genotype_id), signature(signature)
+{}
 
 DescendantsForest::const_node::const_node(const DescendantsForest* forest, const CellId cell_id):
     forest(const_cast<DescendantsForest*>(forest)), cell_id(cell_id)
@@ -74,26 +80,26 @@ DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation):
 {}
 
 DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation,
-                                       const std::list<Simulation::TissueSample>& tissue_samples):
-    samples(tissue_samples.begin(),tissue_samples.end())
+                                     const std::list<Simulation::TissueSample>& tissue_samples)
 {
-    for (const auto& sample: samples) {
-        for (const auto& cell_id: sample.get_cell_ids()) {
-            coming_from.insert(std::make_pair(cell_id, &sample));
-        }
+    std::set<GenotypeId> genotype_ids;
+
+    auto species_properties = simulation.tissue().get_species_properties();
+    for (const auto& s_propeties: species_properties) {
+        const auto& genotype_id = s_propeties.get_genotype_id();
+        genotype_ids.insert(genotype_id);
+
+        const auto& signature = s_propeties.get_methylation_signature();
+        species_data.insert({s_propeties.get_id(), {genotype_id, signature}});
+    }
+
+    for (const auto& genotype_id : genotype_ids) {
+        genotype_names[genotype_id] = simulation.find_genotype_name(genotype_id);
     }
 
     Simulation::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
 
-    auto genotypes = simulation.tissue().get_species_properties();
-
-    std::list<CellId> cell_ids;
-    for (auto sample_it = tissue_samples.begin(); sample_it != tissue_samples.end(); ++sample_it) {
-        cell_ids.insert(cell_ids.end(), sample_it->get_cell_ids().begin(), 
-                        sample_it->get_cell_ids().end());
-    }
-
-    grow_forest_from(cell_ids, reader, genotypes);
+    grow_from(tissue_samples, reader);
 }
 
 DescendantsForest::const_node DescendantsForest::const_node::parent() const
@@ -133,17 +139,6 @@ std::vector<DescendantsForest::const_node> DescendantsForest::const_node::childr
     }
 
     return nodes;
-}
-
-GenotypeId DescendantsForest::const_node::get_genotype_id() const
-{
-    auto genotype_it = forest->genotype_map.find(get_species_id());
-    
-    if (genotype_it == forest->genotype_map.end()) {
-        throw std::runtime_error("unknown species");
-    }
-
-    return genotype_it->second;
 }
 
 DescendantsForest::node DescendantsForest::node::parent()
@@ -192,12 +187,25 @@ std::vector<DescendantsForest::node> DescendantsForest::get_roots()
     return nodes;
 }
 
+const DescendantsForest::SpeciesData& 
+DescendantsForest::get_species_data(const SpeciesId& species_id) const
+{
+    auto data_it = species_data.find(species_id);
+    
+    if (data_it == species_data.end()) {
+        throw std::runtime_error("Unknown species");
+    }
+
+    return data_it->second;
+}
+
 void DescendantsForest::clear()
 {
     cells.clear();
     roots.clear();
     branches.clear();
-    genotype_map.clear();
+    samples.clear();
+    coming_from.clear();
 }
 
 }   // Drivers
