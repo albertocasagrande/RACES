@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.20
- * @date 2023-11-14
+ * @version 0.21
+ * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -121,6 +121,18 @@ public:
          *      cell archives
          */
         Cell operator[](const CellId& cell_id);
+
+        /**
+         * @brief Get a timed-labelled cell from the directory
+         * 
+         * @param cell_id is the identifier of the aimed cell
+         * @return the cell in the `cell_id`-th position of the 
+         *      cell archives
+         */
+        inline Cell at(const CellId& cell_id)
+        {
+            return operator[](cell_id);
+        }
     };
 
     /**
