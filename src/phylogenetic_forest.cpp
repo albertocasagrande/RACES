@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.12
- * @date 2023-11-14
+ * @version 0.13
+ * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -123,7 +123,7 @@ const Simulation::TissueSample& DescendantsForest::const_node::get_sample() cons
         throw std::domain_error("The node does not correspond to a sampled cell");
     }
 
-    return *(found->second);
+    return forest->samples[found->second];
 }
 
 std::vector<DescendantsForest::const_node> DescendantsForest::const_node::children() const

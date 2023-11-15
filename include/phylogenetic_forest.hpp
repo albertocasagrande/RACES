@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.17
- * @date 2023-11-14
+ * @version 0.18
+ * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -68,7 +68,6 @@ class DescendantsForest
         SpeciesData(const GenotypeId& genotype_id, const MethylationSignature& signature);
     }; 
 
-    using TissueSamplePtr = Simulation::TissueSample const *;
     using EdgeTail = std::set<CellId>;
  
     std::set<CellId> roots;                 //!< The cell ids of the forest roots
@@ -79,7 +78,7 @@ class DescendantsForest
     std::map<GenotypeId, std::string> genotype_names;       //!< The genotype id to genotype name map
 
     std::vector<Simulation::TissueSample> samples;  //!< The vector of the samples that produced the forest
-    std::map<CellId, TissueSamplePtr> coming_from;  //!< The map associating each leaf to the sample which it comes from
+    std::map<CellId, uint16_t> coming_from;  //!< The map associating each leaf to the sample which it comes from
 
     /**
      * @brief Grow a forest from a sample of cells
@@ -151,10 +150,12 @@ class DescendantsForest
         samples = std::vector<Simulation::TissueSample>(tissue_samples.begin(), 
                                                         tissue_samples.end());
  
+        uint16_t i{0};
         for (const auto& sample: samples) {
             for (const auto& cell_id: sample.get_cell_ids()) {
-                coming_from.insert(std::make_pair(cell_id, &sample));
+                coming_from.insert(std::make_pair(cell_id, i));
             }
+            ++i;
         }
  
         std::list<CellId> cell_ids;
@@ -195,7 +196,7 @@ protected:
      * @return a constant reference to the map associating each leaf to the 
      *      sample which it comes from
      */
-    inline const std::map<CellId, TissueSamplePtr>& get_coming_from() const
+    inline const std::map<CellId, uint16_t>& get_coming_from() const
     {
         return coming_from;
     }
