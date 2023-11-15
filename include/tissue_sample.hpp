@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.6
- * @date 2023-11-14
+ * @version 0.7
+ * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -48,7 +48,7 @@ namespace Drivers
 namespace Simulation
 {
 
-using TissueSampleId = uint8_t;
+using TissueSampleId = uint16_t;
 
 /**
  * @brief A class to represent tissue samples
