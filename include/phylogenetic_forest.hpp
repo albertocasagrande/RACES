@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.18
+ * @version 0.19
  * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
@@ -105,7 +105,7 @@ class DescendantsForest
         std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());
 
         while (!queue.empty()) {
-            auto cell = cell_storage[queue.top()];
+            auto cell = cell_storage.at(queue.top());
 
             queue.pop();
             parent_ids.erase(cell.get_id());
@@ -461,6 +461,32 @@ public:
     {
         return samples;
     }
+
+    /**
+     * @brief Get the most recent common ancestors of the forest leaves
+     * 
+     * @return the most recent common ancestors of the forest leaves
+     */
+    std::vector<CellId> get_coalescent_cells() const;
+
+    /**
+     * @brief Get the most recent common ancestors
+     * 
+     * @param cell_ids is the list of the cells whose most recent common
+     *          ancestors are searched
+     * @return the most recent common ancestors of the cells having 
+     *          the identifier among those in `cell_ids`
+     */
+    std::vector<CellId> get_coalescent_cells(const std::list<CellId>& cell_ids) const;
+
+    /**
+     * @brief Get the forest for a subset of the tissue samples
+     * 
+     * @param sample_names are the names of the samples to be considered
+     * @return the descendants forest for the tissue samples whose name is 
+     *          in `sample_names`
+     */
+    DescendantsForest get_subforest_for(const std::vector<std::string>& sample_names) const;
 
     /**
      * @brief Clear the forest

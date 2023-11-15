@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.13
+ * @version 0.14
  * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
@@ -29,6 +29,7 @@
  */
 
 #include <set>
+#include <algorithm>
 
 #include "phylogenetic_forest.hpp"
 
@@ -197,6 +198,125 @@ DescendantsForest::get_species_data(const SpeciesId& species_id) const
     }
 
     return data_it->second;
+}
+
+std::map<CellId, size_t> 
+count_descendants_in_subtree(const DescendantsForest& forest,
+                             const std::list<CellId>& leaf_ids)
+{
+    std::map<CellId, size_t> counter;
+
+    for (const auto& cell_id: leaf_ids) {
+        auto found = counter.find(cell_id);
+        if (found == counter.end()) {
+            counter.insert({cell_id, 1});
+        } else {
+            ++found->second;
+        }
+
+        auto cell_node = forest.get_node(cell_id);
+        while (!cell_node.is_root()) {
+            cell_node = cell_node.parent();
+
+            ++counter[cell_node.get_id()];
+        }
+    }
+    
+    return counter;
+}
+
+CellId find_tree_coalescent(const DescendantsForest& forest, const CellId& root,
+                            const std::map<CellId, size_t>& counter)
+{
+    const auto& num_of_leaves = counter.at(root);
+    auto cell_node = forest.get_node(root);
+
+    while (true) {
+        auto children = cell_node.children();
+
+        if (children.size()>0) {
+            size_t i{0};
+            auto counter_it = counter.find(children[i].get_id());
+            while (counter_it==counter.end()) {
+                counter_it = counter.find(children[++i].get_id());
+            }
+
+            if (counter_it->second != num_of_leaves) {
+                return cell_node.get_id(); 
+            }
+
+            cell_node = children[i];
+        } else {
+            return cell_node.get_id();
+        }
+    }
+}
+
+std::vector<CellId> 
+DescendantsForest::get_coalescent_cells(const std::list<CellId>& cell_ids) const
+{
+    const auto counter = count_descendants_in_subtree(*this, cell_ids);
+
+    std::vector<CellId> coalescent_nodes;
+    coalescent_nodes.reserve(roots.size());
+
+    for (const auto& root: roots) {
+        if (counter.find(root) != counter.end()) {
+            coalescent_nodes.push_back(find_tree_coalescent(*this, root, counter));
+        }
+    }
+
+    return coalescent_nodes;
+}
+
+std::vector<CellId> 
+DescendantsForest::get_coalescent_cells() const
+{
+    std::list<CellId> leaf_ids;
+
+    for (const auto& sample: get_samples()) {
+        for (const auto& cell_id: sample.get_cell_ids()) {
+            leaf_ids.push_back(cell_id);
+        }
+    }
+
+    return get_coalescent_cells(leaf_ids);
+}
+
+DescendantsForest 
+DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_names) const
+{
+    std::set<std::string> names(sample_names.begin(), sample_names.end());
+    std::set<std::string> found_names, missing_names;
+
+    std::list<Simulation::TissueSample> tissue_samples;
+    for (const auto& sample : samples) {
+        if (names.count(sample.get_name())>0) {
+            tissue_samples.push_back(sample);
+            found_names.insert(sample.get_name());
+        }
+    }
+
+    if (names.size() != found_names.size()) {
+        std::set_difference(names.begin(), names.end(),
+                            found_names.begin(), found_names.end(),
+                            std::inserter(missing_names, missing_names.end()));
+
+        std::ostringstream oss;
+        oss << "Unknown sample names:";
+        std::string sep = " ";
+        for (const auto& missing_name : missing_names) {
+            oss << sep << missing_name;
+            sep = ", ";
+        }
+
+        throw std::domain_error(oss.str());
+    }
+
+    DescendantsForest subforest = *this;
+    subforest.grow_from(tissue_samples, cells);
+
+    return subforest;
 }
 
 void DescendantsForest::clear()
