@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.14
+ * @version 0.15
  * @date 2023-11-15
  * 
  * @copyright Copyright (c) 2023
@@ -287,7 +287,7 @@ DescendantsForest
 DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_names) const
 {
     std::set<std::string> names(sample_names.begin(), sample_names.end());
-    std::set<std::string> found_names, missing_names;
+    std::set<std::string> found_names;
 
     std::list<Simulation::TissueSample> tissue_samples;
     for (const auto& sample : samples) {
@@ -298,6 +298,7 @@ DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_name
     }
 
     if (names.size() != found_names.size()) {
+        std::set<std::string> missing_names;
         std::set_difference(names.begin(), names.end(),
                             found_names.begin(), found_names.end(),
                             std::inserter(missing_names, missing_names.end()));
