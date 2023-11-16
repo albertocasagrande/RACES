@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.15
- * @date 2023-11-15
+ * @version 0.16
+ * @date 2023-11-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -186,18 +186,6 @@ std::vector<DescendantsForest::node> DescendantsForest::get_roots()
     }
 
     return nodes;
-}
-
-const DescendantsForest::SpeciesData& 
-DescendantsForest::get_species_data(const SpeciesId& species_id) const
-{
-    auto data_it = species_data.find(species_id);
-    
-    if (data_it == species_data.end()) {
-        throw std::runtime_error("Unknown species");
-    }
-
-    return data_it->second;
 }
 
 std::map<CellId, size_t> 

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.19
- * @date 2023-11-15
+ * @version 0.20
+ * @date 2023-11-16
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -204,11 +204,12 @@ protected:
     /**
      * @brief Get the species data
      * 
-     * @param species_id is the identifier of the aimed species
-     * @return a constant reference to the data of the species having 
-     *      `species_id` as identifier.
+     * @return a constant reference to the species data.
      */
-    const SpeciesData& get_species_data(const SpeciesId& species_id) const;
+    inline const std::map<SpeciesId, SpeciesData>& get_species_data() const
+    {
+        return species_data;
+    }
 public:
 
     /**
@@ -315,7 +316,7 @@ public:
          */
         inline const GenotypeId& get_genotype_id() const
         {
-            return forest->get_species_data(get_species_id()).genotype_id;
+            return forest->species_data.at(get_species_id()).genotype_id;
         }
 
         /**
@@ -335,7 +336,7 @@ public:
          */
         inline const MethylationSignature& get_methylation_signature() const
         {
-            return forest->get_species_data(get_species_id()).signature;
+            return forest->species_data.at(get_species_id()).signature;
         }
 
         /**
