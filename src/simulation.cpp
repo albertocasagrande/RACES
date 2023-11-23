@@ -868,6 +868,10 @@ Simulation::simulate_sampling(const std::string& sample_name, const RectangleSet
 TissueSample
 Simulation::sample_tissue(const std::string& sample_name, const RectangleSet& rectangle)
 {
+    if (name2sample.count(sample_name)>0) {
+        throw std::domain_error("Sample name \""+sample_name+ "\" has been already used");
+    }
+
     TissueSample sample(sample_name, time, rectangle);
 
     for (const auto& position: rectangle) {
@@ -885,6 +889,7 @@ Simulation::sample_tissue(const std::string& sample_name, const RectangleSet& re
     }
 
     samples.push_back(sample);
+    name2sample[sample_name]=(samples.end()--);
 
     return sample;
 }

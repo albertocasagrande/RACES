@@ -162,6 +162,10 @@ protected:
 
     std::list<TissueSample> samples;    //!< The list of the tissue samples
 
+    using SampleConstIt = std::list<TissueSample>::const_iterator;
+
+    std::map<std::string, SampleConstIt> name2sample; //!< A map associating each sample name to the sample
+
     /**
      * @brief Simulate a cell duplication
      * 
@@ -1004,6 +1008,11 @@ public:
                 & simulation.storage_enabled
                 & simulation.samples
                 & Cell::counter;
+        
+        for (auto sample_it=simulation.samples.begin();
+                sample_it != simulation.samples.end(); ++sample_it) {
+            simulation.name2sample[sample_it->get_name()] = sample_it;
+        }
 
         simulation.init_valid_directions();
 
