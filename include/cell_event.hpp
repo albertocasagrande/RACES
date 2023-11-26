@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.13
- * @date 2023-11-05
+ * @version 0.14
+ * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -52,7 +52,8 @@ enum class CellEventType {
     DEATH,
     DUPLICATION,
     EPIGENETIC_SWITCH,
-    GENOTYPE_MUTATION
+    GENOTYPE_MUTATION,
+    ANY
 };
 
 /**

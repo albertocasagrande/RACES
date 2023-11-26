@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.32
- * @date 2023-11-13
+ * @version 0.33
+ * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -65,10 +65,10 @@ class Simulation;
 class Tissue {
     using GenotypePosition = std::map<GenotypeId, std::vector<size_t>>;
 
-    std::string name;                               //!< The tissue name
-    std::vector<Species> species;                   //!< The species in the tissue
-    std::map<SpeciesId, size_t> id_pos;  //!< The identifier to position map
-    std::map<std::string, size_t> name_pos;         //!< The name to position map
+    std::string name;                       //!< The tissue name
+    std::vector<Species> species;           //!< The species in the tissue
+    std::map<SpeciesId, size_t> id_pos;     //!< The identifier to position map
+    std::map<std::string, size_t> name_pos; //!< The name to position map
     GenotypePosition genotype_pos;     //!< The positions of the species associated to the same genotype 
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
@@ -402,6 +402,24 @@ public:
         inline bool is_wild_type() const
         {
             return tissue.cell_pointer(position)==nullptr;
+        }
+
+        /**
+         * @brief Test whether the referenced cell is available for an event
+         * 
+         * @param event_type is the event type for which the avaiability is tested
+         * @return `true` if and only if the referenced cell is available for an event
+         */
+        bool is_available_for(const CellEventType& event_type) const
+        {
+            if (is_wild_type()) {
+                return false;
+            }
+
+            const CellInTissue& cell = *(tissue.cell_pointer(position));
+            const Species& species = tissue.species[tissue.id_pos.at(cell.get_species_id())];
+
+            return species.cell_is_available_for(cell.get_id(), event_type);
         }
 
         /**

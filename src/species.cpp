@@ -3,7 +3,7 @@
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
  * @version 0.17
- * @date 2023-11-05
+ * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -108,6 +108,8 @@ size_t Species::num_of_cells_available_for(const CellEventType& event_type) cons
         case CellEventType::EPIGENETIC_SWITCH:
         case CellEventType::GENOTYPE_MUTATION:
             return duplication_enabled.size();
+        case CellEventType::ANY:
+            return cells.size();
         default:
             throw std::domain_error("Unsupported event type");
     }

@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.25
- * @date 2023-11-05
+ * @version 0.26
+ * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -263,6 +263,35 @@ public:
     }
 
     /**
+     * @brief Test whether a cell in the species is avaiable for an event
+     * 
+     * @param cell_id is the id of the cell to be tested
+     * @param event_type is the event type for which the availability is tested
+     * @return `true` if and only if the cell having id `cell_id` belong to the 
+     *          species and it is available for the the event `event_type`
+     */
+    inline bool cell_is_available_for(const CellId& cell_id,
+                                      const CellEventType event_type) const
+    {
+        if (cells.count(cell_id)==0) {
+            throw std::domain_error("The cell does not belong to the species");
+        }
+
+        switch (event_type) {
+            case CellEventType::DEATH:
+                return true;
+            case CellEventType::DUPLICATION:
+            case CellEventType::GENOTYPE_MUTATION:
+            case CellEventType::EPIGENETIC_SWITCH:
+                return (duplication_enabled.count(cell_id)>0);
+            case CellEventType::ANY:
+                return true;
+            default:
+                throw std::domain_error("Unsupported event type");
+        }
+    }
+
+    /**
      * @brief Get the number of cells available for an event
      * 
      * @param event_type is the event for which the cells are needed
@@ -295,6 +324,8 @@ public:
             case CellEventType::GENOTYPE_MUTATION:
             case CellEventType::EPIGENETIC_SWITCH:
                 return choose_a_cell(generator, duplication_enabled);
+            case CellEventType::ANY:
+                return choose_a_cell(generator, cells);
             default:
                 throw std::domain_error("Unsupported event type");
         }

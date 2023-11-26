@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.45
+ * @version 0.46
  * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
@@ -202,7 +202,7 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
 }
 
 const CellInTissue&
-Simulation::choose_cell_in(const GenotypeId& genotype_id)
+Simulation::choose_cell_in(const GenotypeId& genotype_id, const CellEventType& event_type)
 {
     std::vector<size_t> num_of_cells;
 
@@ -210,7 +210,7 @@ Simulation::choose_cell_in(const GenotypeId& genotype_id)
 
     const auto& species = tissue().get_genotype_species(genotype_id);
     for (const auto& S : species) {
-        total += S.num_of_cells();
+        total += S.num_of_cells_available_for(event_type);
         num_of_cells.push_back(total);
     }
 
@@ -226,18 +226,18 @@ Simulation::choose_cell_in(const GenotypeId& genotype_id)
         ++i;
     }
 
-    return species[i].choose_a_cell(random_gen);
+    return species[i].choose_a_cell(random_gen, event_type);
 }
 
-const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name)
+const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name, const CellEventType& event_type)
 {
     auto genotype_id = find_genotype_id(genotype_name);
 
-    return choose_cell_in(genotype_id);
+    return choose_cell_in(genotype_id, event_type);
 }
 
 const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
-                                               const RectangleSet& rectangle)
+                                               const RectangleSet& rectangle, const CellEventType& event_type)
 {
     std::set<SpeciesId> species_ids;
     auto genotype_species = tissue().get_genotype_species(genotype_id);
@@ -248,7 +248,7 @@ const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
 
     std::list<PositionInTissue> position_vector;
     for (const auto& position : rectangle) {
-        if (!tissue()(position).is_wild_type()) {
+        if (!tissue()(position).is_available_for(event_type)) {
             const CellInTissue& cell = tissue()(position);
 
             if (species_ids.count(cell.get_species_id())>0) {
@@ -275,11 +275,11 @@ const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
 }
 
 const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name,
-                                               const RectangleSet& rectangle)
+                                               const RectangleSet& rectangle, const CellEventType& event_type)
 {
     auto genotype_id = find_genotype_id(genotype_name);
 
-    return choose_cell_in(genotype_id, rectangle);
+    return choose_cell_in(genotype_id, rectangle, event_type);
 }
 
 /**

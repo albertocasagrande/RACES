@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.39
- * @date 2023-11-14
+ * @version 0.40
+ * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -671,53 +671,75 @@ public:
 
     /**
      * @brief Randomly select a cell among those having a specified genotype
-     * 
+     *
+     * This method randomly select a cell available for an event among those
+     * having a specified genotype. 
+     *
      * @param genotype_id is the identifier of the genotype that must contain 
      *          the selected cell
+     * @param event_type is the event type for which the choosen cell must be 
+     *          available
      * @return whenever the set of cells having `genotype_id` as genotype 
      *         identifier is not empty, a randomly selected cell in it. 
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
-    const CellInTissue& choose_cell_in(const GenotypeId& genotype_id);
+    const CellInTissue& choose_cell_in(const GenotypeId& genotype_id,
+                                       const CellEventType& event_type=CellEventType::ANY);
 
     /**
      * @brief Randomly select a cell among those having a specified genotype
-     * 
+     *
+     * This method randomly select a cell available for an event among those
+     * having a specified genotype name. 
+     *
      * @param genotype_name is the name of the genotype that must contain 
      *          the selected cell
+     * @param event_type is the event type for which the choosen cell must be 
+     *          available
      * @return whenever the set of cells having `genotype_id` as genotype 
      *         identifier is not empty, a randomly selected cell in it. 
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
-    const CellInTissue& choose_cell_in(const std::string& genotype_name);
+    const CellInTissue& choose_cell_in(const std::string& genotype_name,
+                                       const CellEventType& event_type=CellEventType::ANY);
 
     /**
-     * @brief Randomly select in a tissue rectangle a cell having a specified genotype
-     * 
+     * @brief Randomly select a cell in a tissue rectangle
+     *
+     * This method randomly select a cell available for an event among those
+     * having a specified genotype and laying in a tissue rectangle.
+     *
      * @param genotype_id is the identifier of the genotype that must contain 
      *          the selected cell
      * @param rectangle is the tissue rectangle in which the cell must be selected 
-     * @return whenever the set of tissue cells that have `genotype_id` as genotype 
-     *         and lay in one the positions specified by `rectangle` is not empty, 
+     * @param event_type is the event type for which the choosen cell must be 
+     *          available
+     * @return whenever the set of tissue cells that have `genotype_id` as genotype
+     *         id and lay in one the positions specified by `rectangle` is not empty, 
      *         a randomly selected cell in it. Otherwise, if the set is empty, a 
      *         domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const GenotypeId& genotype_id,
-                                       const RectangleSet& rectangle);
+                                       const RectangleSet& rectangle,
+                                       const CellEventType& event_type=CellEventType::ANY);
 
     /**
-     * @brief Randomly select in a tissue rectangle a cell having a specified genotype
-     * 
+     * @brief Randomly select a cell in a tissue rectangle
+     *
+     * This method randomly select a cell available for an event among those
+     * having a specified genotype and laying in a tissue rectangle.
+     *
      * @param genotype_name is the name of the genotype that must contain 
      *          the selected cell
      * @param rectangle is the tissue rectangle in which the cell must be selected 
-     * @return whenever the set of tissue cells that have `genotype_id` as genotype 
-     *         and lay in one the positions specified by `rectangle` is not empty, 
+     * @return whenever the set of tissue cells that have `genotype_name` as genotype 
+     *         name and lay in one the positions specified by `rectangle` is not empty, 
      *         a randomly selected cell in it. Otherwise, if the set is empty, a 
      *         domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const std::string& genotype_name,
-                                       const RectangleSet& rectangle);
+                                       const RectangleSet& rectangle,
+                                       const CellEventType& event_type=CellEventType::ANY);
 
     /**
      * @brief Get the current simulation time
