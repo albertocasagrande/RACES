@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.44
- * @date 2023-11-14
+ * @version 0.45
+ * @date 2023-11-26
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -132,17 +132,18 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
     bool selected_new_event = false;
     // deal with exclusively genomic events
     for (const auto& event_type: event_types) {
-        const Time event_rate = species.get_rate(event_type);
-        const Time r_value = uni_dist(random_gen);
-        size_t num_of_cells;
-        
-        num_of_cells = species.num_of_cells_available_for(event_type);
-        //num_of_cells = species.num_of_cells();
-        const Time candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
-        if (event.delay>candidate_delay) {
-            event.type = event_type;
-            event.delay = candidate_delay;
-            selected_new_event = true;
+        const auto event_rate = species.get_rate(event_type);
+        const size_t num_of_cells = species.num_of_cells_available_for(event_type);
+
+        if (num_of_cells>0 && event_rate>0) {
+            const auto r_value = uni_dist(random_gen);
+            const auto candidate_delay =  -log(r_value) / (num_of_cells * event_rate);
+
+            if (event.delay>candidate_delay) {
+                event.type = event_type;
+                event.delay = candidate_delay;
+                selected_new_event = true;
+            }
         }
     }
 
@@ -156,18 +157,25 @@ template<typename GENERATOR_TYPE>
 void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const Species& species,
                                         std::uniform_real_distribution<double>& uni_dist, GENERATOR_TYPE& random_gen)
 {
-    const auto& num_of_cells{species.num_of_cells()};
+    const auto num_of_cells = species.num_of_cells_available_for(CellEventType::EPIGENETIC_SWITCH);
+
+    if (num_of_cells == 0) {
+        return;
+    }
 
     bool selected_new_event = false;
     // Deal with possible epigenetic events whenever admitted
     for (const auto& [dst_id, event_rate]: species.get_epigenetic_switch_rates()) {
-        const Time r_value = uni_dist(random_gen);
-        const Time candidate_delay = -log(r_value) / (num_of_cells * event_rate);
-        
-        if (event.delay>candidate_delay) {
-            event.delay = candidate_delay;
-            event.final_species = dst_id;
-            selected_new_event = true;
+        if (event_rate>0) {
+            const auto r_value = uni_dist(random_gen);
+
+            const auto candidate_delay = -log(r_value) / (num_of_cells * event_rate);
+            
+            if (event.delay>candidate_delay) {
+                event.delay = candidate_delay;
+                event.final_species = dst_id;
+                selected_new_event = true;
+            }
         }
     }
 
