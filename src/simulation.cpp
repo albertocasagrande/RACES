@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.47
+ * @version 0.48
  * @date 2023-11-27
  * 
  * @copyright Copyright (c) 2023
@@ -248,7 +248,7 @@ const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
 
     std::list<PositionInTissue> position_vector;
     for (const auto& position : rectangle) {
-        if (!tissue()(position).is_available_for(event_type)) {
+        if (tissue()(position).is_available_for(event_type)) {
             const CellInTissue& cell = tissue()(position);
 
             if (species_ids.count(cell.get_species_id())>0) {
