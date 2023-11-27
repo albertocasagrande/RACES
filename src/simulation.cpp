@@ -2,7 +2,7 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.48
+ * @version 0.49
  * @date 2023-11-27
  * 
  * @copyright Copyright (c) 2023
@@ -641,8 +641,8 @@ void disable_duplication_on_neighborhood_internals(Tissue& tissue, const Positio
         pos.y = (position.y>0?position.y-1:0);
         for (; (pos.y < position.y+2 &&  pos.y < sizes[1]); ++pos.y) {
             pos.z = (position.z>0?position.z-1:0);
-            for (; ((pos.z < position.z+2 &&  pos.z < sizes[2])
-                    || (sizes[2]==0 && pos.z==0)); ++pos.z) {
+            for (; ((sizes.size()==3 && pos.z < position.z+2 &&  pos.z < sizes[2])
+                    || (sizes.size()==2 && pos.z==0)); ++pos.z) {
                 Tissue::CellInTissueProxy cell_in_tissue = tissue(pos);
                 if (!cell_in_tissue.is_wild_type() && !cell_in_tissue.is_on_border()) {
                     cell_in_tissue.disable_duplication();
