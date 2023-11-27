@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.46
- * @date 2023-11-26
+ * @version 0.47
+ * @date 2023-11-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -527,6 +527,48 @@ inline const Direction& select_push_direction(GENERATOR& random_gen,
     return directions.back();
 }
 
+template<typename GENERATOR>
+inline const Direction& select_inverse_min_direction(GENERATOR& random_gen,
+                                                     const Tissue& tissue,
+                                                     const PositionInTissue& position,
+                                                     const std::vector<Direction>& directions)
+{
+    std::list<size_t> cells_to_push;
+    size_t total = 0;
+    for (const auto& direction : directions) {
+        cells_to_push.push_back(tissue.count_driver_cells_from(position, direction));
+        total += cells_to_push.back();
+    }
+
+    std::vector<double> ratios;
+    ratios.reserve(directions.size());
+
+    double sum{0};
+    for (const auto& count : cells_to_push) {
+        ratios.push_back(static_cast<double>(total)/count);
+        sum += ratios.back();
+    }
+    for (auto& ratio : ratios) {
+        ratio /= sum;
+    }
+
+    std::uniform_real_distribution<double> distribution(0,1);
+
+    auto selected = distribution(random_gen);
+
+    auto dir_it = directions.begin();
+    sum = 0;
+    for (const auto& ratio : ratios) {
+        sum += ratio;
+        if (sum >= selected) {
+            return *dir_it;
+        }
+
+        ++dir_it;
+    }
+
+    return directions.back();
+}
 
 template<typename GENERATOR>
 inline const Direction& select_min_push_direction(GENERATOR& random_gen,
@@ -623,9 +665,11 @@ Simulation::simulate_duplication(const Position& position)
     Cell parent_cell = tissue(position);
 
     // push the cell in position towards a random direction
-    const Direction& push_dir = select_random_value(random_gen, valid_directions);
+    //const Direction& push_dir = select_random_value(random_gen, valid_directions);
     //const Direction& push_dir = select_min_push_direction(random_gen, tissue, position, 
     //                                                      valid_directions);
+    const Direction& push_dir = select_inverse_min_direction(random_gen, tissue, position, 
+                                                             valid_directions);
     
     affected.lost_cells = tissue.push_cells(position, push_dir);
     
