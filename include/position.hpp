@@ -2,8 +2,8 @@
  * @file position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.7
- * @date 2023-10-18
+ * @version 0.8
+ * @date 2023-11-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,6 +35,39 @@
 #include <type_traits>
 
 #include "archive.hpp"
+
+
+
+namespace Races 
+{
+
+namespace Drivers 
+{
+
+namespace Simulation 
+{
+
+struct Direction;
+
+}
+
+}
+
+}
+
+namespace std
+{
+
+/**
+ * @brief Write a direction in an output stream
+ * 
+ * @param os is the output stream
+ * @param direction is the direction to be streamed
+ * @return a reference to the output stream
+ */
+std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Direction& direction);
+
+};
 
 namespace Races 
 {
@@ -84,7 +117,7 @@ public:
 
     int get_delta_z() const;
 
-    friend std::ostream& operator<<(std::ostream& os, const Direction& direction);
+    friend std::ostream& std::operator<<(std::ostream& os, const Direction& direction);
 };
 
 inline
@@ -295,15 +328,6 @@ struct Position : public PositionInTissue
 
 namespace std
 {
-
-/**
- * @brief Write a direction in an output stream
- * 
- * @param os is the output stream
- * @param direction is the direction to be streamed
- * @return a reference to the output stream
- */
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Direction& direction);
 
 /**
  * @brief Write a position delta in an output stream
