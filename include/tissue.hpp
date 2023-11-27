@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.33
- * @date 2023-11-26
+ * @version 0.34
+ * @date 2023-11-27
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -389,7 +389,17 @@ public:
             tissue(tissue), position(position)
         {
             if (!tissue.is_valid(position)) {
-                throw std::out_of_range("The position does not belong to the tissue");
+                std::ostringstream oss;
+
+                oss << "The position (" << position.x << "," << position.y;
+
+                if (tissue.num_of_dimensions()==3) {
+                    oss << "," << position.z;
+                } 
+                
+                oss << ") does not belong to the tissue";
+
+                throw std::out_of_range(oss.str());
             }
         }
     public:
