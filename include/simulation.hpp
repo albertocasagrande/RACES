@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.40
- * @date 2023-11-26
+ * @version 0.41
+ * @date 2023-11-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -323,7 +323,7 @@ public:
          * @param simulation is the considered simulation
          * @return a Boolean value
          */
-        virtual bool operator()(const Simulation& simulation) const = 0;
+        virtual bool operator()(const Simulation& simulation) = 0;
 
         /**
          * @brief Return the percentage of the completed simulation

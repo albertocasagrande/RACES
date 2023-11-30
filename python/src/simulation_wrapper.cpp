@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.13
- * @date 2023-11-13
+ * @version 0.14
+ * @date 2023-11-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -71,7 +71,7 @@ struct PythonEndTest : public Races::Drivers::Simulation::TimeTest
      * @param simulation is the considered simulation
      * @return `true` if and only if a signal has been sent to the Python process
      */
-    inline bool operator()(const Races::Drivers::Simulation::Simulation& simulation) const
+    inline bool operator()(const Races::Drivers::Simulation::Simulation& simulation)
     {
         return Races::Drivers::Simulation::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
     }

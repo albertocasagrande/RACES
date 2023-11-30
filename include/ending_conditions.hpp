@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.5
- * @date 2023-11-07
+ * @version 0.6
+ * @date 2023-11-30
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -67,7 +67,7 @@ struct TimeTest : public Simulation::BasicTest
      * @return `false` if and only if the time simulated by `simulation`
      *          is lower than the test threshold
      */
-    inline bool operator()(const Simulation& simulation) const override
+    inline bool operator()(const Simulation& simulation) override
     {
         return threshold < simulation.get_time();
     }
@@ -112,7 +112,7 @@ struct SpeciesCountTest : public Simulation::BasicTest
      * @return `false` if and only if the number of cells of the 
      *          considered species is below the test threshold
      */
-    bool operator()(const Simulation& simulation) const override;
+    bool operator()(const Simulation& simulation) override;
 
     /**
      * @brief Return the percentage of the completed simulation
@@ -151,7 +151,7 @@ struct GenotypeCountTest : public Simulation::BasicTest
      * @return `false` if and only if the number of cells of the 
      *          considered genotype is below the test threshold
      */
-    bool operator()(const Simulation& simulation) const override;
+    bool operator()(const Simulation& simulation) override;
 
     /**
      * @brief Return the percentage of the completed simulation
@@ -225,7 +225,7 @@ public:
      * @return `false` if and only if the number of cells of the 
      *          considered species is below the test threshold
      */
-    bool operator()(const Simulation& simulation) const override;
+    bool operator()(const Simulation& simulation) override;
 
     /**
      * @brief Return the percentage of the completed simulation
