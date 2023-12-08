@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements phyloXML stream
- * @version 0.8
- * @date 2023-11-11
+ * @version 0.9
+ * @date 2023-12-07
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -128,7 +128,7 @@ phyloXMLStream& phyloXMLStream::operator<<(const DescendantsForest::const_node& 
         os << indent_string << "<clade>" << std::endl;
     } else {
         // this is not the root
-        const Cell& parent = node.parent();
+        const Cell parent = node.parent();
 
         os << indent_string << "<clade branch_length=\"" 
            << (cell.get_birth_time()-parent.get_birth_time())  << "\">" << std::endl;
