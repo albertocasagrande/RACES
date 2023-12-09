@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.18
- * @date 2023-11-13
+ * @version 0.19
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,10 +40,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 class TissueStatistics;
@@ -516,9 +516,9 @@ public:
     }
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

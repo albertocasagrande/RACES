@@ -2,8 +2,8 @@
  * @file logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation loggers
- * @version 0.12
- * @date 2023-11-05
+ * @version 0.13
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,10 +42,10 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 class Simulation;
@@ -117,7 +117,7 @@ public:
      */
     static void 
     save_sample(const std::filesystem::path simulation_dir,
-                const Races::Drivers::Simulation::TissueSample& tissue_sample);
+                const Races::Clones::Evolutions::TissueSample& tissue_sample);
 
     /**
      * @brief Close open archives
@@ -153,15 +153,15 @@ public:
      * 
      * @param tissue_sample is the tissue sample to log
      */
-    inline void save_sample(const Races::Drivers::Simulation::TissueSample& tissue_sample) const
+    inline void save_sample(const Races::Clones::Evolutions::TissueSample& tissue_sample) const
     {
         BasicLogger::save_sample(directory, tissue_sample);
     }
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

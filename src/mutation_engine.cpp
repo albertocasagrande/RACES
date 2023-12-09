@@ -1,9 +1,9 @@
 /**
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements a class to place passenger mutations on a descendants forest
- * @version 0.7
- * @date 2023-11-11
+ * @brief Implements a class to place mutations on a descendants forest
+ * @version 0.8
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 MutationStatistics::SNVStatistics::SNVStatistics():
@@ -90,11 +90,11 @@ MutationStatistics& MutationStatistics::record(const std::string& sample_name,
     return *this;
 }
 
-MutationStatistics& MutationStatistics::record(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list,
+MutationStatistics& MutationStatistics::record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
                                                UI::ProgressBar* progress_bar)
 {
     using namespace Races;
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     size_t total_steps{0};
     size_t recorded{0};
@@ -195,6 +195,6 @@ std::ostream& MutationStatistics::write_CNAs_table(std::ostream& os, const char 
     return os;
 }
 
-}   // Passengers
+}   // Mutations
 
 }   // Races

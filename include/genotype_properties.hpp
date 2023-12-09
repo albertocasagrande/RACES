@@ -2,8 +2,8 @@
  * @file genotype_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genotype properties
- * @version 0.2
- * @date 2023-11-05
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,7 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
 /**
@@ -116,12 +116,12 @@ typedef std::vector<bool> MethylationSignature;
 
 class GenotypeProperties;
 
-namespace Simulation
+namespace Evolutions
 {
 
     class Species;
 
-}   // Simulation
+}   // Evolutions
 
 /**
  * @brief A class to represent species properties
@@ -304,7 +304,7 @@ public:
     }
 
     friend class GenotypeProperties;
-    friend class Simulation::Species;
+    friend class Evolutions::Species;
 };
 
 /**
@@ -464,7 +464,7 @@ void GenotypeProperties::validate_signature(const SIGNATURE_TYPE& signature) con
     }
 }
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -478,7 +478,7 @@ namespace std
  * @param epigenetic_rates are the epigenetic rates to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRates& epigenetic_rates);
+std::ostream& operator<<(std::ostream& out, const Races::Clones::EpigeneticRates& epigenetic_rates);
 
 /**
  * @brief Write information about a species in an output stream
@@ -487,7 +487,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRate
  * @param genotype is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesProperties& genotype);
+std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& genotype);
 
 /**
  * @brief Write information about a genotype in an output stream
@@ -496,7 +496,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesPropert
  * @param genotype is the genotype to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::GenotypeProperties& genotype);
+std::ostream& operator<<(std::ostream& out, const Races::Clones::GenotypeProperties& genotype);
 
 }   // std
 

@@ -2,8 +2,8 @@
  * @file simulation_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a basic simulation class
- * @version 0.2
- * @date 2023-11-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,10 +36,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -63,9 +63,9 @@ struct SimulationEvent
 
 extern const std::map<SimulationEvent::Type, const char*> simulation_event_names;
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

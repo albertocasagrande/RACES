@@ -2,8 +2,8 @@
  * @file sampling.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements samplings
- * @version 0.4
- * @date 2023-11-14
+ * @version 0.5
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 Sampling::Sampling(const SampleSpecification& orig):
@@ -51,8 +51,8 @@ Sampling::Sampling(const std::string& name, const RectangleSet& region):
     SampleSpecification(name, region)
 {}
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

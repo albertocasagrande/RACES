@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.20
- * @date 2023-11-16
+ * @version 0.21
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@
 namespace Races
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
 /**
@@ -77,7 +77,7 @@ class DescendantsForest
     std::map<SpeciesId, SpeciesData> species_data;          //!< The species id to data map
     std::map<GenotypeId, std::string> genotype_names;       //!< The genotype id to genotype name map
 
-    std::vector<Simulation::TissueSample> samples;  //!< The vector of the samples that produced the forest
+    std::vector<Evolutions::TissueSample> samples;  //!< The vector of the samples that produced the forest
     std::map<CellId, uint16_t> coming_from;  //!< The map associating each leaf to the sample which it comes from
 
     /**
@@ -142,12 +142,12 @@ class DescendantsForest
      * @param cell_storage is the cell storage
      */
     template<typename CELL_STORAGE>
-    void grow_from(const std::list<Simulation::TissueSample>& tissue_samples, 
+    void grow_from(const std::list<Evolutions::TissueSample>& tissue_samples, 
                    CELL_STORAGE& cell_storage)
     {
         clear();
  
-        samples = std::vector<Simulation::TissueSample>(tissue_samples.begin(), 
+        samples = std::vector<Evolutions::TissueSample>(tissue_samples.begin(), 
                                                         tissue_samples.end());
  
         uint16_t i{0};
@@ -297,7 +297,7 @@ public:
          * @throw `std::domain_error` when the node is not 
          *      a leaf
          */
-        const Simulation::TissueSample& get_sample() const;
+        const Evolutions::TissueSample& get_sample() const;
 
         /**
          * @brief Get the node species id
@@ -401,7 +401,7 @@ public:
      * 
      * @param simulation is a simulation
      */
-    DescendantsForest(const Simulation::Simulation& simulation);
+    DescendantsForest(const Evolutions::Simulation& simulation);
 
     /**
      * @brief Construct a descendants forest by using a tissue sample of a simulation
@@ -409,8 +409,8 @@ public:
      * @param simulation is a simulation
      * @param tissue_samples is a list of tissue samples coming from the simulation
      */
-    DescendantsForest(const Simulation::Simulation& simulation,
-                      const std::list<Simulation::TissueSample>& tissue_samples);
+    DescendantsForest(const Evolutions::Simulation& simulation,
+                      const std::list<Evolutions::TissueSample>& tissue_samples);
 
     /**
      * @brief Get a constant node with the given id
@@ -458,7 +458,7 @@ public:
      * @return a constant reference to a vector of tissue samples 
      *      that produced the descendants forest
      */
-    inline const std::vector<Simulation::TissueSample>& get_samples() const
+    inline const std::vector<Evolutions::TissueSample>& get_samples() const
     {
         return samples;
     }
@@ -495,7 +495,7 @@ public:
     void clear();
 };
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

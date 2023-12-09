@@ -2,8 +2,8 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,10 +34,10 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 Direction::Direction(const uint8_t value):
@@ -172,16 +172,16 @@ Position::Position(Tissue& tissue, const PositionInTissue& pos):
     }
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 namespace std 
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Direction& direction)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Direction& direction)
 {
     for (size_t i=0; i<3; ++i) {
         switch(direction.get_delta(i)) {
@@ -202,24 +202,24 @@ std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Dir
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionDelta& delta)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::PositionDelta& delta)
 {
     os << "(" << delta.x << "," << delta.y << "," << delta.z << ")";
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::PositionInTissue& position)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::PositionInTissue& position)
 {
     os << "(" << position.x <<","<< position.y <<","<< position.z <<")";
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::Position& position)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Position& position)
 {
     os << "\""<< position.tissue->get_name() << "\""
-       << static_cast<Races::Drivers::Simulation::PositionInTissue>(position);
+       << static_cast<Races::Clones::Evolutions::PositionInTissue>(position);
 
     return os;
 }

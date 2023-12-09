@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.7
- * @date 2023-10-02
+ * @version 0.8
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 SNV::SNV():
@@ -86,18 +86,18 @@ SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const cha
     SNV(position, context, mutated_base, cause)
 {}
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 namespace std
 {
 
-bool less<Races::Passengers::SNV>::operator()(const Races::Passengers::SNV &lhs,
-                                              const Races::Passengers::SNV &rhs) const
+bool less<Races::Mutations::SNV>::operator()(const Races::Mutations::SNV &lhs,
+                                              const Races::Mutations::SNV &rhs) const
 {
     {
-        less<Races::Passengers::GenomicPosition> gp_op;
+        less<Races::Mutations::GenomicPosition> gp_op;
 
         if (gp_op(lhs, rhs)) {
             return true;
@@ -109,7 +109,7 @@ bool less<Races::Passengers::SNV>::operator()(const Races::Passengers::SNV &lhs,
     }
     
     {
-        less<Races::Passengers::MutationalContext> mc_op;
+        less<Races::Mutations::MutationalContext> mc_op;
         
         if (mc_op(lhs.context, rhs.context)) {
             return true; 
@@ -135,11 +135,11 @@ bool less<Races::Passengers::SNV>::operator()(const Races::Passengers::SNV &lhs,
     }
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV& snv)
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::SNV& snv)
 {
     std::string snv_sequence = snv.context.get_sequence();
 
-    out << static_cast<Races::Passengers::GenomicPosition>(snv) << "("
+    out << static_cast<Races::Mutations::GenomicPosition>(snv) << "("
         << snv_sequence[0] 
         << "[" << snv_sequence[1] << ">" <<  snv.mutated_base << "]" 
         << snv_sequence[2] << ")";

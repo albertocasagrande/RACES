@@ -2,8 +2,8 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.6
- * @date 2023-11-03
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
 /**
@@ -89,8 +89,8 @@ struct BasicPositionSet
  */
 struct RectangleSet : public BasicPositionSet
 {
-    Simulation::PositionInTissue lower_corner;  //!< The lower corner in the hyper-rectangle
-    Simulation::PositionInTissue upper_corner;  //!< The upper corner in the hyper-rectangle
+    Evolutions::PositionInTissue lower_corner;  //!< The lower corner in the hyper-rectangle
+    Evolutions::PositionInTissue upper_corner;  //!< The upper corner in the hyper-rectangle
 
     /**
      * @brief Constant iterators for the sample cells
@@ -99,7 +99,7 @@ struct RectangleSet : public BasicPositionSet
     {
         const RectangleSet* rectangle;
 
-        Simulation::PositionInTissue pos;
+        Evolutions::PositionInTissue pos;
 
         /**
          * @brief A constructor
@@ -107,12 +107,12 @@ struct RectangleSet : public BasicPositionSet
          * @param rectangle is the a rectangle set
          * @param position is the current position of the new iterator
          */
-        const_iterator(const RectangleSet* rectangle, const Simulation::PositionInTissue& position);
+        const_iterator(const RectangleSet* rectangle, const Evolutions::PositionInTissue& position);
     public:
         using difference_type   =   std::ptrdiff_t;
-        using value_type        =   Simulation::PositionInTissue;
-        using pointer           =   const Simulation::PositionInTissue*;
-        using reference         =   const Simulation::PositionInTissue&;
+        using value_type        =   Evolutions::PositionInTissue;
+        using pointer           =   const Evolutions::PositionInTissue*;
+        using reference         =   const Evolutions::PositionInTissue&;
         using iterator_category =   std::bidirectional_iterator_tag;
 
         /**
@@ -208,7 +208,7 @@ struct RectangleSet : public BasicPositionSet
      * 
      * @param position is the only position in the hyper-rectangle set
      */
-    explicit RectangleSet(const Simulation::PositionInTissue& position);
+    explicit RectangleSet(const Evolutions::PositionInTissue& position);
 
     /**
      * @brief A hyper-rectangle set constructor
@@ -216,8 +216,8 @@ struct RectangleSet : public BasicPositionSet
      * @param lower_corner is the hyper-rectangle lower corner
      * @param upper_corner is the hyper-rectangle upper corner
      */
-    RectangleSet(const Simulation::PositionInTissue& lower_corner, 
-                 const Simulation::PositionInTissue& upper_corner);
+    RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+                 const Evolutions::PositionInTissue& upper_corner);
 
     /**
      * @brief A cuboid set constructor
@@ -227,9 +227,9 @@ struct RectangleSet : public BasicPositionSet
      * @param y_size is the hyper-rectangle size along the y-axis
      * @param z_size is the hyper-rectangle size along the z-axis
      */
-    RectangleSet(const Simulation::PositionInTissue& lower_corner, 
-                 const Simulation::AxisSize& x_size, const Simulation::AxisSize& y_size, 
-                 const Simulation::AxisSize& z_size);
+    RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+                 const Evolutions::AxisSize& x_size, const Evolutions::AxisSize& y_size, 
+                 const Evolutions::AxisSize& z_size);
 
     /**
      * @brief A rectangle set constructor
@@ -238,8 +238,8 @@ struct RectangleSet : public BasicPositionSet
      * @param x_size is the hyper-rectangle size along the x-axis
      * @param y_size is the hyper-rectangle size along the y-axis
      */
-    RectangleSet(const Simulation::PositionInTissue& lower_corner, 
-                 const Simulation::AxisSize& x_size, const Simulation::AxisSize& y_size);
+    RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+                 const Evolutions::AxisSize& x_size, const Evolutions::AxisSize& y_size);
 
     /**
      * @brief Get the initial position iterator
@@ -285,7 +285,7 @@ struct RectangleSet : public BasicPositionSet
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static RectangleSet load(ARCHIVE& archive)
     {
-        Simulation::PositionInTissue lower_corner, upper_corner;
+        Evolutions::PositionInTissue lower_corner, upper_corner;
 
         archive & lower_corner
                 & upper_corner;
@@ -323,7 +323,7 @@ inline bool operator!=(const RectangleSet::const_iterator& a, const RectangleSet
     return !(a==b); 
 }
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -335,7 +335,7 @@ namespace std {
  * @param rectangle is a rectangle position set
  * @return a reference to the updated output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::RectangleSet& rectangle);
+std::ostream& operator<<(std::ostream& os, const Races::Clones::RectangleSet& rectangle);
 
 }   // std
 

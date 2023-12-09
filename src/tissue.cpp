@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.30
- * @date 2023-11-13
+ * @version 0.31
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,10 +36,10 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 Tissue::SpeciesView::SpeciesView(const std::vector<Species>& species, const std::vector<size_t>& species_pos):
@@ -114,7 +114,7 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
 
 void Tissue::CellInTissueProxy::erase()
 {
-    // if the position already contains a cell with driver mutation
+    // if the position already contains a cell with mutations
     if (!is_wild_type()) {
         CellInTissue*& space_ptr = tissue.cell_pointer(position);
 
@@ -155,7 +155,7 @@ Tissue::CellInTissueProxy::operator CellInTissue&()
         return *ptr;
     }
 
-    throw std::runtime_error("Non-driver mutated cell");
+    throw std::runtime_error("Wild-type cell");
 }
 
 Tissue::Tissue(const std::string& name, const std::vector<AxisSize>& sizes):
@@ -377,8 +377,8 @@ const Tissue::CellInTissueConstantProxy Tissue::operator()(const PositionInTissu
     return CellInTissueConstantProxy(*this, position);
 }
 
-size_t Tissue::count_driver_cells_from(PositionInTissue position, 
-                                       const Direction& direction) const
+size_t Tissue::count_mutated_cells_from(PositionInTissue position, 
+                                        const Direction& direction) const
 {
     size_t counter{0};
 
@@ -434,8 +434,8 @@ std::vector<AxisSize> Tissue::size() const
     return sizes;
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.13
- * @date 2023-11-14
+ * @version 0.14
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 char read_a_base(std::istream& in)
@@ -332,15 +332,15 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
     return result;
 }
 
-}  // Passengers
+}  // Mutations
 
 }  // Races
 
 namespace std
 {
 
-bool less<Races::Passengers::MutationalType>::operator()(const Races::Passengers::MutationalType &lhs,
-                                                         const Races::Passengers::MutationalType &rhs) const
+bool less<Races::Mutations::MutationalType>::operator()(const Races::Mutations::MutationalType &lhs,
+                                                         const Races::Mutations::MutationalType &rhs) const
 {
     const auto& lhs_code = lhs.get_context().get_code();
     const auto& rhs_code = rhs.get_context().get_code();
@@ -349,7 +349,7 @@ bool less<Races::Passengers::MutationalType>::operator()(const Races::Passengers
             ((lhs_code == rhs_code) && (lhs.get_replace_base()<rhs.get_replace_base())));
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalType& type)
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalType& type)
 {
     std::string type_sequence = type.get_context().get_sequence();
 
@@ -360,9 +360,9 @@ std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalT
     return out;
 }
 
-std::istream& operator>>(std::istream& in, Races::Passengers::MutationalType& type)
+std::istream& operator>>(std::istream& in, Races::Mutations::MutationalType& type)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::string seq;
     char replace_base;

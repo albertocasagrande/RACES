@@ -1,9 +1,9 @@
 /**
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Testing Races::Passengers::GenomeMutations class
- * @version 0.4
- * @date 2023-10-02
+ * @brief Testing Races::Mutations::GenomeMutations class
+ * @version 0.5
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 
 BOOST_AUTO_TEST_CASE(chromosome_mutations_creation)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     BOOST_CHECK_NO_THROW(ChromosomeMutations());
     BOOST_CHECK_NO_THROW(ChromosomeMutations(1, 100, 3));
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(chromosome_mutations_creation)
 
 BOOST_AUTO_TEST_CASE(genome_mutations_creation)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     BOOST_CHECK_NO_THROW(GenomeMutations());
     BOOST_CHECK_NO_THROW(GenomeMutations({{1, 100, 3}, {2, 100, 2}}));
@@ -63,11 +63,11 @@ BOOST_AUTO_TEST_CASE(genome_mutations_creation)
 
 struct GenomeMutationsFixture
 {
-    Races::Passengers::GenomeMutations genome_mutations;
+    Races::Mutations::GenomeMutations genome_mutations;
 
     GenomeMutationsFixture()
     {
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         auto index = ContextIndex<>::build_index(FASTA_FILE);
         genome_mutations = GenomeMutations(index, 2);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(genome_sizes)
 
 BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     SNV snv0(1, 32, "AAG", 'G');  // chromosome 1, position 32
     
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 
 BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     SNV snv0(1, 32, "AAG", 'G');
     
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
 
 BOOST_AUTO_TEST_CASE(genome_amplify_region)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     SNV snv0(1, 32, "AAG", 'G');
     
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
 
 BOOST_AUTO_TEST_CASE(genome_remove_region)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     SNV snv0(1, 32, "AAG", 'G');
     

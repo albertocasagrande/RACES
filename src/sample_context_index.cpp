@@ -2,8 +2,8 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief The main source file for context index sampler
- * @version 0.8
- * @date 2023-10-26
+ * @version 0.9
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -53,7 +53,7 @@ class ContextSampler
     template<typename GENOME_WIDE_POSITION>
     void sample_context_index() const
     {
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         Races::UI::ProgressBar* bar{nullptr};
 
@@ -203,7 +203,7 @@ public:
         }
 
         try {
-            using namespace Races::Passengers;
+            using namespace Races::Mutations;
 
             Races::Archive::Binary::In archive(context_index_filename);
 

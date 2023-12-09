@@ -2,8 +2,8 @@
  * @file genomic_region.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic region
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -428,7 +428,7 @@ public:
     GenomicRegion& join(GenomicRegion& contiguous_region);
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
@@ -436,10 +436,10 @@ namespace std
 {
 
 template<>
-struct less<Races::Passengers::GenomicRegion>
+struct less<Races::Mutations::GenomicRegion>
 {
-    inline bool operator()(const Races::Passengers::GenomicRegion &lhs,
-                           const Races::Passengers::GenomicRegion &rhs) const
+    inline bool operator()(const Races::Mutations::GenomicRegion &lhs,
+                           const Races::Mutations::GenomicRegion &rhs) const
     {
         return ((lhs.get_chromosome_id()<rhs.get_chromosome_id())
                 || ((lhs.get_chromosome_id()==rhs.get_chromosome_id()) 
@@ -457,7 +457,7 @@ struct less<Races::Passengers::GenomicRegion>
  * @param genomic_region is the genomic region to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicRegion& genomic_region);
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicRegion& genomic_region);
 
 }
 

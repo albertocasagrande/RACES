@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.8
- * @date 2023-10-26
+ * @version 0.9
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 namespace SequencingSimulations
@@ -374,6 +374,6 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
 } // SequencingSimulator
 
-} // Passengers
+} // Mutations
 
 } // Races

@@ -2,8 +2,8 @@
  * @file position_set.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to represent tissue position set
- * @version 0.4
- * @date 2023-10-25
+ * @version 0.5
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
 BasicPositionSet::const_iterator BasicPositionSet::begin() const
@@ -50,7 +50,7 @@ BasicPositionSet::~BasicPositionSet()
 {}
 
 RectangleSet::const_iterator::const_iterator(const RectangleSet* rectangle,
-                                             const Simulation::PositionInTissue& position):
+                                             const Evolutions::PositionInTissue& position):
     rectangle(rectangle), pos(position)
 {
 }
@@ -73,13 +73,13 @@ bool increase_and_update(T& value, const T& min, const T& max)
     return false;
 }
 
-void set_to_invalid_position(Simulation::PositionInTissue& pos, const RectangleSet& rectangle)
+void set_to_invalid_position(Evolutions::PositionInTissue& pos, const RectangleSet& rectangle)
 {
     pos = rectangle.upper_corner;
     ++pos.x;
 }
 
-inline bool is_invalid_in(Simulation::PositionInTissue& pos, const RectangleSet& rectangle)
+inline bool is_invalid_in(Evolutions::PositionInTissue& pos, const RectangleSet& rectangle)
 {
     return ((pos.x<rectangle.lower_corner.x || pos.x>rectangle.upper_corner.x
             || pos.y<rectangle.lower_corner.y || pos.y>rectangle.upper_corner.y
@@ -149,28 +149,28 @@ RectangleSet::RectangleSet():
     RectangleSet({0,0,0})
 {}
 
-RectangleSet::RectangleSet(const Simulation::PositionInTissue& position):
+RectangleSet::RectangleSet(const Evolutions::PositionInTissue& position):
     RectangleSet(position, position)
 {}
 
-RectangleSet::RectangleSet(const Simulation::PositionInTissue& lower_corner, 
-                           const Simulation::PositionInTissue& upper_corner):
+RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+                           const Evolutions::PositionInTissue& upper_corner):
     lower_corner(lower_corner), upper_corner(upper_corner)
 {
 }
 
-RectangleSet::RectangleSet(const Simulation::PositionInTissue& lower_corner,
-                            const Simulation::AxisSize& x_size,
-                            const Simulation::AxisSize& y_size,
-                            const Simulation::AxisSize& z_size):
+RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner,
+                            const Evolutions::AxisSize& x_size,
+                            const Evolutions::AxisSize& y_size,
+                            const Evolutions::AxisSize& z_size):
     lower_corner(lower_corner), 
     upper_corner(lower_corner.x+x_size-1,lower_corner.y+y_size-1,lower_corner.z+z_size-1)
 {
 }
 
-RectangleSet::RectangleSet(const Simulation::PositionInTissue& lower_corner,
-                           const Simulation::AxisSize& x_size,
-                           const Simulation::AxisSize& y_size):
+RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner,
+                           const Evolutions::AxisSize& x_size,
+                           const Evolutions::AxisSize& y_size):
     lower_corner(lower_corner), 
     upper_corner(lower_corner.x+x_size-1,lower_corner.y+y_size-1)
 {
@@ -204,14 +204,14 @@ size_t RectangleSet::size() const
             *(upper_corner.z-lower_corner.z+1));
 }
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::RectangleSet& rectangle)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::RectangleSet& rectangle)
 {
     os << "RectangleSet{" << rectangle.lower_corner 
        << "," << rectangle.upper_corner << "}";

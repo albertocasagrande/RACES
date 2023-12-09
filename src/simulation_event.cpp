@@ -2,8 +2,8 @@
  * @file simulation_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation events
- * @version 0.2
- * @date 2023-11-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 SimulationEvent::~SimulationEvent()
@@ -49,8 +49,8 @@ const std::map<SimulationEvent::Type, const char*> simulation_event_names
     {SimulationEvent::Type::LIVENESS_RATE_UPDATE, "liveness rate update"},
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

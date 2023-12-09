@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.9
- * @date 2023-10-24
+ * @version 0.10
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 ChromosomeMutations::ChromosomeMutations():
@@ -335,24 +335,24 @@ CellGenomeMutations::CellGenomeMutations():
 {}
 
 
-CellGenomeMutations::CellGenomeMutations(const Drivers::Cell& cell, const GenomeMutations& genome_mutations):
+CellGenomeMutations::CellGenomeMutations(const Clones::Cell& cell, const GenomeMutations& genome_mutations):
     Cell(cell), GenomeMutations(genome_mutations)
 {}
 
-SampleGenomeMutations::SampleGenomeMutations(const Drivers::Simulation::TissueSample& sample): 
-    Drivers::Simulation::TissueSample(sample)
+SampleGenomeMutations::SampleGenomeMutations(const Clones::Evolutions::TissueSample& sample): 
+    Clones::Evolutions::TissueSample(sample)
 {}
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMutations& chromosome_mutations)
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::ChromosomeMutations& chromosome_mutations)
 {
-    os << "Chromosome " << Races::Passengers::GenomicPosition::chrtos(chromosome_mutations.id()) << std::endl;
+    os << "Chromosome " << Races::Mutations::GenomicPosition::chrtos(chromosome_mutations.id()) << std::endl;
 
     for (const auto& [allele_id, allele]: chromosome_mutations.get_alleles()) {
         os << "  " << allele_id << ": " << allele << std::endl;
@@ -361,7 +361,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMu
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::GenomeMutations& genome_mutations)
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::GenomeMutations& genome_mutations)
 {
     for (const auto& [chr_id, chr_mutations]: genome_mutations.get_chromosomes()) {
         os << chr_mutations << std::endl;

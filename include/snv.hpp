@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.7
- * @date 2023-10-02
+ * @version 0.8
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,7 +39,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -127,7 +127,7 @@ struct SNV : public GenomicPosition
         const char mutated_base, const std::string& cause);
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
@@ -135,10 +135,10 @@ namespace std
 {
 
 template<>
-struct less<Races::Passengers::SNV>
+struct less<Races::Mutations::SNV>
 {
-    bool operator()(const Races::Passengers::SNV &lhs,
-                    const Races::Passengers::SNV &rhs) const;
+    bool operator()(const Races::Mutations::SNV &lhs,
+                    const Races::Mutations::SNV &rhs) const;
 };
 
 /**
@@ -148,7 +148,7 @@ struct less<Races::Passengers::SNV>
  * @param snv is the SNV to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::SNV& snv);
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::SNV& snv);
 
 }   // std
 

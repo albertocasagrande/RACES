@@ -2,8 +2,8 @@
  * @file genotype_id.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genotype ans species identifiers
- * @version 0.2
- * @date 2023-11-07
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,9 +38,9 @@ namespace Races
 {
 
 /**
- * @brief The namespace of classes handing drivers
+ * @brief The namespace of classes handing clones
  */
-namespace Drivers
+namespace Clones
 {
 
 /**
@@ -54,7 +54,7 @@ using GenotypeId = uint16_t;
 using SpeciesId = uint16_t;
 
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -63,6 +63,6 @@ using SpeciesId = uint16_t;
  * 
  * This macro represents the species identifier of the wild-type cells.
  */
-#define WILD_TYPE_SPECIES std::numeric_limits<Races::Drivers::SpeciesId>::max()
+#define WILD_TYPE_SPECIES std::numeric_limits<Races::Clones::SpeciesId>::max()
 
 #endif // __RACES_GENOTYPE_ID__

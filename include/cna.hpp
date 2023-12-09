@@ -2,8 +2,8 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -99,7 +99,7 @@ struct CopyNumberAlteration
     }
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 

@@ -1,9 +1,9 @@
 /**
  * @file genotype_mutation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements driver genomic mutations
- * @version 0.1
- * @date 2023-11-02
+ * @brief Implements genomic mutations
+ * @version 0.2
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 GenotypeMutation::GenotypeMutation(const GenotypeId& initial_id, const GenotypeId& final_id):
@@ -49,8 +49,8 @@ GenotypeMutation::GenotypeMutation(const GenotypeProperties& initial_genotype,
 {}
 
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

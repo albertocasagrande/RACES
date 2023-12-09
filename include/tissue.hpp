@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.34
- * @date 2023-11-27
+ * @version 0.35
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,10 +46,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -436,7 +436,7 @@ public:
          * @brief Check whether a cell is on the cancer edge
          * 
          * @return `true` if and only if one of the eight 
-         *      neighbor cell does not have a driver mutation
+         *      neighbor cell does not have a mutation
          */
         bool is_on_border() const
         {
@@ -468,12 +468,11 @@ public:
          * @brief Get a constant reference to the referenced cell
          * 
          * This method returns a constant reference of the referenced cell. When 
-         * the referenced cell has not a driver mutation, the method throws 
+         * the referenced cell is a wild-type cell, the method throws 
          * a `std::runtime_error`.
          * 
          * @return a constant reference of the referenced cell
-         * @throws `std::runtime_error` if the referenced cell has not a driver 
-         *      mutation
+         * @throws `std::runtime_error` if the referenced cell is a wild-type cell
          */
         operator const CellInTissue&() const
         {
@@ -648,7 +647,7 @@ public:
     std::vector<SpeciesProperties> get_species_properties() const;
 
     /**
-     * @brief Get a tissue species by driver identifier
+     * @brief Get a tissue species by identifier
      * 
      * @param species_id is the genotype identifier
      * @return a constant reference to the tissue species
@@ -656,7 +655,7 @@ public:
     const Species& get_species(const SpeciesId& species_id) const;
 
     /**
-     * @brief Get a tissue species by driver identifier
+     * @brief Get a tissue species by identifier
      * 
      * @param species_id is the genotype identifier
      * @return a non-constant reference to the tissue species
@@ -664,7 +663,7 @@ public:
     Species& get_species(const SpeciesId& species_id);
 
     /**
-     * @brief Get a tissue species by driver name
+     * @brief Get a tissue species by name
      * 
      * @param species_name is the species name
      * @return a constant reference to the tissue species
@@ -672,7 +671,7 @@ public:
     const Species& get_species(const std::string& species_name) const;
 
     /**
-     * @brief Get a tissue species by driver name
+     * @brief Get a tissue species by name
      * 
      * @param species_name is the genotype name
      * @return a non-constant reference to the tissue species
@@ -717,7 +716,7 @@ public:
      * 
      * This method returns the total number of cells 
      * in the simulated space. This number accounts for 
-     * both driver mutated cells and normal ones.
+     * both mutated cells and normal ones.
      * 
      * @return the number of cells in the simulated tissue
      */
@@ -727,9 +726,9 @@ public:
     }
 
     /**
-     * @brief Get the number of driver mutated cells in the tissue
+     * @brief Get the number of mutated cells in the tissue
      * 
-     * @return the number of driver mutated cells in the tissue
+     * @return the number of mutated cells in the tissue
      */
     size_t num_of_mutated_cells() const;
 
@@ -782,22 +781,22 @@ public:
     }
 
     /**
-     * @brief Count the contiguous driver mutated cells in a direction
+     * @brief Count the contiguous mutated cells in a direction
      * 
      * @param position is the position from which the cells are counted
      * @param direction is the counting direction 
-     * @return the number of contiguous driver mutated cells from 
+     * @return the number of contiguous mutated cells from 
      *      `from_position` towards `directions`
      */
-    size_t count_driver_cells_from(const PositionInTissue position, 
-                                   const Direction& directions) const;
+    size_t count_mutated_cells_from(const PositionInTissue position, 
+                                    const Direction& directions) const;
 
     /**
-     * @brief Push contiguous driver mutated cells in a direction
+     * @brief Push contiguous mutated cells in a direction
      * 
-     * This method pushes the contiguous driver mutated cells from a
-     * position towards a direction and returns the list of the cells
-     * that are pushed outside the tissue. 
+     * This method pushes the contiguous mutated cells from a position
+     * towards a direction and returns the list of the cells that are 
+     * pushed outside the tissue. 
      * 
      * @param from_position is the position from which the cells are pushed
      * @param direction is the push direction
@@ -878,9 +877,9 @@ inline bool operator!=(const Tissue::SpeciesView::const_iterator& a, const Tissu
     return !(a==b); 
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

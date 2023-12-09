@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.6
- * @date 2023-11-02
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -51,9 +51,9 @@ class ConfigReader
      * 
      * @param sampler_region_json is the JSON of the region to sample
      * @param corner_field_name is the corner field name
-     * @return std::vector<Races::Drivers::Simulation::AxisPosition> 
+     * @return std::vector<Races::Clones::Evolutions::AxisPosition> 
      */
-    static std::vector<Races::Drivers::Simulation::AxisPosition>
+    static std::vector<Races::Clones::Evolutions::AxisPosition>
     get_corner(const nlohmann::json& sampler_region_json, const std::string& corner_field_name);
 
     /**
@@ -71,7 +71,7 @@ class ConfigReader
      * @param CNA_json is the JSON of the CNA
      * @return the type of the CNA
      */
-    static Races::Passengers::CopyNumberAlteration::Type
+    static Races::Mutations::CopyNumberAlteration::Type
     get_CNA_type(const nlohmann::json& CNA_json);
 
     /**
@@ -81,7 +81,7 @@ class ConfigReader
      * @param CNA_json is the JSON of the CNA to be inserted into the list
      */
     static void
-    add_CNA(std::list<Races::Passengers::CopyNumberAlteration>& CNAs, 
+    add_CNA(std::list<Races::Mutations::CopyNumberAlteration>& CNAs, 
             const nlohmann::json& CNA_json);
 
     /**
@@ -92,7 +92,7 @@ class ConfigReader
      * @param SNV_json is the JSON of the SNV to be inserted into the list
      */
     static void
-    add_SNV(const std::string& genotype_name, std::list<Races::Passengers::SNV>& SNVs,
+    add_SNV(const std::string& genotype_name, std::list<Races::Mutations::SNV>& SNVs,
             const nlohmann::json& SNV_json);
 
     /**
@@ -114,8 +114,8 @@ class ConfigReader
      */
     static void
     schedule_genotype_mutation(const std::string& genotype_name,
-                        std::list<Races::Passengers::SNV>& SNVs,
-                        std::list<Races::Passengers::CopyNumberAlteration>& CNAs,
+                        std::list<Races::Mutations::SNV>& SNVs,
+                        std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
                         const nlohmann::json& genotype_mutation_json);
 
     /**
@@ -134,8 +134,8 @@ class ConfigReader
      * @param mutational_properties_json is the JSON of the properties
      */
     static void 
-    schedule_genotype_mutational_properties(Races::Passengers::MutationalProperties& mutational_properties,
-                                     const Races::Drivers::Simulation::Simulation& simulation,
+    schedule_genotype_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
+                                     const Races::Clones::Evolutions::Simulation& simulation,
                                      const nlohmann::json& mutational_properties_json);
 
 public:
@@ -159,7 +159,7 @@ public:
      */
     template<typename GENOME_WIDE_POSITION, typename RANDOM_GENERATOR>
     static void
-    add_timed_mutational_coefficients(Races::Passengers::MutationEngine<GENOME_WIDE_POSITION,RANDOM_GENERATOR>& engine, 
+    add_timed_mutational_coefficients(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION,RANDOM_GENERATOR>& engine, 
                                       const nlohmann::json& mutational_coeff_json)
     {
         std::map<double, std::map<std::string, double>> timed_coefficients;
@@ -203,7 +203,7 @@ public:
      * @param field_name is the name of the field
      * @return the rectangle position set
      */
-    static Drivers::RectangleSet 
+    static Clones::RectangleSet 
     get_sample_region(const nlohmann::json& sample_region_json,
                       const std::string& field_name="sample region");
 
@@ -214,7 +214,7 @@ public:
      * @param field_name is the name of the field
      * @return a sample specification
      */
-    static Drivers::Simulation::SampleSpecification
+    static Clones::Evolutions::SampleSpecification
     get_sample_specification(const nlohmann::json& sample_specification_json,
                              const std::string& field_name="sample");
 
@@ -228,8 +228,8 @@ public:
      */
     static void
     collect_genotype_mutations(const std::string& genotype_name,
-                             std::list<Races::Passengers::SNV>& SNVs,
-                             std::list<Races::Passengers::CopyNumberAlteration>& CNAs,
+                             std::list<Races::Mutations::SNV>& SNVs,
+                             std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
                              const nlohmann::json& genotype_mutations_json);
 
     /**
@@ -239,8 +239,8 @@ public:
      * @param configuration_json is the JSON of the simulation configuration
      * @return the species mutational properties
      */
-    static Races::Passengers::MutationalProperties
-    get_mutational_properties(const Races::Drivers::Simulation::Simulation& simulation,
+    static Races::Mutations::MutationalProperties
+    get_mutational_properties(const Races::Clones::Evolutions::Simulation& simulation,
                               const nlohmann::json& configuration_json);
 
     /**
@@ -251,9 +251,9 @@ public:
      * @param timed_event_json is the JSON of the timed event
      * @return the time event described in `timed_event_json`
      */
-    static Races::Drivers::Simulation::TimedEvent 
-    get_timed_event(const Races::Drivers::Simulation::Simulation& simulation,
-                    const std::map<std::string, Races::Drivers::GenotypeProperties> name2genotype,
+    static Races::Clones::Evolutions::TimedEvent 
+    get_timed_event(const Races::Clones::Evolutions::Simulation& simulation,
+                    const std::map<std::string, Races::Clones::GenotypeProperties> name2genotype,
                     const nlohmann::json& timed_event_json);
 
     /**

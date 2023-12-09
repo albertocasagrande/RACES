@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.20
- * @date 2023-11-13
+ * @version 0.21
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,12 +46,12 @@
 struct ArchiveFixture {
     long double time_horizon;
 
-    Races::Drivers::Simulation::Simulation simulation;
+    Races::Clones::Evolutions::Simulation simulation;
 
     ArchiveFixture():
         time_horizon(70), simulation()
     {
-        using namespace Races::Drivers;
+        using namespace Races::Clones;
         
         GenotypeProperties A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DEATH, 0.1},
@@ -74,7 +74,7 @@ struct ArchiveFixture {
         simulation.death_activation_level = 100;
         simulation.storage_enabled = false;
 
-        Races::Drivers::Simulation::TimeTest done(time_horizon);
+        Races::Clones::Evolutions::TimeTest done(time_horizon);
 
         simulation.run(done);
     }
@@ -165,22 +165,22 @@ bool operator==(const std::map<KEY,T>& a, const std::map<KEY,T>& b)
     return true;
 }
 
-bool operator==(const Races::Drivers::Cell& a, const Races::Drivers::Cell& b)
+bool operator==(const Races::Clones::Cell& a, const Races::Clones::Cell& b)
 {
     return (a.get_id()==b.get_id() && 
             a.get_parent_id()==b.get_parent_id() &&
             a.get_species_id()==b.get_species_id());
 }
 
-bool operator==(const Races::Drivers::Simulation::CellInTissue& a, const Races::Drivers::Simulation::CellInTissue& b)
+bool operator==(const Races::Clones::Evolutions::CellInTissue& a, const Races::Clones::Evolutions::CellInTissue& b)
 {
-    using namespace  Races::Drivers;
+    using namespace  Races::Clones;
 
     return (static_cast<const Cell&>(a)==static_cast<const Cell&>(b) &&
-            static_cast<const Simulation::PositionInTissue&>(a)==static_cast<const Simulation::PositionInTissue&>(b));
+            static_cast<const Evolutions::PositionInTissue&>(a)==static_cast<const Evolutions::PositionInTissue&>(b));
 }
 
-bool operator==(const Races::Drivers::SpeciesProperties& a, const Races::Drivers::SpeciesProperties& b)
+bool operator==(const Races::Clones::SpeciesProperties& a, const Races::Clones::SpeciesProperties& b)
 {
     return (a.get_name()==b.get_name() &&
             a.get_id()==b.get_id() &&
@@ -189,14 +189,14 @@ bool operator==(const Races::Drivers::SpeciesProperties& a, const Races::Drivers
             a.get_epigenetic_switch_rates()==b.get_epigenetic_switch_rates());
 }
 
-inline bool operator!=(const Races::Drivers::SpeciesProperties& a, const Races::Drivers::SpeciesProperties& b)
+inline bool operator!=(const Races::Clones::SpeciesProperties& a, const Races::Clones::SpeciesProperties& b)
 {
     return !(a==b);
 }
 
-bool operator==(const Races::Drivers::Simulation::Species& a, const Races::Drivers::Simulation::Species& b)
+bool operator==(const Races::Clones::Evolutions::Species& a, const Races::Clones::Evolutions::Species& b)
 {
-    using namespace Races::Drivers;
+    using namespace Races::Clones;
 
     if (static_cast<const SpeciesProperties&>(a)!=static_cast<const SpeciesProperties&>(b)) {
         return false;
@@ -213,9 +213,9 @@ bool operator==(const Races::Drivers::Simulation::Species& a, const Races::Drive
     return true;
 }
 
-bool operator==(const Races::Drivers::Simulation::Tissue& a, const Races::Drivers::Simulation::Tissue& b)
+bool operator==(const Races::Clones::Evolutions::Tissue& a, const Races::Clones::Evolutions::Tissue& b)
 {
-    using namespace Races::Drivers;
+    using namespace Races::Clones;
 
     if (a.get_name()!=b.get_name()) {
         return false;
@@ -250,7 +250,7 @@ bool operator==(const Races::Drivers::Simulation::Tissue& a, const Races::Driver
     return true;
 }
 
-bool operator==(const Races::Drivers::Simulation::Simulation& a, const Races::Drivers::Simulation::Simulation& b)
+bool operator==(const Races::Clones::Evolutions::Simulation& a, const Races::Clones::Evolutions::Simulation& b)
 {
     return a.get_time()==b.get_time() &&
            a.tissue()==b.tissue() &&
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(binary_map)
 
 BOOST_AUTO_TEST_CASE(binary_cell)
 {
-    using namespace Races::Drivers;
+    using namespace Races::Clones;
 
     std::vector<Cell> to_save{Cell(0), Cell(1,300), Cell(2, 200)};
 
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(binary_cell)
 
 BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(GenotypeMutation(0,1))},
                                     {3.5,SimulationEventWrapper(GenotypeMutation(1,7))},
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation)
 
 BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation_queue)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(GenotypeMutation(0,1))},
                                     {3.5,SimulationEventWrapper(GenotypeMutation(1,7))},
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation_queue)
 
 BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
 {
-    using namespace Races::Drivers;
+    using namespace Races::Clones;
     
     GenotypeProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
     to_save["--"].set_rates({{CellEventType::DEATH, 0.1},
@@ -461,7 +461,7 @@ BOOST_FIXTURE_TEST_SUITE( simulatedData, ArchiveFixture )
 
 BOOST_AUTO_TEST_CASE(binary_tissue)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     auto filename = get_a_temporary_path();
 
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(binary_tissue)
 
 BOOST_AUTO_TEST_CASE(simulation_statistics)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     auto filename = get_a_temporary_path();
 
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(simulation_statistics)
 
 BOOST_AUTO_TEST_CASE(simulation_tissue)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     auto filename = get_a_temporary_path();
 

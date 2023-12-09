@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.41
- * @date 2023-11-30
+ * @version 0.42
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -54,13 +54,13 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
 /**
- * @brief The namespace of driver simulations
+ * @brief The namespace of clones evolutions
  */
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -177,16 +177,16 @@ protected:
      * the 6 possible directions (i.e., left or right on x-axis, 
      * y-axis, or z-axis) and by pushing all the cells on that 
      * direction one position await from the parent cell.
-     * If the cell in the provided position has non-driver 
+     * If the cell in the provided position has wild-type
      * genotype, then nothing is done.  
      * 
      * @param position is the position of the cell to be duplicate
      * @return list of the affected cells. Whenever the specified position 
-     *      is not in the tissue or does not correspond to a driver 
-     *      mutation, the returned list is empty. If one of the two 
-     *      children is pushed outside the tissue borders, the returned 
-     *      list contains only the new cell in position `position`. 
-     *      In the remaining case, the returned list contains two cells
+     *      is not in the tissue or does correspond to a wild-type cell, 
+     *      the returned list is empty. If one of the two children is 
+     *      pushed outside the tissue borders, the returned list contains 
+     *      only the new cell in position `position`. In the remaining 
+     *      case, the returned list contains two cells
      */
     EventAffectedCells simulate_duplication(const Position& position);
 
@@ -194,7 +194,7 @@ protected:
      * @brief Simulate the death of a cell
      * 
      * This method simulates the death of a cell in tissue.
-     * If the cell in the provided position has non-driver 
+     * If the cell in the provided position has wild-type
      * genotype, then nothing is done.
      * 
      * @param position is the position of the cell to be killed
@@ -227,11 +227,11 @@ protected:
      * @param position is the position of the cell to be duplicate
      * @param final_id is the resulting species identifier of the cell
      * @return list of the affected cells. Whenever the specified position 
-     *      is not in the tissue or does not correspond to a driver 
-     *      mutation, the returned list is empty. If one of the two 
-     *      children is pushed outside the tissue borders, the returned 
-     *      list contains only the new cell in position `position`. 
-     *      In the remaining case, the returned list contains two cells
+     *      is not in the tissue or does correspond to a wild-type cell, 
+     *      the returned list is empty. If one of the two children is 
+     *      pushed outside the tissue borders, the returned list contains
+     *      only the new cell in position `position`. In the remaining
+     *      case, the returned list contains two cells
      */
     EventAffectedCells simulate_duplication_and_mutation_event(const Position& position, 
                                                                const SpeciesId& final_id);
@@ -250,12 +250,12 @@ protected:
     void init_valid_directions();
 
     /**
-     * @brief Handle a driver mutation
+     * @brief Handle a mutation
      * 
-     * This method tries to handle a driver mutation during the cell event selection and 
+     * This method tries to handle a mutation during the cell event selection and 
      * it succeeds if and only if there exists at least one cell in the origin.
      * 
-     * @param timed_genotype_mutation is the timed driver mutation to be applied
+     * @param timed_genotype_mutation is the timed mutation to be applied
      * @param candidate_event is the current candidate cell event
      * @return `true` if and only if there exists at least one cell in the origin and 
      *          the candidate cell event has been updated
@@ -284,9 +284,8 @@ protected:
      * 
      * This method handles the time event queue during the cell event selection
      * by extracting the timed events that occurs before the candidate cell 
-     * event and applying them. If necessary (for instance when the next 
-     * time event is a driver mutation), the method also updates the
-     * candidate event.
+     * event and applying them. If necessary (for instance when the next time
+     * event is a mutation), the method also updates the candidate event.
      * 
      * @param candidate_event is a candidate cell event
      */
@@ -1137,9 +1136,9 @@ Simulation& Simulation::simulate(const CellEvent& event, UI::TissuePlotter<PLOT_
     return *this;
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

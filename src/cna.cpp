@@ -2,8 +2,8 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.2
- * @date 2023-10-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 CopyNumberAlteration::CopyNumberAlteration()
@@ -44,6 +44,6 @@ CopyNumberAlteration::CopyNumberAlteration(const GenomicRegion& region, const Al
     region(region), source(source), dest(destination), type(type)
 {}
 
-}   // Passengers
+}   // Mutations
 
 }   // Races

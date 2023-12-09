@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.13
- * @date 2023-11-13
+ * @version 0.14
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -55,7 +55,7 @@ class SimulationWrapper
 {
     struct _SimulationWrapper
     {
-        using Simulation = Races::Drivers::Simulation::Simulation;
+        using Simulation = Races::Clones::Evolutions::Simulation;
 
         Simulation simulation;         //!< the c++ simulation object
 
@@ -105,8 +105,8 @@ public:
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void schedule_genotype_mutation(const Races::Drivers::GenotypeProperties& src,
-                                    const Races::Drivers::GenotypeProperties& dst,
+    void schedule_genotype_mutation(const Races::Clones::GenotypeProperties& src,
+                                    const Races::Clones::GenotypeProperties& dst,
                                     const Races::Time time);
 
     /**
@@ -115,7 +115,7 @@ public:
      * @param genotype_properties is the genotype properties of the genotype
      * @return a reference to the updated object
      */
-    void add_genotype(const Races::Drivers::GenotypeProperties& genotype);
+    void add_genotype(const Races::Clones::GenotypeProperties& genotype);
 
     /**
      * @brief Place a cell in the simulated tissue
@@ -125,7 +125,7 @@ public:
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    void place_cell(const Races::Drivers::GenotypeProperties& genotype, const std::string& methylation_signature, 
+    void place_cell(const Races::Clones::GenotypeProperties& genotype, const std::string& methylation_signature, 
                     boost::python::list const& position);
 
     /**

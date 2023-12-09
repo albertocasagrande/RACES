@@ -2,8 +2,8 @@
  * @file lineage_graph.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements lineage graphs
- * @version 0.1
- * @date 2023-11-07
+ * @version 0.2
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 LineageEdge::LineageEdge():
@@ -61,8 +61,8 @@ LineageGraph& LineageGraph::add_edge(const LineageEdge& edge, const Time& time)
     return *this;
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

@@ -2,8 +2,8 @@
  * @file genotype.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Genotype`
- * @version 0.5
- * @date 2023-11-03
+ * @version 0.6
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -58,7 +58,7 @@ struct GenotypeWrapper
      *         `EpigeneticRates`
      * @return a shared pointer of the newly created object
      */
-    static std::shared_ptr<Races::Drivers::GenotypeProperties>
+    static std::shared_ptr<Races::Clones::GenotypeProperties>
     create(std::string const& name, boost::python::list const& epigenetic_rates);
 
     /**
@@ -76,7 +76,7 @@ struct GenotypeWrapper
      * @param rates are the new rates 
      */
     static
-    void set_rates(Races::Drivers::GenotypeProperties *genotype, const std::string& methylation_signature, 
+    void set_rates(Races::Clones::GenotypeProperties *genotype, const std::string& methylation_signature, 
                 boost::python::dict const& rates);
 
     /**
@@ -94,9 +94,9 @@ struct GenotypeWrapper
      * @param 
      */
     inline static
-    double get_rate(const Races::Drivers::GenotypeProperties *genotype, 
+    double get_rate(const Races::Clones::GenotypeProperties *genotype, 
                     const std::string& methylation_signature,
-                    const Races::Drivers::CellEventType event_type)
+                    const Races::Clones::CellEventType event_type)
     {
         return (*genotype)[methylation_signature].get_rate(event_type);
     }

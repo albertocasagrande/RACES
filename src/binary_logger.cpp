@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.24
- * @date 2023-11-14
+ * @version 0.25
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,10 +42,10 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 std::string snapshot_prefix = "snapshot";
@@ -293,8 +293,8 @@ BinaryLogger::~BinaryLogger()
     close();
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

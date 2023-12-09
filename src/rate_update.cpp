@@ -2,8 +2,8 @@
  * @file rate_update.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements liveness rate updates
- * @version 0.2
- * @date 2023-11-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,10 +34,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 RateUpdate::RateUpdate(const SpeciesId& species_id, const CellEventType& event_type, 
@@ -50,8 +50,8 @@ RateUpdate::RateUpdate(const SpeciesProperties& species, const CellEventType& ev
     RateUpdate(species.get_id(), event_type, new_rate)
 {}
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

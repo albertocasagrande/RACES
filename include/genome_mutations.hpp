@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.13
- * @date 2023-10-24
+ * @version 0.14
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,13 +49,13 @@ namespace Races
 {
 
 /**
- * @brief A namespace for classes related to passenger mutations
+ * @brief A namespace for classes related to mutations
  */
-namespace Passengers
+namespace Mutations
 {
 
 /**
- * @brief A class to represent the passenger mutations in a chromosome
+ * @brief A class to represent the mutations in a chromosome
  */
 class ChromosomeMutations
 {
@@ -287,7 +287,7 @@ public:
 };
 
 /**
- * @brief A class to represent the passenger mutations of a genome
+ * @brief A class to represent the mutations of a genome
  */
 class GenomeMutations
 {
@@ -450,9 +450,9 @@ public:
 
 
 /**
- * @brief A class to represent the passenger mutations of a specific cell
+ * @brief A class to represent the mutations of a specific cell
  */
-struct CellGenomeMutations : public Drivers::Cell, public GenomeMutations
+struct CellGenomeMutations : public Clones::Cell, public GenomeMutations
 {
     /**
      * @brief The genome length type
@@ -469,13 +469,13 @@ struct CellGenomeMutations : public Drivers::Cell, public GenomeMutations
      * 
      * @param chromosomes is the vector of genome chromosomes
      */
-    explicit CellGenomeMutations(const Drivers::Cell& cell, const GenomeMutations& genome_mutations);    
+    explicit CellGenomeMutations(const Clones::Cell& cell, const GenomeMutations& genome_mutations);    
 };
 
 /**
  * @brief A structure representing the genome mutations of a tissue sample
  */
-struct SampleGenomeMutations : public Drivers::Simulation::TissueSample
+struct SampleGenomeMutations : public Clones::Evolutions::TissueSample
 {
     std::list<CellGenomeMutations> mutations;   //!< The list of cell genome mutations
 
@@ -484,10 +484,10 @@ struct SampleGenomeMutations : public Drivers::Simulation::TissueSample
      * 
      * @param sample is the tissue sample whose cell mutations is represented
      */
-    SampleGenomeMutations(const Drivers::Simulation::TissueSample& sample);
+    SampleGenomeMutations(const Clones::Evolutions::TissueSample& sample);
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
@@ -502,7 +502,7 @@ namespace std
  * @param chromosome_mutations is a chromosome mutations
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMutations& chromosome_mutations);
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::ChromosomeMutations& chromosome_mutations);
 
 /**
  * @brief Write genome mutations data in a stream
@@ -511,7 +511,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Passengers::ChromosomeMu
  * @param genome_mutations is a genome mutations
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::GenomeMutations& genome_mutations);
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::GenomeMutations& genome_mutations);
 
 }   // std
 

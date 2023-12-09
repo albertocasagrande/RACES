@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.8
- * @date 2023-11-30
+ * @version 0.9
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 TimeTest::TimeTest(const Time& threshold):
@@ -144,9 +144,9 @@ uint8_t EventCountTest::percentage(const Simulation& simulation) const
     return static_cast<uint8_t>((100*get_event_number(simulation)/threshold));
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

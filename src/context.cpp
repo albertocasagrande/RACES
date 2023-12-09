@@ -2,8 +2,8 @@
  * @file context.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements mutational contexts and extended context automata
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 
@@ -300,7 +300,7 @@ ExtendedContextAutomaton& ExtendedContextAutomaton::reset()
     return *this;
 }
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 

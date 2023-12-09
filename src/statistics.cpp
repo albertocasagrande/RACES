@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.16
- * @date 2023-11-13
+ * @version 0.17
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,10 +36,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 SpeciesStatistics::SpeciesStatistics():
@@ -221,8 +221,8 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
     }
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

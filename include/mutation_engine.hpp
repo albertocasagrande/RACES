@@ -1,9 +1,9 @@
 /**
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines a class to place passenger mutations on a descendants forest
- * @version 0.17
- * @date 2023-11-11
+ * @brief Defines a class to place mutations on a descendants forest
+ * @version 0.18
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -50,7 +50,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -114,7 +114,7 @@ public:
      * @return a reference to the updated object
      */
     MutationStatistics& 
-    record(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list,
+    record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
            UI::ProgressBar* progress_bar=nullptr);
 
     /**
@@ -125,7 +125,7 @@ public:
      * @return a reference to the updated object
      */
     inline MutationStatistics& 
-    record(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list,
+    record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
            UI::ProgressBar& progress_bar)
     {
         return record(mutations_list, &progress_bar);
@@ -171,7 +171,7 @@ class MutationEngine
      * The inverse cumulative SBS type associated such a probability to T itself for 
      * all the mutational type T.
      */
-    using InverseCumulativeSBS = std::map<double, Races::Passengers::MutationalType>;
+    using InverseCumulativeSBS = std::map<double, Races::Mutations::MutationalType>;
 
     /**
      * @brief Coefficients for mutational signatures
@@ -256,7 +256,7 @@ class MutationEngine
      *         to `cell` birth time
      */
     const MutationalCoefficients&
-    get_active_mutational_coefficients(const Drivers::Cell& cell) const
+    get_active_mutational_coefficients(const Clones::Cell& cell) const
     {
         auto mc_it = timed_mutational_coefficients.upper_bound(cell.get_birth_time());
 
@@ -278,7 +278,7 @@ class MutationEngine
      */
     SNV select_SVN(const MutationalType& m_type, const std::string& cause)
     {
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         MutationalContext context = m_type.get_context();
         MutationalContext complement_context = context.get_complement();
@@ -313,7 +313,7 @@ class MutationEngine
      * @brief Randomly select the number of SNVs according to a Poisson distribution
      * 
      * @param genome_size is the genome size
-     * @param mean_passenger_mutations is the mean passenger mutations per duplication
+     * @param mean_passenger_mutations is the mean mutations per duplication
      * @return is the randomly selected number of SNVs
      */
     size_t number_of_SNVs(GenomeMutations::Length genome_size,
@@ -358,7 +358,7 @@ class MutationEngine
      * @param node is a descendants forest node representing a cell
      * @param cell_mutations are the cell mutations
      */
-    void place_SNVs(const Drivers::DescendantsForest::const_node& node,
+    void place_SNVs(const Clones::DescendantsForest::const_node& node,
                     GenomeMutations& cell_mutations)
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
@@ -422,25 +422,25 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the driver specific SNVs
+     * @brief Place the clone specific SNVs
      * 
      * @param node is a descendants forest node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
      */
-    void place_driver_specific_mutations(const Drivers::DescendantsForest::const_node& node,
-                                         GenomeMutations& cell_mutations)
+    void place_clone_specific_mutations(const Clones::DescendantsForest::const_node& node,
+                                        GenomeMutations& cell_mutations)
     {
         if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
-            const auto& driver_mp = mutational_properties.at(node.get_species_id());
+            const auto& clone_mp = mutational_properties.at(node.get_species_id());
 
-            for (auto snv : driver_mp.SNVs) {
-                snv.cause = driver_mp.name;
+            for (auto snv : clone_mp.SNVs) {
+                snv.cause = clone_mp.name;
 
                 place_SNV(snv, cell_mutations);
             }
 
-            for (auto CNA : driver_mp.CNAs) {
+            for (auto CNA : clone_mp.CNAs) {
                 place_CNA(CNA, cell_mutations);
             }
         }
@@ -461,19 +461,19 @@ class MutationEngine
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
-    void place_mutations(std::map<Drivers::Simulation::TissueSampleId, 
+    void place_mutations(std::map<Clones::Evolutions::TissueSampleId, 
                                   SampleGenomeMutations*>& sample_mutation_map,
-                         const Drivers::DescendantsForest::const_node& node,
+                         const Clones::DescendantsForest::const_node& node,
                          const GenomeMutations& ancestor_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         size_t context_stack_size = context_stack.size();
         
-        CellGenomeMutations cell_mutations(static_cast<const Drivers::Cell&>(node), ancestor_mutations);
+        CellGenomeMutations cell_mutations(static_cast<const Clones::Cell&>(node), ancestor_mutations);
 
-        place_driver_specific_mutations(node, cell_mutations);
+        place_clone_specific_mutations(node, cell_mutations);
         place_SNVs(node, cell_mutations);
         //place_CNAs(node, mutations);
 
@@ -600,11 +600,11 @@ public:
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
      */
-    std::list<SampleGenomeMutations> place_mutations(const Drivers::DescendantsForest& forest,
+    std::list<SampleGenomeMutations> place_mutations(const Clones::DescendantsForest& forest,
                                                      UI::ProgressBar *progress_bar=nullptr)
     {
-        using namespace Races::Drivers::Simulation;
-        using namespace Races::Passengers;
+        using namespace Races::Clones::Evolutions;
+        using namespace Races::Mutations;
 
         GenomeMutations mutations(context_index, num_of_alleles);
 
@@ -630,7 +630,7 @@ public:
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
      */
-    inline std::list<SampleGenomeMutations> place_mutations(const Drivers::DescendantsForest& forest,
+    inline std::list<SampleGenomeMutations> place_mutations(const Clones::DescendantsForest& forest,
                                                             UI::ProgressBar &progress_bar)
     {
         return place_mutations(forest, &progress_bar);
@@ -650,7 +650,7 @@ public:
     }
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 

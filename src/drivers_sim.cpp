@@ -1,9 +1,9 @@
 /**
  * @file drivers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for the driver simulator
- * @version 0.17
- * @date 2023-11-13
+ * @brief Main file for the clones simulator
+ * @version 0.18
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -48,7 +48,7 @@
 #endif
 
 
-Races::Drivers::Simulation::Simulation simulation;
+Races::Clones::Evolutions::Simulation simulation;
 Races::UI::ProgressBar *bar;
 
 void termination_handling(int signal_num)
@@ -112,9 +112,9 @@ class DriverSimulator : public BasicExecutable
         throw std::domain_error(oss.str());
     }
 
-    static Races::Drivers::GenotypeProperties create_genotype(const nlohmann::json& genotype_json)
+    static Races::Clones::GenotypeProperties create_genotype(const nlohmann::json& genotype_json)
     {
-        using namespace Races::Drivers;
+        using namespace Races::Clones;
         std::vector<EpigeneticRates> epigenetic_rates;
 
         if (!genotype_json.is_object()) {
@@ -172,7 +172,7 @@ class DriverSimulator : public BasicExecutable
 
     static void configure_tissue(const nlohmann::json& tissue_json)
     {
-        using namespace Races::Drivers::Simulation;
+        using namespace Races::Clones::Evolutions;
 
         if (!tissue_json.contains("size")) {
             throw std::domain_error("The tissue specification must contain a \"size\" field");
@@ -199,10 +199,10 @@ class DriverSimulator : public BasicExecutable
         throw std::domain_error("tissue is either a 2D or a 3D space");
     }
 
-    static Races::Drivers::Simulation::PositionInTissue
+    static Races::Clones::Evolutions::PositionInTissue
     get_position(const nlohmann::json& position_json)
     {
-        using namespace Races::Drivers::Simulation;
+        using namespace Races::Clones::Evolutions;
 
         if (!position_json.is_array()) {
             throw std::domain_error("The \"position\" field must be an array of Natural values");
@@ -224,7 +224,7 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_initial_cells(const nlohmann::json& initial_cells_json,
-                                        const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes)
+                                        const std::map<std::string, Races::Clones::GenotypeProperties> genotypes)
     {
         if (!initial_cells_json.is_array()) {
             throw std::domain_error("The \"initial cells\" field must contain an array");
@@ -268,10 +268,10 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_timed_events(const nlohmann::json& timed_events_json,
-                                       const std::map<std::string, Races::Drivers::GenotypeProperties> genotypes)
+                                       const std::map<std::string, Races::Clones::GenotypeProperties> genotypes)
     {
         using namespace Races;
-        using namespace Races::Drivers;
+        using namespace Races::Clones;
 
         if (!timed_events_json.is_array()) {
             throw std::domain_error("The \"timed events\" field must contain an array");
@@ -282,7 +282,7 @@ class DriverSimulator : public BasicExecutable
                 throw std::domain_error("Every element in the \"timed events\" field must be an object");
             }
 
-            Simulation::TimedEvent timed_event = ConfigReader::get_timed_event(simulation, genotypes,
+            Evolutions::TimedEvent timed_event = ConfigReader::get_timed_event(simulation, genotypes,
                                                                                timed_event_json);
 
             simulation.schedule_timed_event(timed_event);
@@ -291,7 +291,7 @@ class DriverSimulator : public BasicExecutable
 
     static void configure_simulation(const std::string& simulation_filename)
     {
-        using namespace Races::Drivers;
+        using namespace Races::Clones;
 
         std::ifstream f(simulation_filename);
         nlohmann::json simulation_cfg = nlohmann::json::parse(f);
@@ -420,7 +420,7 @@ public:
     void run()
     {
         using namespace Races;
-        using namespace Races::Drivers::Simulation;
+        using namespace Races::Clones::Evolutions;
 
         if (!quiet) {
             UI::ProgressBar::hide_console_cursor();
@@ -432,7 +432,7 @@ public:
         if (snapshot_path != "") {
             snapshot_path = get_last_snapshot_path(snapshot_path, "simulation");
 
-            simulation = load_drivers_simulation(snapshot_path, quiet);
+            simulation = load_clones_simulation(snapshot_path, quiet);
         } else {
             init_simulation();
         }

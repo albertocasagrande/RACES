@@ -2,8 +2,8 @@
  * @file rate_update.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines liveness rate updates
- * @version 0.3
- * @date 2023-11-03
+ * @version 0.4
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,10 +38,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -115,9 +115,9 @@ struct RateUpdate : public SimulationEvent
     } 
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -130,8 +130,8 @@ struct RateUpdate : public SimulationEvent
  * @return `true` if and only if the two liveness rate updates represent
  *      the same event
  */
-inline bool operator==(const Races::Drivers::Simulation::RateUpdate& lhs, 
-                       const Races::Drivers::Simulation::RateUpdate& rhs)
+inline bool operator==(const Races::Clones::Evolutions::RateUpdate& lhs, 
+                       const Races::Clones::Evolutions::RateUpdate& rhs)
 {
     return (lhs.species_id == rhs.species_id)
             && (lhs.event_type == rhs.event_type)

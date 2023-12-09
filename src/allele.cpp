@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.2
- * @date 2023-10-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 AlleleFragment::AlleleFragment():
@@ -301,14 +301,14 @@ Allele::Length Allele::size() const
     return total_size;
 }
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::AlleleFragment& allele_fragment)
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragment& allele_fragment)
 {
     os << "["<< allele_fragment.get_initial_position() << "-" 
        << allele_fragment.get_final_position() << "]{";
@@ -324,7 +324,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Passengers::AlleleFragme
     return os; 
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::Allele& allele)
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::Allele& allele)
 {
     std::string sep;
     for (const auto& [pos, fragment]: allele.get_fragments()) {

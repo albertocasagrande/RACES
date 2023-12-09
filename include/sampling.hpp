@@ -2,8 +2,8 @@
  * @file sampling.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samplings
- * @version 0.4
- * @date 2023-11-14
+ * @version 0.5
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,10 +38,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -78,9 +78,9 @@ struct Sampling : public SampleSpecification, public SimulationEvent
     } 
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

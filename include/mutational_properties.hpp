@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.6
- * @date 2023-11-05
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,24 +42,24 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
- * @brief A class representing the passenger mutational properties of all the species
+ * @brief A class representing the mutational properties of all the species
  * 
  */
 class MutationalProperties
 {
     /**
-     * @brief The passenger mutational properties of a species
+     * @brief The mutational properties of a species
      */
     struct SpeciesMutationalProperties
     {
         std::string name;                       //!< the species name
-        double mu;                              //!< the species passenger mutation rate
-        std::list<SNV> SNVs;                    //!< the driver species SNVs
-        std::list<CopyNumberAlteration> CNAs;   //!< the driver species CNAs
+        double mu;                              //!< the species mutation rate
+        std::list<SNV> SNVs;                    //!< the species SNVs
+        std::list<CopyNumberAlteration> CNAs;   //!< the species CNAs
 
         /**
          * @brief The empty constructor
@@ -78,7 +78,7 @@ class MutationalProperties
                                      const std::list<CopyNumberAlteration>& CNAs);
     };
 
-    std::map<Drivers::SpeciesId, SpeciesMutationalProperties> properties;  //!< the species property map
+    std::map<Clones::SpeciesId, SpeciesMutationalProperties> properties;  //!< the species property map
 public:
 
     /**
@@ -89,19 +89,19 @@ public:
     /**
      * @brief Add a genotype mutational properties
      * 
-     * @param simulation is a driver tissue simulation
+     * @param clones_simulation is a clones simulation
      * @param name is the name of the genotype
      * @param epigenetic_rates is a map from epigenomic status to 
-     *          passenger mutational rate
+     *          mutational rate
      * @param species_SNVs is a list of SNVs characterizing the species
      * @param species_CNAs is a list of CNAs characterizing the species
      * @return a reference to the updated object
      */
-    MutationalProperties& add_genotype(const Drivers::Simulation::Simulation& simulation,
-                                             const std::string& name, 
-                                             const std::map<std::string, double>& epigenetic_rates,
-                                             const std::list<SNV>& species_SNVs={},
-                                             const std::list<CopyNumberAlteration>& species_CNAs={});
+    MutationalProperties& add_genotype(const Clones::Evolutions::Simulation& clones_simulation,
+                                        const std::string& name, 
+                                        const std::map<std::string, double>& epigenetic_rates,
+                                        const std::list<SNV>& species_SNVs={},
+                                        const std::list<CopyNumberAlteration>& species_CNAs={});
 
     /**
      * @brief Get the properties of a species
@@ -110,14 +110,14 @@ public:
      * @return the mutational properties of the species having 
      *          `species_id` as identifier.
      */
-    inline const MutationalProperties::SpeciesMutationalProperties& at(const Drivers::SpeciesId& species_id) const
+    inline const MutationalProperties::SpeciesMutationalProperties& at(const Clones::SpeciesId& species_id) const
     {
         return properties.at(species_id);
     }
 };
 
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 

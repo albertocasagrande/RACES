@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.6
- * @date 2023-11-05
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties()
@@ -49,15 +49,15 @@ MutationalProperties::MutationalProperties()
 {}
 
 MutationalProperties& 
-MutationalProperties::add_genotype(const Drivers::Simulation::Simulation& simulation,  
+MutationalProperties::add_genotype(const Clones::Evolutions::Simulation& clones_simulation,  
                                          const std::string& name,
                                          const std::map<std::string, double>& epigenetic_rates,
                                          const std::list<SNV>& species_SNVs,
                                          const std::list<CopyNumberAlteration>& species_CNAs)
 {
-    std::map<std::string, const Drivers::Simulation::Species*> species_map;
+    std::map<std::string, const Clones::Evolutions::Species*> species_map;
 
-    for (const auto& species : simulation.tissue()) {
+    for (const auto& species : clones_simulation.tissue()) {
         species_map[species.get_name()] = &species;
     }
 
@@ -69,7 +69,7 @@ MutationalProperties::add_genotype(const Drivers::Simulation::Simulation& simula
             throw std::domain_error("Unknown species name: \""+full_name+"\"");
         }
 
-        Drivers::SpeciesId id = (species_it->second)->get_id();
+        Clones::SpeciesId id = (species_it->second)->get_id();
 
         auto prop_it = properties.find(id);
 
@@ -84,6 +84,6 @@ MutationalProperties::add_genotype(const Drivers::Simulation::Simulation& simula
     return *this;
 }
 
-}   // Passengers
+}   // Mutations
 
 }   // Races

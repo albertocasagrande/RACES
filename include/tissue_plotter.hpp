@@ -2,8 +2,8 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a UI window to plot a tissue
- * @version 0.14
- * @date 2023-11-02
+ * @version 0.15
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -83,7 +83,7 @@ std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, den
  */
 template<typename PLOT_WINDOW>
 class TissuePlotter {
-	using Tissue = Drivers::Simulation::Tissue;
+	using Tissue = Clones::Evolutions::Tissue;
 
 	const Tissue& tissue;					//!< the tissue to plot
 
@@ -141,7 +141,7 @@ class TissuePlotter {
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-	void draw_time(const Drivers::Simulation::TissueStatistics& statistics)
+	void draw_time(const Clones::Evolutions::TissueStatistics& statistics)
 	{
 		unsigned int label_width, label_height;
 
@@ -161,7 +161,7 @@ class TissuePlotter {
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-	void draw_elapsed_time(const Drivers::Simulation::TissueStatistics& statistics)
+	void draw_elapsed_time(const Clones::Evolutions::TissueStatistics& statistics)
 	{
 		unsigned int label_width, label_height;
 
@@ -181,7 +181,7 @@ class TissuePlotter {
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-	void draw_events_per_second(const Drivers::Simulation::TissueStatistics& statistics)
+	void draw_events_per_second(const Clones::Evolutions::TissueStatistics& statistics)
 	{
 		using namespace std::chrono;
 		unsigned int label_width, label_height;
@@ -200,7 +200,7 @@ class TissuePlotter {
 		window->draw_text(oss.str(), label_x_pos, label_y_pos);
 	}
 
-	void draw_time_statistics(const Drivers::Simulation::TissueStatistics& statistics)
+	void draw_time_statistics(const Clones::Evolutions::TissueStatistics& statistics)
 	{
 		draw_time(statistics);
 		draw_elapsed_time(statistics);
@@ -232,8 +232,8 @@ class TissuePlotter {
 		}
 	}
 
-	void draw_species_legend(const Drivers::Simulation::Species& species,
-							 const Drivers::Simulation::SpeciesStatistics& statistics, 
+	void draw_species_legend(const Clones::Evolutions::Species& species,
+							 const Clones::Evolutions::SpeciesStatistics& statistics, 
 							 const unsigned int& x, const unsigned int& y, const Color& color)
 	{
 		window->use_color(color);
@@ -258,7 +258,7 @@ class TissuePlotter {
 	/**
 	 * @brief Draw the legend
 	 */
-	void draw_legend(const Drivers::Simulation::TissueStatistics& statistics)
+	void draw_legend(const Clones::Evolutions::TissueStatistics& statistics)
 	{
 		auto sizes(tissue.size());
 		const unsigned int x = 2*frame_border + static_cast<unsigned int>(sizes[0]);
@@ -269,7 +269,7 @@ class TissuePlotter {
 				draw_species_legend(species, statistics.at(species.get_id()),
 									x, y, palette[species.get_id()]);
 			} else {
-				Drivers::Simulation::SpeciesStatistics s_statistics;
+				Clones::Evolutions::SpeciesStatistics s_statistics;
 				draw_species_legend(species, s_statistics,
 									x, y, palette[species.get_id()]);
 			}
@@ -285,7 +285,7 @@ public:
 	 * @param tissue is the tissue to plot
 	 * @param frames_per_second is the number of frames per second
 	 */
-	explicit TissuePlotter(const Drivers::Simulation::Tissue& tissue, const unsigned int frames_per_second=10):
+	explicit TissuePlotter(const Clones::Evolutions::Tissue& tissue, const unsigned int frames_per_second=10):
 		TissuePlotter<PLOT_WINDOW>(tissue, "RACES Simulation"+((tissue.get_name()=="")?"":" - "+tissue.get_name()), frames_per_second)
 	{
 	}
@@ -297,7 +297,7 @@ public:
 	 * @param name is the name of the plotting window
 	 * @param frames_per_second is the number of frames per second
 	 */
-	TissuePlotter(const Drivers::Simulation::Tissue& tissue, const std::string& name,
+	TissuePlotter(const Clones::Evolutions::Tissue& tissue, const std::string& name,
 				  const unsigned int frames_per_second=10):
 		tissue(tissue), frame_border(20), frame_thickness(5), legend_rectangle_width(400),
 		legend_rectangle_height(35), legend_label_height(16), redraw_interval(1000/frames_per_second), 
@@ -322,7 +322,7 @@ public:
 	 * 
 	 * @param statistics are the simulation statistics
 	 */
-    void plot(const Drivers::Simulation::TissueStatistics& statistics)
+    void plot(const Clones::Evolutions::TissueStatistics& statistics)
 	{
 		using namespace std::chrono;
 

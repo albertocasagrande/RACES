@@ -1,9 +1,9 @@
 /**
  * @file context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Testing Races::Passengers::ContextIndex class
- * @version 0.5
- * @date 2023-10-02
+ * @brief Testing Races::Mutations::ContextIndex class
+ * @version 0.6
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 
 BOOST_AUTO_TEST_CASE(context_index_creation)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     BOOST_CHECK_NO_THROW(ContextIndex());
 
@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(context_index_creation)
 }
 
 template<typename GENOME_WIDE_POSITION>
-std::set<Races::Passengers::GenomicPosition> get_genomic_positions(const Races::Passengers::ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                                                                   const Races::Passengers::MutationalContext& mutational_context)
+std::set<Races::Mutations::GenomicPosition> get_genomic_positions(const Races::Mutations::ContextIndex<GENOME_WIDE_POSITION>& context_index,
+                                                                   const Races::Mutations::MutationalContext& mutational_context)
 {
-    std::set<Races::Passengers::GenomicPosition> positions;
+    std::set<Races::Mutations::GenomicPosition> positions;
 
     for (const auto& abs_pos: context_index[mutational_context]) {
         positions.insert(context_index.get_genomic_position(abs_pos));
@@ -88,8 +88,8 @@ std::set<Races::Passengers::GenomicPosition> get_genomic_positions(const Races::
 
 struct ContextFixture
 {
-    using MutationalContext = Races::Passengers::MutationalContext;
-    using GenomicPosition = Races::Passengers::GenomicPosition;
+    using MutationalContext = Races::Mutations::MutationalContext;
+    using GenomicPosition = Races::Mutations::GenomicPosition;
 
     std::map<MutationalContext, std::set<GenomicPosition> > test_positions;
 
@@ -110,12 +110,12 @@ BOOST_FIXTURE_TEST_SUITE( context_index_test, ContextFixture )
 
 BOOST_AUTO_TEST_CASE(context_index_whole_genome)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     auto context_index = ContextIndex<>::build_index(FASTA_FILE);
 
     for (const auto& [context_test, positions_test]: test_positions) {
-        std::set<Races::Passengers::GenomicPosition> positions;
+        std::set<Races::Mutations::GenomicPosition> positions;
 
         if (positions_test.size() != 0) {
             BOOST_CHECK_NO_THROW(positions = get_genomic_positions(context_index, context_test));
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(context_index_whole_genome)
     }
 }
 
-bool in_regions(const std::set<Races::Passengers::GenomicRegion>& genomic_regions,
-               const Races::Passengers::GenomicPosition& genomic_position)
+bool in_regions(const std::set<Races::Mutations::GenomicRegion>& genomic_regions,
+               const Races::Mutations::GenomicPosition& genomic_position)
 {
     for (const auto& genomic_region: genomic_regions) {
         if (genomic_region.contains(genomic_position)) {
@@ -148,7 +148,7 @@ bool in_regions(const std::set<Races::Passengers::GenomicRegion>& genomic_region
 
 BOOST_AUTO_TEST_CASE(context_index_regions)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     const std::set<GenomicRegion> regions{{{2,115}, 20}, {{1,5}, 73},
                                           {{2,247}, 11}};
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(context_index_regions)
     auto context_index = ContextIndex<>::build_index(FASTA_FILE, regions);
 
     for (const auto& [context_test, positions_test]: filtered_test_positions) {
-        std::set<Races::Passengers::GenomicPosition> positions;
+        std::set<Races::Mutations::GenomicPosition> positions;
 
         if (positions_test.size() != 0) {
             BOOST_CHECK_NO_THROW(positions = get_genomic_positions(context_index, context_test));
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(context_index_regions)
 
 BOOST_AUTO_TEST_CASE(context_index_remove_insert)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     auto context_index = ContextIndex<>::build_index(FASTA_FILE);
 

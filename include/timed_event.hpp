@@ -2,8 +2,8 @@
  * @file timed_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines timed events
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,14 +42,14 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
- * @brief A structure to represent timed driver genomic mutation
+ * @brief A structure to represent timed genomic mutation
  */
 struct TimedEvent : public SimulationEventWrapper
 {
@@ -96,17 +96,17 @@ struct TimedEvent : public SimulationEventWrapper
     }
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 
 template<>
-struct std::greater<Races::Drivers::Simulation::TimedEvent> {
-    inline constexpr bool operator()(const Races::Drivers::Simulation::TimedEvent &lhs, 
-                                     const Races::Drivers::Simulation::TimedEvent &rhs) const 
+struct std::greater<Races::Clones::Evolutions::TimedEvent> {
+    inline constexpr bool operator()(const Races::Clones::Evolutions::TimedEvent &lhs, 
+                                     const Races::Clones::Evolutions::TimedEvent &rhs) const 
     {
         return lhs.time > rhs.time;
     }
@@ -120,10 +120,10 @@ struct std::greater<Races::Drivers::Simulation::TimedEvent> {
  * @return `true` if and only if the two timed events represent
  *      the same event
  */
-inline bool operator==(const Races::Drivers::Simulation::TimedEvent& lhs, 
-                       const Races::Drivers::Simulation::TimedEvent& rhs)
+inline bool operator==(const Races::Clones::Evolutions::TimedEvent& lhs, 
+                       const Races::Clones::Evolutions::TimedEvent& rhs)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     return (lhs.time == rhs.time) 
             && (static_cast<const SimulationEventWrapper&>(lhs)

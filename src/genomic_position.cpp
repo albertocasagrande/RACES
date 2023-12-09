@@ -2,8 +2,8 @@
  * @file genomic_position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic position and related functions
- * @version 0.4
- * @date 2023-10-02
+ * @version 0.5
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 GenomicPosition::GenomicPosition():
@@ -61,7 +61,7 @@ ChromosomeId GenomicPosition::stochr(const std::string& chr_name)
         return std::numeric_limits<ChromosomeId>::max();
     }
 
-    return static_cast<Passengers::ChromosomeId>(stoi(chr_name));
+    return static_cast<Mutations::ChromosomeId>(stoi(chr_name));
 }
 
 std::string GenomicPosition::chrtos(const ChromosomeId& chr_id)
@@ -77,16 +77,16 @@ std::string GenomicPosition::chrtos(const ChromosomeId& chr_id)
     return std::to_string(chr_id);
 }
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicPosition& genomic_position)
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicPosition& genomic_position)
 {
-    out << "chr" <<  Races::Passengers::GenomicPosition::chrtos(genomic_position.chr_id) << "(" 
+    out << "chr" <<  Races::Mutations::GenomicPosition::chrtos(genomic_position.chr_id) << "(" 
         << genomic_position.position << ")";
 
     return out;

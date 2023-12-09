@@ -2,8 +2,8 @@
  * @file common.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements auxiliary classes and functions for executables
- * @version 0.7
- * @date 2023-11-10
+ * @version 0.8
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -83,7 +83,7 @@ BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
     }
 
     try {
-        return Races::Drivers::Simulation::BinaryLogger::find_last_snapshot_in(simulation_dir);
+        return Races::Clones::Evolutions::BinaryLogger::find_last_snapshot_in(simulation_dir);
     } catch (std::exception &except) {
         print_help_and_exit(except.what(), 1);
 
@@ -92,12 +92,12 @@ BasicExecutable::get_last_snapshot_path(const std::string& simulation_dir,
 }
 
 
-Races::Drivers::Simulation::Simulation 
-BasicExecutable::load_drivers_simulation(const std::filesystem::path snapshot_path, const bool quiet)
+Races::Clones::Evolutions::Simulation 
+BasicExecutable::load_clones_simulation(const std::filesystem::path snapshot_path, const bool quiet)
 {
     Races::Archive::Binary::In archive(snapshot_path);
 
-    Races::Drivers::Simulation::Simulation simulation;
+    Races::Clones::Evolutions::Simulation simulation;
 
     if (quiet) {
         archive & simulation;

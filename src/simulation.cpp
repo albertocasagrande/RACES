@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.49
- * @date 2023-11-27
+ * @version 0.50
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,10 +36,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 Simulation::AddedCell::AddedCell():
@@ -504,7 +504,7 @@ inline const Direction& select_push_direction(GENERATOR& random_gen,
     std::vector<double> cells_to_push;
     double total{0.0};
     for (const auto& direction : directions) {
-        size_t num_of_cells = tissue.count_driver_cells_from(position, direction);
+        size_t num_of_cells = tissue.count_mutated_cells_from(position, direction);
         cells_to_push.push_back(static_cast<double>(1.0)/num_of_cells);
         total += cells_to_push.back(); 
     }
@@ -536,7 +536,7 @@ inline const Direction& select_inverse_min_direction(GENERATOR& random_gen,
     std::list<size_t> cells_to_push;
     size_t total = 0;
     for (const auto& direction : directions) {
-        cells_to_push.push_back(tissue.count_driver_cells_from(position, direction));
+        cells_to_push.push_back(tissue.count_mutated_cells_from(position, direction));
         total += cells_to_push.back();
     }
 
@@ -580,7 +580,7 @@ inline const Direction& select_min_push_direction(GENERATOR& random_gen,
     size_t min_cells_to_push = std::numeric_limits<size_t>::max();
     uint8_t num_of_mins = 0;
     for (const auto& direction : directions) {
-        cells_to_push.push_back(tissue.count_driver_cells_from(position, direction));
+        cells_to_push.push_back(tissue.count_mutated_cells_from(position, direction));
         if (min_cells_to_push>cells_to_push.back()) {
             num_of_mins = 1;
             min_cells_to_push = cells_to_push.back();
@@ -950,8 +950,8 @@ Simulation::~Simulation()
 {
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

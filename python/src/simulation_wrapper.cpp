@@ -1,9 +1,9 @@
 /**
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the Python wrapper class and functions for `Races::Simulation`
- * @version 0.14
- * @date 2023-11-30
+ * @brief Implements the Python wrapper class and functions for `Simulation`
+ * @version 0.15
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,8 +47,8 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::schedule_genotype_mutation(const Races::Drivers::GenotypeProperties& src,
-                                            const Races::Drivers::GenotypeProperties& dst,
+void SimulationWrapper::schedule_genotype_mutation(const Races::Clones::GenotypeProperties& src,
+                                            const Races::Clones::GenotypeProperties& dst,
                                             const Races::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
@@ -56,13 +56,13 @@ void SimulationWrapper::schedule_genotype_mutation(const Races::Drivers::Genotyp
     obj_ptr->simulation.schedule_genotype_mutation(src, dst, time);
 }
 
-struct PythonEndTest : public Races::Drivers::Simulation::TimeTest
+struct PythonEndTest : public Races::Clones::Evolutions::TimeTest
 {
     /**
      * @brief The empty constructor
      */
     explicit PythonEndTest(const Races::Time& time):
-        Races::Drivers::Simulation::TimeTest(time)
+        Races::Clones::Evolutions::TimeTest(time)
     {}
 
     /**
@@ -71,9 +71,9 @@ struct PythonEndTest : public Races::Drivers::Simulation::TimeTest
      * @param simulation is the considered simulation
      * @return `true` if and only if a signal has been sent to the Python process
      */
-    inline bool operator()(const Races::Drivers::Simulation::Simulation& simulation)
+    inline bool operator()(const Races::Clones::Evolutions::Simulation& simulation)
     {
-        return Races::Drivers::Simulation::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
+        return Races::Clones::Evolutions::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
     }
 };
 
@@ -128,18 +128,18 @@ const Races::Time& SimulationWrapper::get_time() const
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_genotype(const Races::Drivers::GenotypeProperties& genotype)
+void SimulationWrapper::add_genotype(const Races::Clones::GenotypeProperties& genotype)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
     obj_ptr->simulation.add_genotype(genotype);
 }
 
-Races::Drivers::Simulation::PositionInTissue 
+Races::Clones::Evolutions::PositionInTissue 
 from_Python_list_to_position(boost::python::list const& position, const uint8_t num_of_dimensions)
 {
     namespace bp = boost::python;
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     std::vector<AxisPosition> c_position;
     try {
@@ -167,7 +167,7 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
 }
 
 
-void SimulationWrapper::place_cell(const Races::Drivers::GenotypeProperties& genotype, 
+void SimulationWrapper::place_cell(const Races::Clones::GenotypeProperties& genotype, 
                                    const std::string& methylation_signature,
                                    boost::python::list const& position)
 {
@@ -184,7 +184,7 @@ void SimulationWrapper::place_cell(const Races::Drivers::GenotypeProperties& gen
 void SimulationWrapper::set_tissue(const std::string& name, boost::python::list const& sizes_list)
 {
     namespace bp = boost::python;
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     std::vector<AxisSize> c_sizes;
     try {

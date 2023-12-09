@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,7 +39,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -317,7 +317,7 @@ public:
     Length size() const;
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
@@ -331,7 +331,7 @@ namespace std
  * @param allele_fragment is the allele fragment to be written
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::AlleleFragment& allele_fragment);
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragment& allele_fragment);
 
 
 /**
@@ -341,7 +341,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Passengers::AlleleFragme
  * @param allele is the allele to be written
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Passengers::Allele& allele);
+std::ostream& operator<<(std::ostream& os, const Races::Mutations::Allele& allele);
 
 } // std
 

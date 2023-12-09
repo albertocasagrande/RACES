@@ -2,8 +2,8 @@
  * @file context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.5
- * @date 2023-10-02
+ * @version 0.6
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -331,15 +331,15 @@ public:
     }
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 template<>
-struct std::less<Races::Passengers::MutationalContext>
+struct std::less<Races::Mutations::MutationalContext>
 {
-    inline bool operator()(const Races::Passengers::MutationalContext &lhs,
-                           const Races::Passengers::MutationalContext &rhs) const
+    inline bool operator()(const Races::Mutations::MutationalContext &lhs,
+                           const Races::Mutations::MutationalContext &rhs) const
     {
         return lhs.get_code() < rhs.get_code();
     }
@@ -355,7 +355,7 @@ namespace std
  * @param context is the mutational context to stream
  * @return a reference to the output stream
  */
-inline std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalContext& context)
+inline std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalContext& context)
 {
     return (out << context.get_sequence());
 }

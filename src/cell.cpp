@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell representation
- * @version 0.15
- * @date 2023-11-03
+ * @version 0.16
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
 uint64_t Cell::counter = 0;
@@ -70,7 +70,7 @@ void swap(Cell& a, Cell &b)
     std::swap(a.species_id, b.species_id);
 }
 
-namespace Simulation
+namespace Evolutions
 {
 
 
@@ -115,16 +115,16 @@ CellInTissue& CellInTissue::operator=(const PositionInTissue& position)
     return *this;
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Cell& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
@@ -135,13 +135,13 @@ std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::CellInTissue& cell)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::CellInTissue& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
        << ", birth_time: "<< cell.get_birth_time()
-       << ", driver_genotype: " << cell.get_species_id()
-       << ", position: " << static_cast<Races::Drivers::Simulation::PositionInTissue>(cell)
+       << ", species_id: " << cell.get_species_id()
+       << ", position: " << static_cast<Races::Clones::Evolutions::PositionInTissue>(cell)
        << "}";
 
     return os;

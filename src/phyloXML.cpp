@@ -2,8 +2,8 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements phyloXML stream
- * @version 0.9
- * @date 2023-12-07
+ * @version 0.10
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 namespace IO
 {
@@ -169,6 +169,6 @@ phyloXMLStream::~phyloXMLStream()
 
 }  // IO
 
-}  // Drivers
+}  // Clones
 
 }  // Race

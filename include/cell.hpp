@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.22
- * @date 2023-11-03
+ * @version 0.23
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,10 +41,10 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 class Simulation;
@@ -76,7 +76,7 @@ protected:
 
 public:
     /**
-     * @brief Create a new cell with no passenger mutations
+     * @brief Create a new cell with no mutations
      * 
      * @param species_id is the species identifier
      */
@@ -186,7 +186,7 @@ public:
 
     friend class Tissue;
     friend class SpeciesProperties;
-    friend class Simulation::Simulation; 
+    friend class Evolutions::Simulation; 
 
     friend void swap(Cell& a, Cell &b);
 };
@@ -203,7 +203,7 @@ void swap(Cell& a, Cell &b);
  * @brief Labelled cell
  * 
  * This template represents cells labelled by information, e.g., 
- * their birth time or a list of their passenger mutations. 
+ * their birth time or a list of their mutations. 
  * 
  * @tparam LABEL is the label type
  */
@@ -279,7 +279,7 @@ void swap(LabelledCell<LABEL>& a, LabelledCell<LABEL> &b)
 
 class SpeciesProperties;
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -395,9 +395,9 @@ public:
     friend class CellInTissueProxy;
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -411,7 +411,7 @@ namespace std
  * @param cell is the cell to be streamed
  * @return a reference to the updated stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell);
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Cell& cell);
 
 /**
  * @brief Write a cell in a tissue in an output stream
@@ -420,7 +420,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Drivers::Cell& cell);
  * @param cell is the cell in the tissue to be streamed
  * @return a reference to the updated stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::CellInTissue& cell);
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::CellInTissue& cell);
 
 } // std
 

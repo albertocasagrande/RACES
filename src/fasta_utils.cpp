@@ -2,8 +2,8 @@
  * @file fasta_utils.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements support utilities for FASTA files
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,9 +44,9 @@ namespace FASTA
 SeqNameDecoder::~SeqNameDecoder()
 {}
 
-bool EnsemblSeqNameDecoder::is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
+bool EnsemblSeqNameDecoder::is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id) const
 {
-    using namespace Passengers;
+    using namespace Mutations;
 
     const std::regex chr_regex("([0-9]+|X|Y) dna:chromosome chromosome:[a-zA-Z0-9]+:([0-9]+|X|Y):1:([0-9]+):1 .*");
 
@@ -61,9 +61,9 @@ bool EnsemblSeqNameDecoder::is_chromosome_header(const std::string& seq_name, Pa
     return true;
 }
 
-bool NCBISeqNameDecoder::is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const
+bool NCBISeqNameDecoder::is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id) const
 {
-    using namespace Passengers;
+    using namespace Mutations;
 
     const std::regex chr_regex("NC_[0-9]+.[0-9]+ [A-Za-z0-9 ]+ chromosome ([0-9]+|X|Y), [.A-Za-z0-9]+ Primary Assembly");
 
@@ -83,7 +83,7 @@ std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders{
     std::make_shared<NCBISeqNameDecoder>()
 };
 
-bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id)
+bool is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id)
 {
     for (const auto& seq_decoder_ptr : seq_name_decoders) {
         if (seq_decoder_ptr->is_chromosome_header(seq_name, chr_id)) {

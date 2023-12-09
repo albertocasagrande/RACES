@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.13
- * @date 2023-10-02
+ * @version 0.14
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,9 +40,9 @@
 
 #include "archive.hpp"
 #include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_header
-#include "genomic_region.hpp"   // Passengers::GenomicRegion
+#include "genomic_region.hpp"   // Mutations::GenomicRegion
 #include "basic_IO.hpp"         // IO::get_stream_size
-#include "context.hpp"          // Passengers::ExtendedContextAutomaton
+#include "context.hpp"          // Mutations::ExtendedContextAutomaton
 
 #include "progress_bar.hpp"
 
@@ -50,7 +50,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -789,7 +789,7 @@ public:
 
 }   // Races
 
-}   // Passengers
+}   // Mutations
 
 
 #endif // __RACES_CONTEXT_INDEX__

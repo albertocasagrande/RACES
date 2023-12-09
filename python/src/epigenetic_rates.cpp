@@ -2,8 +2,8 @@
  * @file epigenetic_rates.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement the Python wrapper class and functions for `Races::EpigeneticRates`
- * @version 0.3
- * @date 2023-10-02
+ * @version 0.4
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -30,10 +30,10 @@
 
 #include "epigenetic_rates.hpp"
 
-std::shared_ptr<Races::Drivers::EpigeneticRates>
+std::shared_ptr<Races::Clones::EpigeneticRates>
 EpigeneticRatesWrapper::create(boost::python::list const& rates_list)
 {
-    using namespace Races::Drivers;
+    using namespace Races::Clones;
 
     namespace bp = boost::python;
 

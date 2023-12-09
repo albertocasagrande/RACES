@@ -2,8 +2,8 @@
  * @file lineage_graph.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines lineage graphs
- * @version 0.1
- * @date 2023-11-07
+ * @version 0.2
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,10 +41,10 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 /**
@@ -262,9 +262,9 @@ public:
     }
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

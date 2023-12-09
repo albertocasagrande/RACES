@@ -2,8 +2,8 @@
  * @file tissue_sample.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements tissue samples
- * @version 0.5
- * @date 2023-11-14
+ * @version 0.6
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 TissueSampleId TissueSample::counter = 0;
@@ -50,23 +50,23 @@ TissueSample::TissueSample(const Time& time, const RectangleSet& region):
 {}
 
 TissueSample::TissueSample(const std::string& name, const Races::Time& time,
-                           const Races::Drivers::RectangleSet& region):
+                           const Races::Clones::RectangleSet& region):
     TissueSample(name, time, region, {})
 {}
 
 TissueSample::TissueSample(const Time& time, const RectangleSet& region,
-                           const std::list<Races::Drivers::CellId>& cell_ids):
+                           const std::list<Races::Clones::CellId>& cell_ids):
     TissueSample("", time, region, cell_ids)
 {
     name = "S_"+std::to_string(id);
 }
 
 TissueSample::TissueSample(const std::string& name, const Time& time, const RectangleSet& region,
-                           const std::list<Races::Drivers::CellId>& cell_ids):
+                           const std::list<Races::Clones::CellId>& cell_ids):
     id(counter++), time(time), region(region), cell_ids(cell_ids), name(name)
 {}
 
-void TissueSample::add_cell_id(const Races::Drivers::CellId& cell_id)
+void TissueSample::add_cell_id(const Races::Clones::CellId& cell_id)
 {
     if (region.size() == cell_ids.size()) {
         throw std::domain_error("The sample already contains all the cell ids");
@@ -75,15 +75,15 @@ void TissueSample::add_cell_id(const Races::Drivers::CellId& cell_id)
     cell_ids.push_back(cell_id);
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
-std::ostream& operator<<(std::ostream& os, const Races::Drivers::Simulation::TissueSample& tissue_sample)
+std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::TissueSample& tissue_sample)
 {
-    const Races::Drivers::RectangleSet& region =  tissue_sample.get_region();
+    const Races::Clones::RectangleSet& region =  tissue_sample.get_region();
 
     os << "# " << tissue_sample.get_time()
        << " " << tissue_sample.get_cell_ids().size()

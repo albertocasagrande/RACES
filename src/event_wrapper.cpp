@@ -2,8 +2,8 @@
  * @file event_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a simulation event wrapper
- * @version 0.2
- * @date 2023-11-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,10 +33,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 SimulationEventWrapper::SimulationEventWrapper(const GenotypeMutation& genotype_mutation):
@@ -54,17 +54,17 @@ SimulationEventWrapper::SimulationEventWrapper(const Sampling& sampling):
     event(std::make_shared<Sampling>(sampling))
 {}
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 
-bool operator==(const Races::Drivers::Simulation::SimulationEventWrapper& lhs, 
-                const Races::Drivers::Simulation::SimulationEventWrapper& rhs)
+bool operator==(const Races::Clones::Evolutions::SimulationEventWrapper& lhs, 
+                const Races::Clones::Evolutions::SimulationEventWrapper& rhs)
 {
-    using namespace Races::Drivers::Simulation;
+    using namespace Races::Clones::Evolutions;
 
     if (lhs.type != rhs.type) {
         return false;

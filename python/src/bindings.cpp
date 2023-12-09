@@ -2,8 +2,8 @@
  * @file bindings.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Python bindings
- * @version 0.15
- * @date 2023-11-13
+ * @version 0.16
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,8 +41,8 @@
 
 using namespace boost::python;
 
-namespace RacesSim = Races::Drivers::Simulation;
-namespace RacesDrv = Races::Drivers;
+namespace RacesSim = Races::Clones::Evolutions;
+namespace RacesDrv = Races::Clones;
 
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(run_up_to_overloads, SimulationWrapper::static_run_up_to, 2, 4)

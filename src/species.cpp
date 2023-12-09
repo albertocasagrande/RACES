@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.17
- * @date 2023-11-26
+ * @version 0.18
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,10 +35,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 Species::Species():
@@ -254,18 +254,18 @@ void swap(Species& a, Species& b)
     std::swap(a.last_insertion_time,b.last_insertion_time);
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::Simulation::Species& species)
+std::ostream& operator<<(std::ostream& out, const Races::Clones::Evolutions::Species& species)
 {
-    out << "{genotype: " << static_cast<Races::Drivers::SpeciesProperties>(species) 
+    out << "{genotype: " << static_cast<Races::Clones::SpeciesProperties>(species) 
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {

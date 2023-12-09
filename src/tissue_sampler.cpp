@@ -2,8 +2,8 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES tool that sample tissues
- * @version 0.9
- * @date 2023-11-14
+ * @version 0.10
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,24 +41,24 @@
 class TissueSampler : public BasicExecutable
 {
     std::filesystem::path snapshot_path;
-    std::filesystem::path drivers_directory;
+    std::filesystem::path clones_directory;
     std::filesystem::path config;
 
     bool quiet;
 
     void perform_sampling(const nlohmann::json& sampling_cfg, const bool quiet=false) const
     {
-        using namespace Races::Drivers;
-        using namespace Races::Drivers::Simulation;
+        using namespace Races::Clones;
+        using namespace Races::Clones::Evolutions;
         using ConfigReader = Races::ConfigReader;
 
         if (!sampling_cfg.is_array()) {
             throw std::runtime_error("The sampling configuration does not consist in an array");
         }
 
-        BinaryLogger::CellReader reader(drivers_directory);
+        BinaryLogger::CellReader reader(clones_directory);
 
-        auto simulation = load_drivers_simulation(snapshot_path, quiet);
+        auto simulation = load_clones_simulation(snapshot_path, quiet);
 
         for (const auto& sample_specs_json : sampling_cfg) {
             const auto sample_specs = ConfigReader::get_sample_specification(sample_specs_json);
@@ -84,8 +84,8 @@ public:
         ;
 
         hidden_options.add_options()
-            ("simulation", po::value<std::filesystem::path>(&drivers_directory), 
-            "the simulation directory")
+            ("clones simulation", po::value<std::filesystem::path>(&clones_directory), 
+            "the clones simulation directory")
             ("sampling-config", po::value<std::filesystem::path>(&config), 
             "the sampling simulation config")
         ;
@@ -96,7 +96,7 @@ public:
         }
         program_options.add(hidden_options);
 
-        positional_options.add("simulation", 1);
+        positional_options.add("clones simulation", 1);
         positional_options.add("sampling-config", 1);
 
         po::variables_map vm;
@@ -116,7 +116,7 @@ public:
             print_help_and_exit("Missing simulation snapshot!", 1);
         }
 
-        snapshot_path = get_last_snapshot_path(drivers_directory, "simulation");
+        snapshot_path = get_last_snapshot_path(clones_directory, "simulation");
 
         if (!vm.count("sampling-config")) {
             print_help_and_exit("Missing passenger configuration file!", 1);

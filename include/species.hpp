@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.26
- * @date 2023-11-26
+ * @version 0.27
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,10 +47,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 class Tissue;
@@ -516,9 +516,9 @@ public:
  */
 void swap(Species& a, Species& b);
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -532,7 +532,7 @@ namespace std
  * @param species is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesProperties& species);
+std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& species);
 
 }   // std
 

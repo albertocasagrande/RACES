@@ -2,8 +2,8 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some SNV example
- * @version 0.6
- * @date 2023-10-02
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -45,7 +45,7 @@
 
 BOOST_AUTO_TEST_CASE(mutational_context_creation)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     BOOST_CHECK_NO_THROW(MutationalContext());
     BOOST_CHECK_NO_THROW(MutationalContext("AAA"));
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_creation)
 
 struct ContextFixture
 {
-    std::list<Races::Passengers::MutationalContext> contexts;
+    std::list<Races::Mutations::MutationalContext> contexts;
 
     ContextFixture()
     {
@@ -79,7 +79,7 @@ BOOST_FIXTURE_TEST_SUITE( context_test, ContextFixture )
 
 BOOST_AUTO_TEST_CASE(mutational_context_lower_case)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
     std::vector<char> bases{'a', 'c', 'g', 't'};
 
     auto it=contexts.cbegin();
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_lower_case)
 
 BOOST_AUTO_TEST_CASE(mutational_context_relation)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     for (const auto& context: contexts) {
         BOOST_CHECK_EQUAL(context, context);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_relation)
 
 BOOST_AUTO_TEST_CASE(mutational_context_copy_by_sequence)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     for (const auto& context: contexts) {
         MutationalContext copy(context.get_sequence());
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_copy_by_sequence)
 
 BOOST_AUTO_TEST_CASE(mutational_context_sequence)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     for (const auto& context: contexts) {
         MutationalContext copy(context.get_sequence());
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(mutational_context_complement)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::list<std::pair<std::string, std::string>> tests{
             {"AAA","TTT"},
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
 
 BOOST_AUTO_TEST_CASE(mutational_type_create)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     BOOST_CHECK_NO_THROW(MutationalType());
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_create)
 
 BOOST_AUTO_TEST_CASE(mutational_type_get_replace_base)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     for (const auto base: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
         for (const auto seq1: {'C', 'T', 'c', 't'}){
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_replace_base)
 
 BOOST_AUTO_TEST_CASE(mutational_type_get_complement_replace_base)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     for (const auto base: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
         for (const auto seq1: {'C', 'T', 'c', 't'}){
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_complement_replace_base)
 
 BOOST_AUTO_TEST_CASE(mutational_type_read)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::list<std::pair<std::string, std::pair<std::string, char>>> tests{
         {"A[A>C]T",{"TTA", 'G'}},
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_read)
 
 BOOST_AUTO_TEST_CASE(mutational_type_read_error)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::list<std::string> errors{
         "A[A>A]T", "A", "A[A<C]T", "A<A>C]T"
@@ -371,7 +371,7 @@ std::ostream& operator<<(std::ostream& out, const std::set<T>& S)
 
 BOOST_AUTO_TEST_CASE(mutational_signature_load)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::set<std::string> signature_names{"SBS3_GRCh37","SBS3_GRCh38","SBS3_mm9","SBS3_mm10","SBS3_rn6"};
 
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(mutational_signature_load)
 
 BOOST_AUTO_TEST_CASE(selective_mutational_signature_load)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::set<std::string> signature_names{"SBS3_GRCh38","SBS3_mm10","SBS3_rn6"};
 
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(selective_mutational_signature_load)
 
 BOOST_AUTO_TEST_CASE(mutational_signature_expression)
 {
-    using namespace Races::Passengers;
+    using namespace Races::Mutations;
 
     std::map<std::string, MutationalSignature> signatures;
     {

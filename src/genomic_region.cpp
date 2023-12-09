@@ -2,8 +2,8 @@
  * @file genomic_region.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic region
- * @version 0.2
- * @date 2023-10-02
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 using Length = GenomicRegion::Length;
@@ -104,14 +104,14 @@ GenomicRegion& GenomicRegion::join(GenomicRegion& contiguous_region)
 }
 
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::GenomicRegion& genomic_region)
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicRegion& genomic_region)
 {
     auto begin_pos = genomic_region.get_begin();
 

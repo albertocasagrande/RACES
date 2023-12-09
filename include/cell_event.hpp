@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.14
- * @date 2023-11-26
+ * @version 0.15
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,7 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
 /**
@@ -61,7 +61,7 @@ enum class CellEventType {
  */
 extern std::map<CellEventType, std::string> cell_event_names;
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 /**
@@ -81,9 +81,9 @@ struct CellEvent
     CellEvent();
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 

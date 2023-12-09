@@ -2,8 +2,8 @@
  * @file timed_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements timed events
- * @version 0.1
- * @date 2023-10-18
+ * @version 0.2
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,18 +33,18 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 TimedEvent::TimedEvent(const Time& time, const SimulationEventWrapper& event):
     SimulationEventWrapper(event), time(time)
 {}
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

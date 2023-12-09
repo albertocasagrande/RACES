@@ -1,9 +1,9 @@
 /**
  * @file passengers_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for the RACES passenger mutations simulator
- * @version 0.24
- * @date 2023-11-14
+ * @brief Main file for the RACES mutations simulator
+ * @version 0.25
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -59,9 +59,9 @@
 
 template<>
 std::string 
-boost::lexical_cast<std::string, Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode>(const Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode& mode)
+boost::lexical_cast<std::string, Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode>(const Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode& mode)
 {
-    using namespace Races::Passengers::SequencingSimulations;
+    using namespace Races::Mutations::SequencingSimulations;
     switch (mode) {
         case ReadSimulator<>::Mode::CREATE:
             return "create";
@@ -75,15 +75,15 @@ boost::lexical_cast<std::string, Races::Passengers::SequencingSimulations::ReadS
 }
 
 template<>
-Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode 
-boost::lexical_cast<Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode, std::string>(const std::string& mode)
+Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode 
+boost::lexical_cast<Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode, std::string>(const std::string& mode)
 {
     std::string upper_token = mode;
     for (auto& t_char: upper_token) {
         t_char = toupper(t_char);
     }
 
-    using namespace Races::Passengers::SequencingSimulations;
+    using namespace Races::Mutations::SequencingSimulations;
 
     if (upper_token == "CREATE") {
         return ReadSimulator<>::Mode::CREATE;
@@ -107,10 +107,10 @@ boost::lexical_cast<Races::Passengers::SequencingSimulations::ReadSimulator<>::M
     throw po::validation_error(po::validation_error::kind_t::invalid_option_value, oss.str());
 }
 
-class PassengersSimulator : public BasicExecutable
+class MutationsSimulator : public BasicExecutable
 {
     std::filesystem::path simulation_filename;
-    std::filesystem::path drivers_directory;
+    std::filesystem::path clones_directory;
     std::filesystem::path snapshot_path;
     std::filesystem::path context_index_filename;
     std::filesystem::path ref_genome_filename;
@@ -118,7 +118,7 @@ class PassengersSimulator : public BasicExecutable
 
     double coverage;
     std::string seq_output_directory;
-    Races::Passengers::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
+    Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
     bool paired_read;
     size_t read_size;
     size_t insert_size;
@@ -131,13 +131,13 @@ class PassengersSimulator : public BasicExecutable
     size_t bytes_per_abs_position;
     bool quiet;
 
-    std::list<Races::Drivers::Simulation::TissueSample>
-    get_samples(const Races::Drivers::Simulation::Simulation& simulation, const nlohmann::json& simulation_cfg) const
+    std::list<Races::Clones::Evolutions::TissueSample>
+    get_samples(const Races::Clones::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
     {
-        using namespace Races::Drivers;
-        using namespace Races::Drivers::Simulation;
+        using namespace Races::Clones;
+        using namespace Races::Clones::Evolutions;
 
-        std::list<Races::Drivers::Simulation::TissueSample> samples;
+        std::list<Races::Clones::Evolutions::TissueSample> samples;
 
         if (simulation_cfg.contains("sample regions")) {
             const auto& sample_regions_json = simulation_cfg["sample regions"];
@@ -158,11 +158,11 @@ class PassengersSimulator : public BasicExecutable
     }
 
     template<typename ABSOLUTE_GENOTYPE_POSITION = uint32_t>
-    Races::Passengers::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> load_context_index(const std::string& filename) const
+    Races::Mutations::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> load_context_index(const std::string& filename) const
     {
         Races::Archive::Binary::In archive(filename);
 
-        Races::Passengers::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> context_index;
+        Races::Mutations::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> context_index;
 
         if (quiet) {
             archive & context_index;
@@ -173,17 +173,17 @@ class PassengersSimulator : public BasicExecutable
         return context_index;
     }
 
-    static std::map<std::string, Races::Passengers::MutationalSignature> load_signatures(const std::string filename)
+    static std::map<std::string, Races::Mutations::MutationalSignature> load_signatures(const std::string filename)
     {
         std::ifstream is(filename);
 
-        return Races::Passengers::MutationalSignature::read_from_stream(is);
+        return Races::Mutations::MutationalSignature::read_from_stream(is);
     }
 
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
-    std::list<Races::Passengers::SampleGenomeMutations>
-    place_mutations(Races::Passengers::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
-                    const Races::Drivers::DescendantsForest& forest) const
+    std::list<Races::Mutations::SampleGenomeMutations>
+    place_mutations(Races::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
+                    const Races::Clones::DescendantsForest& forest) const
     {
         if (quiet) {
             return engine.place_mutations(forest);
@@ -207,10 +207,10 @@ class PassengersSimulator : public BasicExecutable
         return nlohmann::json::parse(simulation_stream);
     }
 
-    void process_statistics(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list) const
+    void process_statistics(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list) const
     {
         using namespace Races::UI;
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         if ((SNVs_csv_filename != "") || (CNAs_csv_filename != "")) {
 
@@ -235,13 +235,13 @@ class PassengersSimulator : public BasicExecutable
     }
 
     static void
-    split_epigenetic_status(std::list<Races::Passengers::SampleGenomeMutations>& FACS_samples,
-                            const Races::Passengers::SampleGenomeMutations& sample_mutations,
-                            std::map<Races::Drivers::SpeciesId, std::string> methylation_map)
+    split_epigenetic_status(std::list<Races::Mutations::SampleGenomeMutations>& FACS_samples,
+                            const Races::Mutations::SampleGenomeMutations& sample_mutations,
+                            std::map<Races::Clones::SpeciesId, std::string> methylation_map)
     {
-        using namespace Races::Drivers;
-        using namespace Races::Drivers::Simulation;
-        using namespace Races::Passengers;
+        using namespace Races::Clones;
+        using namespace Races::Clones::Evolutions;
+        using namespace Races::Mutations;
 
         std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
         
@@ -263,14 +263,14 @@ class PassengersSimulator : public BasicExecutable
         }
     }
 
-    static std::list<Races::Passengers::SampleGenomeMutations>
-    split_epigenetic_status(const std::list<Races::Passengers::SampleGenomeMutations>& sample_mutations_list,
-                            const std::map<Races::Drivers::SpeciesId, std::string>& methylation_map)
+    static std::list<Races::Mutations::SampleGenomeMutations>
+    split_epigenetic_status(const std::list<Races::Mutations::SampleGenomeMutations>& sample_mutations_list,
+                            const std::map<Races::Clones::SpeciesId, std::string>& methylation_map)
     {
-        using namespace Races::Drivers;
-        using namespace Races::Drivers::Simulation;
+        using namespace Races::Clones;
+        using namespace Races::Clones::Evolutions;
 
-        std::list<Races::Passengers::SampleGenomeMutations> FACS_samples;
+        std::list<Races::Mutations::SampleGenomeMutations> FACS_samples;
 
         for (const auto& sample_mutations : sample_mutations_list) {
             split_epigenetic_status(FACS_samples, sample_mutations, methylation_map);
@@ -280,7 +280,7 @@ class PassengersSimulator : public BasicExecutable
     }
 
     template<typename TISSUE_SAMPLE,
-             std::enable_if_t<std::is_base_of_v<Races::Drivers::Simulation::TissueSample, TISSUE_SAMPLE>, bool> = true>
+             std::enable_if_t<std::is_base_of_v<Races::Clones::Evolutions::TissueSample, TISSUE_SAMPLE>, bool> = true>
     static std::map<Races::Time, std::list<TISSUE_SAMPLE>>
     split_list_by_time(const std::list<TISSUE_SAMPLE>& sample_list)
     {
@@ -297,9 +297,9 @@ class PassengersSimulator : public BasicExecutable
     void run_abs_position() const
     {
         using namespace Races;
-        using namespace Races::Drivers;
-        using namespace Races::Passengers;
-        using namespace Races::Passengers::SequencingSimulations;
+        using namespace Races::Clones;
+        using namespace Races::Mutations;
+        using namespace Races::Mutations::SequencingSimulations;
 
         nlohmann::json simulation_cfg = get_simulation_json();
 
@@ -313,23 +313,23 @@ class PassengersSimulator : public BasicExecutable
 
         ReadSimulator<> read_simulator;
 
-        Drivers::DescendantsForest forest;
+        Clones::DescendantsForest forest;
         MutationalProperties mutational_properties;
 
         std::map<SpeciesId, std::string> methylation_map;
         {
-            auto drivers_simulation = load_drivers_simulation(snapshot_path, quiet);
+            auto clones_simulation = load_clones_simulation(snapshot_path, quiet);
 
-            for (const auto& species : drivers_simulation.tissue()) {
+            for (const auto& species : clones_simulation.tissue()) {
                 const auto& signature = species.get_methylation_signature();
                 methylation_map[species.get_id()] = GenotypeProperties::signature_to_string(signature);
             }
 
-            auto samples = get_samples(drivers_simulation, simulation_cfg);
+            auto samples = get_samples(clones_simulation, simulation_cfg);
 
-            forest = Drivers::DescendantsForest(drivers_simulation, samples);
+            forest = Clones::DescendantsForest(clones_simulation, samples);
 
-            mutational_properties = ConfigReader::get_mutational_properties(drivers_simulation,
+            mutational_properties = ConfigReader::get_mutational_properties(clones_simulation,
                                                                             simulation_cfg);
         }
 
@@ -383,17 +383,17 @@ class PassengersSimulator : public BasicExecutable
     {
         namespace fs = std::filesystem;
 
-        if (!vm.count("simulation file")) {
-            print_help_and_exit("The simulation file is mandatory", 1);
+        if (!vm.count("mutation file")) {
+            print_help_and_exit("The mutation file is mandatory", 1);
         }
     
-        if (!vm.count("driver simulation")) {
-            print_help_and_exit("The driver simulation directory is mandatory. "
+        if (!vm.count("clones simulation")) {
+            print_help_and_exit("The clones simulation directory is mandatory. "
                                 "You can produce it by using `drivers_sim`", 1);
         }
         
-        if (!fs::exists(drivers_directory)) {
-            print_help_and_exit("\"" + std::string(drivers_directory) + "\"  does not exist", 1);
+        if (!fs::exists(clones_directory)) {
+            print_help_and_exit("\"" + std::string(clones_directory) + "\"  does not exist", 1);
         }
 
         if (!vm.count("context index")) {
@@ -473,19 +473,19 @@ class PassengersSimulator : public BasicExecutable
     }
 
 public:
-    PassengersSimulator(int argc, char* argv[]):
-        BasicExecutable(argv[0], {{"passengers", "Passenger mutation simulation options"},
+    MutationsSimulator(int argc, char* argv[]):
+        BasicExecutable(argv[0], {{"mutations", "Mutation simulation options"},
                                   {"sequencing", "Sequencing simulation options"},
-                                  {"drivers", "Driver simulation related options"},
+                                  {"clones", "Clones evolution related options"},
                                   {"generic", "Generic options"}}),
         paired_read(false), 
         insert_size(0), SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
     {
         namespace po = boost::program_options;
 
-        using namespace Races::Passengers::SequencingSimulations;
+        using namespace Races::Mutations::SequencingSimulations;
 
-        visible_options.at("passengers").add_options()
+        visible_options.at("mutations").add_options()
             ("SNVs-CSV,S", po::value<std::string>(&SNVs_csv_filename),
              "the SNVs CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
@@ -505,7 +505,7 @@ public:
             ("write-SAM,w", "write the simulated read SAM files")
         ;
 
-        visible_options.at("drivers").add_options()
+        visible_options.at("clones").add_options()
             ("epigenetic-FACS,F", "distinguish between epigenetic states")
         ;
 
@@ -517,10 +517,10 @@ public:
         ;
 
         hidden_options.add_options()
-            ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
-             "the name of the file describing the passenger mutations simulation")
-            ("driver simulation", po::value<std::filesystem::path>(&drivers_directory), 
-             "the driver simulation directory")
+            ("mutation file", po::value<std::filesystem::path>(&simulation_filename), 
+             "the name of the file describing the mutations simulation")
+            ("clones simulation", po::value<std::filesystem::path>(&clones_directory), 
+             "the clones simulation directory")
             ("context index", po::value<std::filesystem::path>(&context_index_filename), 
              "the genome context index")
             ("mutational signature", po::value<std::filesystem::path>(&SBS_filename), 
@@ -535,8 +535,8 @@ public:
         }
         program_options.add(hidden_options);
 
-        positional_options.add("simulation file", 1);
-        positional_options.add("driver simulation", 1);
+        positional_options.add("mutation file", 1);
+        positional_options.add("clones simulation", 1);
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
@@ -558,7 +558,7 @@ public:
         quiet = vm.count("quiet")>0;
 
         {
-            using namespace Races::Passengers::SequencingSimulations;
+            using namespace Races::Mutations::SequencingSimulations;
 
             read_simulator_output_mode = ((vm.count("overwrite")>0)?
                                           ReadSimulator<>::Mode::OVERWRITE:
@@ -571,7 +571,7 @@ public:
         write_SAM = vm.count("write-SAM")>0;
 
         try {
-            using namespace Races::Passengers;
+            using namespace Races::Mutations;
 
             Races::Archive::Binary::In archive(context_index_filename);
 
@@ -583,7 +583,7 @@ public:
 
         validate(vm);
 
-        snapshot_path = get_last_snapshot_path(drivers_directory, "driver simulation");
+        snapshot_path = get_last_snapshot_path(clones_directory, "clones simulation");
     }
 
     void run() const
@@ -612,7 +612,7 @@ public:
 
 int main(int argc, char* argv[])
 {
-    PassengersSimulator passenger_sim(argc, argv);
+    MutationsSimulator passenger_sim(argc, argv);
 
     passenger_sim.run();
 

@@ -1,9 +1,9 @@
 /**
  * @file palette.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the Color class and defines the TissuePlotter driver palette
- * @version 0.3
- * @date 2023-10-02
+ * @brief Implements the Color class and defines the TissuePlotter species palette
+ * @version 0.4
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.16
- * @date 2023-11-16
+ * @version 0.17
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 namespace Races
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
 DescendantsForest::SpeciesData::SpeciesData(const GenotypeId& genotype_id, const MethylationSignature& signature):
@@ -76,12 +76,12 @@ DescendantsForest::node DescendantsForest::get_node(const CellId& cell_id)
 DescendantsForest::DescendantsForest()
 {}
 
-DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation):
+DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation):
     DescendantsForest(simulation, simulation.get_tissue_samples())
 {}
 
-DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation,
-                                     const std::list<Simulation::TissueSample>& tissue_samples)
+DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation,
+                                     const std::list<Evolutions::TissueSample>& tissue_samples)
 {
     std::set<GenotypeId> genotype_ids;
 
@@ -98,7 +98,7 @@ DescendantsForest::DescendantsForest(const Simulation::Simulation& simulation,
         genotype_names[genotype_id] = simulation.find_genotype_name(genotype_id);
     }
 
-    Simulation::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
+    Evolutions::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
 
     grow_from(tissue_samples, reader);
 }
@@ -112,7 +112,7 @@ DescendantsForest::const_node DescendantsForest::const_node::parent() const
     return DescendantsForest::const_node(forest, forest->cells.at(cell_id).get_parent_id());
 }
 
-const Simulation::TissueSample& DescendantsForest::const_node::get_sample() const
+const Evolutions::TissueSample& DescendantsForest::const_node::get_sample() const
 {
     if (forest==nullptr) {
         throw std::runtime_error("The forest node has not been initialized");
@@ -277,7 +277,7 @@ DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_name
     std::set<std::string> names(sample_names.begin(), sample_names.end());
     std::set<std::string> found_names;
 
-    std::list<Simulation::TissueSample> tissue_samples;
+    std::list<Evolutions::TissueSample> tissue_samples;
     for (const auto& sample : samples) {
         if (names.count(sample.get_name())>0) {
             tissue_samples.push_back(sample);
@@ -317,6 +317,6 @@ void DescendantsForest::clear()
     coming_from.clear();
 }
 
-}   // Drivers
+}   // Clones
 
 }   // Races

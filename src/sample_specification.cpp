@@ -2,8 +2,8 @@
  * @file sample_specification.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sample specification
- * @version 0.2
- * @date 2023-11-14
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,10 +35,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 std::string SampleSpecification::get_default_name(const RectangleSet& region)
@@ -58,8 +58,8 @@ SampleSpecification::SampleSpecification(const std::string& name, const Rectangl
     name(name), region(region)
 {}
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

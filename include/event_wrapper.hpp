@@ -2,8 +2,8 @@
  * @file event_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a simulation event wrapper
- * @version 0.3
- * @date 2023-11-02
+ * @version 0.4
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,10 +41,10 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
@@ -58,7 +58,7 @@ struct SimulationEventWrapper
     std::shared_ptr<void> event;    //!< The pointer to the real event
 
     /**
-     * @brief A constructor that wraps a driver mutation event
+     * @brief A constructor that wraps a mutation event
      * 
      * @param genotype_mutation is the event to wrap
      */
@@ -167,9 +167,9 @@ struct SimulationEventWrapper
     }
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
@@ -181,7 +181,7 @@ struct SimulationEventWrapper
  * @return `true` if and only if the two wrappers represent
  *      the same event
  */
-bool operator==(const Races::Drivers::Simulation::SimulationEventWrapper& lhs, 
-                const Races::Drivers::Simulation::SimulationEventWrapper& rhs);
+bool operator==(const Races::Clones::Evolutions::SimulationEventWrapper& lhs, 
+                const Races::Clones::Evolutions::SimulationEventWrapper& rhs);
 
 #endif // __RACES_EVENT_WRAPPER__

@@ -2,8 +2,8 @@
  * @file genotype_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the genotype properties
- * @version 0.2
- * @date 2023-11-05
+ * @version 0.3
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
 unsigned int SpeciesProperties::counter = 0;
@@ -245,28 +245,28 @@ MethylationSignature GenotypeProperties::index_to_signature(const size_t& index,
     return signature;
 }
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::EpigeneticRates& epigentic_rates)
+std::ostream& operator<<(std::ostream& out, const Races::Clones::EpigeneticRates& epigentic_rates)
 {
     out << "{\"on\": " << epigentic_rates.get_methylation_rate() 
             << ",\"off\": " << epigentic_rates.get_demethylation_rate() << "}";
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesProperties& species)
+std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& species)
 {
     out << "{name: \""<< species.get_name() << "\", id: " << species.get_id() 
         << ", event_rates: {";
 
     std::string sep="";
     for (const auto& [event, rate]: species.get_rates()) {
-        out << sep << Races::Drivers::cell_event_names[event] << ": " << rate;
+        out << sep << Races::Clones::cell_event_names[event] << ": " << rate;
         sep = ", ";
     }
 
@@ -286,7 +286,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Drivers::SpeciesPropert
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Drivers::GenotypeProperties& genotype)
+std::ostream& operator<<(std::ostream& out, const Races::Clones::GenotypeProperties& genotype)
 {
     out << "{name: \"" << genotype.get_name() << "\", id: " 
         << genotype.get_id() << ", species=[";

@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation loggers
- * @version 0.13
- * @date 2023-11-05
+ * @version 0.14
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,10 +38,10 @@
 namespace Races 
 {
 
-namespace Drivers 
+namespace Clones 
 {
 
-namespace Simulation 
+namespace Evolutions 
 {
 
 std::string BasicLogger::get_time_string()
@@ -111,7 +111,7 @@ void BasicLogger::snapshot(const Simulation& simulation)
 
 void
 BasicLogger::save_sample(const std::filesystem::path simulation_dir,
-                         const Races::Drivers::Simulation::TissueSample& tissue_sample)
+                         const Races::Clones::Evolutions::TissueSample& tissue_sample)
 {
 
     std::ofstream os(simulation_dir/"samples.list", std::ofstream::app);
@@ -119,8 +119,8 @@ BasicLogger::save_sample(const std::filesystem::path simulation_dir,
     os << tissue_sample;
 }
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races

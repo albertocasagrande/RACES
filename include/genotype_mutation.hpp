@@ -2,8 +2,8 @@
  * @file genotype_mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic mutations
- * @version 0.1
- * @date 2023-11-03
+ * @version 0.2
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,14 +37,14 @@
 namespace Races 
 {
 
-namespace Drivers
+namespace Clones
 {
 
-namespace Simulation
+namespace Evolutions
 {
 
 /**
- * @brief A structure to represent driver genomic mutation
+ * @brief A structure to represent genomic mutation
  */
 struct GenotypeMutation : public SimulationEvent
 {
@@ -106,22 +106,22 @@ struct GenotypeMutation : public SimulationEvent
     } 
 };
 
-}   // Simulation
+}   // Evolutions
 
-}   // Drivers
+}   // Clones
 
 }   // Races
 
 /**
- * @brief Test the equivalence between two driver mutations
+ * @brief Test the equivalence between two mutations
  * 
  * @param lhs is the left-hand side of the equivalence
  * @param rhs is the right-hand side of the equivalence
- * @return `true` if and only if the two driver mutations represent
+ * @return `true` if and only if the two mutations represent
  *      the same event
  */
-inline bool operator==(const Races::Drivers::Simulation::GenotypeMutation& lhs,
-                       const Races::Drivers::Simulation::GenotypeMutation& rhs)
+inline bool operator==(const Races::Clones::Evolutions::GenotypeMutation& lhs,
+                       const Races::Clones::Evolutions::GenotypeMutation& rhs)
 {
     return (lhs.initial_id == rhs.initial_id) 
             && (lhs.final_id == rhs.final_id);

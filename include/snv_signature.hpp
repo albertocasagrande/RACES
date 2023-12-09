@@ -2,8 +2,8 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Variation Mutation mutational signature
- * @version 0.12
- * @date 2023-10-02
+ * @version 0.13
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -43,7 +43,7 @@
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -151,21 +151,21 @@ public:
     }
 };
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
 template<>
-struct std::less<Races::Passengers::MutationalType>
+struct std::less<Races::Mutations::MutationalType>
 {
-    bool operator()(const Races::Passengers::MutationalType &lhs,
-                    const Races::Passengers::MutationalType &rhs) const;
+    bool operator()(const Races::Mutations::MutationalType &lhs,
+                    const Races::Mutations::MutationalType &rhs) const;
 };
 
 namespace Races 
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 
@@ -372,7 +372,7 @@ inline MutationalSignatureExprResult operator*(const T& value, const MutationalS
     return signature * value;
 }
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 
@@ -386,7 +386,7 @@ namespace std
  * @param type is the mutational type to stream
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalType& type);
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalType& type);
 
 /**
  * @brief Stream the mutational type from a stream
@@ -395,7 +395,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Passengers::MutationalT
  * @param type is the object where the streamed mutational type will be placed
  * @return a reference to the input stream
  */
-std::istream& operator>>(std::istream& in, Races::Passengers::MutationalType& type);
+std::istream& operator>>(std::istream& in, Races::Mutations::MutationalType& type);
 
 }  // std
 

@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.6
- * @date 2023-11-01
+ * @version 0.7
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -54,7 +54,7 @@
 namespace Races
 {
 
-namespace Passengers
+namespace Mutations
 {
 
 /**
@@ -298,13 +298,13 @@ private:
      * @return a map associating the sample id to the sum of all the allelic sizes in 
      *      the sample mutations in `mutation_lists`
      */
-    static std::map<Races::Drivers::Simulation::TissueSampleId, size_t>
+    static std::map<Races::Clones::Evolutions::TissueSampleId, size_t>
     get_sample_allelic_sizes(const std::list<SampleGenomeMutations>& mutations_list,
                              UI::ProgressBar& progress_bar)
     {
         progress_bar.set_message("Evaluating allelic sizes");
 
-        std::map<Races::Drivers::Simulation::TissueSampleId, size_t> allelic_sizes;
+        std::map<Races::Clones::Evolutions::TissueSampleId, size_t> allelic_sizes;
         for (const auto& sample_mutations: mutations_list) {
             auto& sample_allelic_size = allelic_sizes[sample_mutations.get_id()];
             sample_allelic_size = 0;
@@ -332,7 +332,7 @@ private:
      *          size
      * @todo move this method in SampleGenomicMutations
      */
-    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<Races::Passengers::GenomeMutations, GENOME_MUTATION>, bool> = true>
+    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<Races::Mutations::GenomeMutations, GENOME_MUTATION>, bool> = true>
     static bool represents_same_genome(const std::list<GENOME_MUTATION>& mutations, UI::ProgressBar& progress_bar)
     {
         if (mutations.size()==0) {
@@ -392,7 +392,7 @@ private:
     static std::string get_CIGAR(const std::map<GenomicPosition, SNV>& SNVs,
                                  const GenomicPosition& genomic_position, const size_t& read_size)
     {
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         const ChrPosition last_position = genomic_position.position+read_size-1;
 
@@ -446,7 +446,7 @@ private:
                                    const std::map<GenomicPosition, SNV>& SNVs,
                                    const GenomicPosition& genomic_position)
     {
-        using namespace Races::Passengers;
+        using namespace Races::Mutations;
 
         const ChrPosition last_position = genomic_position.position+nucleic_sequence.size()-1;
 
@@ -753,7 +753,7 @@ private:
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void generate_chromosome_reads(const std::list<SampleGenomeMutations>& mutations_list,
                                    const ChromosomeData<DATA_TYPE>& chr_data, 
-                                   std::map<Races::Drivers::Simulation::TissueSampleId,
+                                   std::map<Races::Clones::Evolutions::TissueSampleId,
                                             ReadSimulationData>& read_simulation_data, 
                                    const size_t& total_steps, size_t& steps, 
                                    Races::UI::ProgressBar& progress_bar,
@@ -848,11 +848,11 @@ private:
      * @param coverage is the aimed coverage
      * @return the initial read simulation data for each sample
      */
-    std::map<Races::Drivers::Simulation::TissueSampleId, ReadSimulationData>
+    std::map<Races::Clones::Evolutions::TissueSampleId, ReadSimulationData>
     get_initial_read_simulation_data(const std::list<SampleGenomeMutations>& mutations_list,
                                      const double& coverage) const
     {
-        std::map<Races::Drivers::Simulation::TissueSampleId, ReadSimulationData> read_simulation_data;
+        std::map<Races::Clones::Evolutions::TissueSampleId, ReadSimulationData> read_simulation_data;
 
         size_t total_read_size = (read_type==ReadType::PAIRED_READ?2:1)*read_size;
         for (const auto& sample_mutations : mutations_list) {
@@ -1043,7 +1043,7 @@ public:
      * @param quiet is a Boolean flag to avoid progress bar and user messages
      * @return a reference to the updated object
      */
-    ReadSimulator& operator()(const std::list<Races::Passengers::SampleGenomeMutations>& mutations_list,
+    ReadSimulator& operator()(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
                               const double& coverage, const bool with_sequences=true,
                               const bool quiet=false)
     {
@@ -1084,7 +1084,7 @@ public:
 
 }   // SequencingSimulations
 
-}   // Passengers
+}   // Mutations
 
 }   // Races
 

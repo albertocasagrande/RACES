@@ -2,8 +2,8 @@
  * @file fasta_utils.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines support utilities for FASTA files
- * @version 0.7
- * @date 2023-10-02
+ * @version 0.8
+ * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -62,7 +62,7 @@ struct SeqNameDecoder
      * @param chr_id is the variable where the chromosome id will be placed
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence name
      */
-    virtual bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const = 0;
+    virtual bool is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id) const = 0;
 
     /**
      * @brief The destroyer
@@ -83,7 +83,7 @@ struct EnsemblSeqNameDecoder : public SeqNameDecoder
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in Ensembl format
      */
-    bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
+    bool is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id) const override;
 };
 
 /**
@@ -99,7 +99,7 @@ struct NCBISeqNameDecoder : public SeqNameDecoder
      * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
      *      name in NCBI format
      */
-    bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id) const override;
+    bool is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id) const override;
 };
 
 /**
@@ -118,7 +118,7 @@ extern std::list<std::shared_ptr<SeqNameDecoder>> seq_name_decoders;
  * @return `true` if and only if `seq_name` correspond to a DNA chromosome sequence 
  *      name in NCBI format
  */
-bool is_chromosome_header(const std::string& seq_name, Passengers::ChromosomeId& chr_id);
+bool is_chromosome_header(const std::string& seq_name, Mutations::ChromosomeId& chr_id);
 
 }   // FASTA
 
