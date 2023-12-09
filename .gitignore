@@ -10,8 +10,8 @@ Makefile
 .ninja_deps
 .ninja_log
 build.ninja
-drivers_sim
-passengers_sim
+clones_sim
+mutations_sim
 descendants_builder
 tissue_sampler
 build_context_index

@@ -229,7 +229,7 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
 
-    set(DRIVERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers_sim.cpp
+    set(CLONES_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/clones_sim.cpp
                             ${COMMON_SOURCES})
 
     set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
@@ -238,7 +238,7 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     set(DESCENDANTS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/descendants_builder.cpp
                     ${COMMON_SOURCES})
 
-    set(PASSENGERS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/passengers_sim.cpp
+    set(MUTATIONS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/mutations_sim.cpp
                             ${COMMON_SOURCES})
 
     set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
@@ -246,9 +246,9 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
 
     set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
 
-    add_executable(drivers_sim ${DRIVERS_SIM_SOURCES})
-    target_include_directories(drivers_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(drivers_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
+    add_executable(clones_sim ${CLONES_SIM_SOURCES})
+    target_include_directories(clones_sim PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(clones_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
     add_executable(descendants_builder ${DESCENDANTS_SOURCES})
     target_include_directories(descendants_builder PRIVATE ${Boost_INCLUDE_DIR})
@@ -266,9 +266,9 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})
     target_link_libraries(sample_context_index ${BUILD_LIB_TARGET})
 
-    add_executable(passengers_sim ${PASSENGERS_SIM_SOURCES})
-    target_include_directories(passengers_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(passengers_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
+    add_executable(mutations_sim ${MUTATIONS_SIM_SOURCES})
+    target_include_directories(mutations_sim PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(mutations_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
     add_subdirectory(python)
 

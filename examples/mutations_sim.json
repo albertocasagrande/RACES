@@ -1,5 +1,5 @@
 {
-    "comment": "An configuration example for \"passengers_sim\".",
+    "comment": "An configuration example for \"mutations_sim\".",
     "number of alleles": 2,
     "driver properties": [
         {

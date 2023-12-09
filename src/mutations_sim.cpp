@@ -1,8 +1,8 @@
 /**
- * @file passengers_sim.cpp
+ * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.25
+ * @version 0.1
  * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
@@ -389,7 +389,7 @@ class MutationsSimulator : public BasicExecutable
     
         if (!vm.count("clones simulation")) {
             print_help_and_exit("The clones simulation directory is mandatory. "
-                                "You can produce it by using `drivers_sim`", 1);
+                                "You can produce it by using `clones_sim`", 1);
         }
         
         if (!fs::exists(clones_directory)) {

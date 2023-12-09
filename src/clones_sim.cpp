@@ -1,8 +1,8 @@
 /**
- * @file drivers_sim.cpp
+ * @file clones_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the clones simulator
- * @version 0.18
+ * @version 0.1
  * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
