@@ -87,12 +87,12 @@ class ConfigReader
     /**
      * @brief Add a SNV to a list
      * 
-     * @param genotype_name is the genotype name
+     * @param clone_name is the clone name
      * @param SNVs is the list of SNV in which the read SNV should be inserted
      * @param SNV_json is the JSON of the SNV to be inserted into the list
      */
     static void
-    add_SNV(const std::string& genotype_name, std::list<Races::Mutations::SNV>& SNVs,
+    add_SNV(const std::string& clone_name, std::list<Races::Mutations::SNV>& SNVs,
             const nlohmann::json& SNV_json);
 
     /**
@@ -105,18 +105,18 @@ class ConfigReader
     get_mutation_rates(const nlohmann::json& mutation_rates_json);
 
     /**
-     * @brief Add the genotype mutations to SNV and CNA lists
+     * @brief Add the clone mutations to SNV and CNA lists
      * 
-     * @param genotype_name is the genotype name
+     * @param clone_name is the clone name
      * @param SNVs is the list of SNVs in which the new SNVs must be inserted
      * @param CNAs is the list of CNAs in which the new CNAs must be inserted
-     * @param genotype_mutation_json is the JSON of the genotype mutation
+     * @param clone_mutation_json is the JSON of the clone mutation
      */
     static void
-    schedule_genotype_mutation(const std::string& genotype_name,
+    schedule_clone_mutation(const std::string& clone_name,
                         std::list<Races::Mutations::SNV>& SNVs,
                         std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
-                        const nlohmann::json& genotype_mutation_json);
+                        const nlohmann::json& clone_mutation_json);
 
     /**
      * @brief Get the fraction field
@@ -127,14 +127,14 @@ class ConfigReader
     static double get_fraction(const nlohmann::json& fraction_json);
 
     /**
-     * @brief Add genotype mutational properties
+     * @brief Add clone mutational properties
      * 
      * @param mutational_properties are the mutational properties of all the species
      * @param simulation is the simulation
      * @param mutational_properties_json is the JSON of the properties
      */
     static void 
-    schedule_genotype_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
+    schedule_clone_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
                                      const Races::Clones::Evolutions::Simulation& simulation,
                                      const nlohmann::json& mutational_properties_json);
 
@@ -219,18 +219,18 @@ public:
                              const std::string& field_name="sample");
 
     /**
-     * @brief Collect the genotype mutations
+     * @brief Collect the clone mutations
      * 
-     * @param[in] genotype_name is the genotype name
-     * @param[in,out] SNVs is the list of genotype SNVs
-     * @param[in,out] CNAs is the list of genotype CNAs
-     * @param[in] genotype_mutations_json is the JSON of genotype mutations
+     * @param[in] clone_name is the clone name
+     * @param[in,out] SNVs is the list of clone SNVs
+     * @param[in,out] CNAs is the list of clone CNAs
+     * @param[in] clone_mutations_json is the JSON of clone mutations
      */
     static void
-    collect_genotype_mutations(const std::string& genotype_name,
+    collect_clone_mutations(const std::string& clone_name,
                              std::list<Races::Mutations::SNV>& SNVs,
                              std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
-                             const nlohmann::json& genotype_mutations_json);
+                             const nlohmann::json& clone_mutations_json);
 
     /**
      * @brief Get the species mutational properties
@@ -247,13 +247,13 @@ public:
      * @brief Extract a timed event from a JSON object
      * 
      * @param simulation is a simulation
-     * @param name2genotype is the map from name to genotype
+     * @param name2clone is the map from name to clone
      * @param timed_event_json is the JSON of the timed event
      * @return the time event described in `timed_event_json`
      */
     static Races::Clones::Evolutions::TimedEvent 
     get_timed_event(const Races::Clones::Evolutions::Simulation& simulation,
-                    const std::map<std::string, Races::Clones::GenotypeProperties> name2genotype,
+                    const std::map<std::string, Races::Clones::CloneProperties> name2clone,
                     const nlohmann::json& timed_event_json);
 
     /**

@@ -41,8 +41,8 @@ namespace Races
 namespace Clones 
 {
 
-DescendantsForest::SpeciesData::SpeciesData(const GenotypeId& genotype_id, const MethylationSignature& signature):
-    genotype_id(genotype_id), signature(signature)
+DescendantsForest::SpeciesData::SpeciesData(const CloneId& clone_id, const MethylationSignature& signature):
+    clone_id(clone_id), signature(signature)
 {}
 
 DescendantsForest::const_node::const_node(const DescendantsForest* forest, const CellId cell_id):
@@ -83,19 +83,19 @@ DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation):
 DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation,
                                      const std::list<Evolutions::TissueSample>& tissue_samples)
 {
-    std::set<GenotypeId> genotype_ids;
+    std::set<CloneId> clone_ids;
 
     auto species_properties = simulation.tissue().get_species_properties();
     for (const auto& s_propeties: species_properties) {
-        const auto& genotype_id = s_propeties.get_genotype_id();
-        genotype_ids.insert(genotype_id);
+        const auto& clone_id = s_propeties.get_clone_id();
+        clone_ids.insert(clone_id);
 
         const auto& signature = s_propeties.get_methylation_signature();
-        species_data.insert({s_propeties.get_id(), {genotype_id, signature}});
+        species_data.insert({s_propeties.get_id(), {clone_id, signature}});
     }
 
-    for (const auto& genotype_id : genotype_ids) {
-        genotype_names[genotype_id] = simulation.find_genotype_name(genotype_id);
+    for (const auto& clone_id : clone_ids) {
+        clone_names[clone_id] = simulation.find_clone_name(clone_id);
     }
 
     Evolutions::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());

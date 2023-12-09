@@ -1,7 +1,7 @@
 /**
- * @file genotype_properties.hpp
+ * @file clone_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines genotype properties
+ * @brief Defines clone properties
  * @version 0.3
  * @date 2023-12-09
  * 
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_GENOTYPE_PROPERTIES__
-#define __RACES_GENOTYPE_PROPERTIES__
+#ifndef __RACES_CLONE_PROPERTIES__
+#define __RACES_CLONE_PROPERTIES__
 
 #include <map>
 #include <string>
@@ -114,7 +114,7 @@ public:
  */
 typedef std::vector<bool> MethylationSignature;
 
-class GenotypeProperties;
+class CloneProperties;
 
 namespace Evolutions
 {
@@ -126,20 +126,19 @@ namespace Evolutions
 /**
  * @brief A class to represent species properties
  * 
- * A genotype is characterized by specific genomic (potentially 
- * unknown) mutations. The same genotype may be associated to 
- * different rates depending on its methylation signature.
- * A species can be identified by a genotype and a methylation
+ * A clone is characterized by a (potentially unknown) genotype. 
+ * The same clone may have different rates depending on its 
+ * methylation signature. A species is a clone with a methylation
  * signature. 
  */
 class SpeciesProperties 
 {
-    static unsigned int counter;                    //!< Total number of species along the computation
+    static unsigned int counter;                    //!< The total number of species along the computation
 
-    SpeciesId id;                                   //!< Identifier
-    GenotypeId genotype_id;                         //!< Genotype identifier
+    SpeciesId id;                                   //!< The species identifier
+    CloneId clone_id;                               //!< The clone identifier
 
-    std::string name;                               //!< Species name
+    std::string name;                               //!< The species name
     MethylationSignature methylation_signature;     //!< Methylation signature
 
     std::map<CellEventType, double> event_rates;    //!< Event rates
@@ -154,10 +153,10 @@ class SpeciesProperties
     /**
      * @brief A constructor
      * 
-     * @param genotype is the genotype of the new object
+     * @param clone is the clone of the new object
      * @param num_of_promoters is the number of methylable promoters
      */
-    SpeciesProperties(const GenotypeProperties& genotype,
+    SpeciesProperties(const CloneProperties& clone,
                        const size_t num_of_promoters);
 public:
     /**
@@ -171,21 +170,21 @@ public:
     }
 
     /**
-     * @brief Get the genotype identifier
+     * @brief Get the clone identifier
      * 
-     * @return a constant reference to the genotype identifier
+     * @return a constant reference to the clone identifier
      */
-    inline const GenotypeId& get_genotype_id() const
+    inline const CloneId& get_clone_id() const
     {
-        return genotype_id;
+        return clone_id;
     }
 
     /**
-     * @brief Get the genotype name
+     * @brief Get the clone name
      * 
-     * @return a constant reference to the genotype name
+     * @return a constant reference to the clone name
      */
-    inline const std::string& get_genotype_name() const
+    inline const std::string& get_clone_name() const
     {
         return name;
     }
@@ -270,7 +269,7 @@ public:
     void save(ARCHIVE& archive) const
     {
         archive & id 
-                & genotype_id 
+                & clone_id 
                 & name 
                 & methylation_signature 
                 & event_rates
@@ -290,7 +289,7 @@ public:
         SpeciesProperties species_properties;
 
         archive & species_properties.id 
-                & species_properties.genotype_id 
+                & species_properties.clone_id 
                 & species_properties.name 
                 & species_properties.methylation_signature 
                 & species_properties.event_rates
@@ -303,21 +302,21 @@ public:
         return species_properties;
     }
 
-    friend class GenotypeProperties;
+    friend class CloneProperties;
     friend class Evolutions::Species;
 };
 
 /**
- * @brief A class representing genotype properties
+ * @brief A class representing clone properties
  */
-class GenotypeProperties 
+class CloneProperties 
 {
-    static unsigned int counter;                        //!< Total number of genotype along the computation
+    static unsigned int counter;              //!< The total number of clone along the computation
 
-    GenotypeId id;                            //!< Identifier
-    std::string name;                                   //!< Genotype name
+    CloneId id;                               //!< The clone identifier
+    std::string name;                         //!< The clone name
 
-    std::vector<SpeciesProperties> species;   //!< SpeciesProperties
+    std::vector<SpeciesProperties> species;   //!< The vector of species properties for this clone
 
     template<typename SIGNATURE_TYPE>
     void validate_signature(const SIGNATURE_TYPE& signature) const;
@@ -327,45 +326,45 @@ public:
     /**
      * @brief A constructor
      * 
-     * This constructor builds a genotype and its species. 
+     * This constructor builds a clone and its species. 
      * The number of species is determined by the size of the 
      * epigenetic event rate vector. Each cell of the vector correspond to 
      * a pair methylation/demethylation events for a specific target promoter.
      * Since each target promoter can be either methylated ("+") or 
      * non-methylated ("-"), the number of species associated to
-     * a genotype is exponential in the number of the promoters and, 
+     * a clone is exponential in the number of the promoters and, 
      * as a consequence, in the number of elements in the epigenetic event 
      * rate vector.
      * 
-     * @param name is the name of the genotype
+     * @param name is the name of the clone
      * @param epigenetic_event_rates is the rates of the methylation/demethylation events 
      *          on each target promoters
      */
-    GenotypeProperties(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
+    CloneProperties(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
 
     /**
      * @brief A constructor
      * 
-     * This constructor builds a genotype consisting in one species.
+     * This constructor builds a clone consisting in one species.
      * 
-     * @param name is the name of the genotype
+     * @param name is the name of the clone
      */
-    explicit GenotypeProperties(const std::string& name);
+    explicit CloneProperties(const std::string& name);
 
     /**
      * @brief Get the species identifier
      * 
      * @return a constant reference to the identifier
      */
-    inline const GenotypeId& get_id() const
+    inline const CloneId& get_id() const
     {
         return id;
     }
 
     /**
-     * @brief Get the genotype name
+     * @brief Get the clone name
      * 
-     * @return a constant reference to the genotype name
+     * @return a constant reference to the clone name
      */
     inline const std::string& get_name() const
     {
@@ -373,7 +372,7 @@ public:
     }
 
     /**
-     * @brief Get the species associated to this genotype
+     * @brief Get the species associated to this clone
      * 
      * @return a constant reference to the species
      */
@@ -383,9 +382,9 @@ public:
     }
 
     /**
-     * @brief Get the number of methylable promoters in the genotype
+     * @brief Get the number of methylable promoters in the clone
      * 
-     * @return the number of methylable promoters in the genotype
+     * @return the number of methylable promoters in the clone
      */
     size_t num_of_promoters() const;
 
@@ -435,12 +434,12 @@ public:
     {
         const auto signature_index = signature_to_index(methylation_signature);
 
-        return GenotypeProperties::index_to_string(signature_index, methylation_signature.size());
+        return CloneProperties::index_to_string(signature_index, methylation_signature.size());
     }
 };
 
 template<typename SIGNATURE_TYPE>
-void GenotypeProperties::validate_signature(const SIGNATURE_TYPE& signature) const
+void CloneProperties::validate_signature(const SIGNATURE_TYPE& signature) const
 {
     const size_t promoters = num_of_promoters();
     if (signature.size()!=promoters) {
@@ -484,21 +483,21 @@ std::ostream& operator<<(std::ostream& out, const Races::Clones::EpigeneticRates
  * @brief Write information about a species in an output stream
  * 
  * @param out is the output stream
- * @param genotype is the species to be streamed
+ * @param clone is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& genotype);
+std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& clone);
 
 /**
- * @brief Write information about a genotype in an output stream
+ * @brief Write information about a clone in an output stream
  * 
  * @param out is the output stream
- * @param genotype is the genotype to be streamed
+ * @param clone is the clone to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Clones::GenotypeProperties& genotype);
+std::ostream& operator<<(std::ostream& out, const Races::Clones::CloneProperties& clone);
 
 }   // std
 
 
-#endif // __RACES_GENOTYPE_PROPERTIES__
+#endif // __RACES_CLONE_PROPERTIES__

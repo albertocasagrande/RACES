@@ -34,7 +34,7 @@
 #include <string>
 #include <map>
 
-#include "genotype_id.hpp"
+#include "clone_id.hpp"
 #include "position.hpp"
 #include "time.hpp"
 
@@ -52,7 +52,7 @@ enum class CellEventType {
     DEATH,
     DUPLICATION,
     EPIGENETIC_SWITCH,
-    GENOTYPE_MUTATION,
+    CLONE_MUTATION,
     ANY
 };
 

@@ -33,10 +33,10 @@
 #include <boost/python.hpp>
 
 #include "position.hpp" 
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 #include "simulation_wrapper.hpp"
-#include "genotype.hpp"
+#include "clone.hpp"
 #include "epigenetic_rates.hpp"
 
 using namespace boost::python;
@@ -61,7 +61,7 @@ BOOST_PYTHON_MODULE(RACES)
         .value("DEATH", RacesDrv::CellEventType::DEATH)
         .value("DUPLICATION", RacesDrv::CellEventType::DUPLICATION)
         .value("EPIGENETIC_SWITCH", RacesDrv::CellEventType::EPIGENETIC_SWITCH)
-        .value("GENOTYPE_MUTATION", RacesDrv::CellEventType::GENOTYPE_MUTATION)
+        .value("CLONE_MUTATION", RacesDrv::CellEventType::CLONE_MUTATION)
     ;
 
     class_<RacesDrv::EpigeneticRates, std::shared_ptr<RacesDrv::EpigeneticRates>>("EpigeneticRates", init<double, double>())
@@ -73,13 +73,13 @@ BOOST_PYTHON_MODULE(RACES)
         .def("set_demethylation_rate", &EpigeneticRatesWrapper::set_demethylation_rate)
     ;
 
-    class_<RacesDrv::GenotypeProperties, std::shared_ptr<RacesDrv::GenotypeProperties>>("Genotype", no_init)
-        .def("__init__", make_constructor(GenotypeWrapper::create))
-        .def("set_rates", &GenotypeWrapper::set_rates)
-        .def("get_rate", &GenotypeWrapper::get_rate)
-        .add_property("num_of_promoters", &RacesDrv::GenotypeProperties::num_of_promoters)
-        .add_property("name", make_function(&RacesDrv::GenotypeProperties::get_name, return_value_policy<copy_const_reference>()))
-        .add_property("id", make_function(&RacesDrv::GenotypeProperties::get_id, return_value_policy<copy_const_reference>()))
+    class_<RacesDrv::CloneProperties, std::shared_ptr<RacesDrv::CloneProperties>>("Clone", no_init)
+        .def("__init__", make_constructor(CloneWrapper::create))
+        .def("set_rates", &CloneWrapper::set_rates)
+        .def("get_rate", &CloneWrapper::get_rate)
+        .add_property("num_of_promoters", &RacesDrv::CloneProperties::num_of_promoters)
+        .add_property("name", make_function(&RacesDrv::CloneProperties::get_name, return_value_policy<copy_const_reference>()))
+        .add_property("id", make_function(&RacesDrv::CloneProperties::get_id, return_value_policy<copy_const_reference>()))
     ;
 
     class_<SimulationWrapper, std::shared_ptr<SimulationWrapper>>("Simulation", no_init)
@@ -88,8 +88,8 @@ BOOST_PYTHON_MODULE(RACES)
         .def("run_up_to", &SimulationWrapper::static_run_up_to,
              run_up_to_overloads((arg("wrapper"), arg("time"), arg("quiet")=false, arg("plot")=false)))
         .def("get_time", make_function(&SimulationWrapper::get_time, return_value_policy<copy_const_reference>()))
-        .def("add_genotype", &SimulationWrapper::add_genotype)
-        .def("schedule_genotype_mutation", &SimulationWrapper::schedule_genotype_mutation)
+        .def("add_clone", &SimulationWrapper::add_clone)
+        .def("schedule_clone_mutation", &SimulationWrapper::schedule_clone_mutation)
         .def("place_cell", &SimulationWrapper::place_cell)
         .def("set_tissue", &SimulationWrapper::set_tissue)
         .def("rename_log_directory", &SimulationWrapper::rename_log_directory)

@@ -322,7 +322,7 @@ class MutationsSimulator : public BasicExecutable
 
             for (const auto& species : clones_simulation.tissue()) {
                 const auto& signature = species.get_methylation_signature();
-                methylation_map[species.get_id()] = GenotypeProperties::signature_to_string(signature);
+                methylation_map[species.get_id()] = CloneProperties::signature_to_string(signature);
             }
 
             auto samples = get_samples(clones_simulation, simulation_cfg);

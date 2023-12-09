@@ -87,21 +87,21 @@ public:
     MutationalProperties();
 
     /**
-     * @brief Add a genotype mutational properties
+     * @brief Add a clone mutational properties
      * 
      * @param clones_simulation is a clones simulation
-     * @param name is the name of the genotype
+     * @param name is the name of the clone
      * @param epigenetic_rates is a map from epigenomic status to 
      *          mutational rate
      * @param species_SNVs is a list of SNVs characterizing the species
      * @param species_CNAs is a list of CNAs characterizing the species
      * @return a reference to the updated object
      */
-    MutationalProperties& add_genotype(const Clones::Evolutions::Simulation& clones_simulation,
-                                        const std::string& name, 
-                                        const std::map<std::string, double>& epigenetic_rates,
-                                        const std::list<SNV>& species_SNVs={},
-                                        const std::list<CopyNumberAlteration>& species_CNAs={});
+    MutationalProperties& add_clone(const Clones::Evolutions::Simulation& clones_simulation,
+                                    const std::string& name, 
+                                    const std::map<std::string, double>& epigenetic_rates,
+                                    const std::list<SNV>& species_SNVs={},
+                                    const std::list<CopyNumberAlteration>& species_CNAs={});
 
     /**
      * @brief Get the properties of a species

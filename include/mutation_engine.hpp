@@ -37,7 +37,7 @@
 #include <ostream>
 
 #include "phylogenetic_forest.hpp"
-#include "genotype_id.hpp"
+#include "clone_id.hpp"
 
 #include "context_index.hpp"
 #include "genome_mutations.hpp"
@@ -431,7 +431,7 @@ class MutationEngine
     void place_clone_specific_mutations(const Clones::DescendantsForest::const_node& node,
                                         GenomeMutations& cell_mutations)
     {
-        if (node.is_root() || node.get_genotype_id()!=node.parent().get_genotype_id()) {
+        if (node.is_root() || node.get_clone_id()!=node.parent().get_clone_id()) {
             const auto& clone_mp = mutational_properties.at(node.get_species_id());
 
             for (auto snv : clone_mp.SNVs) {

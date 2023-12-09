@@ -1,8 +1,8 @@
 /**
- * @file genotype.hpp
+ * @file clone.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Define the Python wrapper class and functions for `Races::Genotype`
- * @version 0.6
+ * @brief Define the Python wrapper class and functions for `CloneProperties`
+ * @version 0.1
  * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
@@ -28,29 +28,29 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_PYTHON_GENOMIC_GENOTYPE__
-#define __RACES_PYTHON_GENOMIC_GENOTYPE__
+#ifndef __RACES_PYTHON_CLONE__
+#define __RACES_PYTHON_CLONE__
 
 #include <memory>
 
 #include <boost/python.hpp>
 
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 
 using namespace boost::python;
 
 /**
- * @brief A wrapper structure for `Races::Genotype`
+ * @brief A wrapper structure for `CloneProperties`
  * 
  * This structure defines all the static methods required by 
- * the Python wrapping of `Races::Genotype`.
+ * the Python wrapping of `CloneProperties`.
  */
-struct GenotypeWrapper 
+struct CloneWrapper 
 {
 
     /**
-     * @brief Create a new `Genotype` object
+     * @brief Create a new `Clone` object
      * 
      * @param name is the name of the new object
      * @param epigenetic_rates is the Python list of epigenetic rates
@@ -58,49 +58,49 @@ struct GenotypeWrapper
      *         `EpigeneticRates`
      * @return a shared pointer of the newly created object
      */
-    static std::shared_ptr<Races::Clones::GenotypeProperties>
+    static std::shared_ptr<Races::Clones::CloneProperties>
     create(std::string const& name, boost::python::list const& epigenetic_rates);
 
     /**
      * @brief Set the rates of the species
      * 
-     * Every genotype is associated to many different species.
-     * The species is a genotype equipped with a epigenetic status
+     * Every clone is associated to many different species.
+     * The species is a clone equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
      * signature (i.e., "+"/"-"). This method set the rates of a species 
-     * by specifying its genotype, its methylation signature, and the new 
+     * by specifying its clone, its methylation signature, and the new 
      * rates. 
      * 
-     * @param genotype is the genotype whose rate should be set
+     * @param clone is the clone whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param rates are the new rates 
      */
     static
-    void set_rates(Races::Clones::GenotypeProperties *genotype, const std::string& methylation_signature, 
+    void set_rates(Races::Clones::CloneProperties *clone, const std::string& methylation_signature, 
                 boost::python::dict const& rates);
 
     /**
      * @brief Get the rates of the species
      * 
-     * Every genotype is associated to many different species.
-     * The species is a genotype equipped with a epigenetic status
+     * Every clone is associated to many different species.
+     * The species is a clone equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
      * signature (i.e., "+"/"-"). This method get the rates of a species 
-     * by specifying its genotype, its methylation signature, and the 
+     * by specifying its clone, its methylation signature, and the 
      * event type.
      * 
-     * @param genotype is the genotype whose rate should be set
+     * @param clone is the clone whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param 
      */
     inline static
-    double get_rate(const Races::Clones::GenotypeProperties *genotype, 
+    double get_rate(const Races::Clones::CloneProperties *clone, 
                     const std::string& methylation_signature,
                     const Races::Clones::CellEventType event_type)
     {
-        return (*genotype)[methylation_signature].get_rate(event_type);
+        return (*clone)[methylation_signature].get_rate(event_type);
     }
 
 };
 
-#endif // __RACES_PYTHON_GENOMIC_GENOTYPE__
+#endif // __RACES_PYTHON_CLONE__

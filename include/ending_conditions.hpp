@@ -124,32 +124,32 @@ struct SpeciesCountTest : public Simulation::BasicTest
 };
 
 /**
- * @brief Genotype count test
+ * @brief Clone count test
  * 
  * The objects of this class have a method testing the number of 
- * cells of a genotype. If this number is below a threshold,
+ * cells of a clone. If this number is below a threshold,
  * then the test returns `false`; otherwise, it returns `true`.
  */
-struct GenotypeCountTest : public Simulation::BasicTest
+struct CloneCountTest : public Simulation::BasicTest
 {
-    const GenotypeId genotype_id; //!< The genotype id
-    const size_t threshold;     //!< The size threshold
+    const CloneId clone_id;  //!< The clone id
+    const size_t threshold;  //!< The size threshold
 
     /**
      * @brief A constructor
      * 
-     * @param genotype_id is the identifier of the genotype whose 
+     * @param clone_id is the identifier of the clone whose 
      *          number of cells is counted
      * @param threshold is the threshold for the count test
      */
-    GenotypeCountTest(const GenotypeId& genotype_id, const size_t& threshold);
+    CloneCountTest(const CloneId& clone_id, const size_t& threshold);
 
     /**
      * @brief Test whether the number of cells is below the threshold
      * 
      * @param simulation is the considered simulation
      * @return `false` if and only if the number of cells of the 
-     *          considered genotype is below the test threshold
+     *          considered clone is below the test threshold
      */
     bool operator()(const Simulation& simulation) override;
 

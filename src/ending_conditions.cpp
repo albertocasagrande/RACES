@@ -61,22 +61,22 @@ uint8_t SpeciesCountTest::percentage(const Simulation& simulation) const
     return static_cast<uint8_t>((100*species.num_of_cells()/threshold));
 }
 
-GenotypeCountTest::GenotypeCountTest(const GenotypeId& genotype_id, const size_t& threshold):
-    genotype_id(genotype_id), threshold(threshold)
+CloneCountTest::CloneCountTest(const CloneId& clone_id, const size_t& threshold):
+    clone_id(clone_id), threshold(threshold)
 {}
 
-bool GenotypeCountTest::operator()(const Simulation& simulation)
+bool CloneCountTest::operator()(const Simulation& simulation)
 {
-    const auto& genotype_species = simulation.tissue().get_genotype_species(genotype_id);
+    const auto& clone_species = simulation.tissue().get_clone_species(clone_id);
 
-    return threshold <= genotype_species.num_of_cells();
+    return threshold <= clone_species.num_of_cells();
 }
 
-uint8_t GenotypeCountTest::percentage(const Simulation& simulation) const
+uint8_t CloneCountTest::percentage(const Simulation& simulation) const
 {
-    const auto genotype_species = simulation.tissue().get_genotype_species(genotype_id);
+    const auto clone_species = simulation.tissue().get_clone_species(clone_id);
 
-    return static_cast<uint8_t>((100*genotype_species.num_of_cells()/threshold));
+    return static_cast<uint8_t>((100*clone_species.num_of_cells()/threshold));
 }
 
 EventCountTest::EventCountTest(const CellEventType& event_type, 

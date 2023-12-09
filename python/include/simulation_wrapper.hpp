@@ -36,7 +36,7 @@
 
 #include <boost/python.hpp>
 
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 #include "simulation.hpp"
 
 using namespace boost::python;
@@ -98,34 +98,34 @@ public:
     const Races::Time& get_time() const;
 
     /**
-     * @brief Add a timed genotype mutation
+     * @brief Add a timed clone mutation
      * 
-     * @param src is the source genotype
-     * @param dst is the destination genotype
+     * @param src is the source clone
+     * @param dst is the destination clone
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void schedule_genotype_mutation(const Races::Clones::GenotypeProperties& src,
-                                    const Races::Clones::GenotypeProperties& dst,
-                                    const Races::Time time);
+    void schedule_clone_mutation(const Races::Clones::CloneProperties& src,
+                                 const Races::Clones::CloneProperties& dst,
+                                 const Races::Time time);
 
     /**
-     * @brief Add a genotype to the tissue
+     * @brief Add a clone to the tissue
      * 
-     * @param genotype_properties is the genotype properties of the genotype
+     * @param clone_properties is the clone properties of the clone
      * @return a reference to the updated object
      */
-    void add_genotype(const Races::Clones::GenotypeProperties& genotype);
+    void add_clone(const Races::Clones::CloneProperties& clone);
 
     /**
      * @brief Place a cell in the simulated tissue
      * 
-     * @param genotype is the genotype of the new cell
+     * @param clone is the clone of the new cell
      * @param methylation_signature is the methylation signature of the new cell
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    void place_cell(const Races::Clones::GenotypeProperties& genotype, const std::string& methylation_signature, 
+    void place_cell(const Races::Clones::CloneProperties& clone, const std::string& methylation_signature, 
                     boost::python::list const& position);
 
     /**

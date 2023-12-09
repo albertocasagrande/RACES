@@ -1,7 +1,7 @@
 /**
- * @file genotype_properties.cpp
+ * @file clone_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the genotype properties
+ * @brief Implements the clone properties
  * @version 0.3
  * @date 2023-12-09
  * 
@@ -31,7 +31,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 #include "cell_event.hpp"
 
 namespace Races 
@@ -41,7 +41,7 @@ namespace Clones
 {
 
 unsigned int SpeciesProperties::counter = 0;
-unsigned int GenotypeProperties::counter = 0;
+unsigned int CloneProperties::counter = 0;
 
 EpigeneticRates::EpigeneticRates(const double methylation_rate, const double demethylation_rate):
         methylation(methylation_rate), demethylation(demethylation_rate)
@@ -82,18 +82,18 @@ EpigeneticRates& EpigeneticRates::set_demethylation_rate(const double& rate)
 }
 
 SpeciesProperties::SpeciesProperties():
-    id(0), genotype_id(0)
+    id(0), clone_id(0)
 {}
 
-SpeciesProperties::SpeciesProperties(const GenotypeProperties& genotype,
+SpeciesProperties::SpeciesProperties(const CloneProperties& clone,
                                        const size_t num_of_promoters):
-    id(counter++), genotype_id(genotype.get_id())
+    id(counter++), clone_id(clone.get_id())
 {
-    const size_t epigenetic_index = genotype.get_species().size();
+    const size_t epigenetic_index = clone.get_species().size();
 
-    name = genotype.get_name();
+    name = clone.get_name();
 
-    methylation_signature = GenotypeProperties::index_to_signature(epigenetic_index, num_of_promoters);
+    methylation_signature = CloneProperties::index_to_signature(epigenetic_index, num_of_promoters);
 }
 
 double SpeciesProperties::get_rate(const CellEventType& event) const
@@ -106,10 +106,10 @@ double SpeciesProperties::get_rate(const CellEventType& event) const
 
 std::string SpeciesProperties::get_name() const
 {
-    return name + GenotypeProperties::signature_to_string(methylation_signature);
+    return name + CloneProperties::signature_to_string(methylation_signature);
 }
 
-GenotypeProperties::GenotypeProperties(const std::string& name,
+CloneProperties::CloneProperties(const std::string& name,
                    const std::vector<EpigeneticRates>& epigenetic_event_rates):
     id(counter++), name(name)
 {
@@ -124,15 +124,15 @@ GenotypeProperties::GenotypeProperties(const std::string& name,
         auto& e_rates = l_species.epigenetic_rates;
         
         for (size_t i=0; i<epigenetic_event_rates.size(); ++i) {
-            // get the signature of the genotype reachable by 
+            // get the signature of the clone reachable by 
             // methylating/demethylating the i-th promoter
             e_signature[i] = !e_signature[i];
 
-            // get the index of the genotype reachable by 
+            // get the index of the clone reachable by 
             // methylating/demethylating the i-th promoter
             size_t index = signature_to_index(e_signature);
 
-            // get the identifier of the genotype reachable by 
+            // get the identifier of the clone reachable by 
             // methylating/demethylating the i-th promoter
             SpeciesId dst_id = species[index].get_id();
 
@@ -150,11 +150,11 @@ GenotypeProperties::GenotypeProperties(const std::string& name,
     }
 }
 
-GenotypeProperties::GenotypeProperties(const std::string& name):
-    GenotypeProperties(name, std::vector<EpigeneticRates>())
+CloneProperties::CloneProperties(const std::string& name):
+    CloneProperties(name, std::vector<EpigeneticRates>())
 {}
 
-size_t GenotypeProperties::num_of_promoters() const
+size_t CloneProperties::num_of_promoters() const
 {
     if (species.size()==0) {
         return 0;
@@ -163,35 +163,35 @@ size_t GenotypeProperties::num_of_promoters() const
     return species[0].get_methylation_signature().size();
 }
 
-SpeciesProperties& GenotypeProperties::operator[](const MethylationSignature& methylation_signature)
+SpeciesProperties& CloneProperties::operator[](const MethylationSignature& methylation_signature)
 {
     validate_signature(methylation_signature);
 
-    return species[GenotypeProperties::signature_to_index(methylation_signature)];
+    return species[CloneProperties::signature_to_index(methylation_signature)];
 }
 
-const SpeciesProperties& GenotypeProperties::operator[](const MethylationSignature& methylation_signature) const
+const SpeciesProperties& CloneProperties::operator[](const MethylationSignature& methylation_signature) const
 {
     validate_signature(methylation_signature);
 
-    return species[GenotypeProperties::signature_to_index(methylation_signature)];
+    return species[CloneProperties::signature_to_index(methylation_signature)];
 }
 
-SpeciesProperties& GenotypeProperties::operator[](const std::string& methylation_signature)
+SpeciesProperties& CloneProperties::operator[](const std::string& methylation_signature)
 {
     validate_signature(methylation_signature);
 
-    return species[GenotypeProperties::string_to_index(methylation_signature)];
+    return species[CloneProperties::string_to_index(methylation_signature)];
 }
 
-const SpeciesProperties& GenotypeProperties::operator[](const std::string& methylation_signature) const
+const SpeciesProperties& CloneProperties::operator[](const std::string& methylation_signature) const
 {
     validate_signature(methylation_signature);
 
-    return species[GenotypeProperties::string_to_index(methylation_signature)];
+    return species[CloneProperties::string_to_index(methylation_signature)];
 }
 
-size_t GenotypeProperties::string_to_index(const std::string& methylation_signature)
+size_t CloneProperties::string_to_index(const std::string& methylation_signature)
 {
     size_t index=0, digit_value=(1 << methylation_signature.size());
 
@@ -205,7 +205,7 @@ size_t GenotypeProperties::string_to_index(const std::string& methylation_signat
     return index;
 }
 
-std::string GenotypeProperties::index_to_string(const size_t& index, const size_t num_of_promoters)
+std::string CloneProperties::index_to_string(const size_t& index, const size_t num_of_promoters)
 {
     size_t digit_value=(1 << num_of_promoters);
     std::ostringstream oss;
@@ -218,7 +218,7 @@ std::string GenotypeProperties::index_to_string(const size_t& index, const size_
     return oss.str();
 }
 
-size_t GenotypeProperties::signature_to_index(const MethylationSignature& methylation_signature)
+size_t CloneProperties::signature_to_index(const MethylationSignature& methylation_signature)
 {
     size_t index=0, digit_value=(1 << methylation_signature.size());
 
@@ -232,7 +232,7 @@ size_t GenotypeProperties::signature_to_index(const MethylationSignature& methyl
     return index;
 }
 
-MethylationSignature GenotypeProperties::index_to_signature(const size_t& index, const size_t num_of_promoters)
+MethylationSignature CloneProperties::index_to_signature(const size_t& index, const size_t num_of_promoters)
 {
     MethylationSignature signature;
     size_t digit_value=(1 << num_of_promoters);
@@ -286,17 +286,17 @@ std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperti
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Clones::GenotypeProperties& genotype)
+std::ostream& operator<<(std::ostream& out, const Races::Clones::CloneProperties& clone)
 {
-    out << "{name: \"" << genotype.get_name() << "\", id: " 
-        << genotype.get_id() << ", species=[";
+    out << "{name: \"" << clone.get_name() << "\", id: " 
+        << clone.get_id() << ", species=[";
     
     std::string sep = "";
-    if (genotype.get_species().size()>1) {
+    if (clone.get_species().size()>1) {
         sep = "\n";
     }
 
-    for (const auto& species: genotype.get_species()) {
+    for (const auto& species: clone.get_species()) {
         out << sep << species;
         sep = ",\n";
     }

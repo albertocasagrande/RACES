@@ -43,7 +43,7 @@ std::map<CellEventType, std::string> cell_event_names = {
     {CellEventType::DEATH, "death"},
     {CellEventType::DUPLICATION, "duplication"},
     {CellEventType::EPIGENETIC_SWITCH, "epigenetic switch"},
-    {CellEventType::GENOTYPE_MUTATION, "mutation"}
+    {CellEventType::CLONE_MUTATION, "mutation"}
 };
 
 namespace Evolutions

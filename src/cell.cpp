@@ -31,7 +31,7 @@
 #include "cell.hpp"
 #include "species.hpp"
 #include "tissue.hpp"
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 namespace Races
 {

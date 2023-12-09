@@ -59,13 +59,13 @@ class DescendantsForest
      */
     struct SpeciesData
     {
-        GenotypeId genotype_id;             //!< The species genotype id
-        MethylationSignature signature;     //!< The species signature
+        CloneId clone_id;                //!< The species clone id
+        MethylationSignature signature;  //!< The species signature
 
         /**
          * @brief The constructor
          */
-        SpeciesData(const GenotypeId& genotype_id, const MethylationSignature& signature);
+        SpeciesData(const CloneId& clone_id, const MethylationSignature& signature);
     }; 
 
     using EdgeTail = std::set<CellId>;
@@ -75,7 +75,7 @@ class DescendantsForest
     std::map<CellId, EdgeTail> branches;    //!< The descendant branches
 
     std::map<SpeciesId, SpeciesData> species_data;          //!< The species id to data map
-    std::map<GenotypeId, std::string> genotype_names;       //!< The genotype id to genotype name map
+    std::map<CloneId, std::string> clone_names;       //!< The clone id to clone name map
 
     std::vector<Evolutions::TissueSample> samples;  //!< The vector of the samples that produced the forest
     std::map<CellId, uint16_t> coming_from;  //!< The map associating each leaf to the sample which it comes from
@@ -179,15 +179,15 @@ protected:
     }
 
     /**
-     * @brief Get the name of a genotype
+     * @brief Get the name of a clone
      * 
-     * @param genotype_id is the identifier of the genotype whose name is aimed
-     * @return a constant reference to the name of the genotype having 
-     *          `genotype_id` as identifier
+     * @param clone_id is the identifier of the clone whose name is aimed
+     * @return a constant reference to the name of the clone having 
+     *          `clone_id` as identifier
      */
-    inline const std::string& get_genotype_name(const GenotypeId& genotype_id) const
+    inline const std::string& get_clone_name(const CloneId& clone_id) const
     {
-        return genotype_names.at(genotype_id);
+        return clone_names.at(clone_id);
     }
 
     /**
@@ -310,23 +310,23 @@ public:
         }
 
         /**
-         * @brief Get the node genotype id
+         * @brief Get the node clone id
          * 
-         * @return a constant reference to the node genotype id
+         * @return a constant reference to the node clone id
          */
-        inline const GenotypeId& get_genotype_id() const
+        inline const CloneId& get_clone_id() const
         {
-            return forest->species_data.at(get_species_id()).genotype_id;
+            return forest->species_data.at(get_species_id()).clone_id;
         }
 
         /**
-         * @brief Get the node genotype name
+         * @brief Get the node clone name
          * 
-         * @return a constant reference to the node genotype name
+         * @return a constant reference to the node clone name
          */
-        inline const std::string& get_genotype_name() const
+        inline const std::string& get_clone_name() const
         {
-            return forest->genotype_names.at(get_genotype_id());
+            return forest->clone_names.at(get_clone_id());
         }
 
         /**

@@ -1,8 +1,8 @@
 /**
- * @file genotype_id.hpp
+ * @file clone_id.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines genotype ans species identifiers
- * @version 0.3
+ * @brief Defines clone ans species identifiers
+ * @version 0.1
  * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_GENOTYPE_ID__
-#define __RACES_GENOTYPE_ID__
+#ifndef __RACES_CLONE_ID__
+#define __RACES_CLONE_ID__
 
 #include <limits>
 #include <cstdint>
@@ -44,9 +44,9 @@ namespace Clones
 {
 
 /**
- * @brief The genotype identifier type
+ * @brief The clone identifier type
  */
-using GenotypeId = uint16_t;
+using CloneId = uint16_t;
 
 /**
  * @brief The species identifier type
@@ -65,4 +65,4 @@ using SpeciesId = uint16_t;
  */
 #define WILD_TYPE_SPECIES std::numeric_limits<Races::Clones::SpeciesId>::max()
 
-#endif // __RACES_GENOTYPE_ID__
+#endif // __RACES_CLONE_ID__

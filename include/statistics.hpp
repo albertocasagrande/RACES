@@ -322,14 +322,14 @@ public:
     }
 
     /**
-     * @brief Record a genotype mutation
+     * @brief Record a clone mutation
      * 
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic switch time
      */
     inline
-    void record_genotype_mutation(const SpeciesId& src_species, 
+    void record_clone_mutation(const SpeciesId& src_species, 
                                   const SpeciesId& dst_species,
                                   const Time &time)
     {

@@ -138,7 +138,7 @@ protected:
     using system_clock = std::chrono::system_clock;
 
     std::vector<Tissue> tissues;     //!< Simulated tissues
-    std::map<std::string, GenotypeId> genotype_name2id; //!< A map associating the genotype name to its id
+    std::map<std::string, CloneId> clone_name2id; //!< A map associating the clone name to its id
 
     LineageGraph lineage_graph;     //!< The lineage graph of the simulation
 
@@ -207,11 +207,11 @@ protected:
      * @brief Simulate a cell mutation
      * 
      * This method simulates a mutation on a cell in tissue.
-     * If the cell in the provided position has non-genotype, 
+     * If the cell in the provided position has wild-type genotype, 
      * then nothing is done.  
      * 
      * @param position is the position of the cell that will mutate
-     * @param final_id is the resulting genotype identifier of the cell
+     * @param final_id is the resulting species identifier of the cell
      * @return list of the affected cells, i.e., a list containing 
      *      the status of the mutated cell at most
      */
@@ -255,12 +255,12 @@ protected:
      * This method tries to handle a mutation during the cell event selection and 
      * it succeeds if and only if there exists at least one cell in the origin.
      * 
-     * @param timed_genotype_mutation is the timed mutation to be applied
+     * @param timed_clone_mutation is the timed mutation to be applied
      * @param candidate_event is the current candidate cell event
      * @return `true` if and only if there exists at least one cell in the origin and 
      *          the candidate cell event has been updated
      */
-    bool handle_timed_genotype_mutation(const TimedEvent& timed_genotype_mutation, CellEvent& candidate_event);
+    bool handle_timed_clone_mutation(const TimedEvent& timed_clone_mutation, CellEvent& candidate_event);
 
     /**
      * @brief Apply a rate update
@@ -372,25 +372,25 @@ public:
     Simulation& operator=(Simulation&& orig);
 
     /**
-     * @brief Schedule a timed genotype mutation
+     * @brief Schedule a timed clone mutation
      * 
-     * @param src is the source genotype
-     * @param dst is the destination genotype
+     * @param src is the source clone
+     * @param dst is the destination clone
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& schedule_genotype_mutation(const GenotypeProperties& src, 
-                                           const GenotypeProperties& dst, const Time time);
+    Simulation& schedule_clone_mutation(const CloneProperties& src, 
+                                        const CloneProperties& dst, const Time time);
 
     /**
-     * @brief Schedule a timed genotype mutation
+     * @brief Schedule a timed clone mutation
      * 
-     * @param src is the source genotype name
-     * @param dst is the destination genotype name
+     * @param src is the source clone name
+     * @param dst is the destination clone name
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& schedule_genotype_mutation(const std::string& src, const std::string& dst, const Time time);
+    Simulation& schedule_clone_mutation(const std::string& src, const std::string& dst, const Time time);
 
     /**
      * @brief Schedule a timed event
@@ -414,32 +414,32 @@ public:
     CellEvent select_next_event();
 
     /**
-     * @brief  Simulate a genotype mutation on a position
+     * @brief  Simulate a clone mutation on a position
      * 
      * This method simulates both the duplication of the cell in the 
      * specified position and the birth of a cells of a different 
-     * genotype preserving the epigenetic status of the original cell. 
+     * clone preserving the epigenetic status of the original cell. 
      * 
      * @param position is the position in which the 
-     * @param dst_genotype_name is the name of the mutated cell genotype
+     * @param dst_clone_name is the name of the mutated cell clone
      * @return a reference to the updated simulation
      */
-    Simulation& simulate_genotype_mutation(const PositionInTissue& position,
-                                           const std::string& dst_genotype_name);
+    Simulation& simulate_clone_mutation(const PositionInTissue& position,
+                                        const std::string& dst_clone_name);
 
     /**
-     * @brief  Simulate a genotype mutation on a position
+     * @brief  Simulate a clone mutation on a position
      * 
      * This method simulates both the duplication of the cell in the 
      * specified position and the birth of a cells of a different 
-     * genotype preserving the epigenetic status of the original cell. 
+     * clone preserving the epigenetic status of the original cell. 
      * 
      * @param position is the position in which the 
-     * @param dst_genotype_id is the identifier of the mutated cell genotype
+     * @param dst_clone_id is the identifier of the mutated cell clone
      * @return a reference to the updated simulation
      */
-    Simulation& simulate_genotype_mutation(const PositionInTissue& position,
-                                           const GenotypeId& dst_genotype_id);
+    Simulation& simulate_clone_mutation(const PositionInTissue& position,
+                                        const CloneId& dst_clone_id);
 
     /**
      * @brief Simulate an event
@@ -669,56 +669,56 @@ public:
     }
 
     /**
-     * @brief Randomly select a cell among those having a specified genotype
+     * @brief Randomly select a cell among those having a specified clone
      *
      * This method randomly select a cell available for an event among those
-     * having a specified genotype. 
+     * having a specified clone. 
      *
-     * @param genotype_id is the identifier of the genotype that must contain 
+     * @param clone_id is the identifier of the clone that must contain 
      *          the selected cell
      * @param event_type is the event type for which the choosen cell must be 
      *          available
-     * @return whenever the set of cells having `genotype_id` as genotype 
+     * @return whenever the set of cells having `clone_id` as clone 
      *         identifier is not empty, a randomly selected cell in it. 
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
-    const CellInTissue& choose_cell_in(const GenotypeId& genotype_id,
+    const CellInTissue& choose_cell_in(const CloneId& clone_id,
                                        const CellEventType& event_type=CellEventType::ANY);
 
     /**
-     * @brief Randomly select a cell among those having a specified genotype
+     * @brief Randomly select a cell among those having a specified clone
      *
      * This method randomly select a cell available for an event among those
-     * having a specified genotype name. 
+     * having a specified clone name. 
      *
-     * @param genotype_name is the name of the genotype that must contain 
+     * @param clone_name is the name of the clone that must contain 
      *          the selected cell
      * @param event_type is the event type for which the choosen cell must be 
      *          available
-     * @return whenever the set of cells having `genotype_id` as genotype 
+     * @return whenever the set of cells having `clone_id` as clone 
      *         identifier is not empty, a randomly selected cell in it. 
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
-    const CellInTissue& choose_cell_in(const std::string& genotype_name,
+    const CellInTissue& choose_cell_in(const std::string& clone_name,
                                        const CellEventType& event_type=CellEventType::ANY);
 
     /**
      * @brief Randomly select a cell in a tissue rectangle
      *
      * This method randomly select a cell available for an event among those
-     * having a specified genotype and laying in a tissue rectangle.
+     * having a specified clone and laying in a tissue rectangle.
      *
-     * @param genotype_id is the identifier of the genotype that must contain 
+     * @param clone_id is the identifier of the clone that must contain 
      *          the selected cell
      * @param rectangle is the tissue rectangle in which the cell must be selected 
      * @param event_type is the event type for which the choosen cell must be 
      *          available
-     * @return whenever the set of tissue cells that have `genotype_id` as genotype
+     * @return whenever the set of tissue cells that have `clone_id` as clone
      *         id and lay in one the positions specified by `rectangle` is not empty, 
      *         a randomly selected cell in it. Otherwise, if the set is empty, a 
      *         domain error is thrown.
      */
-    const CellInTissue& choose_cell_in(const GenotypeId& genotype_id,
+    const CellInTissue& choose_cell_in(const CloneId& clone_id,
                                        const RectangleSet& rectangle,
                                        const CellEventType& event_type=CellEventType::ANY);
 
@@ -726,17 +726,17 @@ public:
      * @brief Randomly select a cell in a tissue rectangle
      *
      * This method randomly select a cell available for an event among those
-     * having a specified genotype and laying in a tissue rectangle.
+     * having a specified clone and laying in a tissue rectangle.
      *
-     * @param genotype_name is the name of the genotype that must contain 
+     * @param clone_name is the name of the clone that must contain 
      *          the selected cell
      * @param rectangle is the tissue rectangle in which the cell must be selected 
-     * @return whenever the set of tissue cells that have `genotype_name` as genotype 
+     * @return whenever the set of tissue cells that have `clone_name` as clone 
      *         name and lay in one the positions specified by `rectangle` is not empty, 
      *         a randomly selected cell in it. Otherwise, if the set is empty, a 
      *         domain error is thrown.
      */
-    const CellInTissue& choose_cell_in(const std::string& genotype_name,
+    const CellInTissue& choose_cell_in(const std::string& clone_name,
                                        const RectangleSet& rectangle,
                                        const CellEventType& event_type=CellEventType::ANY);
 
@@ -792,12 +792,12 @@ public:
     }
 
     /**
-     * @brief Add a genotype to the tissue
+     * @brief Add a clone to the tissue
      * 
-     * @param genotype_properties is the genotype properties of the genotype
+     * @param clone_properties is the clone properties of the clone
      * @return a reference to the updated object
      */
-    Simulation& add_genotype(const GenotypeProperties& genotype_properties);
+    Simulation& add_clone(const CloneProperties& clone_properties);
 
     /**
      * @brief Place a cell in the simulated tissue
@@ -961,22 +961,22 @@ public:
     }
 
     /**
-     * @brief Find a genotype id by name
+     * @brief Find a clone id by name
      * 
-     * @param genotype_name is the name of the genotype whose id is aimed
-     * @return a constant reference to the identifier of the genotype having 
-     *         `genotype_name` as name
+     * @param clone_name is the name of the clone whose id is aimed
+     * @return a constant reference to the identifier of the clone having 
+     *         `clone_name` as name
      */
-    const GenotypeId& find_genotype_id(const std::string& genotype_name) const;
+    const CloneId& find_clone_id(const std::string& clone_name) const;
 
     /**
-     * @brief Find a genotype name by id
+     * @brief Find a clone name by id
      * 
-     * @param genotype_id is the identifier of the genotype whose name is aimed
-     * @return a constant reference to the name of the genotype having 
-     *         `genotype_id` as identifier
+     * @param clone_id is the identifier of the clone whose name is aimed
+     * @return a constant reference to the name of the clone having 
+     *         `clone_id` as identifier
      */
-    const std::string& find_genotype_name(const GenotypeId& genotype_id) const;
+    const std::string& find_clone_name(const CloneId& clone_id) const;
 
     /**
      * @brief Save a simulation in an archive
@@ -989,7 +989,7 @@ public:
     {
         archive & tissues
                 & lineage_graph
-                & genotype_name2id
+                & clone_name2id
                 & logger
                 & secs_between_snapshots
                 & statistics
@@ -1017,7 +1017,7 @@ public:
 
         archive & simulation.tissues
                 & simulation.lineage_graph
-                & simulation.genotype_name2id
+                & simulation.clone_name2id
                 & simulation.logger
                 & simulation.secs_between_snapshots
                 & simulation.statistics
@@ -1098,7 +1098,7 @@ Simulation& Simulation::simulate(const CellEvent& event, UI::TissuePlotter<PLOT_
             affected = simulate_duplication(event.position);
             break;
         case CellEventType::EPIGENETIC_SWITCH:
-        case CellEventType::GENOTYPE_MUTATION:
+        case CellEventType::CLONE_MUTATION:
             affected = simulate_duplication_and_mutation_event(event.position, event.final_species);
             break;
         default:

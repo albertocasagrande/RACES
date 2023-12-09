@@ -31,7 +31,7 @@
 #ifndef __RACES_RATE_UPDATE__
 #define __RACES_RATE_UPDATE__
 
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 #include "cell_event.hpp"
 #include "simulation_event.hpp"
 

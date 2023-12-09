@@ -34,7 +34,7 @@
 #include <memory>
 
 #include "archive.hpp"
-#include "genotype_mutation.hpp"
+#include "clone_mutation.hpp"
 #include "rate_update.hpp"
 #include "sampling.hpp"
 
@@ -60,9 +60,9 @@ struct SimulationEventWrapper
     /**
      * @brief A constructor that wraps a mutation event
      * 
-     * @param genotype_mutation is the event to wrap
+     * @param clone_mutation is the event to wrap
      */
-    SimulationEventWrapper(const GenotypeMutation& genotype_mutation);
+    SimulationEventWrapper(const CloneMutation& clone_mutation);
 
     /**
      * @brief A constructor that wraps a liveness rate event
@@ -114,8 +114,8 @@ struct SimulationEventWrapper
         archive & type;
 
         switch(type) {
-            case Type::GENOTYPE_MUTATION:
-                archive & get_event<GenotypeMutation>();
+            case Type::CLONE_MUTATION:
+                archive & get_event<CloneMutation>();
                 break;
             case Type::LIVENESS_RATE_UPDATE:
                 archive & get_event<RateUpdate>();
@@ -143,9 +143,9 @@ struct SimulationEventWrapper
         archive & type;
 
         switch(type) {
-            case Type::GENOTYPE_MUTATION:
+            case Type::CLONE_MUTATION:
                 {
-                    auto mutation = GenotypeMutation::load(archive);
+                    auto mutation = CloneMutation::load(archive);
 
                     return SimulationEventWrapper(mutation);
                 }

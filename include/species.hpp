@@ -41,7 +41,7 @@
 #include "archive.hpp"
 #include "time.hpp"
 #include "cell.hpp"
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 
 namespace Races 
@@ -58,7 +58,7 @@ class Tissue;
 /**
  * @brief Cell species
  * 
- * This class represents the set of cells having the same genotype.
+ * This class represents the set of cells in a species.
  */
 class Species: public SpeciesProperties {
     /**
@@ -211,9 +211,9 @@ public:
     /**
      * @brief A constructor
      * 
-     * @param genotype is the species of the species
+     * @param species_properties is the species of the species
      */
-    explicit Species(const SpeciesProperties& genotype);
+    explicit Species(const SpeciesProperties& species_properties);
 
     /**
      * @brief A copy constructor
@@ -281,7 +281,7 @@ public:
             case CellEventType::DEATH:
                 return true;
             case CellEventType::DUPLICATION:
-            case CellEventType::GENOTYPE_MUTATION:
+            case CellEventType::CLONE_MUTATION:
             case CellEventType::EPIGENETIC_SWITCH:
                 return (duplication_enabled.count(cell_id)>0);
             case CellEventType::ANY:
@@ -321,7 +321,7 @@ public:
             case CellEventType::DEATH:
                 return choose_a_cell(generator, cells);
             case CellEventType::DUPLICATION:
-            case CellEventType::GENOTYPE_MUTATION:
+            case CellEventType::CLONE_MUTATION:
             case CellEventType::EPIGENETIC_SWITCH:
                 return choose_a_cell(generator, duplication_enabled);
             case CellEventType::ANY:
@@ -472,8 +472,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static Species load(ARCHIVE& archive)
     {
-        auto genotype = SpeciesProperties::load(archive);
-        Species species(genotype);
+        auto species_properties = SpeciesProperties::load(archive);
+        Species species(species_properties);
 
         archive & species.last_insertion_time;
 

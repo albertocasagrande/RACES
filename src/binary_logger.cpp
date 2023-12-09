@@ -256,7 +256,7 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
 
     if (type==CellEventType::DUPLICATION || 
             type==CellEventType::EPIGENETIC_SWITCH ||
-            type==CellEventType::GENOTYPE_MUTATION) {
+            type==CellEventType::CLONE_MUTATION) {
 
         record_cell(cell);
     }

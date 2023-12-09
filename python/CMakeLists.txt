@@ -24,7 +24,7 @@ if(${COMPILE_PYTHON_BINDINGS})
     # create the lib
     add_library(pyRACES MODULE
                       ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings.cpp
-                      ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype.cpp  
+                      ${CMAKE_CURRENT_SOURCE_DIR}/src/clone.cpp  
                       ${CMAKE_CURRENT_SOURCE_DIR}/src/epigenetic_rates.cpp  
                       ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_wrapper.cpp)
 

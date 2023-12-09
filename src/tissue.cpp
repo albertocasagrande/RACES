@@ -31,7 +31,7 @@
 #include <random>
 
 #include "tissue.hpp"
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 namespace Races
 {
@@ -185,23 +185,23 @@ Tissue::Tissue(const std::string& name, const AxisSize x_size, const AxisSize y_
 {
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes,
+Tissue::Tissue(const std::string& name, const std::vector<CloneProperties>& clones,
                const AxisSize  x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue(name, {x_size, y_size, z_size})
 {
-    for (const auto& genotype: genotypes) {
-        add_genotype_species(genotype);
+    for (const auto& clone: clones) {
+        add_clone_species(clone);
     }
 
     register_species_cells();
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes, 
+Tissue::Tissue(const std::string& name, const std::vector<CloneProperties>& clones, 
                const AxisSize x_size, const AxisSize y_size):
     Tissue(name, {x_size, y_size})
 {
-    for (const auto& genotype: genotypes) {
-        add_genotype_species(genotype);
+    for (const auto& clone: clones) {
+        add_clone_species(clone);
     }
 
     register_species_cells();
@@ -217,15 +217,15 @@ Tissue::Tissue(const AxisSize x_size, const AxisSize y_size, const AxisSize z_si
 {
 }
 
-Tissue::Tissue(const std::vector<GenotypeProperties>& genotypes,
+Tissue::Tissue(const std::vector<CloneProperties>& clones,
                const AxisSize x_size, const AxisSize y_size, const AxisSize z_size):
-    Tissue("", genotypes, x_size, y_size, z_size)
+    Tissue("", clones, x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<GenotypeProperties>& genotypes,
+Tissue::Tissue(const std::vector<CloneProperties>& clones,
                const AxisSize  x_size, const AxisSize  y_size):
-    Tissue("", genotypes, x_size, y_size)
+    Tissue("", clones, x_size, y_size)
 {
 }
 
@@ -322,24 +322,24 @@ void Tissue::register_species_cells()
     }
 }
 
-Tissue& Tissue::add_genotype(const GenotypeProperties& genotype)
+Tissue& Tissue::add_clone(const CloneProperties& clone)
 {
-    add_genotype_species(genotype);
+    add_clone_species(clone);
 
     register_species_cells();
 
     return *this;
 }
 
-Tissue& Tissue::add_genotype_species(const GenotypeProperties& genotype)
+Tissue& Tissue::add_clone_species(const CloneProperties& clone)
 {
-    // check whether the genotype is already in the tissue
-    if (genotype_pos.count(genotype.get_id())>0) {
-        throw std::runtime_error("Genotype already in the tissue");
+    // check whether the clone is already in the tissue
+    if (clone_pos.count(clone.get_id())>0) {
+        throw std::runtime_error("Clone already in the tissue");
     }
 
     // check whether any of the species is already in the tissue
-    for (const auto& species: genotype.get_species()) {
+    for (const auto& species: clone.get_species()) {
         if (id_pos.count(species.get_id())>0) {
             throw std::runtime_error("Species id "
                                      + std::to_string(static_cast<int>(species.get_id())) 
@@ -352,9 +352,9 @@ Tissue& Tissue::add_genotype_species(const GenotypeProperties& genotype)
         }
     }
 
-    // insert the genotypes in the tissue 
-    auto& pos = genotype_pos[genotype.get_id()];
-    for (const auto& in_species: genotype.get_species()) {
+    // insert the clones in the tissue 
+    auto& pos = clone_pos[clone.get_id()];
+    for (const auto& in_species: clone.get_species()) {
         // place the new species at the end of the species vector
         pos.push_back(species.size());
 

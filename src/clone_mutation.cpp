@@ -1,8 +1,8 @@
 /**
- * @file genotype_mutation.cpp
+ * @file clone_mutation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements genomic mutations
- * @version 0.2
+ * @brief Implements clone mutations
+ * @version 0.1
  * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include "genotype_mutation.hpp"
+#include "clone_mutation.hpp"
 
 namespace Races 
 {
@@ -39,13 +39,13 @@ namespace Clones
 namespace Evolutions
 {
 
-GenotypeMutation::GenotypeMutation(const GenotypeId& initial_id, const GenotypeId& final_id):
+CloneMutation::CloneMutation(const CloneId& initial_id, const CloneId& final_id):
     initial_id(initial_id), final_id(final_id)
 {}
 
-GenotypeMutation::GenotypeMutation(const GenotypeProperties& initial_genotype,
-                               const GenotypeProperties& final_genotype):
-    GenotypeMutation(initial_genotype.get_id(), final_genotype.get_id())
+CloneMutation::CloneMutation(const CloneProperties& initial_clone,
+                             const CloneProperties& final_clone):
+    CloneMutation(initial_clone.get_id(), final_clone.get_id())
 {}
 
 

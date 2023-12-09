@@ -53,23 +53,23 @@ struct ArchiveFixture {
     {
         using namespace Races::Clones;
         
-        GenotypeProperties A("A",{{0.01,0.01}});
+        CloneProperties A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.3}});
         A["+"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.45}});
     
-        GenotypeProperties B("B",{{0.01,0.01}});
+        CloneProperties B("B",{{0.01,0.01}});
         B["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.2}});
         B["+"].set_rates({{CellEventType::DEATH, 0.01},
                           {CellEventType::DUPLICATION, 0.02}});
 
         simulation.set_tissue("Liver", {1000,1000})
-                  .add_genotype(A)
-                  .add_genotype(B)
+                  .add_clone(A)
+                  .add_clone(B)
                   .place_cell(B["-"], {250, 500})
-                  .schedule_genotype_mutation(B,A,50);
+                  .schedule_clone_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
         simulation.storage_enabled = false;
@@ -184,7 +184,7 @@ bool operator==(const Races::Clones::SpeciesProperties& a, const Races::Clones::
 {
     return (a.get_name()==b.get_name() &&
             a.get_id()==b.get_id() &&
-            a.get_genotype_id()==b.get_genotype_id() &&
+            a.get_clone_id()==b.get_clone_id() &&
             a.get_rates()==b.get_rates() &&
             a.get_epigenetic_switch_rates()==b.get_epigenetic_switch_rates());
 }
@@ -221,7 +221,7 @@ bool operator==(const Races::Clones::Evolutions::Tissue& a, const Races::Clones:
         return false;
     }
 
-    std::set<GenotypeId> genotype_ids;
+    std::set<CloneId> clone_ids;
 
     auto a_it = a.begin(), b_it = b.begin();
 
@@ -230,12 +230,12 @@ bool operator==(const Races::Clones::Evolutions::Tissue& a, const Races::Clones:
         if (*a_it != *b_it) {
             return false;
         }
-        genotype_ids.insert(a_it->get_genotype_id());
+        clone_ids.insert(a_it->get_clone_id());
     }
 
-    for (const auto& genotype_id : genotype_ids) {
-        auto a_view = a.get_genotype_species(genotype_id);
-        auto b_view = b.get_genotype_species(genotype_id);
+    for (const auto& clone_id : clone_ids) {
+        auto a_view = a.get_clone_species(clone_id);
+        auto b_view = b.get_clone_species(clone_id);
 
         auto a_it = a_view.begin(), b_it = b_view.begin();
 
@@ -348,13 +348,13 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation)
+BOOST_AUTO_TEST_CASE(binary_timed_clone_mutation)
 {
     using namespace Races::Clones::Evolutions;
 
-    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(GenotypeMutation(0,1))},
-                                    {3.5,SimulationEventWrapper(GenotypeMutation(1,7))},
-                                    {8.1,SimulationEventWrapper(GenotypeMutation(2,1))}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(CloneMutation(0,1))},
+                                    {3.5,SimulationEventWrapper(CloneMutation(1,7))},
+                                    {8.1,SimulationEventWrapper(CloneMutation(2,1))}};
 
     auto filename = get_a_temporary_path();
     {
@@ -379,13 +379,13 @@ BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation)
 }
 
 
-BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation_queue)
+BOOST_AUTO_TEST_CASE(binary_timed_clone_mutation_queue)
 {
     using namespace Races::Clones::Evolutions;
 
-    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(GenotypeMutation(0,1))},
-                                    {3.5,SimulationEventWrapper(GenotypeMutation(1,7))},
-                                    {8.1,SimulationEventWrapper(GenotypeMutation(2,1))}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(CloneMutation(0,1))},
+                                    {3.5,SimulationEventWrapper(CloneMutation(1,7))},
+                                    {8.1,SimulationEventWrapper(CloneMutation(2,1))}};
 
     using PriorityQueue = std::priority_queue<TimedEvent,
                                               std::vector<TimedEvent>,
@@ -422,11 +422,11 @@ BOOST_AUTO_TEST_CASE(binary_timed_genotype_mutation_queue)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_epigenetic_genotype)
+BOOST_AUTO_TEST_CASE(binary_epigenetic_clone)
 {
     using namespace Races::Clones;
     
-    GenotypeProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
+    CloneProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
     to_save["--"].set_rates({{CellEventType::DEATH, 0.1},
                              {CellEventType::DUPLICATION, 0.3}});
     to_save["+-"].set_rates({{CellEventType::DEATH, 0.1},

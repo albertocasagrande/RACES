@@ -35,7 +35,7 @@
 
 #include <boost/python.hpp>
 
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 
 using namespace boost::python;

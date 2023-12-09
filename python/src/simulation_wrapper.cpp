@@ -47,13 +47,13 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::schedule_genotype_mutation(const Races::Clones::GenotypeProperties& src,
-                                            const Races::Clones::GenotypeProperties& dst,
+void SimulationWrapper::schedule_clone_mutation(const Races::Clones::CloneProperties& src,
+                                            const Races::Clones::CloneProperties& dst,
                                             const Races::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.schedule_genotype_mutation(src, dst, time);
+    obj_ptr->simulation.schedule_clone_mutation(src, dst, time);
 }
 
 struct PythonEndTest : public Races::Clones::Evolutions::TimeTest
@@ -128,11 +128,11 @@ const Races::Time& SimulationWrapper::get_time() const
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_genotype(const Races::Clones::GenotypeProperties& genotype)
+void SimulationWrapper::add_clone(const Races::Clones::CloneProperties& clone)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.add_genotype(genotype);
+    obj_ptr->simulation.add_clone(clone);
 }
 
 Races::Clones::Evolutions::PositionInTissue 
@@ -167,7 +167,7 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
 }
 
 
-void SimulationWrapper::place_cell(const Races::Clones::GenotypeProperties& genotype, 
+void SimulationWrapper::place_cell(const Races::Clones::CloneProperties& clone, 
                                    const std::string& methylation_signature,
                                    boost::python::list const& position)
 {
@@ -176,7 +176,7 @@ void SimulationWrapper::place_cell(const Races::Clones::GenotypeProperties& geno
 
     {
         std::unique_lock lock(obj_ptr->s_mutex);
-        obj_ptr->simulation.place_cell(genotype[methylation_signature], c_position);
+        obj_ptr->simulation.place_cell(clone[methylation_signature], c_position);
     }
 
 }

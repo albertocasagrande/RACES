@@ -34,7 +34,7 @@ class TestCellEventType(unittest.TestCase):
             0: RACES.CellEventType.DEATH,
             1: RACES.CellEventType.DUPLICATION,
             2: RACES.CellEventType.EPIGENETIC_SWITCH,
-            3: RACES.CellEventType.GENOTYPE_MUTATION
+            3: RACES.CellEventType.CLONE_MUTATION
         })
 
 
@@ -89,49 +89,49 @@ class TestEpigeneticRates(unittest.TestCase):
             e_rates.set_demethylation_rate(-0.3)
 
 
-class TestGenotype(unittest.TestCase):
+class TestClone(unittest.TestCase):
     def test_init(self):
         try:
-            RACES.Genotype("A", [RACES.EpigeneticRates(0.01, 0.01)])
+            RACES.Clone("A", [RACES.EpigeneticRates(0.01, 0.01)])
         except BaseException:
-            self.fail('RACES.Genotype("A", '
+            self.fail('RACES.Clone("A", '
                       + '[RACES.EpigeneticRates(0.01, 0.01)]) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.Genotype("A", [[0.01, 0.01]])
+            RACES.Clone("A", [[0.01, 0.01]])
         except BaseException:
-            self.fail('RACES.Genotype("A", [[0.01, 0.01]]) '
+            self.fail('RACES.Clone("A", [[0.01, 0.01]]) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.Genotype("A", [])
+            RACES.Clone("A", [])
         except BaseException:
-            self.fail('RACES.Genotype("A", []) '
+            self.fail('RACES.Clone("A", []) '
                       + ' raised an unexpected exeception!')
 
         try:
-            RACES.Genotype("A", [[0.01, 0.01], [0.01, 0.01]])
+            RACES.Clone("A", [[0.01, 0.01], [0.01, 0.01]])
         except BaseException:
-            self.fail('RACES.Genotype("A", [[0.01, 0.01], '
+            self.fail('RACES.Clone("A", [[0.01, 0.01], '
                       + '[0.01, 0.01]]) raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            RACES.Genotype("A", 2)
+            RACES.Clone("A", 2)
 
         with self.assertRaises(Exception):
-            RACES.Genotype("A", ['a'])
+            RACES.Clone("A", ['a'])
 
         with self.assertRaises(Exception):
-            RACES.Genotype("A", [[0.01, 0.01, 2]])
+            RACES.Clone("A", [[0.01, 0.01, 2]])
 
     def test_properties(self):
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
 
         self.assertEqual(A.name, "A")
         self.assertEqual(A.num_of_promoters, 1)
 
-        B = RACES.Genotype("B", [])
+        B = RACES.Clone("B", [])
 
         self.assertEqual(B.name, "B")
         self.assertEqual(B.id, A.id+1)
@@ -147,7 +147,7 @@ class TestGenotype(unittest.TestCase):
             A.num_of_promoters = 7
 
     def test_set_rates(self):
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
         try:
             A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                               RACES.CellEventType.DUPLICATION: 0.2})
@@ -160,7 +160,7 @@ class TestGenotype(unittest.TestCase):
             A.set_rates("", {RACES.CellEventType.DEATH: 0.1,
                              RACES.CellEventType.DUPLICATION: 0.2})
 
-        B = RACES.Genotype("B", [])
+        B = RACES.Clone("B", [])
 
         try:
             B.set_rates("", {RACES.CellEventType.DEATH: 0.1,
@@ -175,7 +175,7 @@ class TestGenotype(unittest.TestCase):
                               RACES.CellEventType.DUPLICATION: 0.2})
 
     def test_get_rate(self):
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.2})
         try:
@@ -186,13 +186,13 @@ class TestGenotype(unittest.TestCase):
                                         RACES.CellEventType.EPIGENETIC_SWITCH),
                              0.0)
         except BaseException:
-            self.fail('RACES.Genotype.set_rate() '
+            self.fail('RACES.Clone.set_rate() '
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
             self.assertEqual(A.get_rate("", RACES.CellEventType.DEATH), 0.01)
 
-        B = RACES.Genotype("B", [])
+        B = RACES.Clone("B", [])
         B.set_rates("", {RACES.CellEventType.DEATH: 0.1,
                          RACES.CellEventType.DUPLICATION: 0.2})
         try:
@@ -203,7 +203,7 @@ class TestGenotype(unittest.TestCase):
                                         RACES.CellEventType.EPIGENETIC_SWITCH),
                              0.0)
         except BaseException:
-            self.fail('RACES.Genotype.set_rate() '
+            self.fail('RACES.Clone.set_rate() '
                       + ' raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
@@ -263,10 +263,10 @@ class TestSimulation(unittest.TestCase):
 
         self.assertEqual(sim.get_time(), 0)
 
-    def test_add_genotype(self):
+    def test_add_clone(self):
         sim = RACES.Simulation()
 
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.2})
         A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
@@ -276,18 +276,18 @@ class TestSimulation(unittest.TestCase):
 
         try:
             # now the simulation has a tissue
-            sim.add_genotype(A)
+            sim.add_clone(A)
 
         except BaseException:
-            self.fail('sim.add_genotype(A) raised an unexpected exeception!')
+            self.fail('sim.add_clone(A) raised an unexpected exeception!')
 
         with self.assertRaises(Exception):
-            sim.add_genotype("A")
+            sim.add_clone("A")
 
     def test_place_cell(self):
         sim = RACES.Simulation()
 
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.2})
         A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
@@ -295,7 +295,7 @@ class TestSimulation(unittest.TestCase):
 
         sim.set_tissue("Liver", [100, 100])
 
-        sim.add_genotype(A)
+        sim.add_clone(A)
 
         try:
             sim.place_cell(A, "-", [50, 50])
@@ -307,45 +307,45 @@ class TestSimulation(unittest.TestCase):
         with self.assertRaises(Exception):
             sim.place_cell(A, "-", [50, 150])
 
-    def test_schedule_genotype_mutation(self):
+    def test_schedule_clone_mutation(self):
         sim = RACES.Simulation()
 
         sim.set_tissue("Liver", [100, 100])
 
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.2})
         A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
                           RACES.CellEventType.DUPLICATION: 0.02})
-        sim.add_genotype(A)
+        sim.add_clone(A)
 
-        B = RACES.Genotype("B", [[0.01, 0.01]])
+        B = RACES.Clone("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.3})
         B.set_rates("+", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.45})
-        sim.add_genotype(B)
+        sim.add_clone(B)
 
-        C = RACES.Genotype("C", [])
+        C = RACES.Clone("C", [])
         C.set_rates("", {RACES.CellEventType.DEATH: 0.1,
                          RACES.CellEventType.DUPLICATION: 0.3})
-        sim.add_genotype(C)
+        sim.add_clone(C)
 
         try:
-            sim.schedule_genotype_mutation(A, B, 70)
+            sim.schedule_clone_mutation(A, B, 70)
         except BaseException:
-            self.fail('sim.schedule_genotype_mutation(A, B, 70) raised'
+            self.fail('sim.schedule_clone_mutation(A, B, 70) raised'
                       + ' an unexpected exeception!')
 
         with self.assertRaises(Exception):
             # methylation signature incompatible
-            sim.schedule_genotype_mutation(A, C, 70)
+            sim.schedule_clone_mutation(A, C, 70)
 
         try:
             # methylation signature compatible
-            sim.schedule_genotype_mutation(C, B, 70)
+            sim.schedule_clone_mutation(C, B, 70)
         except BaseException:
-            self.fail('sim.schedule_genotype_mutation(C, B, 70) raised'
+            self.fail('sim.schedule_clone_mutation(C, B, 70) raised'
                       + ' an unexpected exeception!')
 
     def test_run_up_to(self):
@@ -353,20 +353,20 @@ class TestSimulation(unittest.TestCase):
 
         sim.set_tissue("Liver", [100, 100])
 
-        A = RACES.Genotype("A", [[0.01, 0.01]])
+        A = RACES.Clone("A", [[0.01, 0.01]])
         A.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.2})
         A.set_rates("+", {RACES.CellEventType.DEATH: 0.01,
                           RACES.CellEventType.DUPLICATION: 0.02})
-        sim.add_genotype(A)
+        sim.add_clone(A)
 
-        B = RACES.Genotype("B", [[0.01, 0.01]])
+        B = RACES.Clone("B", [[0.01, 0.01]])
         B.set_rates("-", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.3})
         B.set_rates("+", {RACES.CellEventType.DEATH: 0.1,
                           RACES.CellEventType.DUPLICATION: 0.45})
-        sim.add_genotype(B)
-        sim.schedule_genotype_mutation(A, B, 70)
+        sim.add_clone(B)
+        sim.schedule_clone_mutation(A, B, 70)
 
         sim.storage_enabled = False
 

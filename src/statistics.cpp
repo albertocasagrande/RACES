@@ -212,9 +212,9 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
             record_epigenetic_switch(event.initial_species, 
                                      event.final_species, time);
             break;
-        case CellEventType::GENOTYPE_MUTATION:
-            record_genotype_mutation(event.initial_species, 
-                                     event.final_species, time);
+        case CellEventType::CLONE_MUTATION:
+            record_clone_mutation(event.initial_species, 
+                                  event.final_species, time);
             break;
         default:
             throw std::runtime_error("Unsupported event type");

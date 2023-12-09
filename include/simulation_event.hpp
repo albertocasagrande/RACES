@@ -51,7 +51,7 @@ struct SimulationEvent
      * @brief The simulation event types
      */
     enum class Type {
-        GENOTYPE_MUTATION,
+        CLONE_MUTATION,
         SAMPLING,
         LIVENESS_RATE_UPDATE
     };

@@ -1,8 +1,8 @@
 /**
- * @file genotype.cpp
+ * @file clone.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the Python wrapper class and functions for `Races::GenotypeProperties`
- * @version 0.5
+ * @brief Implements the Python wrapper class and functions for `CloneProperties`
+ * @version 0.1
  * @date 2023-12-09
  * 
  * @copyright Copyright (c) 2023
@@ -30,13 +30,13 @@
 
 #include "cell_event.hpp"
 
-#include "genotype.hpp"
+#include "clone.hpp"
 #include "epigenetic_rates.hpp"
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-std::shared_ptr<Races::Clones::GenotypeProperties>
-GenotypeWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
+std::shared_ptr<Races::Clones::CloneProperties>
+CloneWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
 {
     using namespace Races::Clones;
 
@@ -60,10 +60,10 @@ GenotypeWrapper::create(std::string const& name, boost::python::list const& epig
         }
     }
 
-    return std::make_shared<GenotypeProperties>(name, c_epigenetic_rates);
+    return std::make_shared<CloneProperties>(name, c_epigenetic_rates);
 }
 
-void GenotypeWrapper::set_rates(Races::Clones::GenotypeProperties *genotype, 
+void CloneWrapper::set_rates(Races::Clones::CloneProperties *clone, 
                                 const std::string& methylation_signature,
                                 boost::python::dict const& rates)
 {
@@ -80,5 +80,5 @@ void GenotypeWrapper::set_rates(Races::Clones::GenotypeProperties *genotype,
         c_rates[event_type_id] = bp::extract<double>(rates_list[i][1]);
     }
     
-    (*genotype)[methylation_signature].set_rates(c_rates);
+    (*clone)[methylation_signature].set_rates(c_rates);
 }

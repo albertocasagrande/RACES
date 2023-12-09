@@ -55,8 +55,8 @@ void Species::reset()
     duplication_enabled.clear();
 }
 
-Species::Species(const SpeciesProperties& genotype):
-    SpeciesProperties(genotype), last_insertion_time(0)
+Species::Species(const SpeciesProperties& species_properties):
+    SpeciesProperties(species_properties), last_insertion_time(0)
 {}
 
 Species::Species(const Species& orig):
@@ -106,7 +106,7 @@ size_t Species::num_of_cells_available_for(const CellEventType& event_type) cons
             return cells.size();
         case CellEventType::DUPLICATION:
         case CellEventType::EPIGENETIC_SWITCH:
-        case CellEventType::GENOTYPE_MUTATION:
+        case CellEventType::CLONE_MUTATION:
             return duplication_enabled.size();
         case CellEventType::ANY:
             return cells.size();
@@ -136,7 +136,7 @@ void Species::erase(const CellId& cell_id)
 
 CellInTissue* Species::add(CellInTissue* cell)
 {   
-    // update the genotype id
+    // update the species id
     cell->species_id = get_id();
 
     // update `last_insertion_time`
@@ -265,7 +265,7 @@ namespace std
 
 std::ostream& operator<<(std::ostream& out, const Races::Clones::Evolutions::Species& species)
 {
-    out << "{genotype: " << static_cast<Races::Clones::SpeciesProperties>(species) 
+    out << "{species_properties: " << static_cast<Races::Clones::SpeciesProperties>(species) 
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {

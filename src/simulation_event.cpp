@@ -44,7 +44,7 @@ SimulationEvent::~SimulationEvent()
 
 const std::map<SimulationEvent::Type, const char*> simulation_event_names
 {
-    {SimulationEvent::Type::GENOTYPE_MUTATION, {"genomic mutation"}},
+    {SimulationEvent::Type::CLONE_MUTATION, "clone mutation"},
     {SimulationEvent::Type::SAMPLING, "sampling"},
     {SimulationEvent::Type::LIVENESS_RATE_UPDATE, "liveness rate update"},
 };

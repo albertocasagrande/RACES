@@ -17,6 +17,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/clone_mutation.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/clone_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
@@ -26,8 +28,6 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_mutation.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/genotype_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
@@ -60,6 +60,9 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/clone_id.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/clone_mutation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/clone_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
@@ -69,9 +72,6 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_utils.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_id.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_mutation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/genotype_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp

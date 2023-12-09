@@ -39,9 +39,9 @@ namespace Clones
 namespace Evolutions
 {
 
-SimulationEventWrapper::SimulationEventWrapper(const GenotypeMutation& genotype_mutation):
-    type(SimulationEvent::Type::GENOTYPE_MUTATION),
-    event(std::make_shared<GenotypeMutation>(genotype_mutation))
+SimulationEventWrapper::SimulationEventWrapper(const CloneMutation& clone_mutation):
+    type(SimulationEvent::Type::CLONE_MUTATION),
+    event(std::make_shared<CloneMutation>(clone_mutation))
 {}
 
 SimulationEventWrapper::SimulationEventWrapper(const RateUpdate& rate_update):
@@ -71,10 +71,10 @@ bool operator==(const Races::Clones::Evolutions::SimulationEventWrapper& lhs,
     }
 
     switch(lhs.type) {
-        case SimulationEvent::Type::GENOTYPE_MUTATION:
+        case SimulationEvent::Type::CLONE_MUTATION:
             {
-                const auto& m_lhs = lhs.get_event<GenotypeMutation>();
-                const auto& m_rhs = rhs.get_event<GenotypeMutation>();
+                const auto& m_lhs = lhs.get_event<CloneMutation>();
+                const auto& m_rhs = rhs.get_event<CloneMutation>();
 
                 return (m_lhs == m_rhs);
             }

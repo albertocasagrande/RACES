@@ -81,7 +81,7 @@ Simulation& Simulation::operator=(Simulation&& orig)
 {               
     std::swap(tissues, orig.tissues);
     std::swap(lineage_graph, orig.lineage_graph);
-    std::swap(genotype_name2id, orig.genotype_name2id);
+    std::swap(clone_name2id, orig.clone_name2id);
     std::swap(logger, orig.logger);
     std::swap(secs_between_snapshots, orig.secs_between_snapshots);
     std::swap(statistics, orig.statistics);
@@ -202,20 +202,20 @@ void select_next_event_in_species(CellEvent& event, Tissue& tissue,
 }
 
 const CellInTissue&
-Simulation::choose_cell_in(const GenotypeId& genotype_id, const CellEventType& event_type)
+Simulation::choose_cell_in(const CloneId& clone_id, const CellEventType& event_type)
 {
     std::vector<size_t> num_of_cells;
 
     size_t total = 0;
 
-    const auto& species = tissue().get_genotype_species(genotype_id);
+    const auto& species = tissue().get_clone_species(clone_id);
     for (const auto& S : species) {
         total += S.num_of_cells_available_for(event_type);
         num_of_cells.push_back(total);
     }
 
     if (total == 0) {
-        throw std::runtime_error("No cell available for the genotype "+std::to_string(genotype_id));
+        throw std::runtime_error("No cell available for the clone "+std::to_string(clone_id));
     }
 
     std::uniform_int_distribution<size_t> distribution(1,total);
@@ -229,20 +229,20 @@ Simulation::choose_cell_in(const GenotypeId& genotype_id, const CellEventType& e
     return species[i].choose_a_cell(random_gen, event_type);
 }
 
-const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name, const CellEventType& event_type)
+const CellInTissue& Simulation::choose_cell_in(const std::string& clone_name, const CellEventType& event_type)
 {
-    auto genotype_id = find_genotype_id(genotype_name);
+    auto clone_id = find_clone_id(clone_name);
 
-    return choose_cell_in(genotype_id, event_type);
+    return choose_cell_in(clone_id, event_type);
 }
 
-const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
+const CellInTissue& Simulation::choose_cell_in(const CloneId& clone_id,
                                                const RectangleSet& rectangle, const CellEventType& event_type)
 {
     std::set<SpeciesId> species_ids;
-    auto genotype_species = tissue().get_genotype_species(genotype_id);
+    auto clone_species = tissue().get_clone_species(clone_id);
 
-    for (const auto& species : genotype_species) {
+    for (const auto& species : clone_species) {
         species_ids.insert(species.get_id());
     }
 
@@ -270,57 +270,57 @@ const CellInTissue& Simulation::choose_cell_in(const GenotypeId& genotype_id,
 
     std::ostringstream oss;
 
-    oss <<"No cell having the specified genotype is available in " << rectangle;
+    oss <<"No cell in the specified clone is available in " << rectangle;
     throw std::domain_error(oss.str());
 }
 
-const CellInTissue& Simulation::choose_cell_in(const std::string& genotype_name,
+const CellInTissue& Simulation::choose_cell_in(const std::string& clone_name,
                                                const RectangleSet& rectangle, const CellEventType& event_type)
 {
-    auto genotype_id = find_genotype_id(genotype_name);
+    auto clone_id = find_clone_id(clone_name);
 
-    return choose_cell_in(genotype_id, rectangle, event_type);
+    return choose_cell_in(clone_id, rectangle, event_type);
 }
 
 /**
- * @brief Create a genotype mutation event
+ * @brief Create a clone mutation event
  * 
  * @param tissue is the tissue in which the event will occurs
  * @param position is the position of the parent cell that will give birth to the mutated cell
- * @param final_id is the genotype identifier of the mutated cell
+ * @param final_id is the clone identifier of the mutated cell
  * @param delay is the delay of the mutation with respect to the current simulation clock
  * @return the created cell event 
  */
-CellEvent create_genotype_mutation_event(Tissue& tissue, const PositionInTissue& position,
-                                         const GenotypeId& final_id, const Time& delay)
+CellEvent create_clone_mutation_event(Tissue& tissue, const PositionInTissue& position,
+                                         const CloneId& final_id, const Time& delay)
 {
     CellEvent event;
 
     event.delay = delay;
-    event.type = CellEventType::GENOTYPE_MUTATION;
+    event.type = CellEventType::CLONE_MUTATION;
     event.position = Position(tissue, position);
     event.initial_species = static_cast<const CellInTissue&>(tissue(position)).get_species_id();
 
     const Species& initial_species = tissue.get_species(event.initial_species);
 
-    const auto& genotype_species = tissue.get_genotype_species(final_id);
-    const size_t index = GenotypeProperties::signature_to_index(initial_species.get_methylation_signature());
+    const auto& clone_species = tissue.get_clone_species(final_id);
+    const size_t index = CloneProperties::signature_to_index(initial_species.get_methylation_signature());
 
-    event.final_species = genotype_species[index].get_id();
+    event.final_species = clone_species[index].get_id();
 
     return event;
 }
 
-bool Simulation::handle_timed_genotype_mutation(const TimedEvent& timed_genotype_mutation, CellEvent& candidate_event)
+bool Simulation::handle_timed_clone_mutation(const TimedEvent& timed_clone_mutation, CellEvent& candidate_event)
 {
-    const auto& genotype_mutation = timed_genotype_mutation.get_event<GenotypeMutation>();
+    const auto& clone_mutation = timed_clone_mutation.get_event<CloneMutation>();
 
     try {
-        const auto& cell = choose_cell_in(genotype_mutation.initial_id);
+        const auto& cell = choose_cell_in(clone_mutation.initial_id);
 
-        auto delay = (timed_genotype_mutation.time >= time ? 
-                        timed_genotype_mutation.time-time : 0);
-        candidate_event = create_genotype_mutation_event(tissue(), cell, genotype_mutation.final_id, delay);
+        auto delay = (timed_clone_mutation.time >= time ? 
+                        timed_clone_mutation.time-time : 0);
+        candidate_event = create_clone_mutation_event(tissue(), cell, clone_mutation.final_id, delay);
 
         return true;
     } catch (std::runtime_error&) {
@@ -328,19 +328,19 @@ bool Simulation::handle_timed_genotype_mutation(const TimedEvent& timed_genotype
     }
 }
 
-Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& position, 
-                                                   const std::string& dst_genotype_name)
+Simulation& Simulation::simulate_clone_mutation(const PositionInTissue& position, 
+                                                   const std::string& dst_clone_name)
 {
-    auto dst_genotype_id = find_genotype_id(dst_genotype_name);
+    auto dst_clone_id = find_clone_id(dst_clone_name);
 
-    return simulate_genotype_mutation(position, dst_genotype_id);
+    return simulate_clone_mutation(position, dst_clone_id);
 }
 
-Simulation& Simulation::simulate_genotype_mutation(const PositionInTissue& position,
-                                                   const GenotypeId& dst_genotype_id)
+Simulation& Simulation::simulate_clone_mutation(const PositionInTissue& position,
+                                                   const CloneId& dst_clone_id)
 {
-    auto mutation_event = create_genotype_mutation_event(tissue(), position, 
-                                                         dst_genotype_id, 0);
+    auto mutation_event = create_clone_mutation_event(tissue(), position, 
+                                                         dst_clone_id, 0);
 
     simulate(mutation_event);
 
@@ -397,9 +397,9 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
         }
 
         switch(timed_event.type) {
-            case TimedEvent::Type::GENOTYPE_MUTATION:
+            case TimedEvent::Type::CLONE_MUTATION:
                 {
-                    auto candidate_updated = handle_timed_genotype_mutation(timed_event, candidate_event);
+                    auto candidate_updated = handle_timed_clone_mutation(timed_event, candidate_event);
 
                     if (candidate_updated) {
                         return;
@@ -724,7 +724,7 @@ Simulation::simulate_duplication_and_mutation_event(const Position& position, co
 }
 
 Simulation&
-Simulation::schedule_genotype_mutation(const GenotypeProperties& src, const GenotypeProperties& dst, const Time time)
+Simulation::schedule_clone_mutation(const CloneProperties& src, const CloneProperties& dst, const Time time)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
@@ -740,46 +740,46 @@ Simulation::schedule_genotype_mutation(const GenotypeProperties& src, const Geno
         throw std::domain_error(oss.str());
     }
 
-    GenotypeMutation mutation(src, dst);
+    CloneMutation mutation(src, dst);
 
     timed_event_queue.emplace(time, mutation);
 
     return *this;
 }
 
-const GenotypeId& Simulation::find_genotype_id(const std::string& genotype_name) const
+const CloneId& Simulation::find_clone_id(const std::string& clone_name) const
 {
-    auto found_genotype = genotype_name2id.find(genotype_name);
-    if (found_genotype == genotype_name2id.end()) {
-        throw std::out_of_range("Unknown genotype name \""+genotype_name+"\"");
+    auto found_clone = clone_name2id.find(clone_name);
+    if (found_clone == clone_name2id.end()) {
+        throw std::out_of_range("Unknown clone name \""+clone_name+"\"");
     }
 
-    return found_genotype->second;
+    return found_clone->second;
 }
 
-const std::string& Simulation::find_genotype_name(const GenotypeId& genotype_id) const
+const std::string& Simulation::find_clone_name(const CloneId& clone_id) const
 {
-    for (const auto& [name, id] : genotype_name2id) {
-        if (id == genotype_id) {
+    for (const auto& [name, id] : clone_name2id) {
+        if (id == clone_id) {
             return name;
         }
     }
 
-    throw std::out_of_range("Unknown genotype id "+std::to_string(genotype_id));
+    throw std::out_of_range("Unknown clone id "+std::to_string(clone_id));
 }
 
 Simulation&
-Simulation::schedule_genotype_mutation(const std::string& src, const std::string& dst, const Time time)
+Simulation::schedule_clone_mutation(const std::string& src, const std::string& dst, const Time time)
 {
     // the tissue() call checks whether a tissue has been 
     // associated to the simulation and, if this is not the 
     // case, it throws an std::runtime_error 
     (void)tissue();
 
-    auto src_id = find_genotype_id(src);
-    auto dst_id = find_genotype_id(dst);
+    auto src_id = find_clone_id(src);
+    auto dst_id = find_clone_id(dst);
 
-    GenotypeMutation mutation(src_id, dst_id);
+    CloneMutation mutation(src_id, dst_id);
 
     timed_event_queue.emplace(time, mutation);
 
@@ -838,15 +838,15 @@ void Simulation::reset()
     //death_activation_level = 1;
 }
 
-Simulation& Simulation::add_genotype(const GenotypeProperties& genotype)
+Simulation& Simulation::add_clone(const CloneProperties& clone)
 {
-    if (genotype_name2id.count(genotype.get_name())>0) {
-        throw std::out_of_range("Genotype \""+genotype.get_name()+"\" already in the simulation");
+    if (clone_name2id.count(clone.get_name())>0) {
+        throw std::out_of_range("Clone \""+clone.get_name()+"\" already in the simulation");
     }
 
-    tissue().add_genotype(genotype);
+    tissue().add_clone(clone);
 
-    genotype_name2id[genotype.get_name()] = genotype.get_id();
+    clone_name2id[clone.get_name()] = clone.get_id();
 
     return *this;
 }

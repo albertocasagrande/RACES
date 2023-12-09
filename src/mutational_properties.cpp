@@ -49,11 +49,11 @@ MutationalProperties::MutationalProperties()
 {}
 
 MutationalProperties& 
-MutationalProperties::add_genotype(const Clones::Evolutions::Simulation& clones_simulation,  
-                                         const std::string& name,
-                                         const std::map<std::string, double>& epigenetic_rates,
-                                         const std::list<SNV>& species_SNVs,
-                                         const std::list<CopyNumberAlteration>& species_CNAs)
+MutationalProperties::add_clone(const Clones::Evolutions::Simulation& clones_simulation,  
+                                const std::string& name,
+                                const std::map<std::string, double>& epigenetic_rates,
+                                const std::list<SNV>& species_SNVs,
+                                const std::list<CopyNumberAlteration>& species_CNAs)
 {
     std::map<std::string, const Clones::Evolutions::Species*> species_map;
 

@@ -63,13 +63,13 @@ class Simulation;
  * @brief A class to represent tissues
  */
 class Tissue {
-    using GenotypePosition = std::map<GenotypeId, std::vector<size_t>>;
+    using ClonePosition = std::map<CloneId, std::vector<size_t>>;
 
     std::string name;                       //!< The tissue name
     std::vector<Species> species;           //!< The species in the tissue
     std::map<SpeciesId, size_t> id_pos;     //!< The identifier to position map
     std::map<std::string, size_t> name_pos; //!< The name to position map
-    GenotypePosition genotype_pos;     //!< The positions of the species associated to the same genotype 
+    ClonePosition clone_pos;     //!< The positions of the species associated to the same clone 
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
 
@@ -122,15 +122,15 @@ class Tissue {
     void register_species_cells();
 
     /**
-     * @brief Add a genotype species to the tissue species
+     * @brief Add clone species to the tissue species
      * 
-     * This method add genotype species to the tissue species, but do not 
+     * This method add clone species to the tissue species, but do not 
      * register their cells into tissue space
      * 
-     * @param genotype_properties is the genotype properties of the genotype
+     * @param clone_properties is the clone properties of the clone
      * @return a reference to the updated object
      */
-    Tissue& add_genotype_species(const GenotypeProperties& genotype_properties);
+    Tissue& add_clone_species(const CloneProperties& clone_properties);
 
 
     /**
@@ -148,8 +148,7 @@ public:
      * 
      * This class allows to have a partial view of the 
      * tissue's species. For instance, it allows to 
-     * list all the species having the same genomic 
-     * genotype.
+     * list all the species in the same clone.
      */
     class SpeciesView {
         const std::vector<Species>& species;       //!< The species vector
@@ -555,21 +554,21 @@ public:
     /**
      * @brief A constructor for a 3D tissue
      * 
-     * @param genotypes is the vector of genotypes
+     * @param clones is the vector of clones
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
+    Tissue(const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
      * 
-     * @param genotypes is the vector of genotypes
+     * @param clones is the vector of clones
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size);
+    Tissue(const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief A constructor
@@ -602,22 +601,22 @@ public:
      * @brief A constructor for a 3D tissue
      * 
      * @param name is the tissue name
-     * @param genotypes is the vector of genotypes
+     * @param clones is the vector of clones
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
+    Tissue(const std::string& name, const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
      * 
      * @param name is the tissue name
-     * @param genotypes is the vector of genotypes
+     * @param clones is the vector of clones
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::string& name, const std::vector<GenotypeProperties>& genotypes, const AxisSize x_size, const AxisSize y_size);
+    Tissue(const std::string& name, const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief Get the initial iterator for the tissue species
@@ -649,7 +648,7 @@ public:
     /**
      * @brief Get a tissue species by identifier
      * 
-     * @param species_id is the genotype identifier
+     * @param species_id is the species identifier
      * @return a constant reference to the tissue species
      */
     const Species& get_species(const SpeciesId& species_id) const;
@@ -657,7 +656,7 @@ public:
     /**
      * @brief Get a tissue species by identifier
      * 
-     * @param species_id is the genotype identifier
+     * @param species_id is the species identifier
      * @return a non-constant reference to the tissue species
      */
     Species& get_species(const SpeciesId& species_id);
@@ -673,18 +672,18 @@ public:
     /**
      * @brief Get a tissue species by name
      * 
-     * @param species_name is the genotype name
+     * @param species_name is the species name
      * @return a non-constant reference to the tissue species
      */
     Species& get_species(const std::string& species_name);
 
     /**
-     * @brief Add a genotype to the tissue
+     * @brief Add a clone to the tissue
      * 
-     * @param genotype_properties is the genotype properties of the genotype
+     * @param clone_properties is the clone properties of the clone
      * @return a reference to the updated object
      */
-    Tissue& add_genotype(const GenotypeProperties& genotype_properties);
+    Tissue& add_clone(const CloneProperties& clone_properties);
 
     /**
      * @brief Test whether a position is valid in a tissue
@@ -733,15 +732,15 @@ public:
     size_t num_of_mutated_cells() const;
 
     /**
-     * @brief Get an iterator over the species having the same genotype
+     * @brief Get an iterator over the species having the same clone
      * 
-     * @param genotype_id is the identifier of the genotype whose species are aimed 
-     * @return an interator over the tissue's species having `genotype_id` as
-     *       genotype identifier
+     * @param clone_id is the identifier of the clone whose species are aimed 
+     * @return an interator over the tissue's species having `clone_id` as
+     *       clone identifier
      */
-    inline SpeciesView get_genotype_species(const GenotypeId& genotype_id) const
+    inline SpeciesView get_clone_species(const CloneId& clone_id) const
     {
-        return SpeciesView(species, genotype_pos.at(genotype_id));
+        return SpeciesView(species, clone_pos.at(clone_id));
     }
 
     /**
@@ -824,7 +823,7 @@ public:
         archive & size()
                 & name
                 & species
-                & genotype_pos;
+                & clone_pos;
     }
 
     /**
@@ -845,7 +844,7 @@ public:
 
         archive & tissue.name
                 & tissue.species
-                & tissue.genotype_pos;
+                & tissue.clone_pos;
 
         size_t i=0;
         for (auto& species : tissue.species) {

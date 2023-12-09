@@ -36,7 +36,7 @@
 #include "archive.hpp"
 #include "time.hpp"
 #include "position.hpp"
-#include "genotype_properties.hpp"
+#include "clone_properties.hpp"
 
 namespace Races
 {
