@@ -2,8 +2,8 @@
  * @file event_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a simulation event wrapper
- * @version 0.3
- * @date 2023-12-09
+ * @version 0.4
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,15 +33,15 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
 {
 
-SimulationEventWrapper::SimulationEventWrapper(const CloneMutation& clone_mutation):
-    type(SimulationEvent::Type::CLONE_MUTATION),
-    event(std::make_shared<CloneMutation>(clone_mutation))
+SimulationEventWrapper::SimulationEventWrapper(const Mutation& mutation):
+    type(SimulationEvent::Type::MUTATION),
+    event(std::make_shared<Mutation>(mutation))
 {}
 
 SimulationEventWrapper::SimulationEventWrapper(const RateUpdate& rate_update):
@@ -56,25 +56,25 @@ SimulationEventWrapper::SimulationEventWrapper(const Sampling& sampling):
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
 
-bool operator==(const Races::Clones::Evolutions::SimulationEventWrapper& lhs, 
-                const Races::Clones::Evolutions::SimulationEventWrapper& rhs)
+bool operator==(const Races::Mutants::Evolutions::SimulationEventWrapper& lhs, 
+                const Races::Mutants::Evolutions::SimulationEventWrapper& rhs)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     if (lhs.type != rhs.type) {
         return false;
     }
 
     switch(lhs.type) {
-        case SimulationEvent::Type::CLONE_MUTATION:
+        case SimulationEvent::Type::MUTATION:
             {
-                const auto& m_lhs = lhs.get_event<CloneMutation>();
-                const auto& m_rhs = rhs.get_event<CloneMutation>();
+                const auto& m_lhs = lhs.get_event<Mutation>();
+                const auto& m_rhs = rhs.get_event<Mutation>();
 
                 return (m_lhs == m_rhs);
             }

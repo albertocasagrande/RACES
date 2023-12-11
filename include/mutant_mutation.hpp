@@ -1,9 +1,9 @@
 /**
- * @file clone_mutation.hpp
+ * @file mutant_mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines clone mutations
+ * @brief Defines mutations
  * @version 0.1
- * @date 2023-12-09
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,16 +28,16 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_CLONE_MUTATION__
-#define __RACES_CLONE_MUTATION__
+#ifndef __RACES_MUTANT_MUTATION__
+#define __RACES_MUTANT_MUTATION__
 
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 #include "simulation_event.hpp"
 
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -46,28 +46,28 @@ namespace Evolutions
 /**
  * @brief A structure to represent genomic mutation
  */
-struct CloneMutation : public SimulationEvent
+struct Mutation : public SimulationEvent
 {
     using Type = SimulationEvent::Type;
 
-    CloneId initial_id;   //!< The initial clone identifier
-    CloneId final_id;     //!< The final clone identifier
+    MutantId initial_id;   //!< The initial mutant identifier
+    MutantId final_id;     //!< The final mutant identifier
 
     /**
      * @brief A constructor
      * 
-     * @param initial_id is the identifier of the initial clone
-     * @param final_id is the identifier of the final clone
+     * @param initial_id is the identifier of the initial mutant
+     * @param final_id is the identifier of the final mutant
      */
-    CloneMutation(const CloneId& initial_id, const CloneId& final_id);
+    Mutation(const MutantId& initial_id, const MutantId& final_id);
 
     /**
      * @brief A constructor
      * 
-     * @param initial_clone is the initial clone
-     * @param final_clone is the final clone
+     * @param initial_mutant is the initial mutant
+     * @param final_mutant is the final mutant
      */
-    CloneMutation(const CloneProperties& initial_clone, const CloneProperties& final_clone);
+    Mutation(const MutantProperties& initial_mutant, const MutantProperties& final_mutant);
 
     /**
      * @brief Save a genomic mutation in an archive
@@ -90,10 +90,10 @@ struct CloneMutation : public SimulationEvent
      * @return the loaded timed genomic mutation
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static CloneMutation load(ARCHIVE& archive)
+    static Mutation load(ARCHIVE& archive)
     {
-        CloneId initial_id;
-        CloneId final_id;
+        MutantId initial_id;
+        MutantId final_id;
 
         archive & initial_id 
                 & final_id;
@@ -102,13 +102,13 @@ struct CloneMutation : public SimulationEvent
     }
 
     inline Type type() const {
-        return Type::CLONE_MUTATION;
+        return Type::MUTATION;
     } 
 };
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -120,11 +120,11 @@ struct CloneMutation : public SimulationEvent
  * @return `true` if and only if the two mutations represent
  *      the same event
  */
-inline bool operator==(const Races::Clones::Evolutions::CloneMutation& lhs,
-                       const Races::Clones::Evolutions::CloneMutation& rhs)
+inline bool operator==(const Races::Mutants::Evolutions::Mutation& lhs,
+                       const Races::Mutants::Evolutions::Mutation& rhs)
 {
     return (lhs.initial_id == rhs.initial_id) 
             && (lhs.final_id == rhs.final_id);
 }
 
-#endif // __RACES_CLONE_MUTATION__
+#endif // __RACES_MUTANT_MUTATION__

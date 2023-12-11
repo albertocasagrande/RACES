@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.31
- * @date 2023-12-09
+ * @version 0.32
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,12 +31,12 @@
 #include <random>
 
 #include "tissue.hpp"
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -185,23 +185,23 @@ Tissue::Tissue(const std::string& name, const AxisSize x_size, const AxisSize y_
 {
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<CloneProperties>& clones,
+Tissue::Tissue(const std::string& name, const std::vector<MutantProperties>& mutants,
                const AxisSize  x_size, const AxisSize y_size, const AxisSize z_size):
     Tissue(name, {x_size, y_size, z_size})
 {
-    for (const auto& clone: clones) {
-        add_clone_species(clone);
+    for (const auto& mutant: mutants) {
+        add_mutant_species(mutant);
     }
 
     register_species_cells();
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<CloneProperties>& clones, 
+Tissue::Tissue(const std::string& name, const std::vector<MutantProperties>& mutants, 
                const AxisSize x_size, const AxisSize y_size):
     Tissue(name, {x_size, y_size})
 {
-    for (const auto& clone: clones) {
-        add_clone_species(clone);
+    for (const auto& mutant: mutants) {
+        add_mutant_species(mutant);
     }
 
     register_species_cells();
@@ -217,15 +217,15 @@ Tissue::Tissue(const AxisSize x_size, const AxisSize y_size, const AxisSize z_si
 {
 }
 
-Tissue::Tissue(const std::vector<CloneProperties>& clones,
+Tissue::Tissue(const std::vector<MutantProperties>& mutants,
                const AxisSize x_size, const AxisSize y_size, const AxisSize z_size):
-    Tissue("", clones, x_size, y_size, z_size)
+    Tissue("", mutants, x_size, y_size, z_size)
 {
 }
 
-Tissue::Tissue(const std::vector<CloneProperties>& clones,
+Tissue::Tissue(const std::vector<MutantProperties>& mutants,
                const AxisSize  x_size, const AxisSize  y_size):
-    Tissue("", clones, x_size, y_size)
+    Tissue("", mutants, x_size, y_size)
 {
 }
 
@@ -322,24 +322,24 @@ void Tissue::register_species_cells()
     }
 }
 
-Tissue& Tissue::add_clone(const CloneProperties& clone)
+Tissue& Tissue::add_mutant(const MutantProperties& mutant)
 {
-    add_clone_species(clone);
+    add_mutant_species(mutant);
 
     register_species_cells();
 
     return *this;
 }
 
-Tissue& Tissue::add_clone_species(const CloneProperties& clone)
+Tissue& Tissue::add_mutant_species(const MutantProperties& mutant)
 {
-    // check whether the clone is already in the tissue
-    if (clone_pos.count(clone.get_id())>0) {
+    // check whether the mutant is already in the tissue
+    if (mutant_pos.count(mutant.get_id())>0) {
         throw std::runtime_error("Clone already in the tissue");
     }
 
     // check whether any of the species is already in the tissue
-    for (const auto& species: clone.get_species()) {
+    for (const auto& species: mutant.get_species()) {
         if (id_pos.count(species.get_id())>0) {
             throw std::runtime_error("Species id "
                                      + std::to_string(static_cast<int>(species.get_id())) 
@@ -352,9 +352,9 @@ Tissue& Tissue::add_clone_species(const CloneProperties& clone)
         }
     }
 
-    // insert the clones in the tissue 
-    auto& pos = clone_pos[clone.get_id()];
-    for (const auto& in_species: clone.get_species()) {
+    // insert the mutants in the tissue 
+    auto& pos = mutant_pos[mutant.get_id()];
+    for (const auto& in_species: mutant.get_species()) {
         // place the new species at the end of the species vector
         pos.push_back(species.size());
 
@@ -436,6 +436,6 @@ std::vector<AxisSize> Tissue::size() const
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races

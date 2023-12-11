@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.25
- * @date 2023-12-09
+ * @version 0.26
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -256,7 +256,7 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
 
     if (type==CellEventType::DUPLICATION || 
             type==CellEventType::EPIGENETIC_SWITCH ||
-            type==CellEventType::CLONE_MUTATION) {
+            type==CellEventType::MUTATION) {
 
         record_cell(cell);
     }
@@ -295,6 +295,6 @@ BinaryLogger::~BinaryLogger()
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races

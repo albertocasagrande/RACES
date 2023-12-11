@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.7
- * @date 2023-12-09
+ * @version 0.8
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -298,13 +298,13 @@ private:
      * @return a map associating the sample id to the sum of all the allelic sizes in 
      *      the sample mutations in `mutation_lists`
      */
-    static std::map<Races::Clones::Evolutions::TissueSampleId, size_t>
+    static std::map<Races::Mutants::Evolutions::TissueSampleId, size_t>
     get_sample_allelic_sizes(const std::list<SampleGenomeMutations>& mutations_list,
                              UI::ProgressBar& progress_bar)
     {
         progress_bar.set_message("Evaluating allelic sizes");
 
-        std::map<Races::Clones::Evolutions::TissueSampleId, size_t> allelic_sizes;
+        std::map<Races::Mutants::Evolutions::TissueSampleId, size_t> allelic_sizes;
         for (const auto& sample_mutations: mutations_list) {
             auto& sample_allelic_size = allelic_sizes[sample_mutations.get_id()];
             sample_allelic_size = 0;
@@ -753,7 +753,7 @@ private:
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void generate_chromosome_reads(const std::list<SampleGenomeMutations>& mutations_list,
                                    const ChromosomeData<DATA_TYPE>& chr_data, 
-                                   std::map<Races::Clones::Evolutions::TissueSampleId,
+                                   std::map<Races::Mutants::Evolutions::TissueSampleId,
                                             ReadSimulationData>& read_simulation_data, 
                                    const size_t& total_steps, size_t& steps, 
                                    Races::UI::ProgressBar& progress_bar,
@@ -848,11 +848,11 @@ private:
      * @param coverage is the aimed coverage
      * @return the initial read simulation data for each sample
      */
-    std::map<Races::Clones::Evolutions::TissueSampleId, ReadSimulationData>
+    std::map<Races::Mutants::Evolutions::TissueSampleId, ReadSimulationData>
     get_initial_read_simulation_data(const std::list<SampleGenomeMutations>& mutations_list,
                                      const double& coverage) const
     {
-        std::map<Races::Clones::Evolutions::TissueSampleId, ReadSimulationData> read_simulation_data;
+        std::map<Races::Mutants::Evolutions::TissueSampleId, ReadSimulationData> read_simulation_data;
 
         size_t total_read_size = (read_type==ReadType::PAIRED_READ?2:1)*read_size;
         for (const auto& sample_mutations : mutations_list) {

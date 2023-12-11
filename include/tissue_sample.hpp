@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.8
- * @date 2023-12-09
+ * @version 0.9
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -42,7 +42,7 @@
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -76,7 +76,7 @@ public:
      * @param time is the sampling time
      * @param region is the sampled region
      */
-    TissueSample(const Races::Time& time, const Races::Clones::RectangleSet& region);
+    TissueSample(const Races::Time& time, const Races::Mutants::RectangleSet& region);
 
     /**
      * @brief Construct a new cell sample
@@ -86,7 +86,7 @@ public:
      * @param region is the sampled region
      */
     TissueSample(const std::string& name, const Races::Time& time,
-                 const Races::Clones::RectangleSet& region);
+                 const Races::Mutants::RectangleSet& region);
 
     /**
      * @brief Construct a new cell sample
@@ -95,8 +95,8 @@ public:
      * @param region is the sampled region
      * @param cell_ids is a list of the identifiers of the sample cells
      */
-    TissueSample(const Races::Time& time, const Races::Clones::RectangleSet& region,
-                 const std::list<Races::Clones::CellId>& cell_ids);
+    TissueSample(const Races::Time& time, const Races::Mutants::RectangleSet& region,
+                 const std::list<Races::Mutants::CellId>& cell_ids);
 
     /**
      * @brief Construct a new cell sample
@@ -107,15 +107,15 @@ public:
      * @param cell_ids is a list of the identifiers of the sample cells
      */
     TissueSample(const std::string& name, const Races::Time& time, 
-                 const Races::Clones::RectangleSet& region,
-                 const std::list<Races::Clones::CellId>& cell_ids);
+                 const Races::Mutants::RectangleSet& region,
+                 const std::list<Races::Mutants::CellId>& cell_ids);
 
     /**
      * @brief Add a cell id among those in the sample
      * 
      * @param cell_id is the cell id to be added in the sample
      */
-    void add_cell_id(const Races::Clones::CellId& cell_id);
+    void add_cell_id(const Races::Mutants::CellId& cell_id);
 
     /**
      * @brief Set the sample name
@@ -163,7 +163,7 @@ public:
      * 
      * @return a constant reference to the sampled region
      */
-    inline const Races::Clones::RectangleSet& get_region() const
+    inline const Races::Mutants::RectangleSet& get_region() const
     {
         return region;
     }
@@ -173,7 +173,7 @@ public:
      * 
      * @return a constant reference to the list of the sampled cell identifiers
      */
-    inline const std::list<Races::Clones::CellId>& get_cell_ids() const
+    inline const std::list<Races::Mutants::CellId>& get_cell_ids() const
     {
         return cell_ids;
     }
@@ -247,7 +247,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -258,6 +258,6 @@ public:
  * @param tissue_sample is the cell sample to be streamed
  * @return a reference to the updated output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::TissueSample& tissue_sample);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::TissueSample& tissue_sample);
 
 #endif // __RACES_TISSUE_SAMPLE__

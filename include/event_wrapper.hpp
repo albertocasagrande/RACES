@@ -2,8 +2,8 @@
  * @file event_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a simulation event wrapper
- * @version 0.4
- * @date 2023-12-09
+ * @version 0.5
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,14 +34,14 @@
 #include <memory>
 
 #include "archive.hpp"
-#include "clone_mutation.hpp"
+#include "mutant_mutation.hpp"
 #include "rate_update.hpp"
 #include "sampling.hpp"
 
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -60,9 +60,9 @@ struct SimulationEventWrapper
     /**
      * @brief A constructor that wraps a mutation event
      * 
-     * @param clone_mutation is the event to wrap
+     * @param mutation is the event to wrap
      */
-    SimulationEventWrapper(const CloneMutation& clone_mutation);
+    SimulationEventWrapper(const Mutation& mutation);
 
     /**
      * @brief A constructor that wraps a liveness rate event
@@ -114,8 +114,8 @@ struct SimulationEventWrapper
         archive & type;
 
         switch(type) {
-            case Type::CLONE_MUTATION:
-                archive & get_event<CloneMutation>();
+            case Type::MUTATION:
+                archive & get_event<Mutation>();
                 break;
             case Type::LIVENESS_RATE_UPDATE:
                 archive & get_event<RateUpdate>();
@@ -143,9 +143,9 @@ struct SimulationEventWrapper
         archive & type;
 
         switch(type) {
-            case Type::CLONE_MUTATION:
+            case Type::MUTATION:
                 {
-                    auto mutation = CloneMutation::load(archive);
+                    auto mutation = Mutation::load(archive);
 
                     return SimulationEventWrapper(mutation);
                 }
@@ -169,7 +169,7 @@ struct SimulationEventWrapper
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -181,7 +181,7 @@ struct SimulationEventWrapper
  * @return `true` if and only if the two wrappers represent
  *      the same event
  */
-bool operator==(const Races::Clones::Evolutions::SimulationEventWrapper& lhs, 
-                const Races::Clones::Evolutions::SimulationEventWrapper& rhs);
+bool operator==(const Races::Mutants::Evolutions::SimulationEventWrapper& lhs, 
+                const Races::Mutants::Evolutions::SimulationEventWrapper& rhs);
 
 #endif // __RACES_EVENT_WRAPPER__

@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.18
- * @date 2023-12-09
+ * @version 0.19
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,7 @@
 #include <ostream>
 
 #include "phylogenetic_forest.hpp"
-#include "clone_id.hpp"
+#include "mutant_id.hpp"
 
 #include "context_index.hpp"
 #include "genome_mutations.hpp"
@@ -256,7 +256,7 @@ class MutationEngine
      *         to `cell` birth time
      */
     const MutationalCoefficients&
-    get_active_mutational_coefficients(const Clones::Cell& cell) const
+    get_active_mutational_coefficients(const Mutants::Cell& cell) const
     {
         auto mc_it = timed_mutational_coefficients.upper_bound(cell.get_birth_time());
 
@@ -358,7 +358,7 @@ class MutationEngine
      * @param node is a descendants forest node representing a cell
      * @param cell_mutations are the cell mutations
      */
-    void place_SNVs(const Clones::DescendantsForest::const_node& node,
+    void place_SNVs(const Mutants::DescendantsForest::const_node& node,
                     GenomeMutations& cell_mutations)
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
@@ -422,25 +422,25 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the clone specific SNVs
+     * @brief Place the mutant specific SNVs
      * 
      * @param node is a descendants forest node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
      */
-    void place_clone_specific_mutations(const Clones::DescendantsForest::const_node& node,
+    void place_mutant_specific_mutations(const Mutants::DescendantsForest::const_node& node,
                                         GenomeMutations& cell_mutations)
     {
-        if (node.is_root() || node.get_clone_id()!=node.parent().get_clone_id()) {
-            const auto& clone_mp = mutational_properties.at(node.get_species_id());
+        if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
+            const auto& mutant_mp = mutational_properties.at(node.get_species_id());
 
-            for (auto snv : clone_mp.SNVs) {
-                snv.cause = clone_mp.name;
+            for (auto snv : mutant_mp.SNVs) {
+                snv.cause = mutant_mp.name;
 
                 place_SNV(snv, cell_mutations);
             }
 
-            for (auto CNA : clone_mp.CNAs) {
+            for (auto CNA : mutant_mp.CNAs) {
                 place_CNA(CNA, cell_mutations);
             }
         }
@@ -461,9 +461,9 @@ class MutationEngine
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
-    void place_mutations(std::map<Clones::Evolutions::TissueSampleId, 
+    void place_mutations(std::map<Mutants::Evolutions::TissueSampleId, 
                                   SampleGenomeMutations*>& sample_mutation_map,
-                         const Clones::DescendantsForest::const_node& node,
+                         const Mutants::DescendantsForest::const_node& node,
                          const GenomeMutations& ancestor_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
@@ -471,9 +471,9 @@ class MutationEngine
 
         size_t context_stack_size = context_stack.size();
         
-        CellGenomeMutations cell_mutations(static_cast<const Clones::Cell&>(node), ancestor_mutations);
+        CellGenomeMutations cell_mutations(static_cast<const Mutants::Cell&>(node), ancestor_mutations);
 
-        place_clone_specific_mutations(node, cell_mutations);
+        place_mutant_specific_mutations(node, cell_mutations);
         place_SNVs(node, cell_mutations);
         //place_CNAs(node, mutations);
 
@@ -600,10 +600,10 @@ public:
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
      */
-    std::list<SampleGenomeMutations> place_mutations(const Clones::DescendantsForest& forest,
+    std::list<SampleGenomeMutations> place_mutations(const Mutants::DescendantsForest& forest,
                                                      UI::ProgressBar *progress_bar=nullptr)
     {
-        using namespace Races::Clones::Evolutions;
+        using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
 
         GenomeMutations mutations(context_index, num_of_alleles);
@@ -630,7 +630,7 @@ public:
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
      */
-    inline std::list<SampleGenomeMutations> place_mutations(const Clones::DescendantsForest& forest,
+    inline std::list<SampleGenomeMutations> place_mutations(const Mutants::DescendantsForest& forest,
                                                             UI::ProgressBar &progress_bar)
     {
         return place_mutations(forest, &progress_bar);

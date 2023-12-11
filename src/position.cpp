@@ -2,8 +2,8 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.7
- * @date 2023-12-09
+ * @version 0.8
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,7 +34,7 @@
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -174,14 +174,14 @@ Position::Position(Tissue& tissue, const PositionInTissue& pos):
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
 namespace std 
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Direction& direction)
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Direction& direction)
 {
     for (size_t i=0; i<3; ++i) {
         switch(direction.get_delta(i)) {
@@ -202,24 +202,24 @@ std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Dire
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::PositionDelta& delta)
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionDelta& delta)
 {
     os << "(" << delta.x << "," << delta.y << "," << delta.z << ")";
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::PositionInTissue& position)
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionInTissue& position)
 {
     os << "(" << position.x <<","<< position.y <<","<< position.z <<")";
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Position& position)
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Position& position)
 {
     os << "\""<< position.tissue->get_name() << "\""
-       << static_cast<Races::Clones::Evolutions::PositionInTissue>(position);
+       << static_cast<Races::Mutants::Evolutions::PositionInTissue>(position);
 
     return os;
 }

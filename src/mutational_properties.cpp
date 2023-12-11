@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.7
- * @date 2023-12-09
+ * @version 0.8
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -49,15 +49,15 @@ MutationalProperties::MutationalProperties()
 {}
 
 MutationalProperties& 
-MutationalProperties::add_clone(const Clones::Evolutions::Simulation& clones_simulation,  
-                                const std::string& name,
-                                const std::map<std::string, double>& epigenetic_rates,
-                                const std::list<SNV>& species_SNVs,
-                                const std::list<CopyNumberAlteration>& species_CNAs)
+MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_simulation,  
+                                 const std::string& name,
+                                 const std::map<std::string, double>& epigenetic_rates,
+                                 const std::list<SNV>& species_SNVs,
+                                 const std::list<CopyNumberAlteration>& species_CNAs)
 {
-    std::map<std::string, const Clones::Evolutions::Species*> species_map;
+    std::map<std::string, const Mutants::Evolutions::Species*> species_map;
 
-    for (const auto& species : clones_simulation.tissue()) {
+    for (const auto& species : species_simulation.tissue()) {
         species_map[species.get_name()] = &species;
     }
 
@@ -69,7 +69,7 @@ MutationalProperties::add_clone(const Clones::Evolutions::Simulation& clones_sim
             throw std::domain_error("Unknown species name: \""+full_name+"\"");
         }
 
-        Clones::SpeciesId id = (species_it->second)->get_id();
+        Mutants::SpeciesId id = (species_it->second)->get_id();
 
         auto prop_it = properties.find(id);
 

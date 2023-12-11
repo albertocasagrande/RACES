@@ -17,8 +17,6 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/binary_logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/clone_mutation.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/clone_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
@@ -30,6 +28,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_mutation.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
@@ -60,9 +60,6 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/binary_logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/clone_id.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/clone_mutation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/clone_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
@@ -74,6 +71,9 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_id.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_mutation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
@@ -229,7 +229,7 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
 
-    set(CLONES_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/clones_sim.cpp
+    set(SPECIES_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/species_sim.cpp
                             ${COMMON_SOURCES})
 
     set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
@@ -246,9 +246,9 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
 
     set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
 
-    add_executable(clones_sim ${CLONES_SIM_SOURCES})
-    target_include_directories(clones_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(clones_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
+    add_executable(species_sim ${SPECIES_SIM_SOURCES})
+    target_include_directories(species_sim PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(species_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
     add_executable(descendants_builder ${DESCENDANTS_SOURCES})
     target_include_directories(descendants_builder PRIVATE ${Boost_INCLUDE_DIR})

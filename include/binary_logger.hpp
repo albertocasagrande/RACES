@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.22
- * @date 2023-12-09
+ * @version 0.23
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -283,7 +283,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

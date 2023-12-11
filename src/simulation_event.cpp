@@ -2,8 +2,8 @@
  * @file simulation_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation events
- * @version 0.3
- * @date 2023-12-09
+ * @version 0.4
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -44,13 +44,13 @@ SimulationEvent::~SimulationEvent()
 
 const std::map<SimulationEvent::Type, const char*> simulation_event_names
 {
-    {SimulationEvent::Type::CLONE_MUTATION, "clone mutation"},
+    {SimulationEvent::Type::MUTATION, "mutation"},
     {SimulationEvent::Type::SAMPLING, "sampling"},
     {SimulationEvent::Type::LIVENESS_RATE_UPDATE, "liveness rate update"},
 };
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races

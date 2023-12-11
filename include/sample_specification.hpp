@@ -2,8 +2,8 @@
  * @file sample_specification.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sample specification
- * @version 0.3
- * @date 2023-12-09
+ * @version 0.4
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -140,7 +140,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -155,8 +155,8 @@ public:
  *      name. 
  */
 inline
-bool operator==(const Races::Clones::Evolutions::SampleSpecification& lhs, 
-                const Races::Clones::Evolutions::SampleSpecification& rhs)
+bool operator==(const Races::Mutants::Evolutions::SampleSpecification& lhs, 
+                const Races::Mutants::Evolutions::SampleSpecification& rhs)
 {
     return (lhs.get_name() == rhs.get_name() && lhs.get_region() == rhs.get_region());
 }

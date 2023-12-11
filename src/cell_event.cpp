@@ -2,8 +2,8 @@
  * @file cell_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell events
- * @version 0.9
- * @date 2023-12-09
+ * @version 0.10
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,14 +36,14 @@
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 std::map<CellEventType, std::string> cell_event_names = {
     {CellEventType::DEATH, "death"},
     {CellEventType::DUPLICATION, "duplication"},
     {CellEventType::EPIGENETIC_SWITCH, "epigenetic switch"},
-    {CellEventType::CLONE_MUTATION, "mutation"}
+    {CellEventType::MUTATION, "mutation"}
 };
 
 namespace Evolutions
@@ -55,6 +55,6 @@ CellEvent::CellEvent():
 
 }
 
-}   // Clones
+}   // Mutants
 
 }   // Races

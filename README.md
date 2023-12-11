@@ -9,9 +9,9 @@ RACES is framework for simulating cancer genomic evolution. It supports:
 
 RACES consists in 4 main programs:
 -   `build_context_index` creates an index for the mutational contexts (i.e., consecutive triplets of nucleotides) in a genome. In normal conditions, the context index for a genome must be created once for all and the resulting file can be used many times.
--   `clones_sim` performs cell spacial simulation by using clone evolutional information. It supports epigenetic switching.
--   `tissue_sampler` samples the results of `clones_sim`.
--   `mutations_sim` builds the phylogenetic forest for the sampled cells, and places clone  mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
+-   `species_sim` performs cell spacial simulation by using mutant evolutional information. It supports epigenetic switching.
+-   `tissue_sampler` samples the results of `species_sim`.
+-   `mutations_sim` builds the phylogenetic forest for the sampled cells, and places mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
     *   produce simulated reads and generate the correspoding SAM file for them;
     *   collect SNVs and CNAs statistical data and save them in CSV files.
 

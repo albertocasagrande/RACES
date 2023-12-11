@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.21
- * @date 2023-12-09
+ * @version 0.22
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,35 +46,35 @@
 struct ArchiveFixture {
     long double time_horizon;
 
-    Races::Clones::Evolutions::Simulation simulation;
+    Races::Mutants::Evolutions::Simulation simulation;
 
     ArchiveFixture():
         time_horizon(70), simulation()
     {
-        using namespace Races::Clones;
+        using namespace Races::Mutants;
         
-        CloneProperties A("A",{{0.01,0.01}});
+        MutantProperties A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.3}});
         A["+"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.45}});
     
-        CloneProperties B("B",{{0.01,0.01}});
+        MutantProperties B("B",{{0.01,0.01}});
         B["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.2}});
         B["+"].set_rates({{CellEventType::DEATH, 0.01},
                           {CellEventType::DUPLICATION, 0.02}});
 
         simulation.set_tissue("Liver", {1000,1000})
-                  .add_clone(A)
-                  .add_clone(B)
+                  .add_mutant(A)
+                  .add_mutant(B)
                   .place_cell(B["-"], {250, 500})
-                  .schedule_clone_mutation(B,A,50);
+                  .schedule_mutation(B,A,50);
 
         simulation.death_activation_level = 100;
         simulation.storage_enabled = false;
 
-        Races::Clones::Evolutions::TimeTest done(time_horizon);
+        Races::Mutants::Evolutions::TimeTest done(time_horizon);
 
         simulation.run(done);
     }
@@ -165,38 +165,38 @@ bool operator==(const std::map<KEY,T>& a, const std::map<KEY,T>& b)
     return true;
 }
 
-bool operator==(const Races::Clones::Cell& a, const Races::Clones::Cell& b)
+bool operator==(const Races::Mutants::Cell& a, const Races::Mutants::Cell& b)
 {
     return (a.get_id()==b.get_id() && 
             a.get_parent_id()==b.get_parent_id() &&
             a.get_species_id()==b.get_species_id());
 }
 
-bool operator==(const Races::Clones::Evolutions::CellInTissue& a, const Races::Clones::Evolutions::CellInTissue& b)
+bool operator==(const Races::Mutants::Evolutions::CellInTissue& a, const Races::Mutants::Evolutions::CellInTissue& b)
 {
-    using namespace  Races::Clones;
+    using namespace  Races::Mutants;
 
     return (static_cast<const Cell&>(a)==static_cast<const Cell&>(b) &&
             static_cast<const Evolutions::PositionInTissue&>(a)==static_cast<const Evolutions::PositionInTissue&>(b));
 }
 
-bool operator==(const Races::Clones::SpeciesProperties& a, const Races::Clones::SpeciesProperties& b)
+bool operator==(const Races::Mutants::SpeciesProperties& a, const Races::Mutants::SpeciesProperties& b)
 {
     return (a.get_name()==b.get_name() &&
             a.get_id()==b.get_id() &&
-            a.get_clone_id()==b.get_clone_id() &&
+            a.get_mutant_id()==b.get_mutant_id() &&
             a.get_rates()==b.get_rates() &&
             a.get_epigenetic_switch_rates()==b.get_epigenetic_switch_rates());
 }
 
-inline bool operator!=(const Races::Clones::SpeciesProperties& a, const Races::Clones::SpeciesProperties& b)
+inline bool operator!=(const Races::Mutants::SpeciesProperties& a, const Races::Mutants::SpeciesProperties& b)
 {
     return !(a==b);
 }
 
-bool operator==(const Races::Clones::Evolutions::Species& a, const Races::Clones::Evolutions::Species& b)
+bool operator==(const Races::Mutants::Evolutions::Species& a, const Races::Mutants::Evolutions::Species& b)
 {
-    using namespace Races::Clones;
+    using namespace Races::Mutants;
 
     if (static_cast<const SpeciesProperties&>(a)!=static_cast<const SpeciesProperties&>(b)) {
         return false;
@@ -213,15 +213,15 @@ bool operator==(const Races::Clones::Evolutions::Species& a, const Races::Clones
     return true;
 }
 
-bool operator==(const Races::Clones::Evolutions::Tissue& a, const Races::Clones::Evolutions::Tissue& b)
+bool operator==(const Races::Mutants::Evolutions::Tissue& a, const Races::Mutants::Evolutions::Tissue& b)
 {
-    using namespace Races::Clones;
+    using namespace Races::Mutants;
 
     if (a.get_name()!=b.get_name()) {
         return false;
     }
 
-    std::set<CloneId> clone_ids;
+    std::set<MutantId> mutant_ids;
 
     auto a_it = a.begin(), b_it = b.begin();
 
@@ -230,12 +230,12 @@ bool operator==(const Races::Clones::Evolutions::Tissue& a, const Races::Clones:
         if (*a_it != *b_it) {
             return false;
         }
-        clone_ids.insert(a_it->get_clone_id());
+        mutant_ids.insert(a_it->get_mutant_id());
     }
 
-    for (const auto& clone_id : clone_ids) {
-        auto a_view = a.get_clone_species(clone_id);
-        auto b_view = b.get_clone_species(clone_id);
+    for (const auto& mutant_id : mutant_ids) {
+        auto a_view = a.get_mutant_species(mutant_id);
+        auto b_view = b.get_mutant_species(mutant_id);
 
         auto a_it = a_view.begin(), b_it = b_view.begin();
 
@@ -250,7 +250,7 @@ bool operator==(const Races::Clones::Evolutions::Tissue& a, const Races::Clones:
     return true;
 }
 
-bool operator==(const Races::Clones::Evolutions::Simulation& a, const Races::Clones::Evolutions::Simulation& b)
+bool operator==(const Races::Mutants::Evolutions::Simulation& a, const Races::Mutants::Evolutions::Simulation& b)
 {
     return a.get_time()==b.get_time() &&
            a.tissue()==b.tissue() &&
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(binary_map)
 
 BOOST_AUTO_TEST_CASE(binary_cell)
 {
-    using namespace Races::Clones;
+    using namespace Races::Mutants;
 
     std::vector<Cell> to_save{Cell(0), Cell(1,300), Cell(2, 200)};
 
@@ -348,13 +348,13 @@ BOOST_AUTO_TEST_CASE(binary_cell)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_timed_clone_mutation)
+BOOST_AUTO_TEST_CASE(binary_timed_mutation)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
-    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(CloneMutation(0,1))},
-                                    {3.5,SimulationEventWrapper(CloneMutation(1,7))},
-                                    {8.1,SimulationEventWrapper(CloneMutation(2,1))}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(Mutation(0,1))},
+                                    {3.5,SimulationEventWrapper(Mutation(1,7))},
+                                    {8.1,SimulationEventWrapper(Mutation(2,1))}};
 
     auto filename = get_a_temporary_path();
     {
@@ -379,13 +379,13 @@ BOOST_AUTO_TEST_CASE(binary_timed_clone_mutation)
 }
 
 
-BOOST_AUTO_TEST_CASE(binary_timed_clone_mutation_queue)
+BOOST_AUTO_TEST_CASE(binary_timed_mutation_queue)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
-    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(CloneMutation(0,1))},
-                                    {3.5,SimulationEventWrapper(CloneMutation(1,7))},
-                                    {8.1,SimulationEventWrapper(CloneMutation(2,1))}};
+    std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(Mutation(0,1))},
+                                    {3.5,SimulationEventWrapper(Mutation(1,7))},
+                                    {8.1,SimulationEventWrapper(Mutation(2,1))}};
 
     using PriorityQueue = std::priority_queue<TimedEvent,
                                               std::vector<TimedEvent>,
@@ -422,11 +422,11 @@ BOOST_AUTO_TEST_CASE(binary_timed_clone_mutation_queue)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_epigenetic_clone)
+BOOST_AUTO_TEST_CASE(binary_epigenetic_mutant)
 {
-    using namespace Races::Clones;
+    using namespace Races::Mutants;
     
-    CloneProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
+    MutantProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
     to_save["--"].set_rates({{CellEventType::DEATH, 0.1},
                              {CellEventType::DUPLICATION, 0.3}});
     to_save["+-"].set_rates({{CellEventType::DEATH, 0.1},
@@ -461,7 +461,7 @@ BOOST_FIXTURE_TEST_SUITE( simulatedData, ArchiveFixture )
 
 BOOST_AUTO_TEST_CASE(binary_tissue)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     auto filename = get_a_temporary_path();
 
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(binary_tissue)
 
 BOOST_AUTO_TEST_CASE(simulation_statistics)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     auto filename = get_a_temporary_path();
 
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(simulation_statistics)
 
 BOOST_AUTO_TEST_CASE(simulation_tissue)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     auto filename = get_a_temporary_path();
 

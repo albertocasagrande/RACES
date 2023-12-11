@@ -2,8 +2,8 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Simulation`
- * @version 0.15
- * @date 2023-12-09
+ * @version 0.16
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -47,22 +47,22 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::schedule_clone_mutation(const Races::Clones::CloneProperties& src,
-                                            const Races::Clones::CloneProperties& dst,
-                                            const Races::Time time)
+void SimulationWrapper::schedule_mutation(const Races::Mutants::MutantProperties& src,
+                                          const Races::Mutants::MutantProperties& dst,
+                                          const Races::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.schedule_clone_mutation(src, dst, time);
+    obj_ptr->simulation.schedule_mutation(src, dst, time);
 }
 
-struct PythonEndTest : public Races::Clones::Evolutions::TimeTest
+struct PythonEndTest : public Races::Mutants::Evolutions::TimeTest
 {
     /**
      * @brief The empty constructor
      */
     explicit PythonEndTest(const Races::Time& time):
-        Races::Clones::Evolutions::TimeTest(time)
+        Races::Mutants::Evolutions::TimeTest(time)
     {}
 
     /**
@@ -71,9 +71,9 @@ struct PythonEndTest : public Races::Clones::Evolutions::TimeTest
      * @param simulation is the considered simulation
      * @return `true` if and only if a signal has been sent to the Python process
      */
-    inline bool operator()(const Races::Clones::Evolutions::Simulation& simulation)
+    inline bool operator()(const Races::Mutants::Evolutions::Simulation& simulation)
     {
-        return Races::Clones::Evolutions::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
+        return Races::Mutants::Evolutions::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
     }
 };
 
@@ -128,18 +128,18 @@ const Races::Time& SimulationWrapper::get_time() const
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_clone(const Races::Clones::CloneProperties& clone)
+void SimulationWrapper::add_mutant(const Races::Mutants::MutantProperties& mutant)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
-    obj_ptr->simulation.add_clone(clone);
+    obj_ptr->simulation.add_mutant(mutant);
 }
 
-Races::Clones::Evolutions::PositionInTissue 
+Races::Mutants::Evolutions::PositionInTissue 
 from_Python_list_to_position(boost::python::list const& position, const uint8_t num_of_dimensions)
 {
     namespace bp = boost::python;
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     std::vector<AxisPosition> c_position;
     try {
@@ -167,7 +167,7 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
 }
 
 
-void SimulationWrapper::place_cell(const Races::Clones::CloneProperties& clone, 
+void SimulationWrapper::place_cell(const Races::Mutants::MutantProperties& mutant, 
                                    const std::string& methylation_signature,
                                    boost::python::list const& position)
 {
@@ -176,7 +176,7 @@ void SimulationWrapper::place_cell(const Races::Clones::CloneProperties& clone,
 
     {
         std::unique_lock lock(obj_ptr->s_mutex);
-        obj_ptr->simulation.place_cell(clone[methylation_signature], c_position);
+        obj_ptr->simulation.place_cell(mutant[methylation_signature], c_position);
     }
 
 }
@@ -184,7 +184,7 @@ void SimulationWrapper::place_cell(const Races::Clones::CloneProperties& clone,
 void SimulationWrapper::set_tissue(const std::string& name, boost::python::list const& sizes_list)
 {
     namespace bp = boost::python;
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     std::vector<AxisSize> c_sizes;
     try {

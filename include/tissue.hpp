@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.35
- * @date 2023-12-09
+ * @version 0.36
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -46,7 +46,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -63,13 +63,13 @@ class Simulation;
  * @brief A class to represent tissues
  */
 class Tissue {
-    using ClonePosition = std::map<CloneId, std::vector<size_t>>;
+    using ClonePosition = std::map<MutantId, std::vector<size_t>>;
 
     std::string name;                       //!< The tissue name
     std::vector<Species> species;           //!< The species in the tissue
     std::map<SpeciesId, size_t> id_pos;     //!< The identifier to position map
     std::map<std::string, size_t> name_pos; //!< The name to position map
-    ClonePosition clone_pos;     //!< The positions of the species associated to the same clone 
+    ClonePosition mutant_pos;     //!< The positions of the species associated to the same mutant 
     
     uint8_t dimensions;   //!< The number of space dimension for the tissue
 
@@ -122,15 +122,15 @@ class Tissue {
     void register_species_cells();
 
     /**
-     * @brief Add clone species to the tissue species
+     * @brief Add mutant species to the tissue species
      * 
-     * This method add clone species to the tissue species, but do not 
+     * This method add mutant species to the tissue species, but do not 
      * register their cells into tissue space
      * 
-     * @param clone_properties is the clone properties of the clone
+     * @param mutant_properties is the mutant properties of the mutant
      * @return a reference to the updated object
      */
-    Tissue& add_clone_species(const CloneProperties& clone_properties);
+    Tissue& add_mutant_species(const MutantProperties& mutant_properties);
 
 
     /**
@@ -148,7 +148,7 @@ public:
      * 
      * This class allows to have a partial view of the 
      * tissue's species. For instance, it allows to 
-     * list all the species in the same clone.
+     * list all the species in the same mutant.
      */
     class SpeciesView {
         const std::vector<Species>& species;       //!< The species vector
@@ -554,21 +554,21 @@ public:
     /**
      * @brief A constructor for a 3D tissue
      * 
-     * @param clones is the vector of clones
+     * @param mutants is the vector of mutants
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
+    Tissue(const std::vector<MutantProperties>& mutants, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
      * 
-     * @param clones is the vector of clones
+     * @param mutants is the vector of mutants
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size);
+    Tissue(const std::vector<MutantProperties>& mutants, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief A constructor
@@ -601,22 +601,22 @@ public:
      * @brief A constructor for a 3D tissue
      * 
      * @param name is the tissue name
-     * @param clones is the vector of clones
+     * @param mutants is the vector of mutants
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      * @param z_size is the size of the tissue on the z axis
      */
-    Tissue(const std::string& name, const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
+    Tissue(const std::string& name, const std::vector<MutantProperties>& mutants, const AxisSize x_size, const AxisSize y_size, const AxisSize z_size);
 
     /**
      * @brief A constructor for a 2D tissue
      * 
      * @param name is the tissue name
-     * @param clones is the vector of clones
+     * @param mutants is the vector of mutants
      * @param x_size is the size of the tissue on the x axis
      * @param y_size is the size of the tissue on the y axis
      */
-    Tissue(const std::string& name, const std::vector<CloneProperties>& clones, const AxisSize x_size, const AxisSize y_size);
+    Tissue(const std::string& name, const std::vector<MutantProperties>& mutants, const AxisSize x_size, const AxisSize y_size);
 
     /**
      * @brief Get the initial iterator for the tissue species
@@ -678,12 +678,12 @@ public:
     Species& get_species(const std::string& species_name);
 
     /**
-     * @brief Add a clone to the tissue
+     * @brief Add a mutant to the tissue
      * 
-     * @param clone_properties is the clone properties of the clone
+     * @param mutant_properties is the mutant properties of the mutant
      * @return a reference to the updated object
      */
-    Tissue& add_clone(const CloneProperties& clone_properties);
+    Tissue& add_mutant(const MutantProperties& mutant_properties);
 
     /**
      * @brief Test whether a position is valid in a tissue
@@ -732,15 +732,15 @@ public:
     size_t num_of_mutated_cells() const;
 
     /**
-     * @brief Get an iterator over the species having the same clone
+     * @brief Get an iterator over the species having the same mutant
      * 
-     * @param clone_id is the identifier of the clone whose species are aimed 
-     * @return an interator over the tissue's species having `clone_id` as
-     *       clone identifier
+     * @param mutant_id is the identifier of the mutant whose species are aimed 
+     * @return an interator over the tissue's species having `mutant_id` as
+     *       mutant identifier
      */
-    inline SpeciesView get_clone_species(const CloneId& clone_id) const
+    inline SpeciesView get_mutant_species(const MutantId& mutant_id) const
     {
-        return SpeciesView(species, clone_pos.at(clone_id));
+        return SpeciesView(species, mutant_pos.at(mutant_id));
     }
 
     /**
@@ -823,7 +823,7 @@ public:
         archive & size()
                 & name
                 & species
-                & clone_pos;
+                & mutant_pos;
     }
 
     /**
@@ -844,7 +844,7 @@ public:
 
         archive & tissue.name
                 & tissue.species
-                & tissue.clone_pos;
+                & tissue.mutant_pos;
 
         size_t i=0;
         for (auto& species : tissue.species) {
@@ -878,7 +878,7 @@ inline bool operator!=(const Tissue::SpeciesView::const_iterator& a, const Tissu
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

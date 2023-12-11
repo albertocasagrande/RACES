@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.27
- * @date 2023-12-09
+ * @version 0.28
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,13 +41,13 @@
 #include "archive.hpp"
 #include "time.hpp"
 #include "cell.hpp"
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 
 
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -281,7 +281,7 @@ public:
             case CellEventType::DEATH:
                 return true;
             case CellEventType::DUPLICATION:
-            case CellEventType::CLONE_MUTATION:
+            case CellEventType::MUTATION:
             case CellEventType::EPIGENETIC_SWITCH:
                 return (duplication_enabled.count(cell_id)>0);
             case CellEventType::ANY:
@@ -321,7 +321,7 @@ public:
             case CellEventType::DEATH:
                 return choose_a_cell(generator, cells);
             case CellEventType::DUPLICATION:
-            case CellEventType::CLONE_MUTATION:
+            case CellEventType::MUTATION:
             case CellEventType::EPIGENETIC_SWITCH:
                 return choose_a_cell(generator, duplication_enabled);
             case CellEventType::ANY:
@@ -518,7 +518,7 @@ void swap(Species& a, Species& b);
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -532,7 +532,7 @@ namespace std
  * @param species is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& species);
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::SpeciesProperties& species);
 
 }   // std
 

@@ -2,8 +2,8 @@
  * @file sample_specification.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sample specification
- * @version 0.3
- * @date 2023-12-09
+ * @version 0.4
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -60,6 +60,6 @@ SampleSpecification::SampleSpecification(const std::string& name, const Rectangl
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races

@@ -10,7 +10,7 @@ Makefile
 .ninja_deps
 .ninja_log
 build.ninja
-clones_sim
+species_sim
 mutations_sim
 descendants_builder
 tissue_sampler

@@ -2,8 +2,8 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.15
- * @date 2023-12-09
+ * @version 0.16
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,14 +34,14 @@
 #include <string>
 #include <map>
 
-#include "clone_id.hpp"
+#include "mutant_id.hpp"
 #include "position.hpp"
 #include "time.hpp"
 
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 /**
@@ -52,7 +52,7 @@ enum class CellEventType {
     DEATH,
     DUPLICATION,
     EPIGENETIC_SWITCH,
-    CLONE_MUTATION,
+    MUTATION,
     ANY
 };
 
@@ -83,7 +83,7 @@ struct CellEvent
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

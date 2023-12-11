@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.14
- * @date 2023-12-09
+ * @version 0.15
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -452,7 +452,7 @@ public:
 /**
  * @brief A class to represent the mutations of a specific cell
  */
-struct CellGenomeMutations : public Clones::Cell, public GenomeMutations
+struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
 {
     /**
      * @brief The genome length type
@@ -469,13 +469,13 @@ struct CellGenomeMutations : public Clones::Cell, public GenomeMutations
      * 
      * @param chromosomes is the vector of genome chromosomes
      */
-    explicit CellGenomeMutations(const Clones::Cell& cell, const GenomeMutations& genome_mutations);    
+    explicit CellGenomeMutations(const Mutants::Cell& cell, const GenomeMutations& genome_mutations);    
 };
 
 /**
  * @brief A structure representing the genome mutations of a tissue sample
  */
-struct SampleGenomeMutations : public Clones::Evolutions::TissueSample
+struct SampleGenomeMutations : public Mutants::Evolutions::TissueSample
 {
     std::list<CellGenomeMutations> mutations;   //!< The list of cell genome mutations
 
@@ -484,7 +484,7 @@ struct SampleGenomeMutations : public Clones::Evolutions::TissueSample
      * 
      * @param sample is the tissue sample whose cell mutations is represented
      */
-    SampleGenomeMutations(const Clones::Evolutions::TissueSample& sample);
+    SampleGenomeMutations(const Mutants::Evolutions::TissueSample& sample);
 };
 
 }   // Mutations

@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.10
- * @date 2023-12-09
+ * @version 0.11
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -335,12 +335,12 @@ CellGenomeMutations::CellGenomeMutations():
 {}
 
 
-CellGenomeMutations::CellGenomeMutations(const Clones::Cell& cell, const GenomeMutations& genome_mutations):
+CellGenomeMutations::CellGenomeMutations(const Mutants::Cell& cell, const GenomeMutations& genome_mutations):
     Cell(cell), GenomeMutations(genome_mutations)
 {}
 
-SampleGenomeMutations::SampleGenomeMutations(const Clones::Evolutions::TissueSample& sample): 
-    Clones::Evolutions::TissueSample(sample)
+SampleGenomeMutations::SampleGenomeMutations(const Mutants::Evolutions::TissueSample& sample): 
+    Mutants::Evolutions::TissueSample(sample)
 {}
 
 }   // Mutations

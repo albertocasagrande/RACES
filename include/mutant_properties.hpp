@@ -1,9 +1,9 @@
 /**
- * @file clone_properties.hpp
+ * @file mutant_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines clone properties
- * @version 0.3
- * @date 2023-12-09
+ * @brief Defines mutant properties
+ * @version 0.1
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_CLONE_PROPERTIES__
-#define __RACES_CLONE_PROPERTIES__
+#ifndef __RACES_MUTANT_PROPERTIES__
+#define __RACES_MUTANT_PROPERTIES__
 
 #include <map>
 #include <string>
@@ -41,7 +41,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 /**
@@ -114,7 +114,7 @@ public:
  */
 typedef std::vector<bool> MethylationSignature;
 
-class CloneProperties;
+class MutantProperties;
 
 namespace Evolutions
 {
@@ -126,9 +126,9 @@ namespace Evolutions
 /**
  * @brief A class to represent species properties
  * 
- * A clone is characterized by a (potentially unknown) genotype. 
- * The same clone may have different rates depending on its 
- * methylation signature. A species is a clone with a methylation
+ * A mutant is characterized by a (potentially unknown) genotype. 
+ * The same mutant may have different rates depending on its 
+ * methylation signature. A species is a mutant with a methylation
  * signature. 
  */
 class SpeciesProperties 
@@ -136,7 +136,7 @@ class SpeciesProperties
     static unsigned int counter;                    //!< The total number of species along the computation
 
     SpeciesId id;                                   //!< The species identifier
-    CloneId clone_id;                               //!< The clone identifier
+    MutantId mutant_id;                               //!< The mutant identifier
 
     std::string name;                               //!< The species name
     MethylationSignature methylation_signature;     //!< Methylation signature
@@ -153,11 +153,11 @@ class SpeciesProperties
     /**
      * @brief A constructor
      * 
-     * @param clone is the clone of the new object
+     * @param mutant is the mutant of the new object
      * @param num_of_promoters is the number of methylable promoters
      */
-    SpeciesProperties(const CloneProperties& clone,
-                       const size_t num_of_promoters);
+    SpeciesProperties(const MutantProperties& mutant,
+                      const size_t num_of_promoters);
 public:
     /**
      * @brief Get the species identifier
@@ -170,21 +170,21 @@ public:
     }
 
     /**
-     * @brief Get the clone identifier
+     * @brief Get the mutant identifier
      * 
-     * @return a constant reference to the clone identifier
+     * @return a constant reference to the mutant identifier
      */
-    inline const CloneId& get_clone_id() const
+    inline const MutantId& get_mutant_id() const
     {
-        return clone_id;
+        return mutant_id;
     }
 
     /**
-     * @brief Get the clone name
+     * @brief Get the mutant name
      * 
-     * @return a constant reference to the clone name
+     * @return a constant reference to the mutant name
      */
-    inline const std::string& get_clone_name() const
+    inline const std::string& get_mutant_name() const
     {
         return name;
     }
@@ -269,7 +269,7 @@ public:
     void save(ARCHIVE& archive) const
     {
         archive & id 
-                & clone_id 
+                & mutant_id 
                 & name 
                 & methylation_signature 
                 & event_rates
@@ -289,7 +289,7 @@ public:
         SpeciesProperties species_properties;
 
         archive & species_properties.id 
-                & species_properties.clone_id 
+                & species_properties.mutant_id 
                 & species_properties.name 
                 & species_properties.methylation_signature 
                 & species_properties.event_rates
@@ -302,21 +302,21 @@ public:
         return species_properties;
     }
 
-    friend class CloneProperties;
+    friend class MutantProperties;
     friend class Evolutions::Species;
 };
 
 /**
- * @brief A class representing clone properties
+ * @brief A class representing mutant properties
  */
-class CloneProperties 
+class MutantProperties 
 {
-    static unsigned int counter;              //!< The total number of clone along the computation
+    static unsigned int counter;              //!< The total number of mutant along the computation
 
-    CloneId id;                               //!< The clone identifier
-    std::string name;                         //!< The clone name
+    MutantId id;                               //!< The mutant identifier
+    std::string name;                         //!< The mutant name
 
-    std::vector<SpeciesProperties> species;   //!< The vector of species properties for this clone
+    std::vector<SpeciesProperties> species;   //!< The vector of species properties for this mutant
 
     template<typename SIGNATURE_TYPE>
     void validate_signature(const SIGNATURE_TYPE& signature) const;
@@ -326,45 +326,45 @@ public:
     /**
      * @brief A constructor
      * 
-     * This constructor builds a clone and its species. 
+     * This constructor builds a mutant and its species. 
      * The number of species is determined by the size of the 
      * epigenetic event rate vector. Each cell of the vector correspond to 
      * a pair methylation/demethylation events for a specific target promoter.
      * Since each target promoter can be either methylated ("+") or 
      * non-methylated ("-"), the number of species associated to
-     * a clone is exponential in the number of the promoters and, 
+     * a mutant is exponential in the number of the promoters and, 
      * as a consequence, in the number of elements in the epigenetic event 
      * rate vector.
      * 
-     * @param name is the name of the clone
+     * @param name is the name of the mutant
      * @param epigenetic_event_rates is the rates of the methylation/demethylation events 
      *          on each target promoters
      */
-    CloneProperties(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
+    MutantProperties(const std::string& name, const std::vector<EpigeneticRates>& epigenetic_event_rates);
 
     /**
      * @brief A constructor
      * 
-     * This constructor builds a clone consisting in one species.
+     * This constructor builds a mutant consisting in one species.
      * 
-     * @param name is the name of the clone
+     * @param name is the name of the mutant
      */
-    explicit CloneProperties(const std::string& name);
+    explicit MutantProperties(const std::string& name);
 
     /**
      * @brief Get the species identifier
      * 
      * @return a constant reference to the identifier
      */
-    inline const CloneId& get_id() const
+    inline const MutantId& get_id() const
     {
         return id;
     }
 
     /**
-     * @brief Get the clone name
+     * @brief Get the mutant name
      * 
-     * @return a constant reference to the clone name
+     * @return a constant reference to the mutant name
      */
     inline const std::string& get_name() const
     {
@@ -372,7 +372,7 @@ public:
     }
 
     /**
-     * @brief Get the species associated to this clone
+     * @brief Get the species associated to this mutant
      * 
      * @return a constant reference to the species
      */
@@ -382,9 +382,9 @@ public:
     }
 
     /**
-     * @brief Get the number of methylable promoters in the clone
+     * @brief Get the number of methylable promoters in the mutant
      * 
-     * @return the number of methylable promoters in the clone
+     * @return the number of methylable promoters in the mutant
      */
     size_t num_of_promoters() const;
 
@@ -434,12 +434,12 @@ public:
     {
         const auto signature_index = signature_to_index(methylation_signature);
 
-        return CloneProperties::index_to_string(signature_index, methylation_signature.size());
+        return MutantProperties::index_to_string(signature_index, methylation_signature.size());
     }
 };
 
 template<typename SIGNATURE_TYPE>
-void CloneProperties::validate_signature(const SIGNATURE_TYPE& signature) const
+void MutantProperties::validate_signature(const SIGNATURE_TYPE& signature) const
 {
     const size_t promoters = num_of_promoters();
     if (signature.size()!=promoters) {
@@ -463,7 +463,7 @@ void CloneProperties::validate_signature(const SIGNATURE_TYPE& signature) const
     }
 }
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -477,27 +477,27 @@ namespace std
  * @param epigenetic_rates are the epigenetic rates to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Clones::EpigeneticRates& epigenetic_rates);
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::EpigeneticRates& epigenetic_rates);
 
 /**
  * @brief Write information about a species in an output stream
  * 
  * @param out is the output stream
- * @param clone is the species to be streamed
+ * @param mutant is the species to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& clone);
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::SpeciesProperties& mutant);
 
 /**
- * @brief Write information about a clone in an output stream
+ * @brief Write information about a mutant in an output stream
  * 
  * @param out is the output stream
- * @param clone is the clone to be streamed
+ * @param mutant is the mutant to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Clones::CloneProperties& clone);
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::MutantProperties& mutant);
 
 }   // std
 
 
-#endif // __RACES_CLONE_PROPERTIES__
+#endif // __RACES_MUTANT_PROPERTIES__

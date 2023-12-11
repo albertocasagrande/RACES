@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.7
- * @date 2023-12-09
+ * @version 0.8
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -127,29 +127,29 @@ struct SpeciesCountTest : public Simulation::BasicTest
  * @brief Clone count test
  * 
  * The objects of this class have a method testing the number of 
- * cells of a clone. If this number is below a threshold,
+ * cells of a mutant. If this number is below a threshold,
  * then the test returns `false`; otherwise, it returns `true`.
  */
 struct CloneCountTest : public Simulation::BasicTest
 {
-    const CloneId clone_id;  //!< The clone id
+    const MutantId mutant_id;  //!< The mutant id
     const size_t threshold;  //!< The size threshold
 
     /**
      * @brief A constructor
      * 
-     * @param clone_id is the identifier of the clone whose 
+     * @param mutant_id is the identifier of the mutant whose 
      *          number of cells is counted
      * @param threshold is the threshold for the count test
      */
-    CloneCountTest(const CloneId& clone_id, const size_t& threshold);
+    CloneCountTest(const MutantId& mutant_id, const size_t& threshold);
 
     /**
      * @brief Test whether the number of cells is below the threshold
      * 
      * @param simulation is the considered simulation
      * @return `false` if and only if the number of cells of the 
-     *          considered clone is below the test threshold
+     *          considered mutant is below the test threshold
      */
     bool operator()(const Simulation& simulation) override;
 
@@ -238,7 +238,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

@@ -1,9 +1,9 @@
 /**
- * @file clone.hpp
+ * @file mutant.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Define the Python wrapper class and functions for `CloneProperties`
+ * @brief Define the Python wrapper class and functions for `MutantProperties`
  * @version 0.1
- * @date 2023-12-09
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,23 +28,23 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_PYTHON_CLONE__
-#define __RACES_PYTHON_CLONE__
+#ifndef __RACES_PYTHON_MUTANT__
+#define __RACES_PYTHON_MUTANT__
 
 #include <memory>
 
 #include <boost/python.hpp>
 
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 
 
 using namespace boost::python;
 
 /**
- * @brief A wrapper structure for `CloneProperties`
+ * @brief A wrapper structure for `MutantProperties`
  * 
  * This structure defines all the static methods required by 
- * the Python wrapping of `CloneProperties`.
+ * the Python wrapping of `MutantProperties`.
  */
 struct CloneWrapper 
 {
@@ -58,49 +58,49 @@ struct CloneWrapper
      *         `EpigeneticRates`
      * @return a shared pointer of the newly created object
      */
-    static std::shared_ptr<Races::Clones::CloneProperties>
+    static std::shared_ptr<Races::Mutants::MutantProperties>
     create(std::string const& name, boost::python::list const& epigenetic_rates);
 
     /**
      * @brief Set the rates of the species
      * 
-     * Every clone is associated to many different species.
-     * The species is a clone equipped with a epigenetic status
+     * Every mutant is associated to many different species.
+     * The species is a mutant equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
      * signature (i.e., "+"/"-"). This method set the rates of a species 
-     * by specifying its clone, its methylation signature, and the new 
+     * by specifying its mutant, its methylation signature, and the new 
      * rates. 
      * 
-     * @param clone is the clone whose rate should be set
+     * @param mutant is the mutant whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param rates are the new rates 
      */
     static
-    void set_rates(Races::Clones::CloneProperties *clone, const std::string& methylation_signature, 
+    void set_rates(Races::Mutants::MutantProperties *mutant, const std::string& methylation_signature, 
                 boost::python::dict const& rates);
 
     /**
      * @brief Get the rates of the species
      * 
-     * Every clone is associated to many different species.
-     * The species is a clone equipped with a epigenetic status
+     * Every mutant is associated to many different species.
+     * The species is a mutant equipped with a epigenetic status
      * (i.e., methylated/demethylated) that is represented by the methylation 
      * signature (i.e., "+"/"-"). This method get the rates of a species 
-     * by specifying its clone, its methylation signature, and the 
+     * by specifying its mutant, its methylation signature, and the 
      * event type.
      * 
-     * @param clone is the clone whose rate should be set
+     * @param mutant is the mutant whose rate should be set
      * @param methylation_signature is a string representing the methylation signature
      * @param 
      */
     inline static
-    double get_rate(const Races::Clones::CloneProperties *clone, 
+    double get_rate(const Races::Mutants::MutantProperties *mutant, 
                     const std::string& methylation_signature,
-                    const Races::Clones::CellEventType event_type)
+                    const Races::Mutants::CellEventType event_type)
     {
-        return (*clone)[methylation_signature].get_rate(event_type);
+        return (*mutant)[methylation_signature].get_rate(event_type);
     }
 
 };
 
-#endif // __RACES_PYTHON_CLONE__
+#endif // __RACES_PYTHON_MUTANT__

@@ -1,9 +1,9 @@
 /**
- * @file clone_mutation.cpp
+ * @file mutant_id.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements clone mutations
+ * @brief Defines mutant ans species identifiers
  * @version 0.1
- * @date 2023-12-09
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -28,29 +28,41 @@
  * SOFTWARE.
  */
 
-#include "clone_mutation.hpp"
+#ifndef __RACES_MUTANT_ID__
+#define __RACES_MUTANT_ID__
+
+#include <limits>
+#include <cstdint>
 
 namespace Races 
 {
 
-namespace Clones
+/**
+ * @brief The namespace of classes handing mutants
+ */
+namespace Mutants
 {
 
-namespace Evolutions
-{
+/**
+ * @brief The mutant identifier type
+ */
+using MutantId = uint16_t;
 
-CloneMutation::CloneMutation(const CloneId& initial_id, const CloneId& final_id):
-    initial_id(initial_id), final_id(final_id)
-{}
-
-CloneMutation::CloneMutation(const CloneProperties& initial_clone,
-                             const CloneProperties& final_clone):
-    CloneMutation(initial_clone.get_id(), final_clone.get_id())
-{}
+/**
+ * @brief The species identifier type
+ */
+using SpeciesId = uint16_t;
 
 
-}   // Evolutions
-
-}   // Clones
+}   // Mutants
 
 }   // Races
+
+/**
+ * @brief An identifier for wild-type species
+ * 
+ * This macro represents the species identifier of the wild-type cells.
+ */
+#define WILD_TYPE_SPECIES std::numeric_limits<Races::Mutants::SpeciesId>::max()
+
+#endif // __RACES_MUTANT_ID__

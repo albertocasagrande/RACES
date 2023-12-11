@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.18
- * @date 2023-12-09
+ * @version 0.19
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -106,7 +106,7 @@ size_t Species::num_of_cells_available_for(const CellEventType& event_type) cons
             return cells.size();
         case CellEventType::DUPLICATION:
         case CellEventType::EPIGENETIC_SWITCH:
-        case CellEventType::CLONE_MUTATION:
+        case CellEventType::MUTATION:
             return duplication_enabled.size();
         case CellEventType::ANY:
             return cells.size();
@@ -256,16 +256,16 @@ void swap(Species& a, Species& b)
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Clones::Evolutions::Species& species)
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::Evolutions::Species& species)
 {
-    out << "{species_properties: " << static_cast<Races::Clones::SpeciesProperties>(species) 
+    out << "{species_properties: " << static_cast<Races::Mutants::SpeciesProperties>(species) 
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {

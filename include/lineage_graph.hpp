@@ -2,8 +2,8 @@
  * @file lineage_graph.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines lineage graphs
- * @version 0.2
- * @date 2023-12-09
+ * @version 0.3
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -34,14 +34,14 @@
 #include <map>
 
 #include "time.hpp"
-#include "clone_id.hpp"
+#include "mutant_id.hpp"
 
 #include "archive.hpp"
 
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -264,7 +264,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

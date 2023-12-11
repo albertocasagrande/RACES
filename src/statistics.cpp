@@ -2,8 +2,8 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.17
- * @date 2023-12-09
+ * @version 0.18
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -212,9 +212,9 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
             record_epigenetic_switch(event.initial_species, 
                                      event.final_species, time);
             break;
-        case CellEventType::CLONE_MUTATION:
-            record_clone_mutation(event.initial_species, 
-                                  event.final_species, time);
+        case CellEventType::MUTATION:
+            record_mutation(event.initial_species, 
+                            event.final_species, time);
             break;
         default:
             throw std::runtime_error("Unsupported event type");
@@ -223,6 +223,6 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races

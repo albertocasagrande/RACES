@@ -2,8 +2,8 @@
  * @file logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation loggers
- * @version 0.14
- * @date 2023-12-09
+ * @version 0.15
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,7 +38,7 @@
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -111,7 +111,7 @@ void BasicLogger::snapshot(const Simulation& simulation)
 
 void
 BasicLogger::save_sample(const std::filesystem::path simulation_dir,
-                         const Races::Clones::Evolutions::TissueSample& tissue_sample)
+                         const Races::Mutants::Evolutions::TissueSample& tissue_sample)
 {
 
     std::ofstream os(simulation_dir/"samples.list", std::ofstream::app);
@@ -121,6 +121,6 @@ BasicLogger::save_sample(const std::filesystem::path simulation_dir,
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races

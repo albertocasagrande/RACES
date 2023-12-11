@@ -1,9 +1,9 @@
 /**
- * @file clone_properties.cpp
+ * @file mutant_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the clone properties
- * @version 0.3
- * @date 2023-12-09
+ * @brief Implements the mutant properties
+ * @version 0.1
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,17 +31,17 @@
 #include <iostream>
 #include <sstream>
 
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 #include "cell_event.hpp"
 
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 unsigned int SpeciesProperties::counter = 0;
-unsigned int CloneProperties::counter = 0;
+unsigned int MutantProperties::counter = 0;
 
 EpigeneticRates::EpigeneticRates(const double methylation_rate, const double demethylation_rate):
         methylation(methylation_rate), demethylation(demethylation_rate)
@@ -82,18 +82,18 @@ EpigeneticRates& EpigeneticRates::set_demethylation_rate(const double& rate)
 }
 
 SpeciesProperties::SpeciesProperties():
-    id(0), clone_id(0)
+    id(0), mutant_id(0)
 {}
 
-SpeciesProperties::SpeciesProperties(const CloneProperties& clone,
-                                       const size_t num_of_promoters):
-    id(counter++), clone_id(clone.get_id())
+SpeciesProperties::SpeciesProperties(const MutantProperties& mutant,
+                                     const size_t num_of_promoters):
+    id(counter++), mutant_id(mutant.get_id())
 {
-    const size_t epigenetic_index = clone.get_species().size();
+    const size_t epigenetic_index = mutant.get_species().size();
 
-    name = clone.get_name();
+    name = mutant.get_name();
 
-    methylation_signature = CloneProperties::index_to_signature(epigenetic_index, num_of_promoters);
+    methylation_signature = MutantProperties::index_to_signature(epigenetic_index, num_of_promoters);
 }
 
 double SpeciesProperties::get_rate(const CellEventType& event) const
@@ -106,11 +106,11 @@ double SpeciesProperties::get_rate(const CellEventType& event) const
 
 std::string SpeciesProperties::get_name() const
 {
-    return name + CloneProperties::signature_to_string(methylation_signature);
+    return name + MutantProperties::signature_to_string(methylation_signature);
 }
 
-CloneProperties::CloneProperties(const std::string& name,
-                   const std::vector<EpigeneticRates>& epigenetic_event_rates):
+MutantProperties::MutantProperties(const std::string& name,
+                                   const std::vector<EpigeneticRates>& epigenetic_event_rates):
     id(counter++), name(name)
 {
     size_t epigenetic_switches = 1<<epigenetic_event_rates.size();
@@ -124,15 +124,15 @@ CloneProperties::CloneProperties(const std::string& name,
         auto& e_rates = l_species.epigenetic_rates;
         
         for (size_t i=0; i<epigenetic_event_rates.size(); ++i) {
-            // get the signature of the clone reachable by 
+            // get the signature of the mutant reachable by 
             // methylating/demethylating the i-th promoter
             e_signature[i] = !e_signature[i];
 
-            // get the index of the clone reachable by 
+            // get the index of the mutant reachable by 
             // methylating/demethylating the i-th promoter
             size_t index = signature_to_index(e_signature);
 
-            // get the identifier of the clone reachable by 
+            // get the identifier of the mutant reachable by 
             // methylating/demethylating the i-th promoter
             SpeciesId dst_id = species[index].get_id();
 
@@ -150,11 +150,11 @@ CloneProperties::CloneProperties(const std::string& name,
     }
 }
 
-CloneProperties::CloneProperties(const std::string& name):
-    CloneProperties(name, std::vector<EpigeneticRates>())
+MutantProperties::MutantProperties(const std::string& name):
+    MutantProperties(name, std::vector<EpigeneticRates>())
 {}
 
-size_t CloneProperties::num_of_promoters() const
+size_t MutantProperties::num_of_promoters() const
 {
     if (species.size()==0) {
         return 0;
@@ -163,35 +163,35 @@ size_t CloneProperties::num_of_promoters() const
     return species[0].get_methylation_signature().size();
 }
 
-SpeciesProperties& CloneProperties::operator[](const MethylationSignature& methylation_signature)
+SpeciesProperties& MutantProperties::operator[](const MethylationSignature& methylation_signature)
 {
     validate_signature(methylation_signature);
 
-    return species[CloneProperties::signature_to_index(methylation_signature)];
+    return species[MutantProperties::signature_to_index(methylation_signature)];
 }
 
-const SpeciesProperties& CloneProperties::operator[](const MethylationSignature& methylation_signature) const
+const SpeciesProperties& MutantProperties::operator[](const MethylationSignature& methylation_signature) const
 {
     validate_signature(methylation_signature);
 
-    return species[CloneProperties::signature_to_index(methylation_signature)];
+    return species[MutantProperties::signature_to_index(methylation_signature)];
 }
 
-SpeciesProperties& CloneProperties::operator[](const std::string& methylation_signature)
+SpeciesProperties& MutantProperties::operator[](const std::string& methylation_signature)
 {
     validate_signature(methylation_signature);
 
-    return species[CloneProperties::string_to_index(methylation_signature)];
+    return species[MutantProperties::string_to_index(methylation_signature)];
 }
 
-const SpeciesProperties& CloneProperties::operator[](const std::string& methylation_signature) const
+const SpeciesProperties& MutantProperties::operator[](const std::string& methylation_signature) const
 {
     validate_signature(methylation_signature);
 
-    return species[CloneProperties::string_to_index(methylation_signature)];
+    return species[MutantProperties::string_to_index(methylation_signature)];
 }
 
-size_t CloneProperties::string_to_index(const std::string& methylation_signature)
+size_t MutantProperties::string_to_index(const std::string& methylation_signature)
 {
     size_t index=0, digit_value=(1 << methylation_signature.size());
 
@@ -205,7 +205,7 @@ size_t CloneProperties::string_to_index(const std::string& methylation_signature
     return index;
 }
 
-std::string CloneProperties::index_to_string(const size_t& index, const size_t num_of_promoters)
+std::string MutantProperties::index_to_string(const size_t& index, const size_t num_of_promoters)
 {
     size_t digit_value=(1 << num_of_promoters);
     std::ostringstream oss;
@@ -218,7 +218,7 @@ std::string CloneProperties::index_to_string(const size_t& index, const size_t n
     return oss.str();
 }
 
-size_t CloneProperties::signature_to_index(const MethylationSignature& methylation_signature)
+size_t MutantProperties::signature_to_index(const MethylationSignature& methylation_signature)
 {
     size_t index=0, digit_value=(1 << methylation_signature.size());
 
@@ -232,7 +232,7 @@ size_t CloneProperties::signature_to_index(const MethylationSignature& methylati
     return index;
 }
 
-MethylationSignature CloneProperties::index_to_signature(const size_t& index, const size_t num_of_promoters)
+MethylationSignature MutantProperties::index_to_signature(const size_t& index, const size_t num_of_promoters)
 {
     MethylationSignature signature;
     size_t digit_value=(1 << num_of_promoters);
@@ -245,28 +245,28 @@ MethylationSignature CloneProperties::index_to_signature(const size_t& index, co
     return signature;
 }
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Clones::EpigeneticRates& epigentic_rates)
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::EpigeneticRates& epigentic_rates)
 {
     out << "{\"on\": " << epigentic_rates.get_methylation_rate() 
             << ",\"off\": " << epigentic_rates.get_demethylation_rate() << "}";
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperties& species)
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::SpeciesProperties& species)
 {
     out << "{name: \""<< species.get_name() << "\", id: " << species.get_id() 
         << ", event_rates: {";
 
     std::string sep="";
     for (const auto& [event, rate]: species.get_rates()) {
-        out << sep << Races::Clones::cell_event_names[event] << ": " << rate;
+        out << sep << Races::Mutants::cell_event_names[event] << ": " << rate;
         sep = ", ";
     }
 
@@ -286,17 +286,17 @@ std::ostream& operator<<(std::ostream& out, const Races::Clones::SpeciesProperti
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Clones::CloneProperties& clone)
+std::ostream& operator<<(std::ostream& out, const Races::Mutants::MutantProperties& mutant)
 {
-    out << "{name: \"" << clone.get_name() << "\", id: " 
-        << clone.get_id() << ", species=[";
+    out << "{name: \"" << mutant.get_name() << "\", id: " 
+        << mutant.get_id() << ", species=[";
     
     std::string sep = "";
-    if (clone.get_species().size()>1) {
+    if (mutant.get_species().size()>1) {
         sep = "\n";
     }
 
-    for (const auto& species: clone.get_species()) {
+    for (const auto& species: mutant.get_species()) {
         out << sep << species;
         sep = ",\n";
     }

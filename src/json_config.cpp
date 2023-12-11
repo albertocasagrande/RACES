@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.12
- * @date 2023-12-09
+ * @version 0.13
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -35,7 +35,7 @@
 namespace Races
 {
 
-std::vector<Races::Clones::Evolutions::AxisPosition>
+std::vector<Races::Mutants::Evolutions::AxisPosition>
 ConfigReader::get_corner(const nlohmann::json& sampler_region_json, const std::string& corner_field_name)
 {
     if (!sampler_region_json.contains(corner_field_name)) {
@@ -49,10 +49,10 @@ ConfigReader::get_corner(const nlohmann::json& sampler_region_json, const std::s
         throw std::runtime_error("The \"" + corner_field_name + "\" must be an array of natural values");
     }
 
-    std::vector<Races::Clones::Evolutions::AxisPosition> corner;
+    std::vector<Races::Mutants::Evolutions::AxisPosition> corner;
 
     for (const auto& axis_value : corner_json) {
-        corner.push_back(axis_value.template get<Races::Clones::Evolutions::AxisPosition>());
+        corner.push_back(axis_value.template get<Races::Mutants::Evolutions::AxisPosition>());
     }
 
     if (corner.size()<2 || corner.size()>3) {
@@ -125,7 +125,7 @@ ConfigReader::add_CNA(std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
 }
 
 void
-ConfigReader::add_SNV(const std::string& clone_name, std::list<Races::Mutations::SNV>& SNVs,
+ConfigReader::add_SNV(const std::string& mutant_name, std::list<Races::Mutations::SNV>& SNVs,
                       const nlohmann::json& SNV_json)
 {
     using namespace Races::Mutations;
@@ -138,7 +138,7 @@ ConfigReader::add_SNV(const std::string& clone_name, std::list<Races::Mutations:
 
     GenomicPosition genomic_position(GenomicPosition::stochr(chr_str), position);
 
-    SNVs.emplace_back(genomic_position, context, mutated_base[0], clone_name);
+    SNVs.emplace_back(genomic_position, context, mutated_base[0], mutant_name);
 }
 
 std::map<std::string, double>
@@ -159,25 +159,25 @@ ConfigReader::get_mutation_rates(const nlohmann::json& mutation_rates_json)
 }
 
 void
-ConfigReader::schedule_clone_mutation(const std::string& clone_name,
-                                  std::list<Races::Mutations::SNV>& SNVs,
-                                  std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
-                                  const nlohmann::json& clone_mutation_json)
+ConfigReader::schedule_mutation(const std::string& mutant_name,
+                                std::list<Races::Mutations::SNV>& SNVs,
+                                std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+                                const nlohmann::json& mutation_json)
 {
-    if (!clone_mutation_json.is_object()) {
+    if (!mutation_json.is_object()) {
         throw std::runtime_error("All the elements in \"mutations\" must be objects");
     }
 
-    auto type = get_from<std::string>("type", clone_mutation_json,
+    auto type = get_from<std::string>("type", mutation_json,
                                         "All the elements in \"mutations\"");
     if (type=="SNV") {
-        add_SNV(clone_name, SNVs, clone_mutation_json);
+        add_SNV(mutant_name, SNVs, mutation_json);
 
         return;
     }
 
     if (type=="CNA") {
-        add_CNA(CNAs, clone_mutation_json);
+        add_CNA(CNAs, mutation_json);
 
         return;
     }
@@ -198,16 +198,16 @@ ConfigReader::get_fraction(const nlohmann::json& fraction_json)
 }
 
 void
-ConfigReader::schedule_clone_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
-                                               const Races::Clones::Evolutions::Simulation& simulation,
-                                               const nlohmann::json& mutational_properties_json)
+ConfigReader::schedule_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
+                                             const Races::Mutants::Evolutions::Simulation& simulation,
+                                             const nlohmann::json& mutational_properties_json)
 {
     if (!mutational_properties_json.is_object()) {
         throw std::runtime_error("All the elements in \"driver properties\" "
                                     "must be objects");
     }
 
-    auto clone_name = get_from<std::string>("name", mutational_properties_json, 
+    auto mutant_name = get_from<std::string>("name", mutational_properties_json, 
                                              "All the elements in \"driver properties\"");
 
     if (!mutational_properties_json.contains("mutation rates")) {
@@ -220,10 +220,10 @@ ConfigReader::schedule_clone_mutational_properties(Races::Mutations::MutationalP
     std::list<SNV> SNVs;
     std::list<CopyNumberAlteration> CNAs;
     if (mutational_properties_json.contains("mutations")) {
-        collect_clone_mutations(clone_name, SNVs, CNAs, mutational_properties_json["mutations"]);
+        collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["mutations"]);
     }
     
-    mutational_properties.add_clone(simulation, clone_name, mutation_rates, SNVs, CNAs);
+    mutational_properties.add_mutant(simulation, mutant_name, mutation_rates, SNVs, CNAs);
 }
 
 std::map<std::string, double>
@@ -238,7 +238,7 @@ ConfigReader::get_default_mutational_coefficients(const nlohmann::json& mutation
     return get_mutational_coefficients(mutational_coeff_json["default"]);
 }
 
-Clones::Evolutions::SampleSpecification
+Mutants::Evolutions::SampleSpecification
 ConfigReader::get_sample_specification(const nlohmann::json& sample_specification_json,
                                        const std::string& field_name)
 {
@@ -251,13 +251,13 @@ ConfigReader::get_sample_specification(const nlohmann::json& sample_specificatio
     if (sample_specification_json.contains("name")) {
         auto name = sample_specification_json["name"].template get<std::string>();
 
-        return Clones::Evolutions::SampleSpecification(name, region);
+        return Mutants::Evolutions::SampleSpecification(name, region);
     }
 
-    return Clones::Evolutions::SampleSpecification(region);
+    return Mutants::Evolutions::SampleSpecification(region);
 }
 
-Clones::RectangleSet
+Mutants::RectangleSet
 ConfigReader::get_sample_region(const nlohmann::json& sample_region_json,
                                 const std::string& field_name)
 {
@@ -276,7 +276,7 @@ ConfigReader::get_sample_region(const nlohmann::json& sample_region_json,
                                     "have the same size");
     }
 
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     if (lower_vector.size()==2) {
         return {{lower_vector[0], lower_vector[1]},
@@ -288,23 +288,23 @@ ConfigReader::get_sample_region(const nlohmann::json& sample_region_json,
 }
 
 void 
-ConfigReader::collect_clone_mutations(const std::string& clone_name,
-                                        std::list<Races::Mutations::SNV>& SNVs,
-                                        std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
-                                        const nlohmann::json& clone_mutations_json)
+ConfigReader::collect_mutations(const std::string& mutant_name,
+                                std::list<Races::Mutations::SNV>& SNVs,
+                                std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+                                const nlohmann::json& mutations_json)
 {
-    if (!clone_mutations_json.is_array()) {
+    if (!mutations_json.is_array()) {
         throw std::runtime_error("The \"mutations\" field must be an array "
                                     "of mutations");
     }
 
-    for (const auto& clone_mutation_json : clone_mutations_json) {
-        schedule_clone_mutation(clone_name, SNVs, CNAs, clone_mutation_json);
+    for (const auto& mutation_json : mutations_json) {
+        schedule_mutation(mutant_name, SNVs, CNAs, mutation_json);
     }
 }
 
 Races::Mutations::MutationalProperties
-ConfigReader::get_mutational_properties(const Races::Clones::Evolutions::Simulation& simulation,
+ConfigReader::get_mutational_properties(const Races::Mutants::Evolutions::Simulation& simulation,
                                         const nlohmann::json& configuration_json)
 {
     using namespace Races::Mutations;
@@ -321,34 +321,34 @@ ConfigReader::get_mutational_properties(const Races::Clones::Evolutions::Simulat
     }
 
     for (const auto& species_properties_json : mutational_properties_json) {
-        schedule_clone_mutational_properties(mutational_properties, simulation,
+        schedule_mutational_properties(mutational_properties, simulation,
                                                 species_properties_json);
     }
 
     return mutational_properties;
 }
 
-Races::Clones::Evolutions::TimedEvent
-get_timed_clone_mutation(const std::map<std::string, Races::Clones::CloneProperties> clones,
-                            const nlohmann::json& timed_clone_mutation_json)
+Races::Mutants::Evolutions::TimedEvent
+get_timed_mutation(const std::map<std::string, Races::Mutants::MutantProperties> mutants,
+                   const nlohmann::json& timed_mutation_json)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
-    ConfigReader::expecting("time", timed_clone_mutation_json, "Every timed clone mutation description");
+    ConfigReader::expecting("time", timed_mutation_json, "Every timed mutation description");
 
-    const auto time = timed_clone_mutation_json["time"].template get<Time>();
+    const auto time = timed_mutation_json["time"].template get<Time>();
 
-    ConfigReader::expecting("original clone", timed_clone_mutation_json, "Every timed clone mutation description");
+    ConfigReader::expecting("original mutant", timed_mutation_json, "Every timed mutation description");
 
-    const auto& orig_clone = clones.at(timed_clone_mutation_json["original clone"].template get<std::string>());
+    const auto& orig_mutant = mutants.at(timed_mutation_json["original mutant"].template get<std::string>());
 
-    ConfigReader::expecting("mutated clone", timed_clone_mutation_json, "Every timed clone mutation description");
+    ConfigReader::expecting("mutated mutant", timed_mutation_json, "Every timed mutation description");
 
-    const auto& mutated_clone = clones.at(timed_clone_mutation_json["mutated clone"].template get<std::string>());
+    const auto& mutated_mutant = mutants.at(timed_mutation_json["mutated mutant"].template get<std::string>());
     
-    SimulationEventWrapper clone_mutation({orig_clone, mutated_clone});
+    SimulationEventWrapper mutation({orig_mutant, mutated_mutant});
 
-    return {time, clone_mutation};
+    return {time, mutation};
 }
 
 double get_rate(const nlohmann::json& rate_json)
@@ -362,11 +362,11 @@ double get_rate(const nlohmann::json& rate_json)
     return rate;
 }
 
-Races::Clones::CellEventType
+Races::Mutants::CellEventType
 get_cell_event_type_by_name(const std::string& event_name)
 {
 
-    for (const auto& [type, name]: Clones::cell_event_names) {
+    for (const auto& [type, name]: Mutants::cell_event_names) {
         if (name == event_name) {
             return type;
         }
@@ -375,8 +375,8 @@ get_cell_event_type_by_name(const std::string& event_name)
     throw std::runtime_error("Unknown cell event type \""+event_name+"\"");
 }
 
-const Races::Clones::Evolutions::Species&
-find_species_by_name(const Races::Clones::Evolutions::Simulation& simulation,
+const Races::Mutants::Evolutions::Species&
+find_species_by_name(const Races::Mutants::Evolutions::Simulation& simulation,
                                 const std::string& name)
 {
     for (const auto& species : simulation.tissue()) {
@@ -388,28 +388,28 @@ find_species_by_name(const Races::Clones::Evolutions::Simulation& simulation,
     throw std::runtime_error("Unknown species \""+name+"\"");
 }
 
-Races::Clones::Evolutions::TimedEvent
-get_timed_rate_update(const Races::Clones::Evolutions::Simulation& simulation,
+Races::Mutants::Evolutions::TimedEvent
+get_timed_rate_update(const Races::Mutants::Evolutions::Simulation& simulation,
                       const nlohmann::json& timed_rate_update_json)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     const std::string descr("Every timed rate update description");
 
-    std::vector<std::string> fields{"time", "clone", "status", "rate name", "rate"};
+    std::vector<std::string> fields{"time", "mutant", "status", "rate name", "rate"};
 
     for (const auto& field: fields) { 
         ConfigReader::expecting(field, timed_rate_update_json, descr);
     }
     const auto time = timed_rate_update_json["time"].template get<Time>();
 
-    const auto name = (timed_rate_update_json["clone"].template get<std::string>()
+    const auto name = (timed_rate_update_json["mutant"].template get<std::string>()
                         + timed_rate_update_json["status"].template get<std::string>());
 
     const Species& species = find_species_by_name(simulation, name);
     
     const auto rate_name = timed_rate_update_json["rate name"].template get<std::string>();
-    Races::Clones::CellEventType cell_event_type = get_cell_event_type_by_name(rate_name);
+    Races::Mutants::CellEventType cell_event_type = get_cell_event_type_by_name(rate_name);
 
     SimulationEventWrapper rate_update({species.get_id(), cell_event_type, 
                                         get_rate(timed_rate_update_json["rate"])});
@@ -417,10 +417,10 @@ get_timed_rate_update(const Races::Clones::Evolutions::Simulation& simulation,
     return {time, rate_update};
 }
 
-Races::Clones::Evolutions::TimedEvent
+Races::Mutants::Evolutions::TimedEvent
 get_timed_sampling(const nlohmann::json& timed_sampling_json)
 {
-    using namespace Races::Clones::Evolutions;
+    using namespace Races::Mutants::Evolutions;
 
     const std::string descr("Every timed sampling description");
 
@@ -436,9 +436,9 @@ get_timed_sampling(const nlohmann::json& timed_sampling_json)
     return {time, SimulationEventWrapper(sample_specification)};
 }
 
-Races::Clones::Evolutions::TimedEvent 
-ConfigReader::get_timed_event(const Races::Clones::Evolutions::Simulation& simulation,
-                              const std::map<std::string, Races::Clones::CloneProperties> clones,
+Races::Mutants::Evolutions::TimedEvent 
+ConfigReader::get_timed_event(const Races::Mutants::Evolutions::Simulation& simulation,
+                              const std::map<std::string, Races::Mutants::MutantProperties> mutants,
                               const nlohmann::json& timed_event_json)
 {
     expecting("type", timed_event_json, "The timed event description");
@@ -446,7 +446,7 @@ ConfigReader::get_timed_event(const Races::Clones::Evolutions::Simulation& simul
     std::string type_name =  timed_event_json["type"].template get<std::string>();
 
     if (type_name == "driver mutation") {
-        return get_timed_clone_mutation(clones, timed_event_json);
+        return get_timed_mutation(mutants, timed_event_json);
     }
 
     if (type_name == "liveness rate update") {

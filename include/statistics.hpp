@@ -2,8 +2,8 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.19
- * @date 2023-12-09
+ * @version 0.20
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -40,7 +40,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -322,16 +322,16 @@ public:
     }
 
     /**
-     * @brief Record a clone mutation
+     * @brief Record a mutation
      * 
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic switch time
      */
     inline
-    void record_clone_mutation(const SpeciesId& src_species, 
-                                  const SpeciesId& dst_species,
-                                  const Time &time)
+    void record_mutation(const SpeciesId& src_species, 
+                         const SpeciesId& dst_species,
+                         const Time &time)
     {
         record_duplication_and_species_change(src_species, dst_species, time);
 
@@ -518,7 +518,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

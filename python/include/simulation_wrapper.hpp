@@ -2,8 +2,8 @@
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.14
- * @date 2023-12-09
+ * @version 0.15
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 
 #include <boost/python.hpp>
 
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 #include "simulation.hpp"
 
 using namespace boost::python;
@@ -55,7 +55,7 @@ class SimulationWrapper
 {
     struct _SimulationWrapper
     {
-        using Simulation = Races::Clones::Evolutions::Simulation;
+        using Simulation = Races::Mutants::Evolutions::Simulation;
 
         Simulation simulation;         //!< the c++ simulation object
 
@@ -98,34 +98,34 @@ public:
     const Races::Time& get_time() const;
 
     /**
-     * @brief Add a timed clone mutation
+     * @brief Add a timed mutation
      * 
-     * @param src is the source clone
-     * @param dst is the destination clone
+     * @param src is the source mutant
+     * @param dst is the destination mutant
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void schedule_clone_mutation(const Races::Clones::CloneProperties& src,
-                                 const Races::Clones::CloneProperties& dst,
-                                 const Races::Time time);
+    void schedule_mutation(const Races::Mutants::MutantProperties& src,
+                           const Races::Mutants::MutantProperties& dst,
+                           const Races::Time time);
 
     /**
-     * @brief Add a clone to the tissue
+     * @brief Add a mutant to the tissue
      * 
-     * @param clone_properties is the clone properties of the clone
+     * @param mutant_properties is the mutant properties of the mutant
      * @return a reference to the updated object
      */
-    void add_clone(const Races::Clones::CloneProperties& clone);
+    void add_mutant(const Races::Mutants::MutantProperties& mutant);
 
     /**
      * @brief Place a cell in the simulated tissue
      * 
-     * @param clone is the clone of the new cell
+     * @param mutant is the mutant of the new cell
      * @param methylation_signature is the methylation signature of the new cell
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    void place_cell(const Races::Clones::CloneProperties& clone, const std::string& methylation_signature, 
+    void place_cell(const Races::Mutants::MutantProperties& mutant, const std::string& methylation_signature, 
                     boost::python::list const& position);
 
     /**

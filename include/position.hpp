@@ -2,8 +2,8 @@
  * @file position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.9
- * @date 2023-12-09
+ * @version 0.10
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -41,7 +41,7 @@
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -65,14 +65,14 @@ namespace std
  * @param direction is the direction to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Direction& direction);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Direction& direction);
 
 };
 
 namespace Races 
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 namespace Evolutions 
@@ -321,7 +321,7 @@ struct Position : public PositionInTissue
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -336,7 +336,7 @@ namespace std
  * @param delta is the position delta to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::PositionDelta& delta);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionDelta& delta);
 
 /**
  * @brief Write a position in a tissue in an output stream
@@ -345,7 +345,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Posi
  * @param position is the position in a tissue to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::PositionInTissue& position);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionInTissue& position);
 
 /**
  * @brief Write a position in an output stream
@@ -354,7 +354,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Posi
  * @param position is the position to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::Position& position);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Position& position);
 
 }   // std
 

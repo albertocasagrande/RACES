@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.1
- * @date 2023-12-09
+ * @version 0.2
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -110,7 +110,7 @@ boost::lexical_cast<Races::Mutations::SequencingSimulations::ReadSimulator<>::Mo
 class MutationsSimulator : public BasicExecutable
 {
     std::filesystem::path simulation_filename;
-    std::filesystem::path clones_directory;
+    std::filesystem::path species_directory;
     std::filesystem::path snapshot_path;
     std::filesystem::path context_index_filename;
     std::filesystem::path ref_genome_filename;
@@ -131,13 +131,13 @@ class MutationsSimulator : public BasicExecutable
     size_t bytes_per_abs_position;
     bool quiet;
 
-    std::list<Races::Clones::Evolutions::TissueSample>
-    get_samples(const Races::Clones::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
+    std::list<Races::Mutants::Evolutions::TissueSample>
+    get_samples(const Races::Mutants::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
     {
-        using namespace Races::Clones;
-        using namespace Races::Clones::Evolutions;
+        using namespace Races::Mutants;
+        using namespace Races::Mutants::Evolutions;
 
-        std::list<Races::Clones::Evolutions::TissueSample> samples;
+        std::list<Races::Mutants::Evolutions::TissueSample> samples;
 
         if (simulation_cfg.contains("sample regions")) {
             const auto& sample_regions_json = simulation_cfg["sample regions"];
@@ -183,7 +183,7 @@ class MutationsSimulator : public BasicExecutable
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
     std::list<Races::Mutations::SampleGenomeMutations>
     place_mutations(Races::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
-                    const Races::Clones::DescendantsForest& forest) const
+                    const Races::Mutants::DescendantsForest& forest) const
     {
         if (quiet) {
             return engine.place_mutations(forest);
@@ -237,10 +237,10 @@ class MutationsSimulator : public BasicExecutable
     static void
     split_epigenetic_status(std::list<Races::Mutations::SampleGenomeMutations>& FACS_samples,
                             const Races::Mutations::SampleGenomeMutations& sample_mutations,
-                            std::map<Races::Clones::SpeciesId, std::string> methylation_map)
+                            std::map<Races::Mutants::SpeciesId, std::string> methylation_map)
     {
-        using namespace Races::Clones;
-        using namespace Races::Clones::Evolutions;
+        using namespace Races::Mutants;
+        using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
 
         std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
@@ -265,10 +265,10 @@ class MutationsSimulator : public BasicExecutable
 
     static std::list<Races::Mutations::SampleGenomeMutations>
     split_epigenetic_status(const std::list<Races::Mutations::SampleGenomeMutations>& sample_mutations_list,
-                            const std::map<Races::Clones::SpeciesId, std::string>& methylation_map)
+                            const std::map<Races::Mutants::SpeciesId, std::string>& methylation_map)
     {
-        using namespace Races::Clones;
-        using namespace Races::Clones::Evolutions;
+        using namespace Races::Mutants;
+        using namespace Races::Mutants::Evolutions;
 
         std::list<Races::Mutations::SampleGenomeMutations> FACS_samples;
 
@@ -280,7 +280,7 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename TISSUE_SAMPLE,
-             std::enable_if_t<std::is_base_of_v<Races::Clones::Evolutions::TissueSample, TISSUE_SAMPLE>, bool> = true>
+             std::enable_if_t<std::is_base_of_v<Races::Mutants::Evolutions::TissueSample, TISSUE_SAMPLE>, bool> = true>
     static std::map<Races::Time, std::list<TISSUE_SAMPLE>>
     split_list_by_time(const std::list<TISSUE_SAMPLE>& sample_list)
     {
@@ -297,7 +297,7 @@ class MutationsSimulator : public BasicExecutable
     void run_abs_position() const
     {
         using namespace Races;
-        using namespace Races::Clones;
+        using namespace Races::Mutants;
         using namespace Races::Mutations;
         using namespace Races::Mutations::SequencingSimulations;
 
@@ -313,23 +313,23 @@ class MutationsSimulator : public BasicExecutable
 
         ReadSimulator<> read_simulator;
 
-        Clones::DescendantsForest forest;
+        Mutants::DescendantsForest forest;
         MutationalProperties mutational_properties;
 
         std::map<SpeciesId, std::string> methylation_map;
         {
-            auto clones_simulation = load_clones_simulation(snapshot_path, quiet);
+            auto species_simulation = load_species_simulation(snapshot_path, quiet);
 
-            for (const auto& species : clones_simulation.tissue()) {
+            for (const auto& species : species_simulation.tissue()) {
                 const auto& signature = species.get_methylation_signature();
-                methylation_map[species.get_id()] = CloneProperties::signature_to_string(signature);
+                methylation_map[species.get_id()] = MutantProperties::signature_to_string(signature);
             }
 
-            auto samples = get_samples(clones_simulation, simulation_cfg);
+            auto samples = get_samples(species_simulation, simulation_cfg);
 
-            forest = Clones::DescendantsForest(clones_simulation, samples);
+            forest = Mutants::DescendantsForest(species_simulation, samples);
 
-            mutational_properties = ConfigReader::get_mutational_properties(clones_simulation,
+            mutational_properties = ConfigReader::get_mutational_properties(species_simulation,
                                                                             simulation_cfg);
         }
 
@@ -387,13 +387,13 @@ class MutationsSimulator : public BasicExecutable
             print_help_and_exit("The mutation file is mandatory", 1);
         }
     
-        if (!vm.count("clones simulation")) {
-            print_help_and_exit("The clones simulation directory is mandatory. "
-                                "You can produce it by using `clones_sim`", 1);
+        if (!vm.count("species simulation")) {
+            print_help_and_exit("The species simulation directory is mandatory. "
+                                "You can produce it by using `mutants_sim`", 1);
         }
         
-        if (!fs::exists(clones_directory)) {
-            print_help_and_exit("\"" + std::string(clones_directory) + "\"  does not exist", 1);
+        if (!fs::exists(species_directory)) {
+            print_help_and_exit("\"" + std::string(species_directory) + "\"  does not exist", 1);
         }
 
         if (!vm.count("context index")) {
@@ -476,7 +476,7 @@ public:
     MutationsSimulator(int argc, char* argv[]):
         BasicExecutable(argv[0], {{"mutations", "Mutation simulation options"},
                                   {"sequencing", "Sequencing simulation options"},
-                                  {"clones", "Clones evolution related options"},
+                                  {"mutants", "Mutants evolution related options"},
                                   {"generic", "Generic options"}}),
         paired_read(false), 
         insert_size(0), SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
@@ -505,7 +505,7 @@ public:
             ("write-SAM,w", "write the simulated read SAM files")
         ;
 
-        visible_options.at("clones").add_options()
+        visible_options.at("mutants").add_options()
             ("epigenetic-FACS,F", "distinguish between epigenetic states")
         ;
 
@@ -519,8 +519,8 @@ public:
         hidden_options.add_options()
             ("mutation file", po::value<std::filesystem::path>(&simulation_filename), 
              "the name of the file describing the mutations simulation")
-            ("clones simulation", po::value<std::filesystem::path>(&clones_directory), 
-             "the clones simulation directory")
+            ("species simulation", po::value<std::filesystem::path>(&species_directory), 
+             "the species simulation directory")
             ("context index", po::value<std::filesystem::path>(&context_index_filename), 
              "the genome context index")
             ("mutational signature", po::value<std::filesystem::path>(&SBS_filename), 
@@ -536,7 +536,7 @@ public:
         program_options.add(hidden_options);
 
         positional_options.add("mutation file", 1);
-        positional_options.add("clones simulation", 1);
+        positional_options.add("species simulation", 1);
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
@@ -583,7 +583,7 @@ public:
 
         validate(vm);
 
-        snapshot_path = get_last_snapshot_path(clones_directory, "clones simulation");
+        snapshot_path = get_last_snapshot_path(species_directory, "species simulation");
     }
 
     void run() const

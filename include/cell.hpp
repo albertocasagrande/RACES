@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.23
- * @date 2023-12-09
+ * @version 0.24
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,12 +36,12 @@
 #include "archive.hpp"
 #include "time.hpp"
 #include "position.hpp"
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -397,7 +397,7 @@ public:
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -411,7 +411,7 @@ namespace std
  * @param cell is the cell to be streamed
  * @return a reference to the updated stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Cell& cell);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Cell& cell);
 
 /**
  * @brief Write a cell in a tissue in an output stream
@@ -420,7 +420,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Clones::Cell& cell);
  * @param cell is the cell in the tissue to be streamed
  * @return a reference to the updated stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Clones::Evolutions::CellInTissue& cell);
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::CellInTissue& cell);
 
 } // std
 

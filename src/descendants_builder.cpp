@@ -2,8 +2,8 @@
  * @file descendants_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES descendants forest builder
- * @version 0.4
- * @date 2023-12-09
+ * @version 0.5
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@
 class DescendantsBuilder : public BasicExecutable
 {
     std::filesystem::path snapshot_path;
-    std::filesystem::path clones_directory;
+    std::filesystem::path species_directory;
 
 public:
 
@@ -59,8 +59,8 @@ public:
             ("help,h", "get the help");
 
         hidden_options.add_options()
-            ("clones simulation", po::value<std::filesystem::path>(&clones_directory), 
-            "the clones simulation directory")
+            ("species simulation", po::value<std::filesystem::path>(&species_directory), 
+            "the species simulation directory")
         ;
 
         po::options_description program_options;
@@ -69,7 +69,7 @@ public:
         }
         program_options.add(hidden_options);
 
-        positional_options.add("clones simulation", 1);
+        positional_options.add("species simulation", 1);
 
         po::variables_map vm;
         try {
@@ -84,22 +84,22 @@ public:
             print_help_and_exit(0);
         }
 
-        if (!vm.count("clones simulation")) {
-            print_help_and_exit("Missing clones simulation directory!", 1);
+        if (!vm.count("species simulation")) {
+            print_help_and_exit("Missing species simulation directory!", 1);
         }
     
-        snapshot_path = get_last_snapshot_path(clones_directory, "clones simulation");
+        snapshot_path = get_last_snapshot_path(species_directory, "species simulation");
     }
 
     void run() const
     {
-        using namespace Races::Clones;
+        using namespace Races::Mutants;
 
         try {
-            auto clones_simulation = load_clones_simulation(snapshot_path, true);
-            DescendantsForest forest(clones_simulation);
+            auto species_simulation = load_species_simulation(snapshot_path, true);
+            DescendantsForest forest(species_simulation);
 
-            Races::Clones::IO::phyloXMLStream os;
+            Races::Mutants::IO::phyloXMLStream os;
 
             os << forest;
         } catch (std::runtime_error& ex) {

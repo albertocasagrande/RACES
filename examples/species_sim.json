@@ -1,6 +1,6 @@
 {
-    "comment": "An input example for \"clones_sim\".",
-    "clones": [
+    "comment": "An input example for \"species_sim\".",
+    "mutants": [
         {
             "name": "A",
             "epigenetic rates": [
@@ -50,7 +50,7 @@
     },
     "initial cells": [
         {
-            "clone": {
+            "mutant": {
                 "name": "A",
                 "epigenetic status": "-"
             },
@@ -99,13 +99,13 @@
         {
             "time": 60,
             "type": "driver mutation",
-            "original clone": "A",
-            "mutated clone": "B"
+            "original mutant": "A",
+            "mutated mutant": "B"
         },
         {
             "time": 90,
             "type": "liveness rate update",
-            "clone": "A", 
+            "mutant": "A", 
             "status": "-", 
             "rate name": "death", 
             "rate": 0.3
@@ -113,7 +113,7 @@
         {
             "time": 90,
             "type": "liveness rate update",
-            "clone": "A", 
+            "mutant": "A", 
             "status": "+", 
             "rate name": "death", 
             "rate": 0.3

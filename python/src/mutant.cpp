@@ -1,9 +1,9 @@
 /**
- * @file clone.cpp
+ * @file mutant.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements the Python wrapper class and functions for `CloneProperties`
+ * @brief Implements the Python wrapper class and functions for `MutantProperties`
  * @version 0.1
- * @date 2023-12-09
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -30,15 +30,15 @@
 
 #include "cell_event.hpp"
 
-#include "clone.hpp"
+#include "mutant.hpp"
 #include "epigenetic_rates.hpp"
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-std::shared_ptr<Races::Clones::CloneProperties>
+std::shared_ptr<Races::Mutants::MutantProperties>
 CloneWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
 {
-    using namespace Races::Clones;
+    using namespace Races::Mutants;
 
     namespace bp = boost::python;
 
@@ -60,14 +60,14 @@ CloneWrapper::create(std::string const& name, boost::python::list const& epigene
         }
     }
 
-    return std::make_shared<CloneProperties>(name, c_epigenetic_rates);
+    return std::make_shared<MutantProperties>(name, c_epigenetic_rates);
 }
 
-void CloneWrapper::set_rates(Races::Clones::CloneProperties *clone, 
+void CloneWrapper::set_rates(Races::Mutants::MutantProperties *mutant, 
                                 const std::string& methylation_signature,
                                 boost::python::dict const& rates)
 {
-    using namespace Races::Clones;
+    using namespace Races::Mutants;
 
     namespace bp = boost::python;
 
@@ -80,5 +80,5 @@ void CloneWrapper::set_rates(Races::Clones::CloneProperties *clone,
         c_rates[event_type_id] = bp::extract<double>(rates_list[i][1]);
     }
     
-    (*clone)[methylation_signature].set_rates(c_rates);
+    (*mutant)[methylation_signature].set_rates(c_rates);
 }

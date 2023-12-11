@@ -2,8 +2,8 @@
  * @file simulation_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a basic simulation class
- * @version 0.3
- * @date 2023-12-09
+ * @version 0.4
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -36,7 +36,7 @@
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -51,7 +51,7 @@ struct SimulationEvent
      * @brief The simulation event types
      */
     enum class Type {
-        CLONE_MUTATION,
+        MUTATION,
         SAMPLING,
         LIVENESS_RATE_UPDATE
     };
@@ -65,7 +65,7 @@ extern const std::map<SimulationEvent::Type, const char*> simulation_event_names
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

@@ -2,8 +2,8 @@
  * @file rate_update.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines liveness rate updates
- * @version 0.4
- * @date 2023-12-09
+ * @version 0.5
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -31,14 +31,14 @@
 #ifndef __RACES_RATE_UPDATE__
 #define __RACES_RATE_UPDATE__
 
-#include "clone_properties.hpp"
+#include "mutant_properties.hpp"
 #include "cell_event.hpp"
 #include "simulation_event.hpp"
 
 namespace Races 
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -117,7 +117,7 @@ struct RateUpdate : public SimulationEvent
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
@@ -130,8 +130,8 @@ struct RateUpdate : public SimulationEvent
  * @return `true` if and only if the two liveness rate updates represent
  *      the same event
  */
-inline bool operator==(const Races::Clones::Evolutions::RateUpdate& lhs, 
-                       const Races::Clones::Evolutions::RateUpdate& rhs)
+inline bool operator==(const Races::Mutants::Evolutions::RateUpdate& lhs, 
+                       const Races::Mutants::Evolutions::RateUpdate& rhs)
 {
     return (lhs.species_id == rhs.species_id)
             && (lhs.event_type == rhs.event_type)

@@ -2,8 +2,8 @@
  * @file common.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines auxiliary classes and functions for executables
- * @version 0.8
- * @date 2023-12-09
+ * @version 0.9
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -74,7 +74,7 @@ public:
                     const std::vector<std::pair<std::string,std::string>>& option_sections);
 
     /**
-     * @brief Find the last clones simulation snapshot path
+     * @brief Find the last species simulation snapshot path
      * 
      * @param simulation_dir is the simulation path provided as an executable parameter
      * @param parameter_name is the executable parameter name
@@ -84,12 +84,12 @@ public:
                                                  const std::string& parameter_name);
 
     /**
-     * @brief Load a clones simulation snapshot
+     * @brief Load a species simulation snapshot
      * 
      * @param snapshot_path is the path to the snapshot to be loaded
      * @param quiet is a Boolean flag to switch on/off (false/true) descriptive messages
      * @return the loaded simulation snapshot
      */
-    static Races::Clones::Evolutions::Simulation 
-    load_clones_simulation(const std::filesystem::path snapshot_path, const bool quiet=false);
+    static Races::Mutants::Evolutions::Simulation 
+    load_species_simulation(const std::filesystem::path snapshot_path, const bool quiet=false);
 };

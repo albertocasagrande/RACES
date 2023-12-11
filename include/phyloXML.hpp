@@ -2,8 +2,8 @@
  * @file phyloXML.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines phyloXML stream
- * @version 0.8
- * @date 2023-12-09
+ * @version 0.9
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -39,11 +39,11 @@
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 /**
- * @brief The namespace of IO classes for clones namespace
+ * @brief The namespace of IO classes for mutants namespace
  */
 namespace IO
 {
@@ -125,7 +125,7 @@ public:
 
 }   // IO
 
-}   // Clones
+}   // Mutants
 
 }   // Race
 

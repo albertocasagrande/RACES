@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.9
- * @date 2023-12-09
+ * @version 0.10
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 namespace Evolutions
@@ -61,22 +61,22 @@ uint8_t SpeciesCountTest::percentage(const Simulation& simulation) const
     return static_cast<uint8_t>((100*species.num_of_cells()/threshold));
 }
 
-CloneCountTest::CloneCountTest(const CloneId& clone_id, const size_t& threshold):
-    clone_id(clone_id), threshold(threshold)
+CloneCountTest::CloneCountTest(const MutantId& mutant_id, const size_t& threshold):
+    mutant_id(mutant_id), threshold(threshold)
 {}
 
 bool CloneCountTest::operator()(const Simulation& simulation)
 {
-    const auto& clone_species = simulation.tissue().get_clone_species(clone_id);
+    const auto& mutant_species = simulation.tissue().get_mutant_species(mutant_id);
 
-    return threshold <= clone_species.num_of_cells();
+    return threshold <= mutant_species.num_of_cells();
 }
 
 uint8_t CloneCountTest::percentage(const Simulation& simulation) const
 {
-    const auto clone_species = simulation.tissue().get_clone_species(clone_id);
+    const auto mutant_species = simulation.tissue().get_mutant_species(mutant_id);
 
-    return static_cast<uint8_t>((100*clone_species.num_of_cells()/threshold));
+    return static_cast<uint8_t>((100*mutant_species.num_of_cells()/threshold));
 }
 
 EventCountTest::EventCountTest(const CellEventType& event_type, 
@@ -146,7 +146,7 @@ uint8_t EventCountTest::percentage(const Simulation& simulation) const
 
 }   // Evolutions
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 

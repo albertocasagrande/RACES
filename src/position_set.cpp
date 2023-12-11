@@ -2,8 +2,8 @@
  * @file position_set.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to represent tissue position set
- * @version 0.5
- * @date 2023-12-09
+ * @version 0.6
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -33,7 +33,7 @@
 namespace Races
 {
 
-namespace Clones
+namespace Mutants
 {
 
 BasicPositionSet::const_iterator BasicPositionSet::begin() const
@@ -204,14 +204,14 @@ size_t RectangleSet::size() const
             *(upper_corner.z-lower_corner.z+1));
 }
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Clones::RectangleSet& rectangle)
+std::ostream& operator<<(std::ostream& os, const Races::Mutants::RectangleSet& rectangle)
 {
     os << "RectangleSet{" << rectangle.lower_corner 
        << "," << rectangle.upper_corner << "}";

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.17
- * @date 2023-12-09
+ * @version 0.18
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -38,11 +38,11 @@
 namespace Races
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
-DescendantsForest::SpeciesData::SpeciesData(const CloneId& clone_id, const MethylationSignature& signature):
-    clone_id(clone_id), signature(signature)
+DescendantsForest::SpeciesData::SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature):
+    mutant_id(mutant_id), signature(signature)
 {}
 
 DescendantsForest::const_node::const_node(const DescendantsForest* forest, const CellId cell_id):
@@ -83,19 +83,19 @@ DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation):
 DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation,
                                      const std::list<Evolutions::TissueSample>& tissue_samples)
 {
-    std::set<CloneId> clone_ids;
+    std::set<MutantId> mutant_ids;
 
     auto species_properties = simulation.tissue().get_species_properties();
     for (const auto& s_propeties: species_properties) {
-        const auto& clone_id = s_propeties.get_clone_id();
-        clone_ids.insert(clone_id);
+        const auto& mutant_id = s_propeties.get_mutant_id();
+        mutant_ids.insert(mutant_id);
 
         const auto& signature = s_propeties.get_methylation_signature();
-        species_data.insert({s_propeties.get_id(), {clone_id, signature}});
+        species_data.insert({s_propeties.get_id(), {mutant_id, signature}});
     }
 
-    for (const auto& clone_id : clone_ids) {
-        clone_names[clone_id] = simulation.find_clone_name(clone_id);
+    for (const auto& mutant_id : mutant_ids) {
+        mutant_names[mutant_id] = simulation.find_mutant_name(mutant_id);
     }
 
     Evolutions::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
@@ -317,6 +317,6 @@ void DescendantsForest::clear()
     coming_from.clear();
 }
 
-}   // Clones
+}   // Mutants
 
 }   // Races

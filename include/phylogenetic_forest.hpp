@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.21
- * @date 2023-12-09
+ * @version 0.22
+ * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -44,7 +44,7 @@
 namespace Races
 {
 
-namespace Clones 
+namespace Mutants 
 {
 
 /**
@@ -59,13 +59,13 @@ class DescendantsForest
      */
     struct SpeciesData
     {
-        CloneId clone_id;                //!< The species clone id
+        MutantId mutant_id;                //!< The species mutant id
         MethylationSignature signature;  //!< The species signature
 
         /**
          * @brief The constructor
          */
-        SpeciesData(const CloneId& clone_id, const MethylationSignature& signature);
+        SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature);
     }; 
 
     using EdgeTail = std::set<CellId>;
@@ -75,7 +75,7 @@ class DescendantsForest
     std::map<CellId, EdgeTail> branches;    //!< The descendant branches
 
     std::map<SpeciesId, SpeciesData> species_data;          //!< The species id to data map
-    std::map<CloneId, std::string> clone_names;       //!< The clone id to clone name map
+    std::map<MutantId, std::string> mutant_names;       //!< The mutant id to mutant name map
 
     std::vector<Evolutions::TissueSample> samples;  //!< The vector of the samples that produced the forest
     std::map<CellId, uint16_t> coming_from;  //!< The map associating each leaf to the sample which it comes from
@@ -179,15 +179,15 @@ protected:
     }
 
     /**
-     * @brief Get the name of a clone
+     * @brief Get the name of a mutant
      * 
-     * @param clone_id is the identifier of the clone whose name is aimed
-     * @return a constant reference to the name of the clone having 
-     *          `clone_id` as identifier
+     * @param mutant_id is the identifier of the mutant whose name is aimed
+     * @return a constant reference to the name of the mutant having 
+     *          `mutant_id` as identifier
      */
-    inline const std::string& get_clone_name(const CloneId& clone_id) const
+    inline const std::string& get_mutant_name(const MutantId& mutant_id) const
     {
-        return clone_names.at(clone_id);
+        return mutant_names.at(mutant_id);
     }
 
     /**
@@ -310,23 +310,23 @@ public:
         }
 
         /**
-         * @brief Get the node clone id
+         * @brief Get the node mutant id
          * 
-         * @return a constant reference to the node clone id
+         * @return a constant reference to the node mutant id
          */
-        inline const CloneId& get_clone_id() const
+        inline const MutantId& get_mutant_id() const
         {
-            return forest->species_data.at(get_species_id()).clone_id;
+            return forest->species_data.at(get_species_id()).mutant_id;
         }
 
         /**
-         * @brief Get the node clone name
+         * @brief Get the node mutant name
          * 
-         * @return a constant reference to the node clone name
+         * @return a constant reference to the node mutant name
          */
-        inline const std::string& get_clone_name() const
+        inline const std::string& get_mutant_name() const
         {
-            return forest->clone_names.at(get_clone_id());
+            return forest->mutant_names.at(get_mutant_id());
         }
 
         /**
@@ -396,7 +396,7 @@ public:
     /**
      * @brief Construct a descendants forest by using a tissue sample of a simulation
      * 
-     * This method builds a descendants forest by using clone simulation 
+     * This method builds a descendants forest by using mutant simulation 
      * pre-sampled cells as leaves.
      * 
      * @param simulation is a simulation
@@ -495,7 +495,7 @@ public:
     void clear();
 };
 
-}   // Clones
+}   // Mutants
 
 }   // Races
 
