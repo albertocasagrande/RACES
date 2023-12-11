@@ -2,7 +2,7 @@
  * @file mutants_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the mutants simulator
- * @version 0.1
+ * @version 0.2
  * @date 2023-12-11
  * 
  * @copyright Copyright (c) 2023
@@ -224,7 +224,7 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_initial_cells(const nlohmann::json& initial_cells_json,
-                                        const std::map<std::string, Races::Mutants::MutantProperties> mutants)
+                                        const std::map<std::string, Races::Mutants::MutantProperties>& mutants)
     {
         if (!initial_cells_json.is_array()) {
             throw std::domain_error("The \"initial cells\" field must contain an array");
@@ -268,7 +268,7 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_timed_events(const nlohmann::json& timed_events_json,
-                                       const std::map<std::string, Races::Mutants::MutantProperties> mutants)
+                                       const std::map<std::string, Races::Mutants::MutantProperties>& mutants)
     {
         using namespace Races;
         using namespace Races::Mutants;
