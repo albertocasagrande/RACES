@@ -2,7 +2,7 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.15
+ * @version 0.16
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -311,9 +311,9 @@ ConfigReader::get_mutational_properties(const Races::Mutants::Evolutions::Simula
 
     MutationalProperties mutational_properties;
 
-    expecting("driver properties", configuration_json, "The passengers simulation configuration");
+    expecting("mutant properties", configuration_json, "The passengers simulation configuration");
 
-    auto& mutational_properties_json = configuration_json["driver properties"];
+    auto& mutational_properties_json = configuration_json["mutant properties"];
 
     if (!mutational_properties_json.is_array()) {
         throw std::runtime_error("The \"driver properties\" field must be an array "

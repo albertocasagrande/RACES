@@ -7,7 +7,7 @@
             {"chromosome": "Y", "number of alleles": 1}
         ]
     },
-    "driver properties": [
+    "mutant properties": [
         {
             "name": "A",
             "mutation rates": [
