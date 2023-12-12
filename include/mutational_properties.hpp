@@ -2,7 +2,7 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.9
+ * @version 0.10
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -78,7 +78,8 @@ class MutationalProperties
                                      const std::list<CopyNumberAlteration>& CNAs);
     };
 
-    std::map<Mutants::SpeciesId, SpeciesMutationalProperties> properties;  //!< the species property map
+    std::map<std::string, Mutants::SpeciesId> species_name2id;             //!< The map from species name to identifiers
+    std::map<Mutants::SpeciesId, SpeciesMutationalProperties> properties;  //!< The species property map
 public:
 
     /**
@@ -87,21 +88,26 @@ public:
     MutationalProperties();
 
     /**
-     * @brief Add a mutational properties
+     * @brief A constructor
      *
      * @param species_simulation is a species simulation
+     */
+    MutationalProperties(const Mutants::Evolutions::Simulation& species_simulation);
+
+    /**
+     * @brief Add a mutational properties
+     *
      * @param name is the name of the mutant
      * @param epistate_mutation_rates is a map from epigenomic status to
      *          mutational rate
-     * @param species_SNVs is a list of SNVs characterizing the species
-     * @param species_CNAs is a list of CNAs characterizing the species
+     * @param mutant_SNVs is a list of SNVs characterizing the mutant
+     * @param mutant_CNAs is a list of CNAs characterizing the mutant
      * @return a reference to the updated object
      */
-    MutationalProperties& add_mutant(const Mutants::Evolutions::Simulation& species_simulation,
-                                     const std::string& name,
+    MutationalProperties& add_mutant(const std::string& name,
                                      const std::map<std::string, double>& epistate_mutation_rates,
-                                     const std::list<SNV>& species_SNVs={},
-                                     const std::list<CopyNumberAlteration>& species_CNAs={});
+                                     const std::list<SNV>& mutant_SNVs={},
+                                     const std::list<CopyNumberAlteration>& mutant_CNAs={});
 
     /**
      * @brief Get the properties of a species

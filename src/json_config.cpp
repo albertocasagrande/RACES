@@ -2,7 +2,7 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.16
+ * @version 0.17
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -199,7 +199,6 @@ ConfigReader::get_fraction(const nlohmann::json& fraction_json)
 
 void
 ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
-                                        const Races::Mutants::Evolutions::Simulation& simulation,
                                         const nlohmann::json& mutational_properties_json)
 {
     if (!mutational_properties_json.is_object()) {
@@ -223,7 +222,7 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
         collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["mutations"]);
     }
 
-    mutational_properties.add_mutant(simulation, mutant_name, mutation_rates, SNVs, CNAs);
+    mutational_properties.add_mutant(mutant_name, mutation_rates, SNVs, CNAs);
 }
 
 std::map<std::string, double>
@@ -309,20 +308,19 @@ ConfigReader::get_mutational_properties(const Races::Mutants::Evolutions::Simula
 {
     using namespace Races::Mutations;
 
-    MutationalProperties mutational_properties;
+    MutationalProperties mutational_properties(simulation);
 
     expecting("mutant properties", configuration_json, "The passengers simulation configuration");
 
     auto& mutational_properties_json = configuration_json["mutant properties"];
 
     if (!mutational_properties_json.is_array()) {
-        throw std::runtime_error("The \"driver properties\" field must be an array "
-                                    "of species mutational properties");
+        throw std::runtime_error("The \"mutant properties\" field must be an array "
+                                 "of species mutational properties");
     }
 
     for (const auto& species_properties_json : mutational_properties_json) {
-        add_mutational_properties(mutational_properties, simulation,
-                                  species_properties_json);
+        add_mutational_properties(mutational_properties, species_properties_json);
     }
 
     return mutational_properties;

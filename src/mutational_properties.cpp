@@ -2,7 +2,7 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.9
+ * @version 0.10
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -40,36 +40,36 @@ MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties()
 {}
 
 MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties(const std::string& name, const double& mu,
-                                                                                        const std::list<SNV>& SNVs,
-                                                                                        const std::list<CopyNumberAlteration>& CNAs):
+                                                                               const std::list<SNV>& SNVs,
+                                                                               const std::list<CopyNumberAlteration>& CNAs):
     name(name), mu(mu), SNVs(SNVs), CNAs(CNAs)
 {}
 
 MutationalProperties::MutationalProperties()
 {}
 
-MutationalProperties&
-MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_simulation,
-                                 const std::string& name,
-                                 const std::map<std::string, double>& epistate_mutation_rates,
-                                 const std::list<SNV>& species_SNVs,
-                                 const std::list<CopyNumberAlteration>& species_CNAs)
+MutationalProperties::MutationalProperties(const Mutants::Evolutions::Simulation& species_simulation)
 {
-    std::map<std::string, const Mutants::Evolutions::Species*> species_map;
-
     for (const auto& species : species_simulation.tissue()) {
-        species_map[species.get_name()] = &species;
+        species_name2id[species.get_name()] = species.get_id();
     }
+}
 
+MutationalProperties&
+MutationalProperties::add_mutant(const std::string& name,
+                                 const std::map<std::string, double>& epistate_mutation_rates,
+                                 const std::list<SNV>& mutant_SNVs,
+                                 const std::list<CopyNumberAlteration>& mutant_CNAs)
+{
     for (const auto& [epistate, mutation_rate] : epistate_mutation_rates) {
         auto full_name = name+epistate;
-        auto species_it = species_map.find(full_name);
+        auto species_it = species_name2id.find(full_name);
 
-        if (species_it == species_map.end()) {
+        if (species_it == species_name2id.end()) {
             throw std::domain_error("Unknown species name: \""+full_name+"\"");
         }
 
-        Mutants::SpeciesId id = (species_it->second)->get_id();
+        Mutants::SpeciesId id = species_it->second;
 
         auto prop_it = properties.find(id);
 
@@ -78,7 +78,7 @@ MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_
                                     "\" has been already added.");
         }
 
-        properties[id] = {full_name, mutation_rate, species_SNVs, species_CNAs};
+        properties[id] = {full_name, mutation_rate, mutant_SNVs, mutant_CNAs};
     }
 
     return *this;
