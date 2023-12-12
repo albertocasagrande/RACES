@@ -2,7 +2,7 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.14
+ * @version 0.15
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -198,9 +198,9 @@ ConfigReader::get_fraction(const nlohmann::json& fraction_json)
 }
 
 void
-ConfigReader::schedule_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
-                                             const Races::Mutants::Evolutions::Simulation& simulation,
-                                             const nlohmann::json& mutational_properties_json)
+ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
+                                        const Races::Mutants::Evolutions::Simulation& simulation,
+                                        const nlohmann::json& mutational_properties_json)
 {
     if (!mutational_properties_json.is_object()) {
         throw std::runtime_error("All the elements in \"driver properties\" "
@@ -321,8 +321,8 @@ ConfigReader::get_mutational_properties(const Races::Mutants::Evolutions::Simula
     }
 
     for (const auto& species_properties_json : mutational_properties_json) {
-        schedule_mutational_properties(mutational_properties, simulation,
-                                                species_properties_json);
+        add_mutational_properties(mutational_properties, simulation,
+                                  species_properties_json);
     }
 
     return mutational_properties;

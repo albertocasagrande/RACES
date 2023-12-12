@@ -2,7 +2,7 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.10
+ * @version 0.11
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -134,9 +134,9 @@ class ConfigReader
      * @param mutational_properties_json is the JSON of the properties
      */
     static void
-    schedule_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
-                                   const Races::Mutants::Evolutions::Simulation& simulation,
-                                   const nlohmann::json& mutational_properties_json);
+    add_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
+                              const Races::Mutants::Evolutions::Simulation& simulation,
+                              const nlohmann::json& mutational_properties_json);
 
 public:
     /**
