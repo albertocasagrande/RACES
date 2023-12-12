@@ -2,23 +2,23 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.19
- * @date 2023-12-11
- * 
+ * @version 0.20
+ * @date 2023-12-12
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -96,8 +96,8 @@ public:
 
     /**
      * @brief Record the SVNs of a cell genome
-     * 
-     * @param sample_name is the name of the sample from which the cell has 
+     *
+     * @param sample_name is the name of the sample from which the cell has
      *          been extracted
      * @param cell_mutations are the mutations of the cell whose statistics
      *          is about to be recorded
@@ -108,23 +108,23 @@ public:
 
     /**
      * @brief Record the SVNs in a list of sample genomic mutations
-     * 
+     *
      * @param[in] mutations_list is a list of sample mutations
      * @param[in,out] progress_bar is a progress bar pointer
      * @return a reference to the updated object
      */
-    MutationStatistics& 
+    MutationStatistics&
     record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
            UI::ProgressBar* progress_bar=nullptr);
 
     /**
      * @brief Record the SVNs in a list of sample genomic mutations
-     * 
+     *
      * @param[in] mutations_list is a list of sample mutations
      * @param[in,out] progress_bar is a progress bar pointer
      * @return a reference to the updated object
      */
-    inline MutationStatistics& 
+    inline MutationStatistics&
     record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
            UI::ProgressBar& progress_bar)
     {
@@ -133,7 +133,7 @@ public:
 
     /**
      * @brief Write in a stream a table summarizing SNV statistics
-     * 
+     *
      * @param os is the output stream
      * @param separator is the column separator
      * @return a reference to the updated stream
@@ -142,7 +142,7 @@ public:
 
     /**
      * @brief Write in a stream a table summarizing CNA statistics
-     * 
+     *
      * @param os is the output stream
      * @param separator is the column separator
      * @return a reference to the updated stream
@@ -152,10 +152,10 @@ public:
 
 /**
  * @brief The mutation engine
- * 
- * The objects of this class place mutations on the cell genome according 
+ *
+ * The objects of this class place mutations on the cell genome according
  * to a descendants forest
- * 
+ *
  * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
  * @tparam RANDOM_GENERATOR is the type of random generator
  */
@@ -164,11 +164,11 @@ class MutationEngine
 {
     /**
      * @brief The SBS inverse cumulative distributions
-     * 
+     *
      * SBS's are probability distributions for mutational types. If we arbitrary assign
      * an order to mutational type, given a SBS and a mutational type T, we can compute
-     * the probability of randomly choosing a mutational type smaller or equal to T. 
-     * The inverse cumulative SBS type associated such a probability to T itself for 
+     * the probability of randomly choosing a mutational type smaller or equal to T.
+     * The inverse cumulative SBS type associated such a probability to T itself for
      * all the mutational type T.
      */
     using InverseCumulativeSBS = std::map<double, Races::Mutations::MutationalType>;
@@ -186,25 +186,25 @@ class MutationEngine
     RANDOM_GENERATOR generator; //!< the random generator
 
     ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
-    ContextStack context_stack;                             //!< the stack of the contexts removed from `context_index`
+    ContextStack context_stack;                        //!< the stack of the contexts removed from `context_index`
 
-    size_t num_of_alleles;                                  //!< number of alleles 
+    std::map<ChromosomeId, size_t> alleles_per_chromosome;   //!< number of initial alleles per chromosome
 
     std::map<Time, MutationalCoefficients> timed_mutational_coefficients;   //!< the timed mutational coefficients
-    std::map<std::string, InverseCumulativeSBS> inv_cumulative_SBSs;  //!< the inverse cumulative SBS
+    std::map<std::string, InverseCumulativeSBS> inv_cumulative_SBSs;        //!< the inverse cumulative SBS
 
     MutationalProperties mutational_properties;  //!< the species mutational properties
 
     /**
      * @brief Select a random value in a set
-     * 
+     *
      * @tparam T is the type of objects in the set
      * @param values is the set of values from which a random value must be selected
      * @return a random value among those in `values`
      */
     template<typename T>
     T select_random_value(const std::set<T>& values)
-    {   
+    {
         std::uniform_int_distribution<> u_dist(0,values.size()-1);
         size_t pos = u_dist(generator);
 
@@ -220,13 +220,13 @@ class MutationEngine
 
     /**
      * @brief Compute the inverse cumulative SBS
-     
+
      * SBS's are probability distributions for mutational types. If we arbitrary assign
      * an order to mutational type, given a SBS and a mutational type T, we can compute
-     * the probability of randomly choosing a mutational type smaller or equal to T. 
-     * The inverse cumulative SBS type associated such a probability to T itself for 
+     * the probability of randomly choosing a mutational type smaller or equal to T.
+     * The inverse cumulative SBS type associated such a probability to T itself for
      * all the mutational type T.
-     * 
+     *
      * @param m_signature is a mutational signature (SBS)
      * @return the corresponding mutational signature
      */
@@ -247,12 +247,12 @@ class MutationEngine
 
     /**
      * @brief Get the mutational coefficients according to a cell birth time
-     * 
-     * The active mutational coefficients depend on the simulation time. They 
+     *
+     * The active mutational coefficients depend on the simulation time. They
      * must be selected in agreement with cell birth times.
-     * 
+     *
      * @param cell is the cell whose birth time select the mutational coefficients
-     * @return a constant reference to mutational coefficients that are associated 
+     * @return a constant reference to mutational coefficients that are associated
      *         to `cell` birth time
      */
     const MutationalCoefficients&
@@ -264,16 +264,16 @@ class MutationEngine
     }
 
     /**
-     * @brief Select a random SNV 
-     * 
-     * This method selects a random SNV among whose having a specified 
-     * mutational type and available in a context index. The selected 
-     * SNV is extracted from the context index and inserted into a stack 
+     * @brief Select a random SNV
+     *
+     * This method selects a random SNV among whose having a specified
+     * mutational type and available in a context index. The selected
+     * SNV is extracted from the context index and inserted into a stack
      * to revert the selection.
-     * 
+     *
      * @param[in] m_type is the mutational type of the SNV to be selected
      * @param[in] cause is the SNV cause
-     * @return a SNV whose type is `m_type` and which was available in 
+     * @return a SNV whose type is `m_type` and which was available in
      *          `context_index`
      */
     SNV select_SVN(const MutationalType& m_type, const std::string& cause)
@@ -311,7 +311,7 @@ class MutationEngine
 
     /**
      * @brief Randomly select the number of SNVs according to a Poisson distribution
-     * 
+     *
      * @param genome_size is the genome size
      * @param mean_passenger_mutations is the mean mutations per duplication
      * @return is the randomly selected number of SNVs
@@ -328,11 +328,11 @@ class MutationEngine
 
     /**
      * @brief Try to place a SNV
-     * 
+     *
      * @param snv is the SNV to place
      * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the SNV placement has succeed. This 
-     *          method returns `false` when the SNV cannot be placed 
+     * @return `true` if and only if the SNV placement has succeed. This
+     *          method returns `false` when the SNV cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
@@ -353,7 +353,7 @@ class MutationEngine
 
     /**
      * @brief Place the mutations associated to a cell in the descendants forest
-     * 
+     *
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a descendants forest node representing a cell
      * @param cell_mutations are the cell mutations
@@ -367,7 +367,7 @@ class MutationEngine
         // get the active SBS coefficients
         const auto& mc = get_active_mutational_coefficients(node);
 
-        // for each active SBS coefficient 
+        // for each active SBS coefficient
         for (const auto& [SBS_name, coefficient]: mc) {
 
             // get the inverse cumulative SBS
@@ -386,12 +386,12 @@ class MutationEngine
                 auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
 
                 if (it != inv_cumulative_SBS.end()) {
-                    // select a SNV among those having the picked mutational type 
-                    // and that available in the context index 
+                    // select a SNV among those having the picked mutational type
+                    // and that available in the context index
                     SNV snv = select_SVN(it->second, SBS_name);
 
                     if (place_SNV(snv, cell_mutations)) {
-                        // if the SNV has been successfully applied, 
+                        // if the SNV has been successfully applied,
                         // then increase the number of new SNVs
                         ++new_SNVs;
                     }
@@ -402,11 +402,11 @@ class MutationEngine
 
     /**
      * @brief Try to place a CNA
-     * 
+     *
      * @param CNA is the CNA to place
      * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the CNA placement has succeed. This 
-     *          method returns `false` when the CNA cannot be placed 
+     * @return `true` if and only if the CNA placement has succeed. This
+     *          method returns `false` when the CNA cannot be placed
      *          because no allele are available for it.
      */
     bool place_CNA(const CopyNumberAlteration& CNA, GenomeMutations& cell_mutations)
@@ -423,7 +423,7 @@ class MutationEngine
 
     /**
      * @brief Place the mutant specific SNVs
-     * 
+     *
      * @param node is a descendants forest node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
@@ -448,20 +448,20 @@ class MutationEngine
 
     /**
      * @brief Place the mutations on the genomes of a descendants forest node
-     * 
+     *
      * This method recursively places the mutations on the nodes of a descendants
-     * forest. All the genome mutations associated to the forest leaves are 
-     * collected and saved in a container that partition them according 
-     * to the cell sample. 
-     * 
-     * @param[in,out] sample_mutation_map is a map associating tissue sample ids to 
+     * forest. All the genome mutations associated to the forest leaves are
+     * collected and saved in a container that partition them according
+     * to the cell sample.
+     *
+     * @param[in,out] sample_mutation_map is a map associating tissue sample ids to
      *              the corresponding sample genomic mutations
      * @param[in] node is a descendants forest node representing a cell
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
-    void place_mutations(std::map<Mutants::Evolutions::TissueSampleId, 
+    void place_mutations(std::map<Mutants::Evolutions::TissueSampleId,
                                   SampleGenomeMutations*>& sample_mutation_map,
                          const Mutants::DescendantsForest::const_node& node,
                          const GenomeMutations& ancestor_mutations,
@@ -470,7 +470,7 @@ class MutationEngine
         using namespace Races::Mutations;
 
         size_t context_stack_size = context_stack.size();
-        
+
         CellGenomeMutations cell_mutations(static_cast<const Mutants::Cell&>(node), ancestor_mutations);
 
         place_mutant_specific_mutations(node, cell_mutations);
@@ -522,21 +522,21 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param context_index is the genome context index
-     * @param num_of_alleles is the number of alleles in wild-type cells
+     * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param default_mutational_coefficients is the map of the default mutational signature coefficients
      * @param mutational_signatures is the map of the mutational signatures
      * @param mutational_properties are the mutational properties of all the species
      * @param seed is the random generator seed
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                   const size_t& num_of_alleles,
+                   const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                    const std::map<std::string, double>& default_mutational_coefficients,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
                    const MutationalProperties& mutational_properties,
                    const int& seed=0):
-        generator(seed), context_index(context_index), num_of_alleles(num_of_alleles),
+        generator(seed), context_index(context_index), alleles_per_chromosome(alleles_per_chromosome),
         mutational_properties(mutational_properties)
     {
         for (const auto& [name, mutational_signature]: mutational_signatures) {
@@ -548,10 +548,10 @@ public:
 
     /**
      * @brief Add a timed set of mutational signature coefficients
-     * 
-     * This method add a set mutational signature coefficients that will be applied from 
+     *
+     * This method add a set mutational signature coefficients that will be applied from
      * the specified simulation time on.
-     * 
+     *
      * @param time is the simulation time from which the coefficients will be applied
      * @param mutational_coefficients is the map from the signature name to the coefficient
      * @return a reference to the updated object
@@ -580,10 +580,10 @@ public:
 
     /**
      * @brief Add a timed set of mutational signature coefficients
-     * 
-     * This method add a set mutational signature coefficients that will be applied from 
+     *
+     * This method add a set mutational signature coefficients that will be applied from
      * the specified simulation time on.
-     * 
+     *
      * @param time is the simulation time from which the coefficients will be applied
      * @param mutational_coefficients is the map from the signature name to the coefficient
      * @return a reference to the updated object
@@ -595,7 +595,7 @@ public:
 
     /**
      * @brief Place genomic mutations on a descendants forest
-     * 
+     *
      * @param forest is a descendants forest
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
@@ -606,7 +606,7 @@ public:
         using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
 
-        GenomeMutations mutations(context_index, num_of_alleles);
+        GenomeMutations mutations(context_index, alleles_per_chromosome);
 
         std::list<SampleGenomeMutations> sample_mutations;
         std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
@@ -625,7 +625,7 @@ public:
 
     /**
      * @brief Place genomic mutations on a descendants forest
-     * 
+     *
      * @param forest is a descendants forest
      * @param progress_bar is a progress bar pointer
      * @return the list of genomic mutations of the `forest`'s samples
@@ -638,8 +638,8 @@ public:
 
     /**
      * @brief Bring back the context index to its original state
-     * 
-     * This method may be used after an exception to bring back the 
+     *
+     * This method may be used after an exception to bring back the
      * context index to its original state.
      */
     void reset_context_index()

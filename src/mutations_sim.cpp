@@ -2,23 +2,23 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.2
- * @date 2023-12-11
- * 
+ * @version 0.3
+ * @date 2023-12-12
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include <iostream> 
+#include <iostream>
 #include <string>
 #include <filesystem>
 #include <random>
@@ -58,7 +58,7 @@
 #include "json_config.hpp"
 
 template<>
-std::string 
+std::string
 boost::lexical_cast<std::string, Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode>(const Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode& mode)
 {
     using namespace Races::Mutations::SequencingSimulations;
@@ -75,7 +75,7 @@ boost::lexical_cast<std::string, Races::Mutations::SequencingSimulations::ReadSi
 }
 
 template<>
-Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode 
+Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode
 boost::lexical_cast<Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode, std::string>(const std::string& mode)
 {
     std::string upper_token = mode;
@@ -244,14 +244,14 @@ class MutationsSimulator : public BasicExecutable
         using namespace Races::Mutations;
 
         std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
-        
+
         for (const auto& cell_mutations : sample_mutations.mutations) {
             auto found = meth_samples.find(cell_mutations.get_species_id());
 
             if (found == meth_samples.end()) {
                 auto new_name = sample_mutations.get_name()+"_"+
                                     methylation_map.at(cell_mutations.get_species_id());
-            
+
                 FACS_samples.push_back(SampleGenomeMutations(sample_mutations));
 
                 FACS_samples.back().mutations.push_back(cell_mutations);
@@ -291,6 +291,17 @@ class MutationsSimulator : public BasicExecutable
         }
 
         return time_map;
+    }
+
+    template<typename GENOME_WIDE_POSITION>
+    static std::map<Races::Mutations::ChromosomeId, size_t>
+    get_number_of_alleles(const Races::Mutations::ContextIndex<GENOME_WIDE_POSITION>&context_index,
+                          const nlohmann::json& simulation_cfg)
+    {
+        using namespace Races::Mutations;
+
+        auto chromosome_ids = context_index.get_chromosome_ids();
+        return Races::ConfigReader::get_number_of_alleles(simulation_cfg, chromosome_ids);
     }
 
     template<typename GENOME_WIDE_POSITION>
@@ -335,10 +346,10 @@ class MutationsSimulator : public BasicExecutable
 
         if (coverage>0) {
             if (paired_read) {
-                read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size, 
+                read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size,
                                                  insert_size, read_simulator_output_mode, seed);
             } else {
-                read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size, 
+                read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size,
                                                  read_simulator_output_mode, seed);
             }
         }
@@ -356,9 +367,9 @@ class MutationsSimulator : public BasicExecutable
 
         auto default_coefficients = ConfigReader::get_default_mutational_coefficients(mutational_coeff_json);
 
-        auto num_of_allele = ConfigReader::get_number_of_alleles(simulation_cfg);
+        auto num_of_alleles = get_number_of_alleles(context_index, simulation_cfg);
 
-        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_allele,
+        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_alleles,
                                                     default_coefficients, signatures,
                                                     mutational_properties);
 
@@ -386,12 +397,12 @@ class MutationsSimulator : public BasicExecutable
         if (!vm.count("mutation file")) {
             print_help_and_exit("The mutation file is mandatory", 1);
         }
-    
+
         if (!vm.count("species simulation")) {
             print_help_and_exit("The species simulation directory is mandatory. "
                                 "You can produce it by using `mutants_sim`", 1);
         }
-        
+
         if (!fs::exists(species_directory)) {
             print_help_and_exit("\"" + std::string(species_directory) + "\"  does not exist", 1);
         }
@@ -452,10 +463,10 @@ class MutationsSimulator : public BasicExecutable
         if (coverage<0) {
             print_help_and_exit("coverage must be non-negative.", 1);
         }
-        
+
         for (const auto sequencing_option : {"output-directory"}) {
             if ((coverage>0) && (vm.count(sequencing_option)==0)) {
-                print_help_and_exit("\"--"+ std::string(sequencing_option) 
+                print_help_and_exit("\"--"+ std::string(sequencing_option)
                                      + "\" is mandatory when coverage differs from 0.", 1);
             }
         }
@@ -478,7 +489,7 @@ public:
                                   {"sequencing", "Sequencing simulation options"},
                                   {"mutants", "Mutants evolution related options"},
                                   {"generic", "Generic options"}}),
-        paired_read(false), 
+        paired_read(false),
         insert_size(0), SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
     {
         namespace po = boost::program_options;
@@ -493,9 +504,9 @@ public:
         ;
 
         visible_options.at("sequencing").add_options()
-            ("coverage,c", po::value<double>(&coverage)->default_value(0.0), 
+            ("coverage,c", po::value<double>(&coverage)->default_value(0.0),
              "coverage for the simulated reads (>0 to simulate sequencing)")
-            ("output-directory,d", po::value<std::string>(&seq_output_directory), 
+            ("output-directory,d", po::value<std::string>(&seq_output_directory),
              "the output directory for sequencing simulation")
             ("overwrite,o", "overwrite the output directory")
             ("read-size,r", po::value<size_t>(&read_size)->default_value(150),
@@ -510,22 +521,22 @@ public:
         ;
 
         visible_options.at("generic").add_options()
-            ("seed,s", po::value<int>(&seed)->default_value(0), 
+            ("seed,s", po::value<int>(&seed)->default_value(0),
              "random generator seed")
             ("quiet,q", "avoid output messages")
             ("help,h", "get the help")
         ;
 
         hidden_options.add_options()
-            ("mutation file", po::value<std::filesystem::path>(&simulation_filename), 
+            ("mutation file", po::value<std::filesystem::path>(&simulation_filename),
              "the name of the file describing the mutations simulation")
-            ("species simulation", po::value<std::filesystem::path>(&species_directory), 
+            ("species simulation", po::value<std::filesystem::path>(&species_directory),
              "the species simulation directory")
-            ("context index", po::value<std::filesystem::path>(&context_index_filename), 
+            ("context index", po::value<std::filesystem::path>(&context_index_filename),
              "the genome context index")
-            ("mutational signature", po::value<std::filesystem::path>(&SBS_filename), 
+            ("mutational signature", po::value<std::filesystem::path>(&SBS_filename),
              "the mutational signature")
-            ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename), 
+            ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename),
              "the filename of the reference genome FASTA file")
         ;
 

@@ -1,6 +1,12 @@
 {
     "comment": "An configuration example for \"mutations_sim\".",
-    "number of alleles": 2,
+    "number of alleles": {
+        "default": 2,
+        "exceptions": [
+            {"chromosome": "X", "number of alleles": 1},
+            {"chromosome": "Y", "number of alleles": 1}
+        ]
+    },
     "driver properties": [
         {
             "name": "A",
