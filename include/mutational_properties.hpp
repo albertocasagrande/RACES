@@ -2,23 +2,23 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.8
- * @date 2023-12-11
- * 
+ * @version 0.9
+ * @date 2023-12-12
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ namespace Mutations
 
 /**
  * @brief A class representing the mutational properties of all the species
- * 
+ *
  */
 class MutationalProperties
 {
@@ -68,7 +68,7 @@ class MutationalProperties
 
         /**
          * @brief A constructor
-         * 
+         *
          * @param name is the species name
          * @param SNVs is the vector of species specific SNVs
          * @param CNAs is the vector of species specific CNAs
@@ -88,26 +88,26 @@ public:
 
     /**
      * @brief Add a mutational properties
-     * 
+     *
      * @param species_simulation is a species simulation
      * @param name is the name of the mutant
-     * @param epigenetic_rates is a map from epigenomic status to 
+     * @param epistate_mutation_rates is a map from epigenomic status to
      *          mutational rate
      * @param species_SNVs is a list of SNVs characterizing the species
      * @param species_CNAs is a list of CNAs characterizing the species
      * @return a reference to the updated object
      */
     MutationalProperties& add_mutant(const Mutants::Evolutions::Simulation& species_simulation,
-                                     const std::string& name, 
-                                     const std::map<std::string, double>& epigenetic_rates,
+                                     const std::string& name,
+                                     const std::map<std::string, double>& epistate_mutation_rates,
                                      const std::list<SNV>& species_SNVs={},
                                      const std::list<CopyNumberAlteration>& species_CNAs={});
 
     /**
      * @brief Get the properties of a species
-     * 
+     *
      * @param species_id is the identifier of the species
-     * @return the mutational properties of the species having 
+     * @return the mutational properties of the species having
      *          `species_id` as identifier.
      */
     inline const MutationalProperties::SpeciesMutationalProperties& at(const Mutants::SpeciesId& species_id) const

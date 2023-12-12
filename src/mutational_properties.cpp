@@ -2,23 +2,23 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.8
- * @date 2023-12-11
- * 
+ * @version 0.9
+ * @date 2023-12-12
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties()
 {}
 
 MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties(const std::string& name, const double& mu,
-                                                                                        const std::list<SNV>& SNVs, 
+                                                                                        const std::list<SNV>& SNVs,
                                                                                         const std::list<CopyNumberAlteration>& CNAs):
     name(name), mu(mu), SNVs(SNVs), CNAs(CNAs)
 {}
@@ -48,10 +48,10 @@ MutationalProperties::SpeciesMutationalProperties::SpeciesMutationalProperties(c
 MutationalProperties::MutationalProperties()
 {}
 
-MutationalProperties& 
-MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_simulation,  
+MutationalProperties&
+MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_simulation,
                                  const std::string& name,
-                                 const std::map<std::string, double>& epigenetic_rates,
+                                 const std::map<std::string, double>& epistate_mutation_rates,
                                  const std::list<SNV>& species_SNVs,
                                  const std::list<CopyNumberAlteration>& species_CNAs)
 {
@@ -61,8 +61,8 @@ MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_
         species_map[species.get_name()] = &species;
     }
 
-    for (const auto& [epigenetic_status, epigenetic_rate] : epigenetic_rates) {
-        auto full_name = name+epigenetic_status;
+    for (const auto& [epistate, mutation_rate] : epistate_mutation_rates) {
+        auto full_name = name+epistate;
         auto species_it = species_map.find(full_name);
 
         if (species_it == species_map.end()) {
@@ -78,7 +78,7 @@ MutationalProperties::add_mutant(const Mutants::Evolutions::Simulation& species_
                                     "\" has been already added.");
         }
 
-        properties[id] = {full_name, epigenetic_rate, species_SNVs, species_CNAs};
+        properties[id] = {full_name, mutation_rate, species_SNVs, species_CNAs};
     }
 
     return *this;
