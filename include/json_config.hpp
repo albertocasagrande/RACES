@@ -2,7 +2,7 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.9
+ * @version 0.10
  * @date 2023-12-12
  *
  * @copyright Copyright (c) 2023
@@ -191,7 +191,7 @@ public:
 
                 expecting("coefficients", timed_json, "The elements of the \"timed\" field");
 
-                engine.add(time, get_mutational_coefficients(mutational_coeff_json["default"]));
+                engine.add(time, get_mutational_coefficients(timed_json["coefficients"]));
             }
         }
     }
