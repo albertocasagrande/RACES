@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.3
- * @date 2023-12-12
+ * @version 0.4
+ * @date 2023-12-14
  *
  * @copyright Copyright (c) 2023
  *
@@ -363,15 +363,15 @@ class MutationsSimulator : public BasicExecutable
                                      "a \"mutational coefficients\" field");
         }
 
-        const auto& mutational_coeff_json = simulation_cfg["mutational coefficients"];
-
-        auto default_coefficients = ConfigReader::get_default_mutational_coefficients(mutational_coeff_json);
-
         auto num_of_alleles = get_number_of_alleles(context_index, simulation_cfg);
 
         MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_alleles,
-                                                    default_coefficients, signatures,
-                                                    mutational_properties);
+                                                    signatures, mutational_properties);
+
+        const auto& mutational_coeff_json = simulation_cfg["mutational coefficients"];
+
+        auto default_coefficients = ConfigReader::get_default_mutational_coefficients(mutational_coeff_json);
+        engine.add(default_coefficients);
 
         ConfigReader::add_timed_mutational_coefficients(engine, mutational_coeff_json);
 

@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.20
- * @date 2023-12-12
+ * @version 0.21
+ * @date 2023-12-14
  *
  * @copyright Copyright (c) 2023
  *
@@ -525,14 +525,28 @@ public:
      *
      * @param context_index is the genome context index
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
-     * @param default_mutational_coefficients is the map of the default mutational signature coefficients
+     * @param mutational_signatures is the map of the mutational signatures
+     * @param seed is the random generator seed
+     */
+    MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
+                   const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
+                   const std::map<std::string, MutationalSignature>& mutational_signatures,
+                   const int& seed=0):
+        MutationEngine(context_index, alleles_per_chromosome, mutational_signatures,
+                       MutationalProperties(), seed)
+    {}
+
+    /**
+     * @brief A constructor
+     *
+     * @param context_index is the genome context index
+     * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
      * @param mutational_properties are the mutational properties of all the species
      * @param seed is the random generator seed
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
-                   const std::map<std::string, double>& default_mutational_coefficients,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
                    const MutationalProperties& mutational_properties,
                    const int& seed=0):
@@ -542,8 +556,29 @@ public:
         for (const auto& [name, mutational_signature]: mutational_signatures) {
             inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
         }
+    }
 
-        add(0, default_mutational_coefficients);
+    /**
+     * @brief Add the properties of a mutant
+     *
+     * This method add the properties of a mutant (i.e., its mutation rates, its SNVs and 
+     * CNAs) and all its species to the mutations engine.
+     * 
+     * @param name is the name of the mutant
+     * @param epistate_mutation_rates is a map from epigenomic status to
+     *          mutational rate
+     * @param mutant_SNVs is a list of SNVs characterizing the mutant
+     * @param mutant_CNAs is a list of CNAs characterizing the mutant
+     * @return a reference to the updated object
+     */
+    inline
+    MutationEngine& add_mutant(const std::string& name,
+                               const std::map<std::string, double>& epistate_mutation_rates,
+                               const std::list<SNV>& mutant_SNVs={},
+                               const std::list<CopyNumberAlteration>& mutant_CNAs={})
+    {
+        mutational_properties.add_mutant(name, epistate_mutation_rates, mutant_SNVs, 
+                                         mutant_CNAs);
     }
 
     /**
@@ -591,6 +626,20 @@ public:
     MutationEngine& add(const Time& time, const std::map<std::string, double>& mutational_coefficients)
     {
         return add(time, std::map<std::string, double>(mutational_coefficients));
+    }
+
+    /**
+     * @brief Add the default mutational signature coefficients
+     *
+     * This method add a default set of mutational signature coefficients.
+     *
+     * @param default_mutational_coefficients is the map from the signature name to the 
+     *              coefficient
+     * @return a reference to the updated object
+     */
+    MutationEngine& add(const std::map<std::string, double>& default_mutational_coefficients)
+    {
+        return add(0, default_mutational_coefficients);
     }
 
     /**
