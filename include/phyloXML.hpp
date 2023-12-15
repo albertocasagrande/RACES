@@ -2,23 +2,23 @@
  * @file phyloXML.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines phyloXML stream
- * @version 0.9
- * @date 2023-12-11
- * 
+ * @version 0.10
+ * @date 2023-12-15
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@
 
 #include <ostream>
 
-#include "phylogenetic_forest.hpp"
+#include "descendant_forest.hpp"
 #include "palette.hpp"
 
 namespace Races
@@ -64,7 +64,7 @@ class phyloXMLStream
 
     /**
      * @brief Stream the cell taxonomy
-     * 
+     *
      * @param species_id is the cell species id
      * @return a reference to the updated object
      */
@@ -72,7 +72,7 @@ class phyloXMLStream
 
     /**
      * @brief Stream the branch color
-     * 
+     *
      * @param color is the branch color
      * @return a reference to the updated object
      */
@@ -80,7 +80,7 @@ class phyloXMLStream
 public:
     /**
      * @brief Create a new phyloXML stream
-     * 
+     *
      * @param os is the underline output stream
      * @param indentation_symbols are the indentation symbols
      */
@@ -88,7 +88,7 @@ public:
 
     /**
      * @brief  Stream a descendants forest
-     * 
+     *
      * @param forest is the forest to stream
      * @return a reference to the updated object
      */
@@ -96,7 +96,7 @@ public:
 
     /**
      * @brief  Stream a descendants forest node
-     * 
+     *
      * @param node is the node to stream
      * @return a reference to the updated object
      */
@@ -104,15 +104,15 @@ public:
 
     /**
      * @brief Close the phyloXML tag
-     * 
-     * This method close the phyloxml tag and does not handle the 
+     *
+     * This method close the phyloxml tag and does not handle the
      * underline basic stream.
      */
     void close();
 
     /**
      * @brief Change the indentation level
-     * 
+     *
      * @param level is the new indentation level
      */
     void change_indentation_level(const size_t level);

@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.10
- * @date 2023-12-12
+ * @version 0.11
+ * @date 2023-12-15
  *
  * @copyright Copyright (c) 2023
  *
@@ -95,7 +95,7 @@ public:
     MutationalProperties(const Mutants::Evolutions::Simulation& species_simulation);
 
     /**
-     * @brief Add a mutational properties
+     * @brief Add the properties of a mutant
      *
      * @param name is the name of the mutant
      * @param epistate_mutation_rates is a map from epigenomic status to

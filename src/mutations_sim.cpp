@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.4
- * @date 2023-12-14
+ * @version 0.5
+ * @date 2023-12-15
  *
  * @copyright Copyright (c) 2023
  *
@@ -40,7 +40,7 @@
 
 #include "simulation.hpp"
 
-#include "phylogenetic_forest.hpp"
+#include "descendant_forest.hpp"
 
 #include "context_index.hpp"
 

@@ -2,23 +2,23 @@
  * @file descendants_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES descendants forest builder
- * @version 0.5
- * @date 2023-12-11
- * 
+ * @version 0.6
+ * @date 2023-12-15
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include <iostream> 
+#include <iostream>
 #include <string>
 #include <filesystem>
 
@@ -37,7 +37,7 @@
 #include "common.hpp"
 #include "tissue_sample.hpp"
 
-#include "phylogenetic_forest.hpp"
+#include "descendant_forest.hpp"
 
 #include "phyloXML.hpp"
 
@@ -59,7 +59,7 @@ public:
             ("help,h", "get the help");
 
         hidden_options.add_options()
-            ("species simulation", po::value<std::filesystem::path>(&species_directory), 
+            ("species simulation", po::value<std::filesystem::path>(&species_directory),
             "the species simulation directory")
         ;
 
@@ -87,7 +87,7 @@ public:
         if (!vm.count("species simulation")) {
             print_help_and_exit("Missing species simulation directory!", 1);
         }
-    
+
         snapshot_path = get_last_snapshot_path(species_directory, "species simulation");
     }
 

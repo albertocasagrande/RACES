@@ -2,23 +2,23 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.43
- * @date 2023-12-11
- * 
+ * @version 0.44
+ * @date 2023-12-15
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,11 +47,11 @@
 
 #include "lineage_graph.hpp"
 
-#include "phylogenetic_forest.hpp"
+#include "descendant_forest.hpp"
 
 #include "progress_bar.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutants
@@ -66,7 +66,7 @@ namespace Evolutions
 /**
  * @brief A tumor evolution simulation
  */
-class Simulation 
+class Simulation
 {
 public:
     /**
@@ -84,7 +84,7 @@ public:
 
         /**
          * @brief Construct a new `AddedCell` object
-         * 
+         *
          * @param species_id is the identifier of the added cell
          * @param position is the position of the added cell
          * @param time is the adding time
@@ -93,7 +93,7 @@ public:
 
         /**
          * @brief Save an object of the class `AddedCell` in an archive
-         * 
+         *
          * @tparam ARCHIVE is the output archive type
          * @param archive is the output archive
          */
@@ -101,13 +101,13 @@ public:
         inline void save(ARCHIVE& archive) const
         {
             archive & *(static_cast<const PositionInTissue*>(this))
-                    & species_id 
+                    & species_id
                     & time;
         }
 
         /**
          * @brief Load an object of the class `AddedCell` from an archive
-         * 
+         *
          * @tparam ARCHIVE is the input archive type
          * @param archive is the input archive
          * @return the loaded object
@@ -154,7 +154,7 @@ protected:
     Time time;                       //!< Simulation time
     std::mt19937_64 random_gen;      //!< Pseudo-random generator
 
-    TimedEventQueue timed_event_queue;   //!< The timed event queue 
+    TimedEventQueue timed_event_queue;   //!< The timed event queue
 
     std::set<SpeciesId> death_enabled;  //!< Species having reached the death activation level
 
@@ -168,72 +168,72 @@ protected:
 
     /**
      * @brief Simulate a cell duplication
-     * 
-     * This method simulates the duplication of a cell in the 
-     * tissue. The duplicating cell is identified by its position. 
-     * One of the two sibling cells is placed in the parent cell 
-     * position; the other one is randomly placed near to the 
-     * former parent. This is done by selecting one direction among 
-     * the 6 possible directions (i.e., left or right on x-axis, 
-     * y-axis, or z-axis) and by pushing all the cells on that 
+     *
+     * This method simulates the duplication of a cell in the
+     * tissue. The duplicating cell is identified by its position.
+     * One of the two sibling cells is placed in the parent cell
+     * position; the other one is randomly placed near to the
+     * former parent. This is done by selecting one direction among
+     * the 6 possible directions (i.e., left or right on x-axis,
+     * y-axis, or z-axis) and by pushing all the cells on that
      * direction one position await from the parent cell.
      * If the cell in the provided position has wild-type
-     * genotype, then nothing is done.  
-     * 
+     * genotype, then nothing is done.
+     *
      * @param position is the position of the cell to be duplicate
-     * @return list of the affected cells. Whenever the specified position 
-     *      is not in the tissue or does correspond to a wild-type cell, 
-     *      the returned list is empty. If one of the two children is 
-     *      pushed outside the tissue borders, the returned list contains 
-     *      only the new cell in position `position`. In the remaining 
+     * @return list of the affected cells. Whenever the specified position
+     *      is not in the tissue or does correspond to a wild-type cell,
+     *      the returned list is empty. If one of the two children is
+     *      pushed outside the tissue borders, the returned list contains
+     *      only the new cell in position `position`. In the remaining
      *      case, the returned list contains two cells
      */
     EventAffectedCells simulate_duplication(const Position& position);
 
     /**
      * @brief Simulate the death of a cell
-     * 
+     *
      * This method simulates the death of a cell in tissue.
      * If the cell in the provided position has wild-type
      * genotype, then nothing is done.
-     * 
+     *
      * @param position is the position of the cell to be killed
-     * @return list of the affected cells, i.e., a list containing 
+     * @return list of the affected cells, i.e., a list containing
      *      the former status of the killed cell at most
      */
     EventAffectedCells simulate_death(const Position& position);
 
     /**
      * @brief Simulate a cell mutation
-     * 
+     *
      * This method simulates a mutation on a cell in tissue.
-     * If the cell in the provided position has wild-type genotype, 
-     * then nothing is done.  
-     * 
+     * If the cell in the provided position has wild-type genotype,
+     * then nothing is done.
+     *
      * @param position is the position of the cell that will mutate
      * @param final_id is the resulting species identifier of the cell
-     * @return list of the affected cells, i.e., a list containing 
+     * @return list of the affected cells, i.e., a list containing
      *      the status of the mutated cell at most
      */
     EventAffectedCells simulate_mutation(const Position& position, const SpeciesId& final_id);
 
     /**
      * @brief Simulate a duplication and a mutation event
-     * 
-     * This method simulates the duplication of a cell in the 
-     * tissue and applies a mutation event on the children in 
+     *
+     * This method simulates the duplication of a cell in the
+     * tissue and applies a mutation event on the children in
      * the provided position.
-     * 
+     *
      * @param position is the position of the cell to be duplicate
      * @param final_id is the resulting species identifier of the cell
-     * @return list of the affected cells. Whenever the specified position 
-     *      is not in the tissue or does correspond to a wild-type cell, 
-     *      the returned list is empty. If one of the two children is 
+     * @return list of the affected cells. Whenever the specified position
+     *      is not in the tissue or does correspond to a wild-type cell,
+     *      the returned list is empty. If one of the two children is
      *      pushed outside the tissue borders, the returned list contains
      *      only the new cell in position `position`. In the remaining
      *      case, the returned list contains two cells
      */
-    EventAffectedCells simulate_duplication_and_mutation_event(const Position& position, 
+    EventAffectedCells simulate_duplication_and_mutation_event(const Position& position,
                                                                const SpeciesId& final_id);
 
     /**
@@ -243,7 +243,7 @@ protected:
 
     /**
      * @brief Initialize the valid simulation tissue direction vector
-     * 
+     *
      * This method must be called every time the simulation tissue
      * changes.
      */
@@ -251,29 +251,29 @@ protected:
 
     /**
      * @brief Handle a mutation
-     * 
-     * This method tries to handle a mutation during the cell event selection and 
+     *
+     * This method tries to handle a mutation during the cell event selection and
      * it succeeds if and only if there exists at least one cell in the origin.
-     * 
+     *
      * @param timed_mutation is the timed mutation to be applied
      * @param candidate_event is the current candidate cell event
-     * @return `true` if and only if there exists at least one cell in the origin and 
+     * @return `true` if and only if there exists at least one cell in the origin and
      *          the candidate cell event has been updated
      */
     bool handle_timed_mutation(const TimedEvent& timed_mutation, CellEvent& candidate_event);
 
     /**
      * @brief Apply a rate update
-     * 
+     *
      * @param time_rate_update is the timed rate update to be applied
      */
     void handle_timed_rate_update(const TimedEvent& timed_rate_update);
 
     /**
      * @brief Sample the tissue
-     * 
+     *
      * This method also update next candidate event.
-     * 
+     *
      * @param time_sampling is the timed sampling to be applied
      * @param candidate_event is the current candidate cell event
      */
@@ -281,30 +281,30 @@ protected:
 
     /**
      * @brief Handle time event queue during cell event selection
-     * 
+     *
      * This method handles the time event queue during the cell event selection
-     * by extracting the timed events that occurs before the candidate cell 
+     * by extracting the timed events that occurs before the candidate cell
      * event and applying them. If necessary (for instance when the next time
      * event is a mutation), the method also updates the candidate event.
-     * 
+     *
      * @param candidate_event is a candidate cell event
      */
     void handle_timed_event_queue(CellEvent& candidate_event);
 
     /**
      * @brief Select a cell event among those due to cell liveness
-     * 
+     *
      * @return a cell event among those due to cell liveness
      */
     CellEvent select_next_cell_event();
 
     /**
      * @brief Performs a simulation snapshot
-     * 
-     * This method performs a simulation snapshot if the time 
-     * elapsed from the last snapshot is greater than that set 
+     *
+     * This method performs a simulation snapshot if the time
+     * elapsed from the last snapshot is greater than that set
      * in `secs_between_snapshots`.
-     * 
+     *
      * @tparam INDICATOR is the type of progress bar
      * @param indicator is the progress bar
      */
@@ -318,7 +318,7 @@ public:
     {
         /**
          * @brief Test a simulation
-         * 
+         *
          * @param simulation is the considered simulation
          * @return a Boolean value
          */
@@ -326,7 +326,7 @@ public:
 
         /**
          * @brief Return the percentage of the completed simulation
-         * 
+         *
          * @param simulation is the considered simulation
          * @return the percentage of the completed simulation
          */
@@ -343,14 +343,14 @@ public:
 
     /**
      * @brief The basic simulation constructor
-     * 
+     *
      * @param random_seed is the simulation random seed
      */
     explicit Simulation(int random_seed=0);
 
     /**
      * @brief A simulation constructor
-     * 
+     *
      * @param log_directory is the simulation log directory
      * @param random_seed is the simulation random seed
      */
@@ -358,14 +358,14 @@ public:
 
     /**
      * @brief A swap constructor
-     * 
+     *
      * @param orig is the original simulation
      */
     Simulation(Simulation&& orig);
 
     /**
      * @brief A copy operator
-     * 
+     *
      * @param orig is the original simulation
      * @return A reference of the updated object
      */
@@ -373,18 +373,18 @@ public:
 
     /**
      * @brief Schedule a timed mutation
-     * 
+     *
      * @param src is the source mutant
      * @param dst is the destination mutant
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    Simulation& schedule_mutation(const MutantProperties& src, 
+    Simulation& schedule_mutation(const MutantProperties& src,
                                   const MutantProperties& dst, const Time time);
 
     /**
      * @brief Schedule a timed mutation
-     * 
+     *
      * @param src is the source mutant name
      * @param dst is the destination mutant name
      * @param time is the mutation timing
@@ -394,33 +394,33 @@ public:
 
     /**
      * @brief Schedule a timed event
-     * 
-     * @param timed_event is the timed event to schedule 
+     *
+     * @param timed_event is the timed event to schedule
      * @return a reference to the updated simulation
      */
     Simulation& schedule_timed_event(const TimedEvent& timed_event);
 
     /**
      * @brief Select the next event
-     * 
-     * This method select the next event by using the Gillespie's 
-     * first reaction method as detailed at page 42 of: 
-     *   Gillespie DT. Stochastic simulation of chemical kinetics. 
+     *
+     * This method select the next event by using the Gillespie's
+     * first reaction method as detailed at page 42 of:
+     *   Gillespie DT. Stochastic simulation of chemical kinetics.
      *   Annu Rev Phys Chem. 2007;58:35-55.
      *   doi: 10.1146/annurev.physchem.58.032806.104637.PMID: 17037977.
-     * 
-     * @return a cell event 
+     *
+     * @return a cell event
      */
     CellEvent select_next_event();
 
     /**
      * @brief  Simulate a mutation on a position
-     * 
-     * This method simulates both the duplication of the cell in the 
-     * specified position and the birth of a cells of a different 
-     * mutant preserving the epigenetic status of the original cell. 
-     * 
-     * @param position is the position in which the 
+     *
+     * This method simulates both the duplication of the cell in the
+     * specified position and the birth of a cells of a different
+     * mutant preserving the epigenetic status of the original cell.
+     *
+     * @param position is the position in which the
      * @param dst_mutant_name is the name of the mutated cell mutant
      * @return a reference to the updated simulation
      */
@@ -429,12 +429,12 @@ public:
 
     /**
      * @brief  Simulate a mutation on a position
-     * 
-     * This method simulates both the duplication of the cell in the 
-     * specified position and the birth of a cells of a different 
-     * mutant preserving the epigenetic status of the original cell. 
-     * 
-     * @param position is the position in which the 
+     *
+     * This method simulates both the duplication of the cell in the
+     * specified position and the birth of a cells of a different
+     * mutant preserving the epigenetic status of the original cell.
+     *
+     * @param position is the position in which the
      * @param dst_mutant_id is the identifier of the mutated cell mutant
      * @return a reference to the updated simulation
      */
@@ -443,10 +443,10 @@ public:
 
     /**
      * @brief Simulate an event
-     * 
+     *
      * This method simulates an event on the tissue. If `plotter` is not
      * `nullptr`, then the simulation is also plotted in a graphical window.
-     * 
+     *
      * @tparam PLOT_WINDOW is the plotting window type
      * @param event is the event to be simulated
      * @param plotter is a tissue plotter pointer
@@ -457,10 +457,10 @@ public:
 
     /**
      * @brief Simulate an event
-     * 
+     *
      * This method simulates an event on the tissue. If `plotter` is not
      * `nullptr`, then the simulation is also plotted in a graphical window.
-     * 
+     *
      * @tparam PLOT_WINDOW is the plotting window type
      * @param event is the event to be simulated
      * @param plotter is a tissue plotter pointer
@@ -474,7 +474,7 @@ public:
 
     /**
      * @brief Simulate an event
-     * 
+     *
      * @param event is the event to be simulated
      * @return a reference to the updated simulation
      */
@@ -485,10 +485,10 @@ public:
 
     /**
      * @brief Simulate up to the next event
-     * 
+     *
      * This method simulates a tissue up to the next event. If `plotter` is not
      * `nullptr`, then the simulation is also plotted in a graphical window.
-     * 
+     *
      * @tparam PLOT_WINDOW is the plotting window type
      * @param plotter is a tissue plotter pointer
      * @return a reference to the updated simulation
@@ -498,10 +498,10 @@ public:
 
     /**
      * @brief Simulate up to the next event
-     * 
-     * This method simulates a tissue up to the next event. The simulation is also 
+     *
+     * This method simulates a tissue up to the next event. The simulation is also
      * plotted in a graphical window.
-     * 
+     *
      * @tparam PLOT_WINDOW is the plotting window type
      * @param plotter is a tissue plotter
      * @return a reference to the updated simulation
@@ -514,10 +514,10 @@ public:
 
     /**
      * @brief Simulate up to the next event
-     * 
-     * This method simulates a tissue up to the next 
+     *
+     * This method simulates a tissue up to the next
      * event.
-     * 
+     *
      * @return a reference to the updated simulation
      */
     inline Simulation& run_up_to_next_event()
@@ -527,12 +527,12 @@ public:
 
     /**
      * @brief Simulate a tissue
-     * 
-     * This method simulates a tissue until a test on the simulation 
-     * object holds. If the user provide a pointer to a plotter, then 
+     *
+     * This method simulates a tissue until a test on the simulation
+     * object holds. If the user provide a pointer to a plotter, then
      * the simulation is also plotted in a graphical window.
-     * 
-     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *
+     * @tparam SIMULATION_TEST is a class whose objects can test whether
      *              the simulation is concluded
      * @tparam PLOT_WINDOW is the plotting window type
      * @tparam INDICATOR_TYPE is the progress indicator type
@@ -547,20 +547,20 @@ public:
     Simulation& run(SIMULATION_TEST& done, UI::TissuePlotter<PLOT_WINDOW>* plotter,
                     INDICATOR_TYPE* indicator)
     {
-        // the tissue() call checks whether a tissue has been 
-        // associated to the simulation and, if this is not the 
-        // case, it throws an std::runtime_error 
+        // the tissue() call checks whether a tissue has been
+        // associated to the simulation and, if this is not the
+        // case, it throws an std::runtime_error
         (void)tissue();
 
         if (storage_enabled) {
-            // if we are at the beginning of the computation, 
+            // if we are at the beginning of the computation,
             // log the initial cells
             if (time == 0) {
-                log_initial_cells(); 
+                log_initial_cells();
             }
         }
 
-        while ((plotter == nullptr || !plotter->closed()) && !done(*this) 
+        while ((plotter == nullptr || !plotter->closed()) && !done(*this)
             && tissue().num_of_mutated_cells()>0) {
 
             run_up_to_next_event(plotter);
@@ -588,11 +588,11 @@ public:
 
     /**
      * @brief Simulate a tissue
-     * 
-     * This method simulates a tissue until a test on the simulation 
+     *
+     * This method simulates a tissue until a test on the simulation
      * object holds. The simulation is also plotted in a graphical window.
      *
-     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     * @tparam SIMULATION_TEST is a class whose objects can test whether
      *              the simulation is concluded
      * @tparam PLOT_WINDOW is the plotting window type
      * @tparam INDICATOR_TYPE is the progress indicator type
@@ -612,10 +612,10 @@ public:
 
     /**
      * @brief Simulate a tissue
-     * 
+     *
      * This method simulates a tissue until a test on the simulation holds.
-     * 
-     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     *
+     * @tparam SIMULATION_TEST is a class whose objects can test whether
      *              the simulation is concluded
      * @tparam INDICATOR_TYPE is the progress indicator type
      * @param done is a test verifying whether the simulation has come to an end
@@ -631,11 +631,11 @@ public:
 
     /**
      * @brief Simulate a tissue
-     * 
-     * This method simulates a tissue until a test on the simulation 
+     *
+     * This method simulates a tissue until a test on the simulation
      * object holds. The simulation is also plotted in a graphical window.
      *
-     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     * @tparam SIMULATION_TEST is a class whose objects can test whether
      *              the simulation is concluded
      * @tparam PLOT_WINDOW is the plotting window type
      * @param done is a test verifying whether the simulation has come to an end
@@ -652,11 +652,11 @@ public:
 
     /**
      * @brief Simulate a tissue
-     * 
-     * This method simulates a tissue until a test on the simulation 
+     *
+     * This method simulates a tissue until a test on the simulation
      * object holds.
      *
-     * @tparam SIMULATION_TEST is a class whose objects can test whether 
+     * @tparam SIMULATION_TEST is a class whose objects can test whether
      *              the simulation is concluded
      * @param done is a test verifying whether the simulation has come to an end
      * @return a reference to the updated simulation
@@ -672,14 +672,14 @@ public:
      * @brief Randomly select a cell among those having a specified mutant
      *
      * This method randomly select a cell available for an event among those
-     * having a specified mutant. 
+     * having a specified mutant.
      *
-     * @param mutant_id is the identifier of the mutant that must contain 
+     * @param mutant_id is the identifier of the mutant that must contain
      *          the selected cell
-     * @param event_type is the event type for which the choosen cell must be 
+     * @param event_type is the event type for which the choosen cell must be
      *          available
-     * @return whenever the set of cells having `mutant_id` as mutant 
-     *         identifier is not empty, a randomly selected cell in it. 
+     * @return whenever the set of cells having `mutant_id` as mutant
+     *         identifier is not empty, a randomly selected cell in it.
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const MutantId& mutant_id,
@@ -689,14 +689,14 @@ public:
      * @brief Randomly select a cell among those having a specified mutant
      *
      * This method randomly select a cell available for an event among those
-     * having a specified mutant name. 
+     * having a specified mutant name.
      *
-     * @param mutant_name is the name of the mutant that must contain 
+     * @param mutant_name is the name of the mutant that must contain
      *          the selected cell
-     * @param event_type is the event type for which the choosen cell must be 
+     * @param event_type is the event type for which the choosen cell must be
      *          available
-     * @return whenever the set of cells having `mutant_id` as mutant 
-     *         identifier is not empty, a randomly selected cell in it. 
+     * @return whenever the set of cells having `mutant_id` as mutant
+     *         identifier is not empty, a randomly selected cell in it.
      *         Otherwise, if the set is empty, a domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const std::string& mutant_name,
@@ -708,14 +708,14 @@ public:
      * This method randomly select a cell available for an event among those
      * having a specified mutant and laying in a tissue rectangle.
      *
-     * @param mutant_id is the identifier of the mutant that must contain 
+     * @param mutant_id is the identifier of the mutant that must contain
      *          the selected cell
-     * @param rectangle is the tissue rectangle in which the cell must be selected 
-     * @param event_type is the event type for which the choosen cell must be 
+     * @param rectangle is the tissue rectangle in which the cell must be selected
+     * @param event_type is the event type for which the choosen cell must be
      *          available
      * @return whenever the set of tissue cells that have `mutant_id` as mutant
-     *         id and lay in one the positions specified by `rectangle` is not empty, 
-     *         a randomly selected cell in it. Otherwise, if the set is empty, a 
+     *         id and lay in one the positions specified by `rectangle` is not empty,
+     *         a randomly selected cell in it. Otherwise, if the set is empty, a
      *         domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const MutantId& mutant_id,
@@ -728,12 +728,12 @@ public:
      * This method randomly select a cell available for an event among those
      * having a specified mutant and laying in a tissue rectangle.
      *
-     * @param mutant_name is the name of the mutant that must contain 
+     * @param mutant_name is the name of the mutant that must contain
      *          the selected cell
-     * @param rectangle is the tissue rectangle in which the cell must be selected 
-     * @return whenever the set of tissue cells that have `mutant_name` as mutant 
-     *         name and lay in one the positions specified by `rectangle` is not empty, 
-     *         a randomly selected cell in it. Otherwise, if the set is empty, a 
+     * @param rectangle is the tissue rectangle in which the cell must be selected
+     * @return whenever the set of tissue cells that have `mutant_name` as mutant
+     *         name and lay in one the positions specified by `rectangle` is not empty,
+     *         a randomly selected cell in it. Otherwise, if the set is empty, a
      *         domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const std::string& mutant_name,
@@ -742,7 +742,7 @@ public:
 
     /**
      * @brief Get the current simulation time
-     * 
+     *
      * @return a constant reference to the simulation time
      */
     inline const Time& get_time() const
@@ -752,7 +752,7 @@ public:
 
     /**
      * @brief Get the simulation statistics
-     * 
+     *
      * @return the simulation statistics
      */
     inline const TissueStatistics& get_statistics() const
@@ -762,7 +762,7 @@ public:
 
     /**
      * @brief Get the simulation statistics
-     * 
+     *
      * @return the simulation statistics
      */
     inline TissueStatistics& get_statistics()
@@ -772,8 +772,8 @@ public:
 
     /**
      * @brief Get the cells manually added to the simulation
-     * 
-     * @return a constant reference to the list of cells 
+     *
+     * @return a constant reference to the list of cells
      *          manually added to the simulation
      */
     inline const std::list<AddedCell>& get_added_cells() const
@@ -783,7 +783,7 @@ public:
 
     /**
      * @brief Get the simulation lineage graph
-     * 
+     *
      * @return a constant reference to the simulation lineage graph
      */
     inline const LineageGraph& get_lineage_graph() const
@@ -793,7 +793,7 @@ public:
 
     /**
      * @brief Add a mutant to the tissue
-     * 
+     *
      * @param mutant_properties is the mutant properties of the mutant
      * @return a reference to the updated object
      */
@@ -801,7 +801,7 @@ public:
 
     /**
      * @brief Place a cell in the simulated tissue
-     * 
+     *
      * @param species_properties is the species properties of the new cell
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
@@ -814,7 +814,7 @@ public:
 
     /**
      * @brief Place a cell in the simulated tissue
-     * 
+     *
      * @param species_id is the species identifier of the new cell
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
@@ -823,10 +823,10 @@ public:
 
     /**
      * @brief Set a new simulation tissue
-     * 
-     * This method resets the simulation and sets a 
+     *
+     * This method resets the simulation and sets a
      * new simulation tissue.
-     * 
+     *
      * @param name is the tissue name
      * @param sizes are the sizes of the tissue
      * @return a reference to the updated object
@@ -835,29 +835,29 @@ public:
 
     /**
      * @brief Get the simulation tissue
-     * 
+     *
      * This method returns a reference to the simulation tissue.
-     * A `std::runtime_error` object is throws if no tissue has been 
+     * A `std::runtime_error` object is throws if no tissue has been
      * associated to the simulation yet.
-     * 
+     *
      * @return A constant reference to the associated tissue
      */
     const Tissue& tissue() const;
 
     /**
      * @brief Get the simulated tissue
-     * 
+     *
      * This method returns a reference to the simulated tissue.
-     * A `std::runtime_error` object is throws if no tissue has been 
+     * A `std::runtime_error` object is throws if no tissue has been
      * associated to the simulation yet.
-     * 
+     *
      * @return A constant reference to the associated tissue
      */
     Tissue& tissue();
 
     /**
      * @brief Set the interval between snapshots
-     * 
+     *
      * @param time_interval is the time interval between two snapshots
      */
     template<class Rep, class Period>
@@ -875,7 +875,7 @@ public:
 
     /**
      * @brief Update the log directory
-     * 
+     *
      * @param log_directory is the new simulation log directory
      */
     inline void rename_log_directory(const std::filesystem::path& log_directory)
@@ -885,7 +885,7 @@ public:
 
     /**
      * @brief Inject random generator seed
-     * 
+     *
      * @param random_seed is the simulation random seed
      */
     inline Simulation& random_generator_seed(int random_seed)
@@ -894,12 +894,12 @@ public:
 
         return *this;
     }
-    
+
     /**
      * @brief Performs a simulation snapshot
-     * 
+     *
      * This method performs a simulation snapshot.
-     * 
+     *
      * @tparam INDICATOR is the type of progress bar
      * @param indicator is the progress bar
      */
@@ -908,11 +908,11 @@ public:
 
     /**
      * @brief Simulate tissue sampling
-     * 
-     * This method simulates a tissue sampling collecting cells 
-     * data, but avoiding cell removal. The resulting sample is 
+     *
+     * This method simulates a tissue sampling collecting cells
+     * data, but avoiding cell removal. The resulting sample is
      * not stored among those collected during the simulation.
-     * 
+     *
      * @param sample_name is the name of the sample
      * @param rectangle is the rectangle to sample
      * @return the sample of the tissue in `rectangle`
@@ -922,12 +922,12 @@ public:
 
     /**
      * @brief Sample the simulation tissue
-     * 
-     * This method performs a tissue sampling collecting cells 
-     * data and removing them from them the tissue. The resulting 
-     * sample is stored among those collected during the 
+     *
+     * This method performs a tissue sampling collecting cells
+     * data and removing them from them the tissue. The resulting
+     * sample is stored among those collected during the
      * simulation.
-     * 
+     *
      * @param sample_name is the name of the sample
      * @param rectangle is the rectangle to sample
      * @return the sample of the tissue in `rectangle`
@@ -937,11 +937,11 @@ public:
 
     /**
      * @brief Return all the simulation samples
-     * 
+     *
      * This method returns all the simulation samples collected during
      * the computation.
-     * 
-     * @return the list of all the tissue samples collected during the 
+     *
+     * @return the list of all the tissue samples collected during the
      *      computation sorted by collection time
      */
     inline
@@ -952,7 +952,7 @@ public:
 
     /**
      * @brief Get the simulation logger
-     * 
+     *
      * @return a constant reference to the simulation logger
      */
     inline const BinaryLogger& get_logger() const
@@ -962,25 +962,25 @@ public:
 
     /**
      * @brief Find a mutant id by name
-     * 
+     *
      * @param mutant_name is the name of the mutant whose id is aimed
-     * @return a constant reference to the identifier of the mutant having 
+     * @return a constant reference to the identifier of the mutant having
      *         `mutant_name` as name
      */
     const MutantId& find_mutant_id(const std::string& mutant_name) const;
 
     /**
      * @brief Find a mutant name by id
-     * 
+     *
      * @param mutant_id is the identifier of the mutant whose name is aimed
-     * @return a constant reference to the name of the mutant having 
+     * @return a constant reference to the name of the mutant having
      *         `mutant_id` as identifier
      */
     const std::string& find_mutant_name(const MutantId& mutant_id) const;
 
     /**
      * @brief Save a simulation in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -1005,7 +1005,7 @@ public:
 
     /**
      * @brief Load a simulation from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded simulation
@@ -1029,7 +1029,7 @@ public:
                 & simulation.storage_enabled
                 & simulation.samples
                 & Cell::counter;
-        
+
         for (auto sample_it=simulation.samples.begin();
                 sample_it != simulation.samples.end(); ++sample_it) {
             simulation.name2sample[sample_it->get_name()] = sample_it;
@@ -1114,7 +1114,7 @@ Simulation& Simulation::simulate(const CellEvent& event, UI::TissuePlotter<PLOT_
         const auto species_id = cell.get_species_id();
         if (death_enabled.count(species_id)==0) {
             Species& species = tissue().get_species(species_id);
-            
+
             // and the death activation level has been reached
             if (species.num_of_cells()>=death_activation_level) {
 

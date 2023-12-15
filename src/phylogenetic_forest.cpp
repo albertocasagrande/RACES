@@ -2,23 +2,23 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.18
- * @date 2023-12-11
- * 
+ * @version 0.1
+ * @date 2023-12-15
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,283 +38,95 @@
 namespace Races
 {
 
-namespace Mutants 
+namespace Mutations
 {
 
-DescendantsForest::SpeciesData::SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature):
-    mutant_id(mutant_id), signature(signature)
+PhylogeneticForest::PhylogeneticForest():
+    DescendantsForest()
 {}
 
-DescendantsForest::const_node::const_node(const DescendantsForest* forest, const CellId cell_id):
-    forest(const_cast<DescendantsForest*>(forest)), cell_id(cell_id)
-{}
-
-DescendantsForest::const_node DescendantsForest::get_node(const CellId& cell_id) const
+PhylogeneticForest::PhylogeneticForest(const Mutants::DescendantsForest& descendant_forest,
+                                       std::map<Mutants::CellId, CellGenomeMutations>&& cell_mutations):
+    Mutants::DescendantsForest(descendant_forest)
 {
-    if (cells.count(cell_id)==0) {
-        throw std::runtime_error("The forest does not contain the cell "
-                                 "having the specified identifier");
-    }
-        
-    return DescendantsForest::const_node(this, cell_id);
+    std::swap(this->cell_mutations, cell_mutations);
 }
 
-DescendantsForest::node::node(DescendantsForest* forest, const CellId cell_id):
+PhylogeneticForest::PhylogeneticForest(const Mutants::DescendantsForest& descendant_forest,
+                                       const std::map<Mutants::CellId, CellGenomeMutations>& cell_mutations):
+    Mutants::DescendantsForest(descendant_forest), cell_mutations(cell_mutations)
+{}
+
+PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, const Mutants::CellId cell_id):
+    Mutants::DescendantsForest::_const_node<PhylogeneticForest>(forest, cell_id)
+{}
+
+PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId cell_id):
+    Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id),
     const_node(forest, cell_id)
 {}
 
-DescendantsForest::node DescendantsForest::get_node(const CellId& cell_id)
+
+PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellId& cell_id) const
 {
-    if (cells.count(cell_id)==0) {
+    if (get_cells().count(cell_id)==0) {
         throw std::runtime_error("The forest does not contain the cell "
                                  "having the specified identifier");
     }
 
-    return DescendantsForest::node(this, cell_id);
+    return PhylogeneticForest::const_node(this, cell_id);
 }
 
-DescendantsForest::DescendantsForest()
-{}
-
-DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation):
-    DescendantsForest(simulation, simulation.get_tissue_samples())
-{}
-
-DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation,
-                                     const std::list<Evolutions::TissueSample>& tissue_samples)
+PhylogeneticForest::node PhylogeneticForest::get_node(const Mutants::CellId& cell_id)
 {
-    std::set<MutantId> mutant_ids;
-
-    auto species_properties = simulation.tissue().get_species_properties();
-    for (const auto& s_propeties: species_properties) {
-        const auto& mutant_id = s_propeties.get_mutant_id();
-        mutant_ids.insert(mutant_id);
-
-        const auto& signature = s_propeties.get_methylation_signature();
-        species_data.insert({s_propeties.get_id(), {mutant_id, signature}});
+    if (get_cells().count(cell_id)==0) {
+        throw std::runtime_error("The forest does not contain the cell "
+                                 "having the specified identifier");
     }
 
-    for (const auto& mutant_id : mutant_ids) {
-        mutant_names[mutant_id] = simulation.find_mutant_name(mutant_id);
-    }
-
-    Evolutions::BinaryLogger::CellReader reader(simulation.get_logger().get_directory());
-
-    grow_from(tissue_samples, reader);
+    return PhylogeneticForest::node(this, cell_id);
 }
 
-DescendantsForest::const_node DescendantsForest::const_node::parent() const
+std::vector<PhylogeneticForest::const_node> PhylogeneticForest::get_roots() const
 {
-    if (forest==nullptr) {
-        throw std::runtime_error("The forest node has not been initialized");
-    }
+    std::vector<PhylogeneticForest::const_node> nodes;
 
-    return DescendantsForest::const_node(forest, forest->cells.at(cell_id).get_parent_id());
-}
-
-const Evolutions::TissueSample& DescendantsForest::const_node::get_sample() const
-{
-    if (forest==nullptr) {
-        throw std::runtime_error("The forest node has not been initialized");
-    }
-
-    auto found = forest->coming_from.find(cell_id);
-
-    if (found == forest->coming_from.end()) {
-        throw std::domain_error("The node does not correspond to a sampled cell");
-    }
-
-    return forest->samples[found->second];
-}
-
-std::vector<DescendantsForest::const_node> DescendantsForest::const_node::children() const
-{
-    if (forest==nullptr) {
-        throw std::runtime_error("The forest node has not been initialized");
-    }
-
-    std::vector<DescendantsForest::const_node> nodes;
-
-    for (const auto& child_id: forest->branches.at(cell_id)) {
-        nodes.push_back(DescendantsForest::const_node(forest, child_id));
+    for (const auto& root_id : get_root_cells()) {
+        nodes.push_back(PhylogeneticForest::const_node(this, root_id));
     }
 
     return nodes;
 }
 
-DescendantsForest::node DescendantsForest::node::parent()
+std::vector<PhylogeneticForest::node> PhylogeneticForest::get_roots()
 {
-    if (forest==nullptr) {
-       throw std::runtime_error("The forest node has not been initialized");
-    }
+    std::vector<PhylogeneticForest::node> nodes;
 
-    return DescendantsForest::node(forest, forest->cells.at(cell_id).get_parent_id());
-}
-
-std::vector<DescendantsForest::node> DescendantsForest::node::children()
-{
-    if (forest==nullptr) {
-        throw std::runtime_error("The forest node has not been initialized");
-    }
-
-    std::vector<DescendantsForest::node> nodes;
-
-    for (const auto& child_id: forest->branches.at(cell_id)) {
-        nodes.push_back(DescendantsForest::node(forest, child_id));
+    for (const auto& root_id : get_root_cells()) {
+        nodes.push_back(PhylogeneticForest::node(this, root_id));
     }
 
     return nodes;
 }
 
-std::vector<DescendantsForest::const_node> DescendantsForest::get_roots() const
+PhylogeneticForest
+PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_names) const
 {
-    std::vector<DescendantsForest::const_node> nodes;
+    PhylogeneticForest forest;
 
-    for (const auto& root_id : roots) {
-        nodes.push_back(DescendantsForest::const_node(this, root_id));
+    static_cast<Mutants::DescendantsForest&>(forest) = Mutants::DescendantsForest::get_subforest_for(sample_names);
+
+    for (const auto& [cell_id, cell]: forest.get_cells()) {
+        forest.cell_mutations[cell_id] = cell_mutations.at(cell_id);
     }
 
-    return nodes;
+    return forest;
 }
 
-std::vector<DescendantsForest::node> DescendantsForest::get_roots()
+void PhylogeneticForest::clear()
 {
-    std::vector<DescendantsForest::node> nodes;
-
-    for (const auto& root_id : roots) {
-        nodes.push_back(DescendantsForest::node(this, root_id));
-    }
-
-    return nodes;
-}
-
-std::map<CellId, size_t> 
-count_descendants_in_subtree(const DescendantsForest& forest,
-                             const std::list<CellId>& leaf_ids)
-{
-    std::map<CellId, size_t> counter;
-
-    for (const auto& cell_id: leaf_ids) {
-        auto found = counter.find(cell_id);
-        if (found == counter.end()) {
-            counter.insert({cell_id, 1});
-        } else {
-            ++found->second;
-        }
-
-        auto cell_node = forest.get_node(cell_id);
-        while (!cell_node.is_root()) {
-            cell_node = cell_node.parent();
-
-            ++counter[cell_node.get_id()];
-        }
-    }
-    
-    return counter;
-}
-
-CellId find_tree_coalescent(const DescendantsForest& forest, const CellId& root,
-                            const std::map<CellId, size_t>& counter)
-{
-    const auto& num_of_leaves = counter.at(root);
-    auto cell_node = forest.get_node(root);
-
-    while (true) {
-        auto children = cell_node.children();
-
-        if (children.size()>0) {
-            size_t i{0};
-            auto counter_it = counter.find(children[i].get_id());
-            while (counter_it==counter.end()) {
-                counter_it = counter.find(children[++i].get_id());
-            }
-
-            if (counter_it->second != num_of_leaves) {
-                return cell_node.get_id(); 
-            }
-
-            cell_node = children[i];
-        } else {
-            return cell_node.get_id();
-        }
-    }
-}
-
-std::vector<CellId> 
-DescendantsForest::get_coalescent_cells(const std::list<CellId>& cell_ids) const
-{
-    const auto counter = count_descendants_in_subtree(*this, cell_ids);
-
-    std::vector<CellId> coalescent_nodes;
-    coalescent_nodes.reserve(roots.size());
-
-    for (const auto& root: roots) {
-        if (counter.find(root) != counter.end()) {
-            coalescent_nodes.push_back(find_tree_coalescent(*this, root, counter));
-        }
-    }
-
-    return coalescent_nodes;
-}
-
-std::vector<CellId> 
-DescendantsForest::get_coalescent_cells() const
-{
-    std::list<CellId> leaf_ids;
-
-    for (const auto& sample: get_samples()) {
-        for (const auto& cell_id: sample.get_cell_ids()) {
-            leaf_ids.push_back(cell_id);
-        }
-    }
-
-    return get_coalescent_cells(leaf_ids);
-}
-
-DescendantsForest 
-DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_names) const
-{
-    std::set<std::string> names(sample_names.begin(), sample_names.end());
-    std::set<std::string> found_names;
-
-    std::list<Evolutions::TissueSample> tissue_samples;
-    for (const auto& sample : samples) {
-        if (names.count(sample.get_name())>0) {
-            tissue_samples.push_back(sample);
-            found_names.insert(sample.get_name());
-        }
-    }
-
-    if (names.size() != found_names.size()) {
-        std::set<std::string> missing_names;
-        std::set_difference(names.begin(), names.end(),
-                            found_names.begin(), found_names.end(),
-                            std::inserter(missing_names, missing_names.end()));
-
-        std::ostringstream oss;
-        oss << "Unknown sample names:";
-        std::string sep = " ";
-        for (const auto& missing_name : missing_names) {
-            oss << sep << missing_name;
-            sep = ", ";
-        }
-
-        throw std::domain_error(oss.str());
-    }
-
-    DescendantsForest subforest = *this;
-    subforest.grow_from(tissue_samples, cells);
-
-    return subforest;
-}
-
-void DescendantsForest::clear()
-{
-    cells.clear();
-    roots.clear();
-    branches.clear();
-    samples.clear();
-    coming_from.clear();
+    DescendantsForest::clear();
+    cell_mutations.clear();
 }
 
 }   // Mutants

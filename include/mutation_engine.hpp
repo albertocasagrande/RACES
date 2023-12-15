@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.21
- * @date 2023-12-14
+ * @version 0.22
+ * @date 2023-12-15
  *
  * @copyright Copyright (c) 2023
  *
@@ -36,7 +36,7 @@
 #include <random>
 #include <ostream>
 
-#include "phylogenetic_forest.hpp"
+#include "descendant_forest.hpp"
 #include "mutant_id.hpp"
 
 #include "context_index.hpp"
@@ -561,9 +561,9 @@ public:
     /**
      * @brief Add the properties of a mutant
      *
-     * This method add the properties of a mutant (i.e., its mutation rates, its SNVs and 
+     * This method add the properties of a mutant (i.e., its mutation rates, its SNVs and
      * CNAs) and all its species to the mutations engine.
-     * 
+     *
      * @param name is the name of the mutant
      * @param epistate_mutation_rates is a map from epigenomic status to
      *          mutational rate
@@ -577,7 +577,7 @@ public:
                                const std::list<SNV>& mutant_SNVs={},
                                const std::list<CopyNumberAlteration>& mutant_CNAs={})
     {
-        mutational_properties.add_mutant(name, epistate_mutation_rates, mutant_SNVs, 
+        mutational_properties.add_mutant(name, epistate_mutation_rates, mutant_SNVs,
                                          mutant_CNAs);
     }
 
@@ -633,7 +633,7 @@ public:
      *
      * This method add a default set of mutational signature coefficients.
      *
-     * @param default_mutational_coefficients is the map from the signature name to the 
+     * @param default_mutational_coefficients is the map from the signature name to the
      *              coefficient
      * @return a reference to the updated object
      */
