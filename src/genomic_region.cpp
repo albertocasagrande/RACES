@@ -2,23 +2,23 @@
  * @file genomic_region.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic region
- * @version 0.3
- * @date 2023-12-09
- * 
+ * @version 0.4
+ * @date 2023-12-15
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,7 @@
 
 #include "genomic_region.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -76,7 +76,7 @@ GenomicRegion GenomicRegion::split(const GenomicPosition& split_point)
 
     if (split_point==initial_pos) {
         throw std::domain_error("the fragment initial position and the split point are the same");
-    } 
+    }
 
     GenomicRegion new_region(split_point, length-(split_point.position-initial_pos.position));
 
@@ -115,7 +115,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicRegio
 {
     auto begin_pos = genomic_region.get_begin();
 
-    out << "GenomicRegion(chr: " << static_cast<int>(begin_pos.chr_id)
+    out << "GenomicRegion(chr: " << Races::Mutations::GenomicPosition::chrtos(begin_pos.chr_id)
         << ", begin: " << begin_pos.position
         << ", length: " << genomic_region.size() << ")";
 
