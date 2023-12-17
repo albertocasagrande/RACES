@@ -2,23 +2,23 @@
  * @file snv.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.8
- * @date 2023-12-09
- * 
+ * @version 0.9
+ * @date 2023-12-17
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +36,7 @@
 #include "genomic_position.hpp"
 #include "context.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -58,19 +58,19 @@ struct SNV : public GenomicPosition
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
      * @param context is the SNV context
      * @param mutated_base is the mutated base
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
-    SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
+    SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
         const MutationalContext& context, const char mutated_base);
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param genomic_position is the SNV genomic_position
      * @param context is the SNV context
      * @param mutated_base is the mutated base
@@ -81,7 +81,7 @@ struct SNV : public GenomicPosition
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param genomic_position is the SNV genomic_position
      * @param context is the SNV context
      * @param mutated_base is the mutated base
@@ -91,7 +91,7 @@ struct SNV : public GenomicPosition
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
      * @param context is the SNV context
@@ -99,12 +99,12 @@ struct SNV : public GenomicPosition
      * @param cause is the cause of the SNV
      * @throw std::domain_error `original_base` and `mutated_base` are the same
      */
-    SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
+    SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
         const MutationalContext& context, const char mutated_base, const std::string& cause);
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param genomic_position is the SNV genomic_position
      * @param context is the SNV context
      * @param mutated_base is the mutated base
@@ -116,7 +116,7 @@ struct SNV : public GenomicPosition
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param genomic_position is the SNV genomic_position
      * @param context is the SNV context
      * @param mutated_base is the mutated base
@@ -125,6 +125,42 @@ struct SNV : public GenomicPosition
      */
     SNV(GenomicPosition&& genomic_position, const MutationalContext& context,
         const char mutated_base, const std::string& cause);
+
+    /**
+     * @brief Save a SNV in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<const GenomicPosition&>(*this)
+                & context
+                & mutated_base
+                & cause;
+    }
+
+
+    /**
+     * @brief Load a SNV from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load SNV
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static SNV load(ARCHIVE& archive)
+    {
+        SNV snv;
+
+        archive & static_cast<GenomicPosition&>(snv)
+                & snv.context
+                & snv.mutated_base
+                & snv.cause;
+
+        return snv;
+    }
 };
 
 }   // Mutations
@@ -143,7 +179,7 @@ struct less<Races::Mutations::SNV>
 
 /**
  * @brief Write a SNV in a output stream
- * 
+ *
  * @param out is the output stream
  * @param snv is the SNV to stream
  * @return a reference of the updated stream

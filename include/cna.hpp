@@ -2,7 +2,7 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.5
+ * @version 0.6
  * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
@@ -96,6 +96,65 @@ struct CopyNumberAlteration
     static inline CopyNumberAlteration new_deletion(const GenomicRegion& region, const AlleleId& allele)
     {
         return CopyNumberAlteration(region, allele, allele, Type::DELETION);
+    }
+
+    /**
+     * @brief Save a CNA in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<int>(type)
+                & region
+                & dest;
+
+        switch (type) {
+            case Type::AMPLIFICATION:
+                archive & source;
+                return;
+            case Type::DELETION:
+                return;
+            default:
+                throw std::runtime_error("CopyNumberAlteration::save: Unsupported CopyNumberAlteration::type "+
+                                         std::to_string(static_cast<int>(type)));
+        }
+    }
+
+    /**
+     * @brief Load a CNA from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load CNA
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static CopyNumberAlteration load(ARCHIVE& archive)
+    {
+        int type;
+        CopyNumberAlteration cna;
+
+        archive & type
+                & cna.region
+                & cna.dest;
+
+        cna.type = static_cast<CopyNumberAlteration::Type>(type);
+
+        switch (cna.type) {
+            case Type::AMPLIFICATION:
+                archive & cna.source;
+                break;
+            case Type::DELETION:
+                cna.source = cna.dest;
+                break;
+            default:
+                throw std::runtime_error("CopyNumberAlteration::save: Unsupported CopyNumberAlteration::type "+
+                                         std::to_string(type));
+        }
+
+        return cna;
     }
 };
 

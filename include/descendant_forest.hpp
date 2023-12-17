@@ -2,7 +2,7 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.2
+ * @version 0.3
  * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
@@ -66,6 +66,44 @@ class DescendantsForest
          * @brief The constructor
          */
         SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature);
+
+        /**
+         * @brief Save species data in an archive
+         *
+         * @tparam ARCHIVE is the output archive type
+         * @param archive is the output archive
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+        inline void save(ARCHIVE& archive) const
+        {
+            archive & mutant_id
+                    & signature;
+        }
+
+        /**
+         * @brief Load species data from an archive
+         *
+         * @tparam ARCHIVE is the input archive type
+         * @param archive is the input archive
+         * @return the load species data
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+        inline static SpeciesData load(ARCHIVE& archive)
+        {
+            SpeciesData data;
+
+            archive & data.mutant_id
+                    & data.signature;
+
+            return data;
+        }
+private:
+
+        /**
+         * @brief Construct a new Species Data object
+         *
+         */
+        SpeciesData();
     };
 
     using EdgeTail = std::set<CellId>;
@@ -605,6 +643,47 @@ public:
      * @brief Clear the forest
      */
     void clear();
+
+    /**
+     * @brief Save a descendants forest in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & roots
+                & cells
+                & branches
+                & species_data
+                & mutant_names
+                & samples
+                & coming_from;
+    }
+
+    /**
+     * @brief Load a descendants forest from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load descendants forest
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static DescendantsForest load(ARCHIVE& archive)
+    {
+        DescendantsForest forest;
+
+        archive & forest.roots
+                & forest.cells
+                & forest.branches
+                & forest.species_data
+                & forest.mutant_names
+                & forest.samples
+                & forest.coming_from;
+
+        return forest;
+    }
 };
 
 }   // Mutants

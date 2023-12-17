@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.16
- * @date 2023-12-12
+ * @version 0.17
+ * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
  *
@@ -284,6 +284,43 @@ public:
      *      `allele_id` or `genomic_position` does not lay in the allele
      */
     bool remove_SNV(const GenomicPosition& genomic_position);
+
+    /**
+     * @brief Save chromosome mutations in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & identifier
+                & length
+                & allelic_length
+                & alleles
+                & CNAs;
+    }
+
+    /**
+     * @brief Load chromosome mutations from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load chromosome mutations
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static ChromosomeMutations load(ARCHIVE& archive)
+    {
+        ChromosomeMutations chr_mutations;
+
+        archive & chr_mutations.identifier
+                & chr_mutations.length
+                & chr_mutations.allelic_length
+                & chr_mutations.alleles
+                & chr_mutations.CNAs;
+
+        return chr_mutations;
+    }
 };
 
 /**
@@ -468,6 +505,35 @@ public:
      * @return `true` if and only if a SNV occurred at `genomic_position`
      */
     bool remove_SNV(const GenomicPosition& genomic_position);
+
+    /**
+     * @brief Save genome mutations in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & chromosomes;
+    }
+
+    /**
+     * @brief Load genome mutations from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load genome mutations
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static GenomeMutations load(ARCHIVE& archive)
+    {
+        GenomeMutations g_mutations;
+
+        archive & g_mutations.chromosomes;
+
+        return g_mutations;
+    }
 };
 
 
@@ -492,6 +558,37 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
      * @param chromosomes is the vector of genome chromosomes
      */
     explicit CellGenomeMutations(const Mutants::Cell& cell, const GenomeMutations& genome_mutations);
+
+    /**
+     * @brief Save cell genome mutations in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<const Mutants::Cell&>(*this)
+                & static_cast<const GenomeMutations&>(*this);
+    }
+
+    /**
+     * @brief Load cell genome mutations from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load cell genome mutations
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static CellGenomeMutations load(ARCHIVE& archive)
+    {
+        CellGenomeMutations cg_mutations;
+
+        archive & static_cast<Mutants::Cell&>(cg_mutations)
+                & static_cast<GenomeMutations&>(cg_mutations);
+
+        return cg_mutations;
+    }
 };
 
 /**

@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.2
+ * @version 0.3
  * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
@@ -58,6 +58,37 @@ public:
     {
         std::set<SNV> SNVs;                     //!< The newly introduced SNVs
         std::set<CopyNumberAlteration> CNAs;    //!< The newly introduced CNAs
+
+        /**
+         * @brief Save novel mutations in an archive
+         *
+         * @tparam ARCHIVE is the output archive type
+         * @param archive is the output archive
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+        inline void save(ARCHIVE& archive) const
+        {
+            archive & SNVs
+                    & CNAs;
+        }
+
+        /**
+         * @brief Load novel mutations from an archive
+         *
+         * @tparam ARCHIVE is the input archive type
+         * @param archive is the input archive
+         * @return the load novel mutations
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+        inline static NovelMutations load(ARCHIVE& archive)
+        {
+            NovelMutations mutations;
+
+            archive & mutations.SNVs
+                    & mutations.CNAs;
+
+            return mutations;
+        }
     };
 private:
     std::map<Mutants::CellId, CellGenomeMutations> leaves_mutations;  //!< The mutations of each cells represented as leaves in the forest
@@ -261,6 +292,39 @@ public:
      * @brief Clear the forest
      */
     void clear();
+
+    /**
+     * @brief Save a phylogenetic forest in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & static_cast<const Mutants::DescendantsForest&>(*this)
+                & leaves_mutations
+                & novel_mutations;
+    }
+
+    /**
+     * @brief Load a phylogenetic forest from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load phylogenetic forest
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static PhylogeneticForest load(ARCHIVE& archive)
+    {
+        PhylogeneticForest forest;
+
+        archive & static_cast<Mutants::DescendantsForest&>(forest)
+                & forest.leaves_mutations
+                & forest.novel_mutations;
+
+        return forest;
+    }
 
     template<typename GENOME_WIDE_POSITION, typename RANDOM_GENERATOR>
     friend class MutationEngine;

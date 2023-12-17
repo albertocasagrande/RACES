@@ -2,7 +2,7 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 0.2
+ * @version 0.3
  * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
@@ -40,6 +40,9 @@ namespace Races
 
 namespace Mutants
 {
+
+DescendantsForest::SpeciesData::SpeciesData()
+{}
 
 DescendantsForest::SpeciesData::SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature):
     mutant_id(mutant_id), signature(signature)
