@@ -2,23 +2,23 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.8
- * @date 2023-12-09
- * 
+ * @version 0.9
+ * @date 2023-12-17
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@
 
 #include "context.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -45,7 +45,7 @@ SNV::SNV():
     GenomicPosition(), context(), mutated_base('X')
 {}
 
-SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
+SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
          const MutationalContext& context, const char mutated_base):
     SNV(chromosome_id, chromosomic_position, context, mutated_base, "")
 {}
@@ -59,7 +59,7 @@ SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const cha
     SNV(position, context, mutated_base, "")
 {}
 
-SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position, 
+SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
          const MutationalContext& context, const char mutated_base, const std::string& cause):
     SNV(GenomicPosition(chromosome_id, chromosomic_position), context, mutated_base, cause)
 {}
@@ -94,7 +94,7 @@ namespace std
 {
 
 bool less<Races::Mutations::SNV>::operator()(const Races::Mutations::SNV &lhs,
-                                              const Races::Mutations::SNV &rhs) const
+                                             const Races::Mutations::SNV &rhs) const
 {
     {
         less<Races::Mutations::GenomicPosition> gp_op;
@@ -107,16 +107,16 @@ bool less<Races::Mutations::SNV>::operator()(const Races::Mutations::SNV &lhs,
             return false;
         }
     }
-    
+
     {
         less<Races::Mutations::MutationalContext> mc_op;
-        
+
         if (mc_op(lhs.context, rhs.context)) {
-            return true; 
+            return true;
         }
 
         if (mc_op(rhs.context, lhs.context)) {
-            return false; 
+            return false;
         }
     }
 
@@ -130,7 +130,7 @@ bool less<Races::Mutations::SNV>::operator()(const Races::Mutations::SNV &lhs,
 
     {
         less<std::string> str_op;
-        
+
         return str_op(lhs.cause, rhs.cause);
     }
 }
@@ -140,8 +140,8 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::SNV& snv)
     std::string snv_sequence = snv.context.get_sequence();
 
     out << static_cast<Races::Mutations::GenomicPosition>(snv) << "("
-        << snv_sequence[0] 
-        << "[" << snv_sequence[1] << ">" <<  snv.mutated_base << "]" 
+        << snv_sequence[0]
+        << "[" << snv_sequence[1] << ">" <<  snv.mutated_base << "]"
         << snv_sequence[2] << ")";
 
     return out;

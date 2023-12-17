@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.1
- * @date 2023-12-15
+ * @version 0.2
+ * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
  *
@@ -46,7 +46,23 @@ namespace Mutations
  */
 class PhylogeneticForest : public Mutants::DescendantsForest
 {
-    std::map<Mutants::CellId, CellGenomeMutations> cell_mutations;  //!< The mutations of each cell represented in the forest
+public:
+    /**
+     * @brief Mutations introduced in a cell
+     *
+     * This structure contains the mutations that are present
+     * in one of the cells represented in the phylogenetic forest,
+     * but not in its parent.
+     */
+    struct NovelMutations
+    {
+        std::set<SNV> SNVs;                     //!< The newly introduced SNVs
+        std::set<CopyNumberAlteration> CNAs;    //!< The newly introduced CNAs
+    };
+private:
+    std::map<Mutants::CellId, CellGenomeMutations> leaves_mutations;  //!< The mutations of each cells represented as leaves in the forest
+
+    std::map<Mutants::CellId, NovelMutations> novel_mutations;  //!< The mutations introduces by each cell in the forest
 
 public:
     /**
@@ -54,7 +70,7 @@ public:
      */
     class const_node : public Mutants::DescendantsForest::_const_node<PhylogeneticForest>
     {
-    protected:
+    public:
         /**
          * @brief A constructor for a constant node
          *
@@ -63,24 +79,48 @@ public:
          */
         const_node(const PhylogeneticForest* forest, const Mutants::CellId cell_id);
 
-    public:
         /**
          * @brief Get the genome mutations of the cell represented by the node
          *
          * @return a constant reference to the genome mutations of the cell
          *      represented by the node
          */
-        inline const CellGenomeMutations& get_mutations() const
+        inline const CellGenomeMutations& cell_mutations() const
         {
-            return forest->cell_mutations.at(cell_id);
+            if (is_leaf()) {
+                return forest->leaves_mutations.at(cell_id);
+            }
+
+            throw std::domain_error("The node is not a leaf");
+        }
+
+        /**
+         * @brief Get the parent node
+         *
+         * @return the parent node of this node
+         */
+        const_node parent() const
+        {
+            return Mutants::DescendantsForest::_const_node<PhylogeneticForest>::parent<const_node>();
+        }
+
+        /**
+         * @brief Get the node direct descendants
+         *
+         * @return a vector containing the direct descendants of
+         *         this node
+         */
+        inline std::vector<const_node> children() const
+        {
+            return Mutants::DescendantsForest::_const_node<PhylogeneticForest>::children<const_node>();
         }
 
         friend class PhylogeneticForest;
     };
 
-    class node : public Mutants::DescendantsForest::_node<PhylogeneticForest>, public const_node
+    class node : public Mutants::DescendantsForest::_node<PhylogeneticForest>
     {
-    protected:
+    public:
         /**
          * @brief A constructor for a constant node
          *
@@ -89,6 +129,63 @@ public:
          */
         node(PhylogeneticForest* forest, const Mutants::CellId cell_id);
 
+        /**
+         * @brief Get the parent node
+         *
+         * @return the parent node of this node
+         */
+        node parent()
+        {
+            return Mutants::DescendantsForest::_node<PhylogeneticForest>::parent<node>();
+        }
+
+        /**
+         * @brief Get the node direct descendants
+         *
+         * @return a vector containing the direct descendants of
+         *         this node
+         */
+        inline std::vector<node> children()
+        {
+            return Mutants::DescendantsForest::_node<PhylogeneticForest>::children<node>();
+        }
+
+        /**
+         * @brief Add a newly introduced mutation
+         *
+         * @param snv is a SVN that was introduced in the corresponding
+         *      cell and was not present in the cell parent
+         */
+        inline void add_new_mutation(const SNV& snv)
+        {
+            get_forest().novel_mutations[cell_id].SNVs.insert(snv);
+        }
+
+        /**
+         * @brief Add a newly introduced mutation
+         *
+         * @param cna is a CNA that was introduced in the corresponding
+         *      cell and was not present in the cell parent
+         */
+        inline void add_new_mutation(const CopyNumberAlteration& cna)
+        {
+            get_forest().novel_mutations[cell_id].CNAs.insert(cna);
+        }
+
+        /**
+         * @brief Get the genome mutations of the cell represented by the node
+         *
+         * @return a reference to the genome mutations of the cell
+         *      represented by the node
+         */
+        inline CellGenomeMutations& cell_mutations()
+        {
+            if (is_leaf()) {
+                return forest->leaves_mutations[cell_id];
+            }
+
+            throw std::domain_error("The node is not a leaf");
+        }
         friend class PhylogeneticForest;
     };
 
@@ -96,30 +193,6 @@ public:
      * @brief The empty constructor
      */
     PhylogeneticForest();
-
-    /**
-     * @brief Construct a phylogentic forest
-     *
-     * This method builds a phylogentic forest by labelling each cell represented
-     * in a descendant forest by using the set of its genome mutations.
-     *
-     * @param descendant_forest is a descendant forest
-     * @param cell_mutations is a map labelling each cell in the forest by its genome mutations
-     */
-    PhylogeneticForest(const Mutants::DescendantsForest& descendant_forest,
-                       std::map<Mutants::CellId, CellGenomeMutations>&& cell_mutations);
-
-    /**
-     * @brief Construct a phylogentic forest
-     *
-     * This method builds a phylogentic forest by labelling each cell represented
-     * in a descendant forest by using the set of its genome mutations.
-     *
-     * @param descendant_forest is a descendant forest
-     * @param cell_mutations is a map labelling each cell in the forest by its genome mutations
-     */
-    PhylogeneticForest(const Mutants::DescendantsForest& descendant_forest,
-                       const std::map<Mutants::CellId, CellGenomeMutations>& cell_mutations);
 
     /**
      * @brief Get a constant node with the given id
@@ -161,9 +234,36 @@ public:
     PhylogeneticForest get_subforest_for(const std::vector<std::string>& sample_names) const;
 
     /**
+     * @brief Get the genome mutations of a cell represented as a leaf
+     *
+     * @param cell_id is a cell identifier of a cell represented as a leaf
+     * @return a constant reference to the genome mutations of the cell
+     *          with identifier `cell_id` provided that this cell is represented
+     *          by a forest leaf
+     */
+    const CellGenomeMutations& get_leaf_mutations(const Mutants::CellId& cell_id) const;
+
+    /**
+     * @brief Get the genome mutations of all the forest leaves
+     *
+     * @return a constant reference to a map associating all the leaves cell
+     *      identifiers to the corresponding genome mutations
+     */
+    inline const std::map<Mutants::CellId, CellGenomeMutations>&
+    get_leaves_mutations() const
+    {
+        return leaves_mutations;
+    }
+
+    std::list<SampleGenomeMutations> get_samples_mutations() const;
+
+    /**
      * @brief Clear the forest
      */
     void clear();
+
+    template<typename GENOME_WIDE_POSITION, typename RANDOM_GENERATOR>
+    friend class MutationEngine;
 };
 
 }   // Mutations

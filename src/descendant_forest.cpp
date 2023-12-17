@@ -2,8 +2,8 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 0.1
- * @date 2023-12-15
+ * @version 0.2
+ * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
  *
@@ -235,6 +235,16 @@ DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_name
     subforest.grow_from(tissue_samples, cells);
 
     return subforest;
+}
+
+bool DescendantsForest::is_leaf(const CellId& cell_id) const
+{
+    auto branches_it = branches.find(cell_id);
+
+    if (branches_it == branches.end()) {
+        throw std::domain_error(std::to_string(cell_id)+" is not a forest cell");
+    }
+    return branches_it->second.size()==0;
 }
 
 void DescendantsForest::clear()

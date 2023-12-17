@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.1
- * @date 2023-12-15
+ * @version 0.2
+ * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
  *
@@ -226,10 +226,11 @@ protected:
      *
      * @param FOREST_TYPE is the type of forest
      */
+
     template<typename FOREST_TYPE>
     class _const_node
     {
-    protected:
+    public:
         FOREST_TYPE* forest;    //!< A pointer to the forest
         CellId cell_id;         //!< The cell id of a cell in the forest
 
@@ -242,7 +243,7 @@ protected:
         _const_node(const FOREST_TYPE* forest, const CellId cell_id):
                 forest(const_cast<FOREST_TYPE*>(forest)), cell_id(cell_id)
         {}
-    public:
+
         /**
          * @brief Cast to Cell
          *
@@ -260,33 +261,37 @@ protected:
         /**
          * @brief Get the parent node
          *
+         * @tparam NODE_TYPE is the node type
          * @return the parent node of this node
          */
-        _const_node<FOREST_TYPE> parent() const
+        template<typename NODE_TYPE = _const_node<FOREST_TYPE>>
+        NODE_TYPE parent() const
         {
             if (forest==nullptr) {
                 throw std::runtime_error("The forest node has not been initialized");
             }
 
-            return _const_node<FOREST_TYPE>(forest, forest->cells.at(cell_id).get_parent_id());
+            return NODE_TYPE(forest, forest->cells.at(cell_id).get_parent_id());
         }
 
         /**
          * @brief Get the node direct descendants
          *
+         * @tparam NODE_TYPE is the node type
          * @return a vector containing the direct descendants of
          *         this node
          */
-        std::vector<_const_node<FOREST_TYPE>> children() const
+        template<typename NODE_TYPE = _const_node<FOREST_TYPE>>
+        std::vector<NODE_TYPE> children() const
         {
             if (forest==nullptr) {
                 throw std::runtime_error("The forest node has not been initialized");
             }
 
-            std::vector<_const_node<FOREST_TYPE>> nodes;
+            std::vector<NODE_TYPE> nodes;
 
             for (const auto& child_id: forest->branches.at(cell_id)) {
-                nodes.push_back(_const_node<FOREST_TYPE>(forest, child_id));
+                nodes.push_back(NODE_TYPE(forest, child_id));
             }
 
             return nodes;
@@ -408,10 +413,17 @@ protected:
     template<typename FOREST_TYPE>
     class _node : public _const_node<FOREST_TYPE>
     {
+    public:
+        /**
+         * @brief A constructor for a constant node
+         *
+         * @param forest is the forest of the node
+         * @param cell_id is the cell id of a cell in the forest
+         */
         _node(FOREST_TYPE* forest, const CellId cell_id):
             _const_node<FOREST_TYPE>(forest, cell_id)
         {}
-    public:
+
         /**
          * @brief Cast to Cell
          *
@@ -425,37 +437,51 @@ protected:
         /**
          * @brief Get the parent node
          *
+         * @tparam NODE_TYPE is the node type
          * @return the parent node of this node
          */
-        _node<FOREST_TYPE> parent()
+        template<typename NODE_TYPE = _node<FOREST_TYPE>>
+        NODE_TYPE parent()
         {
             if (_const_node<FOREST_TYPE>::forest==nullptr) {
                 throw std::runtime_error("The forest node has not been initialized");
             }
 
-            return _node<FOREST_TYPE>(_const_node<FOREST_TYPE>::forest,
-                                      _const_node<FOREST_TYPE>::forest->cells.at(_const_node<FOREST_TYPE>::cell_id).get_parent_id());
+            return NODE_TYPE(_const_node<FOREST_TYPE>::forest,
+                             _const_node<FOREST_TYPE>::forest->cells.at(_const_node<FOREST_TYPE>::cell_id).get_parent_id());
         }
 
         /**
          * @brief Get the node direct descendants
          *
+         * @tparam NODE_TYPE is the node type
          * @return a vector containing the direct descendants of
          *         this node
          */
-        std::vector<_node<FOREST_TYPE>> children()
+        template<typename NODE_TYPE = _node<FOREST_TYPE>>
+        std::vector<NODE_TYPE> children()
         {
             if (_const_node<FOREST_TYPE>::forest==nullptr) {
                 throw std::runtime_error("The forest node has not been initialized");
             }
 
-            std::vector<DescendantsForest::node> nodes;
+            std::vector<NODE_TYPE> nodes;
 
             for (const auto& child_id: _const_node<FOREST_TYPE>::forest->branches.at(_const_node<FOREST_TYPE>::cell_id)) {
-                nodes.push_back(_node<FOREST_TYPE>(_const_node<FOREST_TYPE>::forest, child_id));
+                nodes.push_back(NODE_TYPE(_const_node<FOREST_TYPE>::forest, child_id));
             }
 
             return nodes;
+        }
+
+        /**
+         * @brief Get the node forest
+         *
+         * @return a constant reference to the node forest
+         */
+        inline FOREST_TYPE& get_forest()
+        {
+            return *(_const_node<FOREST_TYPE>::forest);
         }
 
         friend FOREST_TYPE;
@@ -565,6 +591,15 @@ public:
      *          in `sample_names`
      */
     DescendantsForest get_subforest_for(const std::vector<std::string>& sample_names) const;
+
+    /**
+     * @brief Check whether a cell is represented by a forest leaf
+     *
+     * @param cell_id is a cell identifier
+     * @return `true` if and only if `cell_id` is the indentifier of a cell represented
+     *      by one of the forest leaves
+     */
+    bool is_leaf(const CellId& cell_id) const;
 
     /**
      * @brief Clear the forest

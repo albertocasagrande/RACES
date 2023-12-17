@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.1
- * @date 2023-12-15
+ * @version 0.2
+ * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
  *
@@ -45,27 +45,13 @@ PhylogeneticForest::PhylogeneticForest():
     DescendantsForest()
 {}
 
-PhylogeneticForest::PhylogeneticForest(const Mutants::DescendantsForest& descendant_forest,
-                                       std::map<Mutants::CellId, CellGenomeMutations>&& cell_mutations):
-    Mutants::DescendantsForest(descendant_forest)
-{
-    std::swap(this->cell_mutations, cell_mutations);
-}
-
-PhylogeneticForest::PhylogeneticForest(const Mutants::DescendantsForest& descendant_forest,
-                                       const std::map<Mutants::CellId, CellGenomeMutations>& cell_mutations):
-    Mutants::DescendantsForest(descendant_forest), cell_mutations(cell_mutations)
-{}
-
 PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, const Mutants::CellId cell_id):
     Mutants::DescendantsForest::_const_node<PhylogeneticForest>(forest, cell_id)
 {}
 
 PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId cell_id):
-    Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id),
-    const_node(forest, cell_id)
+    Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id)
 {}
-
 
 PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellId& cell_id) const
 {
@@ -117,16 +103,51 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
     static_cast<Mutants::DescendantsForest&>(forest) = Mutants::DescendantsForest::get_subforest_for(sample_names);
 
     for (const auto& [cell_id, cell]: forest.get_cells()) {
-        forest.cell_mutations[cell_id] = cell_mutations.at(cell_id);
+        forest.novel_mutations[cell_id] = novel_mutations.at(cell_id);
+        if (forest.is_leaf(cell_id)) {
+            forest.leaves_mutations[cell_id] = leaves_mutations.at(cell_id);
+        }
     }
 
     return forest;
 }
 
+
+const CellGenomeMutations&
+PhylogeneticForest::get_leaf_mutations(const Mutants::CellId& cell_id) const
+{
+    if (is_leaf(cell_id)) {
+        return leaves_mutations.at(cell_id);
+    }
+
+    throw std::domain_error(std::to_string(cell_id)+" is not a leaf of the forest");
+}
+
+std::list<SampleGenomeMutations> PhylogeneticForest::get_samples_mutations() const
+{
+    using namespace Mutants::Evolutions;
+
+    std::list<SampleGenomeMutations> sample_mutations;
+    std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
+    for (const auto& sample: get_samples()) {
+        sample_mutations.push_back(SampleGenomeMutations(sample));
+        sample_mutation_map.insert({sample.get_id(), &(sample_mutations.back())});
+    }
+
+    for (const auto& [cell_id, genome_mutations] : leaves_mutations) {
+        const auto& sample = get_samples()[get_coming_from().at(cell_id)];
+        auto& sample_genomic_mutations = *(sample_mutation_map.at(sample.get_id()));
+        sample_genomic_mutations.mutations.push_back(genome_mutations);
+    }
+
+    return sample_mutations;
+}
+
 void PhylogeneticForest::clear()
 {
     DescendantsForest::clear();
-    cell_mutations.clear();
+    leaves_mutations.clear();
+    novel_mutations.clear();
 }
 
 }   // Mutants

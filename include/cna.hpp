@@ -2,23 +2,23 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.4
- * @date 2023-12-09
- * 
+ * @version 0.5
+ * @date 2023-12-17
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -65,7 +65,7 @@ struct CopyNumberAlteration
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param region is the region in which CNA occurred
      * @param source is the allele from which the region is copied/removed
      * @param destination is the allele in which the region is copied/removed
@@ -75,7 +75,7 @@ struct CopyNumberAlteration
 
     /**
      * @brief Build a new amplification
-     * 
+     *
      * @param region is the region in which CNA occurred
      * @param source is the allele from which the region is copied
      * @param destination is the allele in which the region is copied
@@ -89,7 +89,7 @@ struct CopyNumberAlteration
 
     /**
      * @brief Build a new amplification
-     * 
+     *
      * @param region is the region in which CNA occurred
      * @param allele is the allele from which the region is removed
      */
@@ -102,5 +102,17 @@ struct CopyNumberAlteration
 }   // Mutations
 
 }   // Races
+
+namespace std
+{
+
+template<>
+struct less<Races::Mutations::CopyNumberAlteration>
+{
+    bool operator()(const Races::Mutations::CopyNumberAlteration &lhs,
+                    const Races::Mutations::CopyNumberAlteration &rhs) const;
+};
+
+};
 
 #endif // __RACES_CNA__

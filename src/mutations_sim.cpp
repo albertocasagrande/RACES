@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.5
- * @date 2023-12-15
+ * @version 0.6
+ * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
  *
@@ -181,7 +181,7 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
-    std::list<Races::Mutations::SampleGenomeMutations>
+    Races::Mutations::PhylogeneticForest
     place_mutations(Races::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
                     const Races::Mutants::DescendantsForest& forest) const
     {
@@ -193,11 +193,11 @@ class MutationsSimulator : public BasicExecutable
 
         progress_bar.set_message("Placing mutations");
 
-        auto leaves_mutations = engine.place_mutations(forest, progress_bar);
+        auto phylo_forest = engine.place_mutations(forest, progress_bar);
 
         progress_bar.set_message("Mutations placed");
 
-        return leaves_mutations;
+        return phylo_forest;
     }
 
     nlohmann::json get_simulation_json() const
@@ -235,9 +235,9 @@ class MutationsSimulator : public BasicExecutable
     }
 
     static void
-    split_epigenetic_status(std::list<Races::Mutations::SampleGenomeMutations>& FACS_samples,
-                            const Races::Mutations::SampleGenomeMutations& sample_mutations,
-                            std::map<Races::Mutants::SpeciesId, std::string> methylation_map)
+    split_by_epigenetic_status(std::list<Races::Mutations::SampleGenomeMutations>& FACS_samples,
+                               const Races::Mutations::SampleGenomeMutations& sample_mutations,
+                               std::map<Races::Mutants::SpeciesId, std::string> methylation_map)
     {
         using namespace Races::Mutants;
         using namespace Races::Mutants::Evolutions;
@@ -264,8 +264,8 @@ class MutationsSimulator : public BasicExecutable
     }
 
     static std::list<Races::Mutations::SampleGenomeMutations>
-    split_epigenetic_status(const std::list<Races::Mutations::SampleGenomeMutations>& sample_mutations_list,
-                            const std::map<Races::Mutants::SpeciesId, std::string>& methylation_map)
+    split_by_epigenetic_status(const std::list<Races::Mutations::SampleGenomeMutations>& sample_mutations_list,
+                               const std::map<Races::Mutants::SpeciesId, std::string>& methylation_map)
     {
         using namespace Races::Mutants;
         using namespace Races::Mutants::Evolutions;
@@ -273,7 +273,7 @@ class MutationsSimulator : public BasicExecutable
         std::list<Races::Mutations::SampleGenomeMutations> FACS_samples;
 
         for (const auto& sample_mutations : sample_mutations_list) {
-            split_epigenetic_status(FACS_samples, sample_mutations, methylation_map);
+            split_by_epigenetic_status(FACS_samples, sample_mutations, methylation_map);
         }
 
         return FACS_samples;
@@ -324,7 +324,7 @@ class MutationsSimulator : public BasicExecutable
 
         ReadSimulator<> read_simulator;
 
-        Mutants::DescendantsForest forest;
+        Mutants::DescendantsForest descendants_forest;
         MutationalProperties mutational_properties;
 
         std::map<SpeciesId, std::string> methylation_map;
@@ -338,7 +338,7 @@ class MutationsSimulator : public BasicExecutable
 
             auto samples = get_samples(species_simulation, simulation_cfg);
 
-            forest = Mutants::DescendantsForest(species_simulation, samples);
+            descendants_forest = Mutants::DescendantsForest(species_simulation, samples);
 
             mutational_properties = ConfigReader::get_mutational_properties(species_simulation,
                                                                             simulation_cfg);
@@ -375,10 +375,12 @@ class MutationsSimulator : public BasicExecutable
 
         ConfigReader::add_timed_mutational_coefficients(engine, mutational_coeff_json);
 
-        auto mutations_list = place_mutations(engine, forest);
+        auto phylogenetic_forest = place_mutations(engine, descendants_forest);
+
+        auto mutations_list = phylogenetic_forest.get_samples_mutations();
 
         if (epigenetic_FACS) {
-            mutations_list = split_epigenetic_status(mutations_list, methylation_map);
+            mutations_list = split_by_epigenetic_status(mutations_list, methylation_map);
         }
 
         if (coverage>0) {
