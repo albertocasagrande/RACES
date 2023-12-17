@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.23
+ * @version 0.24
  * @date 2023-12-17
  *
  * @copyright Copyright (c) 2023
@@ -524,14 +524,12 @@ public:
      * @param context_index is the genome context index
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
-     * @param seed is the random generator seed
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
-                   const std::map<std::string, MutationalSignature>& mutational_signatures,
-                   const int& seed=0):
+                   const std::map<std::string, MutationalSignature>& mutational_signatures):
         MutationEngine(context_index, alleles_per_chromosome, mutational_signatures,
-                       MutationalProperties(), seed)
+                       MutationalProperties())
     {}
 
     /**
@@ -541,14 +539,12 @@ public:
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
      * @param mutational_properties are the mutational properties of all the species
-     * @param seed is the random generator seed
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
-                   const MutationalProperties& mutational_properties,
-                   const int& seed=0):
-        generator(seed), context_index(context_index), alleles_per_chromosome(alleles_per_chromosome),
+                   const MutationalProperties& mutational_properties):
+        generator(), context_index(context_index), alleles_per_chromosome(alleles_per_chromosome),
         mutational_properties(mutational_properties)
     {
         for (const auto& [name, mutational_signature]: mutational_signatures) {
@@ -644,14 +640,31 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
+     * @param seed is the random generator seed
+     * @return a phylogenetic forest having the structure of `descendants_forest`
+     */
+    inline
+    PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                                       const int& seed=0)
+    {
+        return place_mutations(descendants_forest, nullptr, seed);
+    }
+
+    /**
+     * @brief Place genomic mutations on a descendants forest
+     *
+     * @param descendants_forest is a descendants forest
      * @param progress_bar is a progress bar pointer
+     * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                                       UI::ProgressBar *progress_bar=nullptr)
+                                       UI::ProgressBar *progress_bar, const int& seed=0)
     {
         using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
+
+        generator.seed(seed);
 
         PhylogeneticForest forest;
 
@@ -672,12 +685,13 @@ public:
      *
      * @param descendants_forest is a descendants forest
      * @param progress_bar is a progress bar pointer
+     * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     inline PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                                              UI::ProgressBar &progress_bar)
+                                              UI::ProgressBar &progress_bar, const int& seed=0)
     {
-        return place_mutations(descendants_forest, &progress_bar);
+        return place_mutations(descendants_forest, &progress_bar, seed);
     }
 
     /**
