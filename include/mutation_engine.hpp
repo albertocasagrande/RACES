@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.25
+ * @version 0.26
  * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
@@ -573,6 +573,8 @@ public:
     {
         mutational_properties.add_mutant(name, epistate_mutation_rates, mutant_SNVs,
                                          mutant_CNAs);
+
+        return *this;
     }
 
     /**
