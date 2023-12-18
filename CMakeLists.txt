@@ -67,8 +67,10 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/descendant_forest.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/ending_conditions.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/event_wrapper.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/filter.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_reader.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/fasta_utils.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genome_mutations.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
