@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.24
- * @date 2023-12-17
+ * @version 0.25
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -692,6 +692,27 @@ public:
                                               UI::ProgressBar &progress_bar, const int& seed=0)
     {
         return place_mutations(descendants_forest, &progress_bar, seed);
+    }
+
+    /**
+     * @brief Get the mutational properties
+     *
+     * @return a constant reference to the mutational properties
+     */
+    inline const MutationalProperties& get_mutational_properties() const
+    {
+        return mutational_properties;
+    }
+
+    /**
+     * @brief Get the mutational coefficients
+     *
+     * @return a constant reference to the mutational coefficients
+     */
+    inline const std::map<Time, MutationalCoefficients>&
+    get_timed_mutational_coefficients() const
+    {
+        return timed_mutational_coefficients;
     }
 
     /**
