@@ -2,7 +2,7 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.12
+ * @version 0.13
  * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
@@ -39,6 +39,7 @@
 #include "snv.hpp"
 #include "cna.hpp"
 
+#include "descendant_forest.hpp"
 namespace Races
 {
 
@@ -95,6 +96,13 @@ public:
     MutationalProperties(const Mutants::Evolutions::Simulation& species_simulation);
 
     /**
+     * @brief A constructor
+     *
+     * @param descendant_forest is a descendant forest
+     */
+    MutationalProperties(const Mutants::DescendantsForest& descendant_forest);
+
+    /**
      * @brief Add the properties of a mutant
      *
      * @param name is the name of the mutant
@@ -123,14 +131,14 @@ public:
 
     /**
      * @brief Get the species mutational properties
-     * 
+     *
      * @return a constant reference to the species mutational properties
      */
     inline const std::map<Mutants::SpeciesId, SpeciesMutationalProperties>&
     get_species_properties() const
     {
         return properties;
-    }; 
+    };
 };
 
 }   // Mutations

@@ -2,7 +2,7 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.11
+ * @version 0.12
  * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
@@ -52,6 +52,16 @@ MutationalProperties::MutationalProperties(const Mutants::Evolutions::Simulation
 {
     for (const auto& species : species_simulation.tissue()) {
         species_names2ids[species.get_name()] = species.get_id();
+    }
+}
+
+MutationalProperties::MutationalProperties(const Mutants::DescendantsForest& descendant_forest)
+{
+    for (const auto& [species_id, species_data] : descendant_forest.get_species_data()) {
+        const auto& mutant_name = descendant_forest.get_mutant_name(species_data.mutant_id);
+
+        const auto sign_str = Mutants::MutantProperties::signature_to_string(species_data.signature);
+        species_names2ids[mutant_name + sign_str] = species_id;
     }
 }
 
