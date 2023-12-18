@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.3
- * @date 2023-12-17
+ * @version 0.4
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -60,7 +60,7 @@ class DescendantsForest
     struct SpeciesData
     {
         MutantId mutant_id;                //!< The species mutant id
-        MethylationSignature signature;  //!< The species signature
+        MethylationSignature signature;    //!< The species signature
 
         /**
          * @brief The constructor
@@ -227,18 +227,6 @@ protected:
     }
 
     /**
-     * @brief Get the name of a mutant
-     *
-     * @param mutant_id is the identifier of the mutant whose name is aimed
-     * @return a constant reference to the name of the mutant having
-     *          `mutant_id` as identifier
-     */
-    inline const std::string& get_mutant_name(const MutantId& mutant_id) const
-    {
-        return mutant_names.at(mutant_id);
-    }
-
-    /**
      * @brief Get the map associating each leaf to the sample which it comes from
      *
      * @return a constant reference to the map associating each leaf to the
@@ -247,16 +235,6 @@ protected:
     inline const std::map<CellId, uint16_t>& get_coming_from() const
     {
         return coming_from;
-    }
-
-    /**
-     * @brief Get the species data
-     *
-     * @return a constant reference to the species data.
-     */
-    inline const std::map<SpeciesId, SpeciesData>& get_species_data() const
-    {
-        return species_data;
     }
 
     /**
@@ -638,6 +616,28 @@ public:
      *      by one of the forest leaves
      */
     bool is_leaf(const CellId& cell_id) const;
+
+    /**
+     * @brief Get the species data
+     *
+     * @return a constant reference to the species data.
+     */
+    inline const std::map<SpeciesId, SpeciesData>& get_species_data() const
+    {
+        return species_data;
+    }
+
+    /**
+     * @brief Get the name of a mutant
+     *
+     * @param mutant_id is the identifier of the mutant whose name is aimed
+     * @return a constant reference to the name of the mutant having
+     *          `mutant_id` as identifier
+     */
+    inline const std::string& get_mutant_name(const MutantId& mutant_id) const
+    {
+        return mutant_names.at(mutant_id);
+    }
 
     /**
      * @brief Clear the forest
