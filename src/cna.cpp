@@ -2,8 +2,8 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.4
- * @date 2023-12-17
+ * @version 0.5
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -99,6 +99,28 @@ bool less<Races::Mutations::CopyNumberAlteration>::operator()(const Races::Mutat
     }
 
     return false;
+}
+
+
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAlteration& cna)
+{
+    out << "CNA(";
+    using namespace Races::Mutations;
+    switch(cna.type) {
+        case CopyNumberAlteration::Type::AMPLIFICATION:
+            out << "'A'," << cna.region << "," << cna.source << "," << cna.dest;
+            break;
+        case CopyNumberAlteration::Type::DELETION:
+            out << "'D'," << cna.region << "," << cna.dest;
+            break;
+        default:
+            throw std::runtime_error("Unsupported CNA type "
+                                     + std::to_string(static_cast<int>(cna.type)));
+    }
+
+    out << ")";
+
+    return out;
 }
 
 }   // std

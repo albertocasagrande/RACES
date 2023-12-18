@@ -2,8 +2,8 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.6
- * @date 2023-12-17
+ * @version 0.7
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -171,6 +171,15 @@ struct less<Races::Mutations::CopyNumberAlteration>
     bool operator()(const Races::Mutations::CopyNumberAlteration &lhs,
                     const Races::Mutations::CopyNumberAlteration &rhs) const;
 };
+
+/**
+ * @brief Write a CNA in a output stream
+ *
+ * @param out is the output stream
+ * @param cna is the CNA to stream
+ * @return a reference of the updated stream
+ */
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAlteration& cna);
 
 };
 
