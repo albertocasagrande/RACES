@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.10
- * @date 2023-12-12
+ * @version 0.11
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -51,7 +51,7 @@ MutationalProperties::MutationalProperties()
 MutationalProperties::MutationalProperties(const Mutants::Evolutions::Simulation& species_simulation)
 {
     for (const auto& species : species_simulation.tissue()) {
-        species_name2id[species.get_name()] = species.get_id();
+        species_names2ids[species.get_name()] = species.get_id();
     }
 }
 
@@ -63,9 +63,9 @@ MutationalProperties::add_mutant(const std::string& name,
 {
     for (const auto& [epistate, mutation_rate] : epistate_mutation_rates) {
         auto full_name = name+epistate;
-        auto species_it = species_name2id.find(full_name);
+        auto species_it = species_names2ids.find(full_name);
 
-        if (species_it == species_name2id.end()) {
+        if (species_it == species_names2ids.end()) {
             throw std::domain_error("Unknown species name: \""+full_name+"\"");
         }
 

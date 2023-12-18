@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.11
- * @date 2023-12-15
+ * @version 0.12
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -78,7 +78,7 @@ class MutationalProperties
                                      const std::list<CopyNumberAlteration>& CNAs);
     };
 
-    std::map<std::string, Mutants::SpeciesId> species_name2id;             //!< The map from species name to identifiers
+    std::map<std::string, Mutants::SpeciesId> species_names2ids;           //!< The map from species name to identifiers
     std::map<Mutants::SpeciesId, SpeciesMutationalProperties> properties;  //!< The species property map
 public:
 
@@ -120,8 +120,18 @@ public:
     {
         return properties.at(species_id);
     }
-};
 
+    /**
+     * @brief Get the species mutational properties
+     * 
+     * @return a constant reference to the species mutational properties
+     */
+    inline const std::map<Mutants::SpeciesId, SpeciesMutationalProperties>&
+    get_species_properties() const
+    {
+        return properties;
+    }; 
+};
 
 }   // Mutations
 
