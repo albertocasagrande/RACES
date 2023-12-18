@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.12
- * @date 2023-12-12
+ * @version 0.13
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -233,12 +233,12 @@ public:
     /**
      * @brief Get the species mutational properties
      *
-     * @param simulation is a simulation
+     * @param descendants_forest is a descendant forest
      * @param configuration_json is the JSON of the simulation configuration
      * @return the species mutational properties
      */
     static Races::Mutations::MutationalProperties
-    get_mutational_properties(const Races::Mutants::Evolutions::Simulation& simulation,
+    get_mutational_properties(const Races::Mutants::DescendantsForest& descendants_forest,
                               const nlohmann::json& configuration_json);
 
     /**

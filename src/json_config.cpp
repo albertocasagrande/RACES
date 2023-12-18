@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.17
- * @date 2023-12-12
+ * @version 0.18
+ * @date 2023-12-18
  *
  * @copyright Copyright (c) 2023
  *
@@ -303,12 +303,12 @@ ConfigReader::collect_mutations(const std::string& mutant_name,
 }
 
 Races::Mutations::MutationalProperties
-ConfigReader::get_mutational_properties(const Races::Mutants::Evolutions::Simulation& simulation,
+ConfigReader::get_mutational_properties(const Races::Mutants::DescendantsForest& descendants_forest,
                                         const nlohmann::json& configuration_json)
 {
     using namespace Races::Mutations;
 
-    MutationalProperties mutational_properties(simulation);
+    MutationalProperties mutational_properties(descendants_forest);
 
     expecting("mutant properties", configuration_json, "The passengers simulation configuration");
 
