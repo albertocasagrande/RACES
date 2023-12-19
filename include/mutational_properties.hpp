@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.13
- * @date 2023-12-18
+ * @version 0.14
+ * @date 2023-12-19
  *
  * @copyright Copyright (c) 2023
  *
@@ -32,6 +32,7 @@
 #define __RACES_MUTATIONAL_PROPERTIES__
 
 #include <map>
+#include <set>
 #include <list>
 #include <string>
 
@@ -52,55 +53,38 @@ namespace Mutations
  */
 class MutationalProperties
 {
+public:
+
     /**
-     * @brief The mutational properties of a species
+     * @brief The genomic characterization of a mutant
      */
-    struct SpeciesMutationalProperties
+    struct MutantMutations
     {
-        std::string name;                       //!< the species name
-        double mu;                              //!< the species mutation rate
-        std::list<SNV> SNVs;                    //!< the species SNVs
-        std::list<CopyNumberAlteration> CNAs;   //!< the species CNAs
+        std::string name;                      //!< The mutant name
+        std::set<SNV> SNVs;                    //!< The mutant SNVs
+        std::set<CopyNumberAlteration> CNAs;   //!< The mutant CNAs
 
         /**
          * @brief The empty constructor
          */
-        SpeciesMutationalProperties();
+        MutantMutations();
 
         /**
          * @brief A constructor
          *
-         * @param name is the species name
+         * @param mutant_name is the name of the mutant
          * @param SNVs is the vector of species specific SNVs
          * @param CNAs is the vector of species specific CNAs
          */
-        SpeciesMutationalProperties(const std::string& name, const double& mu,
-                                     const std::list<SNV>& SNVs,
-                                     const std::list<CopyNumberAlteration>& CNAs);
+        MutantMutations(const std::string& mutant_name,
+                        const std::list<SNV>& SNVs,
+                        const std::list<CopyNumberAlteration>& CNAs);
     };
-
-    std::map<std::string, Mutants::SpeciesId> species_names2ids;           //!< The map from species name to identifiers
-    std::map<Mutants::SpeciesId, SpeciesMutationalProperties> properties;  //!< The species property map
-public:
 
     /**
      * @brief The empty constructor
      */
     MutationalProperties();
-
-    /**
-     * @brief A constructor
-     *
-     * @param species_simulation is a species simulation
-     */
-    MutationalProperties(const Mutants::Evolutions::Simulation& species_simulation);
-
-    /**
-     * @brief A constructor
-     *
-     * @param descendant_forest is a descendant forest
-     */
-    MutationalProperties(const Mutants::DescendantsForest& descendant_forest);
 
     /**
      * @brief Add the properties of a mutant
@@ -112,33 +96,34 @@ public:
      * @param mutant_CNAs is a list of CNAs characterizing the mutant
      * @return a reference to the updated object
      */
-    MutationalProperties& add_mutant(const std::string& name,
+    MutationalProperties& add_mutant(const std::string& mutant_name,
                                      const std::map<std::string, double>& epistate_mutation_rates,
                                      const std::list<SNV>& mutant_SNVs={},
                                      const std::list<CopyNumberAlteration>& mutant_CNAs={});
 
     /**
-     * @brief Get the properties of a species
+     * @brief Get the species rates
      *
-     * @param species_id is the identifier of the species
-     * @return the mutational properties of the species having
-     *          `species_id` as identifier.
+     * @return a constant reference to the species rates
      */
-    inline const MutationalProperties::SpeciesMutationalProperties& at(const Mutants::SpeciesId& species_id) const
+    inline const std::map<std::string, double>& get_species_rates() const
     {
-        return properties.at(species_id);
-    }
+        return rates;
+    };
 
     /**
-     * @brief Get the species mutational properties
+     * @brief Get the species rates
      *
-     * @return a constant reference to the species mutational properties
+     * @return a constant reference to the species rates
      */
-    inline const std::map<Mutants::SpeciesId, SpeciesMutationalProperties>&
-    get_species_properties() const
+    inline const std::map<std::string, MutantMutations>& get_mutant_mutations() const
     {
-        return properties;
+        return mutant_mutations;
     };
+private:
+
+    std::map<std::string, double> rates;                        //!< The rate per species
+    std::map<std::string, MutantMutations> mutant_mutations;    //!< The mutation per mutant
 };
 
 }   // Mutations

@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.7
- * @date 2023-12-18
+ * @version 0.8
+ * @date 2023-12-19
  *
  * @copyright Copyright (c) 2023
  *
@@ -340,8 +340,7 @@ class MutationsSimulator : public BasicExecutable
 
             descendants_forest = Mutants::DescendantsForest(species_simulation, samples);
 
-            mutational_properties = ConfigReader::get_mutational_properties(descendants_forest,
-                                                                            simulation_cfg);
+            mutational_properties = ConfigReader::get_mutational_properties(simulation_cfg);
         }
 
         if (coverage>0) {

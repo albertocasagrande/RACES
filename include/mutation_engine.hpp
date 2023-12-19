@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.26
- * @date 2023-12-18
+ * @version 0.27
+ * @date 2023-12-19
  *
  * @copyright Copyright (c) 2023
  *
@@ -357,11 +357,13 @@ class MutationEngine
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
+     * @param species_rates is the map associating species ids and mutational rates
      */
-    void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations)
+    void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
+                    const std::map<Mutants::SpeciesId, double>& species_rates)
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
-                                          mutational_properties.at(node.get_species_id()).mu);
+                                          species_rates.at(node.get_species_id()));
 
         // get the active SBS coefficients
         const auto& mc = get_active_mutational_coefficients(node);
@@ -428,12 +430,14 @@ class MutationEngine
      * @param node is a phylogenetic forest node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
+     * @param mutant_mutations is the map associating mutant ids and mutations
      */
     void place_mutant_specific_mutations(PhylogeneticForest::node& node,
-                                         GenomeMutations& cell_mutations)
+                                         GenomeMutations& cell_mutations,
+                                         const std::map<Mutants::MutantId, MutationalProperties::MutantMutations>& mutant_mutations)
     {
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
-            const auto& mutant_mp = mutational_properties.at(node.get_species_id());
+            const auto& mutant_mp = mutant_mutations.at(node.get_mutant_id());
 
             for (auto snv : mutant_mp.SNVs) {
                 snv.cause = mutant_mp.name;
@@ -459,10 +463,15 @@ class MutationEngine
      *
      * @param[in] node is a phylogenetic forest node representing a cell
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
+     * @param[in] species_rates is the map associating species ids and mutational rates
+     * @param[in] mutant_mutations is the map associating mutant ids and mutations
+     * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
     void place_mutations(PhylogeneticForest::node& node, const GenomeMutations& ancestor_mutations,
+                         const std::map<Mutants::SpeciesId, double>& species_rates,
+                         const std::map<Mutants::MutantId, MutationalProperties::MutantMutations>& mutant_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
         using namespace Races::Mutations;
@@ -472,8 +481,8 @@ class MutationEngine
         CellGenomeMutations cell_mutations(static_cast<const Mutants::Cell&>(node),
                                            ancestor_mutations);
 
-        place_mutant_specific_mutations(node, cell_mutations);
-        place_SNVs(node, cell_mutations);
+        place_mutant_specific_mutations(node, cell_mutations, mutant_mutations);
+        place_SNVs(node, cell_mutations, species_rates);
         //place_CNAs(node, mutations);
 
         ++visited_nodes;
@@ -491,7 +500,8 @@ class MutationEngine
             phylo_forest.leaves_mutations[cell_id] = cell_mutations;
         } else {
             for (auto child: node.children()) {
-                place_mutations(child, cell_mutations, visited_nodes, progress_bar);
+                place_mutations(child, cell_mutations, species_rates, mutant_mutations,
+                                visited_nodes, progress_bar);
             }
         }
 
@@ -663,6 +673,7 @@ public:
     PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
                                        UI::ProgressBar *progress_bar, const int& seed=0)
     {
+        using namespace Races::Mutants;
         using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
 
@@ -670,13 +681,33 @@ public:
 
         PhylogeneticForest forest;
 
-        static_cast<Mutants::DescendantsForest&>(forest) = descendants_forest;
+        static_cast<DescendantsForest&>(forest) = descendants_forest;
 
         GenomeMutations mutations(context_index, alleles_per_chromosome);
 
+        std::map<SpeciesId, double> species_rates;
+        std::map<MutantId, MutationalProperties::MutantMutations> mutant_mutations;
+
+        for (const auto& [species_id, species_data] : descendants_forest.get_species_data()) {
+            const auto mutant_name = descendants_forest.get_mutant_name(species_data.mutant_id);
+            const auto species_name = mutant_name
+                                      + MutantProperties::signature_to_string(species_data.signature);
+
+            auto species_it = mutational_properties.get_species_rates().find(species_name);
+
+            if (species_it == mutational_properties.get_species_rates().end()) {
+                throw std::runtime_error("\""+species_name+"\" has no mutational rate");
+            }
+
+            species_rates[species_id] = species_it->second;
+
+            mutant_mutations[species_data.mutant_id] = mutational_properties.get_mutant_mutations().at(mutant_name);
+        }
+
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
-            place_mutations(root, mutations, visited_node, progress_bar);
+            place_mutations(root, mutations, species_rates, mutant_mutations,
+                            visited_node, progress_bar);
         }
 
         return forest;
