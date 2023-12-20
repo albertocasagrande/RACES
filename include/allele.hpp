@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.8
- * @date 2023-12-17
+ * @version 0.9
+ * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -164,7 +164,7 @@ public:
      * specified position.
      *
      * @param genomic_position is the genomic position containing the
-     *          SVN to be removed
+     *          SNV to be removed
      * @return `true` if and only if the removal has succeeded
      */
     bool remove_SNV(const GenomicPosition& genomic_position);
@@ -304,7 +304,7 @@ public:
      * specified position.
      *
      * @param genomic_position is the genomic position containing the
-     *          SVN to be removed
+     *          SNV to be removed
      * @return `true` if and only if the removal has succeeded
      */
     bool remove_SNV(const GenomicPosition& genomic_position);

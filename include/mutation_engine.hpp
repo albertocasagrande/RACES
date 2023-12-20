@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.27
- * @date 2023-12-19
+ * @version 0.28
+ * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -95,7 +95,7 @@ public:
     MutationStatistics();
 
     /**
-     * @brief Record the SVNs of a cell genome
+     * @brief Record the SNVs of a cell genome
      *
      * @param sample_name is the name of the sample from which the cell has
      *          been extracted
@@ -107,7 +107,7 @@ public:
                                const CellGenomeMutations& cell_mutations);
 
     /**
-     * @brief Record the SVNs in a list of sample genomic mutations
+     * @brief Record the SNVs in a list of sample genomic mutations
      *
      * @param[in] mutations_list is a list of sample mutations
      * @param[in,out] progress_bar is a progress bar pointer
@@ -118,7 +118,7 @@ public:
            UI::ProgressBar* progress_bar=nullptr);
 
     /**
-     * @brief Record the SVNs in a list of sample genomic mutations
+     * @brief Record the SNVs in a list of sample genomic mutations
      *
      * @param[in] mutations_list is a list of sample mutations
      * @param[in,out] progress_bar is a progress bar pointer
@@ -276,7 +276,7 @@ class MutationEngine
      * @return a SNV whose type is `m_type` and which was available in
      *          `context_index`
      */
-    SNV select_SVN(const MutationalType& m_type, const std::string& cause)
+    SNV select_SNV(const MutationalType& m_type, const std::string& cause)
     {
         using namespace Races::Mutations;
 
@@ -389,7 +389,7 @@ class MutationEngine
                 if (it != inv_cumulative_SBS.end()) {
                     // select a SNV among those having the picked mutational type
                     // and that available in the context index
-                    SNV snv = select_SVN(it->second, SBS_name);
+                    SNV snv = select_SNV(it->second, SBS_name);
 
                     if (place_SNV(snv, cell_mutations)) {
                         // if the SNV has been successfully applied,

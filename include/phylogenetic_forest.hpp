@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.3
- * @date 2023-12-17
+ * @version 0.4
+ * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -184,7 +184,7 @@ public:
         /**
          * @brief Add a newly introduced mutation
          *
-         * @param snv is a SVN that was introduced in the corresponding
+         * @param snv is a SNV that was introduced in the corresponding
          *      cell and was not present in the cell parent
          */
         inline void add_new_mutation(const SNV& snv)
