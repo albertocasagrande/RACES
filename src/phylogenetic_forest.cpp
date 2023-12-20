@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.2
- * @date 2023-12-17
+ * @version 0.3
+ * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -52,6 +52,18 @@ PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, con
 PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId cell_id):
     Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id)
 {}
+
+void PhylogeneticForest::node::add_new_mutation(const SNV& snv)
+{
+    get_forest().novel_mutations[cell_id].SNVs.insert(snv);
+    get_forest().SNV_first_cell[snv] = cell_id;
+}
+
+void PhylogeneticForest::node::add_new_mutation(const CopyNumberAlteration& cna)
+{
+    get_forest().novel_mutations[cell_id].CNAs.insert(cna);
+    get_forest().CNA_first_cell[cna] = cell_id;
+}
 
 PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellId& cell_id) const
 {
@@ -109,9 +121,20 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
         }
     }
 
+    for (const auto& [snv, cell_id]: SNV_first_cell) {
+        if (forest.get_cells().count(cell_id)>0) {
+            forest.SNV_first_cell[snv] = cell_id;
+        }
+    }
+
+    for (const auto& [cna, cell_id]: CNA_first_cell) {
+        if (forest.get_cells().count(cell_id)>0) {
+            forest.CNA_first_cell[cna] = cell_id;
+        }
+    }
+
     return forest;
 }
-
 
 const CellGenomeMutations&
 PhylogeneticForest::get_leaf_mutations(const Mutants::CellId& cell_id) const
@@ -148,6 +171,8 @@ void PhylogeneticForest::clear()
     DescendantsForest::clear();
     leaves_mutations.clear();
     novel_mutations.clear();
+    SNV_first_cell.clear();
+    CNA_first_cell.clear();
 }
 
 }   // Mutants

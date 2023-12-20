@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.4
+ * @version 0.5
  * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
@@ -91,9 +91,10 @@ public:
         }
     };
 private:
-    std::map<Mutants::CellId, CellGenomeMutations> leaves_mutations;  //!< The mutations of each cells represented as leaves in the forest
-
-    std::map<Mutants::CellId, NovelMutations> novel_mutations;  //!< The mutations introduces by each cell in the forest
+    std::map<Mutants::CellId, CellGenomeMutations> leaves_mutations;    //!< The mutations of each cells represented as leaves in the forest
+    std::map<Mutants::CellId, NovelMutations> novel_mutations;          //!< The mutations introduces by each cell in the forest
+    std::map<SNV, Mutants::CellId> SNV_first_cell;                      //!< A map associating each SNV to the first cell in which it occured
+    std::map<CopyNumberAlteration, Mutants::CellId> CNA_first_cell;     //!< A map associating each CNA to the first cell in which it occured
 
 public:
     /**
@@ -130,7 +131,7 @@ public:
          *
          * @return the parent node of this node
          */
-        const_node parent() const
+        inline const_node parent() const
         {
             return Mutants::DescendantsForest::_const_node<PhylogeneticForest>::parent<const_node>();
         }
@@ -165,7 +166,7 @@ public:
          *
          * @return the parent node of this node
          */
-        node parent()
+        inline node parent()
         {
             return Mutants::DescendantsForest::_node<PhylogeneticForest>::parent<node>();
         }
@@ -187,10 +188,7 @@ public:
          * @param snv is a SNV that was introduced in the corresponding
          *      cell and was not present in the cell parent
          */
-        inline void add_new_mutation(const SNV& snv)
-        {
-            get_forest().novel_mutations[cell_id].SNVs.insert(snv);
-        }
+        void add_new_mutation(const SNV& snv);
 
         /**
          * @brief Add a newly introduced mutation
@@ -198,10 +196,7 @@ public:
          * @param cna is a CNA that was introduced in the corresponding
          *      cell and was not present in the cell parent
          */
-        inline void add_new_mutation(const CopyNumberAlteration& cna)
-        {
-            get_forest().novel_mutations[cell_id].CNAs.insert(cna);
-        }
+        void add_new_mutation(const CopyNumberAlteration& cna);
 
         /**
          * @brief Get the genome mutations of the cell represented by the node
@@ -217,6 +212,7 @@ public:
 
             throw std::domain_error("The node is not a leaf");
         }
+
         friend class PhylogeneticForest;
     };
 
@@ -286,6 +282,28 @@ public:
         return leaves_mutations;
     }
 
+    /**
+     * @brief Get map associating each SNV to the first cell in which it occurs
+     * 
+     * @return a constant reference to a map associating each SNV in the phylogenetic
+     *         forest to the identifier of the first cell in which the SNV occured
+     */
+    inline const std::map<SNV, Mutants::CellId>& get_SNV_first_cell() const
+    {
+        return SNV_first_cell;
+    }
+
+    /**
+     * @brief Get map associating each CNA to the first cell in which it occurs
+     * 
+     * @return a constant reference to a map associating each CNA in the phylogenetic
+     *         forest to the identifier of the first cell in which the CNA occured
+     */
+    inline const std::map<CopyNumberAlteration, Mutants::CellId>& get_CNA_first_cell() const
+    {
+        return CNA_first_cell;
+    }
+
     std::list<SampleGenomeMutations> get_samples_mutations() const;
 
     /**
@@ -304,7 +322,9 @@ public:
     {
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
                 & leaves_mutations
-                & novel_mutations;
+                & novel_mutations
+                & SNV_first_cell
+                & CNA_first_cell;
     }
 
     /**
@@ -321,7 +341,9 @@ public:
 
         archive & static_cast<Mutants::DescendantsForest&>(forest)
                 & forest.leaves_mutations
-                & forest.novel_mutations;
+                & forest.novel_mutations
+                & forest.SNV_first_cell
+                & forest.CNA_first_cell;
 
         return forest;
     }
