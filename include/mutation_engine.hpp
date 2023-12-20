@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.28
+ * @version 0.29
  * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
@@ -386,7 +386,9 @@ class MutationEngine
                 // randomly pick a mutational type according to the current SBS
                 auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
 
-                if (it != inv_cumulative_SBS.end()) {
+                if (it != inv_cumulative_SBS.end() &&
+                        context_index[it->second.get_context()].size()>0) {
+
                     // select a SNV among those having the picked mutational type
                     // and that available in the context index
                     SNV snv = select_SNV(it->second, SBS_name);
