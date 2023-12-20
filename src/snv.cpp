@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.9
- * @date 2023-12-17
+ * @version 0.10
+ * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -108,31 +108,7 @@ bool less<Races::Mutations::SNV>::operator()(const Races::Mutations::SNV &lhs,
         }
     }
 
-    {
-        less<Races::Mutations::MutationalContext> mc_op;
-
-        if (mc_op(lhs.context, rhs.context)) {
-            return true;
-        }
-
-        if (mc_op(rhs.context, lhs.context)) {
-            return false;
-        }
-    }
-
-    if (lhs.mutated_base < rhs.mutated_base) {
-        return true;
-    }
-
-    if (lhs.mutated_base > rhs.mutated_base) {
-        return false;
-    }
-
-    {
-        less<std::string> str_op;
-
-        return str_op(lhs.cause, rhs.cause);
-    }
+    return (lhs.mutated_base < rhs.mutated_base);
 }
 
 std::ostream& operator<<(std::ostream& out, const Races::Mutations::SNV& snv)
