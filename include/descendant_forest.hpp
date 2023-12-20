@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.4
- * @date 2023-12-18
+ * @version 0.5
+ * @date 2023-12-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -206,25 +206,6 @@ private:
     }
 
 protected:
-    /**
-     * @brief Get the forest root cells
-     *
-     * @return a constant reference to the forest root cells
-     */
-    inline const std::set<CellId>& get_root_cells() const
-    {
-        return roots;
-    }
-
-    /**
-     * @brief Get the cell ids to cells maps
-     *
-     * @return a constant reference to the cell ids to cells maps
-     */
-    inline const std::map<CellId, Cell>& get_cells() const
-    {
-        return cells;
-    }
 
     /**
      * @brief Get the map associating each leaf to the sample which it comes from
@@ -637,6 +618,26 @@ public:
     inline const std::string& get_mutant_name(const MutantId& mutant_id) const
     {
         return mutant_names.at(mutant_id);
+    }
+
+    /**
+     * @brief Get the forest root cells
+     *
+     * @return a constant reference to the forest root cells
+     */
+    inline const std::set<CellId>& get_root_cells() const
+    {
+        return roots;
+    }
+
+    /**
+     * @brief Get the cell ids to cells maps
+     *
+     * @return a constant reference to the cell ids to cells maps
+     */
+    inline const std::map<CellId, Cell>& get_cells() const
+    {
+        return cells;
     }
 
     /**
