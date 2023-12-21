@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.14
- * @date 2023-12-19
+ * @version 0.15
+ * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
  *
@@ -138,37 +138,37 @@ class ConfigReader
 
 public:
     /**
-     * @brief Get the default mutational coefficients
+     * @brief Get the default exposure
      *
-     * @param mutational_coeff_json is the JSON of the mutational coefficients
+     * @param exposures_json is the JSON of the exposures
      * @return a map associating to a set of mutational signatures their percentage
      *          in the default mutational configuration
      */
-    static std::map<std::string, double>
-    get_default_mutational_coefficients(const nlohmann::json& mutational_coeff_json);
+    static Races::Mutations::Exposure
+    get_default_exposure(const nlohmann::json& exposures_json);
 
     /**
-     * @brief Add the timed mutational coefficients to a mutation engine
+     * @brief Add the timed exposures to a mutation engine
      *
      * @tparam GENOME_WIDE_POSITION is the genome wide position type
      * @tparam RANDOM_GENERATOR is the type of the random generator
      * @param engine is a mutation engine
-     * @param mutational_coeff_json is the JSON of the mutational coefficients
+     * @param exposures_json is the JSON of the exposures
      */
     template<typename GENOME_WIDE_POSITION, typename RANDOM_GENERATOR>
     static void
-    add_timed_mutational_coefficients(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION,RANDOM_GENERATOR>& engine,
-                                      const nlohmann::json& mutational_coeff_json)
+    add_timed_exposures(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION,RANDOM_GENERATOR>& engine,
+                                      const nlohmann::json& exposures_json)
     {
-        std::map<double, std::map<std::string, double>> timed_coefficients;
+        std::map<double, Races::Mutations::Exposure> timed_exposures;
 
-        if (!mutational_coeff_json.is_object()) {
-            throw std::runtime_error("The \"mutational coefficients\" field must be an object");
+        if (!exposures_json.is_object()) {
+            throw std::runtime_error("The \"exposures\" field must be an object");
         }
 
-        if (mutational_coeff_json.contains("timed")) {
+        if (exposures_json.contains("timed")) {
 
-            auto& timed_coeff_json = mutational_coeff_json["timed"];
+            auto& timed_coeff_json = exposures_json["timed"];
 
             if (!timed_coeff_json.is_array()) {
                 throw std::runtime_error("The optional \"timed\" field must be an array");
@@ -182,14 +182,14 @@ public:
                 double time = get_from<double>("time", timed_json,
                                                "The elements of the \"timed\" field");
 
-                if (timed_coefficients.count(time)>0) {
+                if (timed_exposures.count(time)>0) {
                     throw std::runtime_error("Two elements of the \"timed\" field have the "
                                              "same \"time\"");
                 }
 
-                expecting("coefficients", timed_json, "The elements of the \"timed\" field");
+                expecting("exposure", timed_json, "The elements of the \"timed\" field");
 
-                engine.add(time, get_mutational_coefficients(timed_json["coefficients"]));
+                engine.add(time, get_exposure(timed_json["exposure"]));
             }
         }
     }
@@ -296,14 +296,14 @@ public:
                           const std::vector<Mutations::ChromosomeId>& chromosome_ids);
 
     /**
-     * @brief Get the mutational coefficients
+     * @brief Get the exposure
      *
-     * @param mutational_coefficients_json the JSON of the mutational coefficients
+     * @param exposure_json the JSON of the exposure
      * @return a map associating a set of mutational signature to their percentage
-     *          in the mutational coefficients
+     *          in the exposure
      */
-    static std::map<std::string, double>
-    get_mutational_coefficients(const nlohmann::json& mutational_coefficients_json);
+    static Races::Mutations::Exposure
+    get_exposure(const nlohmann::json& exposure_json);
 };
 
 }   // Races

@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.19
- * @date 2023-12-19
+ * @version 0.20
+ * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
  *
@@ -225,16 +225,16 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
     mutational_properties.add_mutant(mutant_name, mutation_rates, SNVs, CNAs);
 }
 
-std::map<std::string, double>
-ConfigReader::get_default_mutational_coefficients(const nlohmann::json& mutational_coeff_json)
+Races::Mutations::Exposure
+ConfigReader::get_default_exposure(const nlohmann::json& exposures_json)
 {
-    if (!mutational_coeff_json.is_object()) {
-        throw std::runtime_error("The \"mutational coefficients\" field must be an object");
+    if (!exposures_json.is_object()) {
+        throw std::runtime_error("The \"exposures\" field must be an object");
     }
 
-    expecting("default", mutational_coeff_json, "The \"mutational coefficients\" field");
+    expecting("default", exposures_json, "The \"exposures\" field");
 
-    return get_mutational_coefficients(mutational_coeff_json["default"]);
+    return get_exposure(exposures_json["default"]);
 }
 
 Mutants::Evolutions::SampleSpecification
@@ -540,30 +540,30 @@ ConfigReader::get_number_of_alleles(const nlohmann::json& simulation_json,
     return num_of_alleles;
 }
 
-std::map<std::string, double>
-ConfigReader::get_mutational_coefficients(const nlohmann::json& mutational_coefficients_json)
+Races::Mutations::Exposure
+ConfigReader::get_exposure(const nlohmann::json& exposure_json)
 {
-    if (!mutational_coefficients_json.is_array()) {
-        throw std::runtime_error("Mutational coefficients must be an array of object");
+    if (!exposure_json.is_array()) {
+        throw std::runtime_error("Exposures must be an array of object");
     }
 
     double total=0;
 
-    std::map<std::string, double> mutational_coefficients;
-    for (const auto& mutational_coefficient_json : mutational_coefficients_json) {
+    Races::Mutations::Exposure exposure;
+    for (const auto& exposures_json : exposure_json) {
 
-        if (!mutational_coefficient_json.is_object()) {
-            throw std::runtime_error("Mutational coefficient must be an object");
+        if (!exposures_json.is_object()) {
+            throw std::runtime_error("An exposure must be an object");
         }
 
-        const std::string SBS = get_from<std::string>("SBS", mutational_coefficient_json,
-                                                        "Every mutational coefficient");
-        if (mutational_coefficients.count(SBS)>0) {
-            throw std::runtime_error("\""+SBS+"\" already among mutational coefficients");
+        const std::string SBS = get_from<std::string>("SBS", exposures_json,
+                                                        "Every exposure");
+        if (exposure.count(SBS)>0) {
+            throw std::runtime_error("\""+SBS+"\" already among exposures");
         }
 
-        double fraction = get_from<double>("fraction", mutational_coefficient_json,
-                                            "Every mutational coefficient");
+        double fraction = get_from<double>("fraction", exposures_json,
+                                            "Every exposure");
 
         total += fraction;
         if (total>1) {
@@ -575,7 +575,7 @@ ConfigReader::get_mutational_coefficients(const nlohmann::json& mutational_coeff
             throw std::runtime_error(oss.str());
         }
 
-        mutational_coefficients[SBS] = fraction;
+        exposure[SBS] = fraction;
     }
 
     if (std::abs(1-total)>10*std::numeric_limits<double>::epsilon()) {
@@ -587,7 +587,7 @@ ConfigReader::get_mutational_coefficients(const nlohmann::json& mutational_coeff
         throw std::runtime_error(oss.str());
     }
 
-    return mutational_coefficients;
+    return exposure;
 }
 
 }   // Races

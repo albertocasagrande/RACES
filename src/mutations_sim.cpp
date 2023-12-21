@@ -357,9 +357,9 @@ class MutationsSimulator : public BasicExecutable
 
         auto context_index = load_context_index<GENOME_WIDE_POSITION>(context_index_filename);
 
-        if (!simulation_cfg.contains("mutational coefficients")) {
+        if (!simulation_cfg.contains("exposures")) {
             throw std::runtime_error("The passengers simulation configuration must contain "
-                                     "a \"mutational coefficients\" field");
+                                     "a \"exposures\" field");
         }
 
         auto num_of_alleles = get_number_of_alleles(context_index, simulation_cfg);
@@ -367,12 +367,12 @@ class MutationsSimulator : public BasicExecutable
         MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_alleles,
                                                     signatures, mutational_properties);
 
-        const auto& mutational_coeff_json = simulation_cfg["mutational coefficients"];
+        const auto& exposures_json = simulation_cfg["exposures"];
 
-        auto default_coefficients = ConfigReader::get_default_mutational_coefficients(mutational_coeff_json);
-        engine.add(default_coefficients);
+        auto default_exposure = ConfigReader::get_default_exposure(exposures_json);
+        engine.add(default_exposure);
 
-        ConfigReader::add_timed_mutational_coefficients(engine, mutational_coeff_json);
+        ConfigReader::add_timed_exposures(engine, exposures_json);
 
         auto phylogenetic_forest = place_mutations(engine, descendants_forest);
 

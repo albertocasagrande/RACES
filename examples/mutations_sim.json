@@ -55,7 +55,7 @@
             ]
         }
     ],
-    "mutational coefficients": {
+    "exposures": {
         "default": [
             { "SBS": "SBS3", "fraction": 0.6 },
             { "SBS": "SBS13", "fraction": 0.3 },
@@ -64,7 +64,7 @@
         "timed": [
             {
                 "time": 70,
-                "coefficients": [
+                "exposure": [
                     { "SBS": "SBS3", "fraction": 0.5 },
                     { "SBS": "SBS13", "fraction": 0.3 },
                     { "SBS": "SBS40", "fraction": 0.2 }

@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.30
+ * @version 0.31
  * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
@@ -151,6 +151,17 @@ public:
 };
 
 /**
+ * @brief The SBS exposure type
+ * 
+ * A SBS is a single base mutation substituion signature that provides for any context
+ * (i.e., a triplet of bases) the probability for a SNV to occur on that context. 
+ * The SBSs depends on the environmental context and, because of that, more 
+ * than one SBSs may be active at the same time with different probabilities.
+ * An exposure is a discrite probability distribution among SBS signatures.
+ */
+using Exposure = std::map<std::string, double>;
+
+/**
  * @brief The mutation engine
  *
  * The objects of this class place mutations on the cell genome according
@@ -173,10 +184,6 @@ class MutationEngine
      */
     using InverseCumulativeSBS = std::map<double, Races::Mutations::MutationalType>;
 
-    /**
-     * @brief Coefficients for mutational signatures
-     */
-    using MutationalCoefficients = std::map<std::string, double>;
 
     /**
      * @brief The stack of contexts removed from a context index
@@ -190,7 +197,7 @@ class MutationEngine
 
     std::map<ChromosomeId, size_t> alleles_per_chromosome;   //!< number of initial alleles per chromosome
 
-    std::map<Time, MutationalCoefficients> timed_mutational_coefficients;   //!< the timed mutational coefficients
+    std::map<Time, Exposure> timed_exposures;          //!< the timed exposures
     std::map<std::string, InverseCumulativeSBS> inv_cumulative_SBSs;        //!< the inverse cumulative SBS
 
     MutationalProperties mutational_properties;  //!< the species mutational properties
@@ -246,21 +253,21 @@ class MutationEngine
     }
 
     /**
-     * @brief Get the mutational coefficients according to a cell birth time
+     * @brief Get the exposure according to a cell birth time
      *
-     * The active mutational coefficients depend on the simulation time. They
-     * must be selected in agreement with cell birth times.
+     * The active exposure depend on the simulation time. It must be selected in 
+     * agreement with cell birth times.
      *
-     * @param cell is the cell whose birth time select the mutational coefficients
-     * @return a constant reference to mutational coefficients that are associated
+     * @param cell is the cell whose birth time select the exposure
+     * @return a constant reference to exposure that are associated
      *         to `cell` birth time
      */
-    const MutationalCoefficients&
-    get_active_mutational_coefficients(const Mutants::Cell& cell) const
+    const Exposure&
+    get_active_exposure(const Mutants::Cell& cell) const
     {
-        auto mc_it = timed_mutational_coefficients.upper_bound(cell.get_birth_time());
+        auto exposure_it = timed_exposures.upper_bound(cell.get_birth_time());
 
-        return (--mc_it)->second;
+        return (--exposure_it)->second;
     }
 
     /**
@@ -365,18 +372,18 @@ class MutationEngine
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
                                           species_rates.at(node.get_species_id()));
 
-        // get the active SBS coefficients
-        const auto& mc = get_active_mutational_coefficients(node);
+        // get the active SBS exposure
+        const auto& exposure = get_active_exposure(node);
 
-        // for each active SBS coefficient
-        for (const auto& [SBS_name, coefficient]: mc) {
+        // for each active SBS probability
+        for (const auto& [SBS_name, probability]: exposure) {
 
             // get the inverse cumulative SBS
             const auto& inv_cumulative_SBS = inv_cumulative_SBSs.at(SBS_name);
 
             // evaluate how many of the SNVs occurred to the considered cells
             // are due to the current SBS
-            size_t SBS_num_of_SNVs = coefficient*num_of_SNVs;
+            size_t SBS_num_of_SNVs = probability*num_of_SNVs;
 
             std::uniform_real_distribution<> u_dist(0,1);
 
@@ -592,64 +599,63 @@ public:
     }
 
     /**
-     * @brief Add a timed set of mutational signature coefficients
+     * @brief Add a timed exposure
      *
-     * This method add a set mutational signature coefficients that will be applied from
-     * the specified simulation time on.
+     * This method add a exposure that will be applied from the specified simulation
+     * time on.
      *
-     * @param time is the simulation time from which the coefficients will be applied
-     * @param mutational_coefficients is the map from the signature name to the coefficient
+     * @param time is the simulation time from which the exposure will be applied
+     * @param exposure is a SBS exposure
      * @return a reference to the updated object
      */
-    MutationEngine& add(const Time& time, std::map<std::string, double>&& mutational_coefficients)
+    MutationEngine& add(const Time& time, Exposure&& exposure)
     {
         if (time<0) {
             throw std::domain_error("Simulation time is a non-negative value");
         }
 
-        if (timed_mutational_coefficients.count(time)>0) {
-            throw std::runtime_error("Another set of mutational coefficients has "
+        if (timed_exposures.count(time)>0) {
+            throw std::runtime_error("Another exposure has "
                                      "been set for the specified time");
         }
 
-        for (const auto& [name, coeff]: mutational_coefficients) {
+        for (const auto& [name, coeff]: exposure) {
             if (inv_cumulative_SBSs.count(name)==0) {
                 throw std::runtime_error("Unknown signature "+name);
             }
         }
 
-        timed_mutational_coefficients.emplace(Time(time), std::move(mutational_coefficients));
+        timed_exposures.emplace(Time(time), std::move(exposure));
 
         return *this;
     }
 
     /**
-     * @brief Add a timed set of mutational signature coefficients
+     * @brief Add a timed exposure
      *
-     * This method add a set mutational signature coefficients that will be applied from
-     * the specified simulation time on.
+     * This method add a exposure that will be applied from the specified simulation
+     * time on.
      *
-     * @param time is the simulation time from which the coefficients will be applied
-     * @param mutational_coefficients is the map from the signature name to the coefficient
+     * @param time is the simulation time from which the exposure will be applied
+     * @param exposure is an SBS exposure
      * @return a reference to the updated object
      */
-    MutationEngine& add(const Time& time, const std::map<std::string, double>& mutational_coefficients)
+    MutationEngine& add(const Time& time, const Exposure& exposure)
     {
-        return add(time, std::map<std::string, double>(mutational_coefficients));
+        return add(time, Exposure(exposure));
     }
 
     /**
-     * @brief Add the default mutational signature coefficients
+     * @brief Add the default exposure
      *
-     * This method add a default set of mutational signature coefficients.
+     * This method add a default exposure.
      *
-     * @param default_mutational_coefficients is the map from the signature name to the
-     *              coefficient
+     * @param default_exposure is the exposure at time 0
      * @return a reference to the updated object
      */
-    MutationEngine& add(const std::map<std::string, double>& default_mutational_coefficients)
+    MutationEngine& add(const Exposure& default_exposure)
     {
-        return add(0, default_mutational_coefficients);
+        return add(0, default_exposure);
     }
 
     /**
@@ -742,14 +748,14 @@ public:
     }
 
     /**
-     * @brief Get the mutational coefficients
+     * @brief Get the exposures
      *
-     * @return a constant reference to the mutational coefficients
+     * @return a constant reference to the exposures
      */
-    inline const std::map<Time, MutationalCoefficients>&
-    get_timed_mutational_coefficients() const
+    inline const std::map<Time, Exposure>&
+    get_timed_exposures() const
     {
-        return timed_mutational_coefficients;
+        return timed_exposures;
     }
 
     /**
