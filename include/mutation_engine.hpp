@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.29
- * @date 2023-12-20
+ * @version 0.30
+ * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
  *
@@ -444,13 +444,15 @@ class MutationEngine
             for (auto snv : mutant_mp.SNVs) {
                 snv.cause = mutant_mp.name;
 
-                place_SNV(snv, cell_mutations);
-                node.add_new_mutation(snv);
+                if (place_SNV(snv, cell_mutations)) {
+                    node.add_new_mutation(snv);
+                }
             }
 
             for (auto CNA : mutant_mp.CNAs) {
-                place_CNA(CNA, cell_mutations);
-                node.add_new_mutation(CNA);
+                if (place_CNA(CNA, cell_mutations)) {
+                    node.add_new_mutation(CNA);
+                }
             }
         }
     }
