@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.32
+ * @version 0.33
  * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
@@ -152,12 +152,12 @@ public:
 
 /**
  * @brief The SBS exposure type
- * 
+ *
  * A SBS is a single base mutation substituion signature that provides for any context
- * (i.e., a triplet of bases) the probability for a SNV to occur on that context. 
- * The SBSs depends on the environmental context and, because of that, more 
+ * (i.e., a triplet of bases) the probability for a SNV to occur on that context.
+ * The SBSs depends on the environmental context and, because of that, more
  * than one SBSs may be active at the same time with different probabilities.
- * An exposure is a discrite probability distribution among SBS signatures.
+ * An exposure is a discrete probability distribution among SBS signatures.
  */
 using Exposure = std::map<std::string, double>;
 
