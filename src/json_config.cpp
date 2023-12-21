@@ -2,7 +2,7 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.20
+ * @version 0.21
  * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
@@ -218,8 +218,8 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
     using namespace Races::Mutations;
     std::list<SNV> SNVs;
     std::list<CopyNumberAlteration> CNAs;
-    if (mutational_properties_json.contains("mutations")) {
-        collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["mutations"]);
+    if (mutational_properties_json.contains("driver mutations")) {
+        collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["driver mutations"]);
     }
 
     mutational_properties.add_mutant(mutant_name, mutation_rates, SNVs, CNAs);

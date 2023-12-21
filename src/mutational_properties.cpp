@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.13
- * @date 2023-12-19
+ * @version 0.14
+ * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
  *
@@ -36,12 +36,12 @@ namespace Races
 namespace Mutations
 {
 
-MutationalProperties::MutantMutations::MutantMutations()
+DriverMutations::DriverMutations()
 {}
 
-MutationalProperties::MutantMutations::MutantMutations(const std::string& mutant_name,
-                                                       const std::list<SNV>& SNVs,
-                                                       const std::list<CopyNumberAlteration>& CNAs):
+DriverMutations::DriverMutations(const std::string& mutant_name,
+                                 const std::list<SNV>& SNVs,
+                                 const std::list<CopyNumberAlteration>& CNAs):
     name(mutant_name), SNVs(SNVs.begin(), SNVs.end()), CNAs(CNAs.begin(), CNAs.end())
 {}
 
@@ -54,12 +54,12 @@ MutationalProperties::add_mutant(const std::string& mutant_name,
                                  const std::list<SNV>& mutant_SNVs,
                                  const std::list<CopyNumberAlteration>& mutant_CNAs)
 {
-    if (mutant_mutations.count(mutant_name)>0) {
+    if (driver_mutations.count(mutant_name)>0) {
         throw std::domain_error("The mutational properties of mutant \""+mutant_name+
                                 "\" has been already added.");
     }
 
-    mutant_mutations.insert({mutant_name, {mutant_name, mutant_SNVs, mutant_CNAs}});
+    driver_mutations.insert({mutant_name, {mutant_name, mutant_SNVs, mutant_CNAs}});
 
 
     for (const auto& [epistate, mutation_rate] : epistate_mutation_rates) {

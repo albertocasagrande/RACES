@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.14
- * @date 2023-12-19
+ * @version 0.15
+ * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
  *
@@ -47,39 +47,43 @@ namespace Races
 namespace Mutations
 {
 
+
+/**
+ * @brief The genomic characterization of a mutant
+ */
+struct DriverMutations
+{
+    std::string name;                      //!< The mutant name
+    std::set<SNV> SNVs;                    //!< The mutant SNVs
+    std::set<CopyNumberAlteration> CNAs;   //!< The mutant CNAs
+
+    /**
+     * @brief The empty constructor
+     */
+    DriverMutations();
+
+    /**
+     * @brief A constructor
+     *
+     * @param mutant_name is the name of the mutant
+     * @param SNVs is the vector of species specific SNVs
+     * @param CNAs is the vector of species specific CNAs
+     */
+    DriverMutations(const std::string& mutant_name,
+                    const std::list<SNV>& SNVs,
+                    const std::list<CopyNumberAlteration>& CNAs);
+};
+
 /**
  * @brief A class representing the mutational properties of all the species
  *
  */
 class MutationalProperties
 {
+    std::map<std::string, double> rates;                        //!< The rate per species
+    std::map<std::string, DriverMutations> driver_mutations;    //!< The mutation per mutant
+
 public:
-
-    /**
-     * @brief The genomic characterization of a mutant
-     */
-    struct MutantMutations
-    {
-        std::string name;                      //!< The mutant name
-        std::set<SNV> SNVs;                    //!< The mutant SNVs
-        std::set<CopyNumberAlteration> CNAs;   //!< The mutant CNAs
-
-        /**
-         * @brief The empty constructor
-         */
-        MutantMutations();
-
-        /**
-         * @brief A constructor
-         *
-         * @param mutant_name is the name of the mutant
-         * @param SNVs is the vector of species specific SNVs
-         * @param CNAs is the vector of species specific CNAs
-         */
-        MutantMutations(const std::string& mutant_name,
-                        const std::list<SNV>& SNVs,
-                        const std::list<CopyNumberAlteration>& CNAs);
-    };
 
     /**
      * @brief The empty constructor
@@ -112,18 +116,16 @@ public:
     };
 
     /**
-     * @brief Get the species rates
+     * @brief Get the driver mutation map
      *
-     * @return a constant reference to the species rates
+     * @return a constant reference to map associating a mutant name to its
+     *      driver mutation
      */
-    inline const std::map<std::string, MutantMutations>& get_mutant_mutations() const
+    inline const std::map<std::string, DriverMutations>& get_driver_mutations() const
     {
-        return mutant_mutations;
+        return driver_mutations;
     };
-private:
 
-    std::map<std::string, double> rates;                        //!< The rate per species
-    std::map<std::string, MutantMutations> mutant_mutations;    //!< The mutation per mutant
 };
 
 }   // Mutations

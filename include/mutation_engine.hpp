@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.31
+ * @version 0.32
  * @date 2023-12-21
  *
  * @copyright Copyright (c) 2023
@@ -434,19 +434,19 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the mutant specific mutations
+     * @brief Place the driver mutations
      *
      * @param node is a phylogenetic forest node representing a cell
      * @param mutations are the cell mutations
      * @param cell_statistics are the statistics of the cell mutations
-     * @param mutant_mutations is the map associating mutant ids and mutations
+     * @param driver_mutations is the map associating mutant ids and mutations
      */
-    void place_mutant_specific_mutations(PhylogeneticForest::node& node,
-                                         GenomeMutations& cell_mutations,
-                                         const std::map<Mutants::MutantId, MutationalProperties::MutantMutations>& mutant_mutations)
+    void place_driver_mutations(PhylogeneticForest::node& node,
+                                GenomeMutations& cell_mutations,
+                                const std::map<Mutants::MutantId, DriverMutations>& driver_mutations)
     {
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
-            const auto& mutant_mp = mutant_mutations.at(node.get_mutant_id());
+            const auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
 
             for (auto snv : mutant_mp.SNVs) {
                 snv.cause = mutant_mp.name;
@@ -475,14 +475,14 @@ class MutationEngine
      * @param[in] node is a phylogenetic forest node representing a cell
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in] species_rates is the map associating species ids and mutational rates
-     * @param[in] mutant_mutations is the map associating mutant ids and mutations
+     * @param[in] driver_mutations is the map associating mutant ids and mutations
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
     void place_mutations(PhylogeneticForest::node& node, const GenomeMutations& ancestor_mutations,
                          const std::map<Mutants::SpeciesId, double>& species_rates,
-                         const std::map<Mutants::MutantId, MutationalProperties::MutantMutations>& mutant_mutations,
+                         const std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
         using namespace Races::Mutations;
@@ -492,7 +492,7 @@ class MutationEngine
         CellGenomeMutations cell_mutations(static_cast<const Mutants::Cell&>(node),
                                            ancestor_mutations);
 
-        place_mutant_specific_mutations(node, cell_mutations, mutant_mutations);
+        place_driver_mutations(node, cell_mutations, driver_mutations);
         place_SNVs(node, cell_mutations, species_rates);
         //place_CNAs(node, mutations);
 
@@ -511,7 +511,7 @@ class MutationEngine
             phylo_forest.leaves_mutations[cell_id] = cell_mutations;
         } else {
             for (auto child: node.children()) {
-                place_mutations(child, cell_mutations, species_rates, mutant_mutations,
+                place_mutations(child, cell_mutations, species_rates, driver_mutations,
                                 visited_nodes, progress_bar);
             }
         }
@@ -696,7 +696,7 @@ public:
         GenomeMutations mutations(context_index, alleles_per_chromosome);
 
         std::map<SpeciesId, double> species_rates;
-        std::map<MutantId, MutationalProperties::MutantMutations> mutant_mutations;
+        std::map<MutantId, DriverMutations> driver_mutations;
 
         for (const auto& [species_id, species_data] : descendants_forest.get_species_data()) {
             const auto mutant_name = descendants_forest.get_mutant_name(species_data.mutant_id);
@@ -711,12 +711,12 @@ public:
 
             species_rates[species_id] = species_it->second;
 
-            mutant_mutations[species_data.mutant_id] = mutational_properties.get_mutant_mutations().at(mutant_name);
+            driver_mutations[species_data.mutant_id] = mutational_properties.get_driver_mutations().at(mutant_name);
         }
 
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
-            place_mutations(root, mutations, species_rates, mutant_mutations,
+            place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
         }
 
