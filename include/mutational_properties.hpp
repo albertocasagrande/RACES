@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.15
- * @date 2023-12-21
+ * @version 0.16
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -75,12 +75,34 @@ struct DriverMutations
 };
 
 /**
+ * @brief Rates of the passenger mutations for a species
+ */
+struct PassengerRates
+{
+    double snv; //!< The species SNV rate
+    double cna; //!< The species CNA rate
+
+    /**
+     * @brief The empty constructor
+     */
+    PassengerRates();
+
+    /**
+     * @brief A constructor
+     *
+     * @param SNV_rate is the the SNV rate
+     * @param CNA_rate is the the CNA rate
+     */
+    PassengerRates(const double& SNV_rate, const double& CNA_rate);
+};
+
+/**
  * @brief A class representing the mutational properties of all the species
  *
  */
 class MutationalProperties
 {
-    std::map<std::string, double> rates;                        //!< The rate per species
+    std::map<std::string, PassengerRates> passenger_rates;      //!< The species passenger rates
     std::map<std::string, DriverMutations> driver_mutations;    //!< The mutation per mutant
 
 public:
@@ -94,25 +116,25 @@ public:
      * @brief Add the properties of a mutant
      *
      * @param name is the name of the mutant
-     * @param epistate_mutation_rates is a map from epigenomic status to
-     *          mutational rate
-     * @param mutant_SNVs is a list of SNVs characterizing the mutant
-     * @param mutant_CNAs is a list of CNAs characterizing the mutant
+     * @param epistate_passenger_rates is a map from epigenomic state to
+     *          passenger rates
+     * @param driver_SNVs is a list of driver SNVs
+     * @param driver_CNAs is a list of driver CNAs
      * @return a reference to the updated object
      */
     MutationalProperties& add_mutant(const std::string& mutant_name,
-                                     const std::map<std::string, double>& epistate_mutation_rates,
-                                     const std::list<SNV>& mutant_SNVs={},
-                                     const std::list<CopyNumberAlteration>& mutant_CNAs={});
+                                     const std::map<std::string, PassengerRates>& epistate_passenger_rates,
+                                     const std::list<SNV>& driver_SNVs={},
+                                     const std::list<CopyNumberAlteration>& driver_CNAs={});
 
     /**
-     * @brief Get the species rates
+     * @brief Get the species passeger rates
      *
-     * @return a constant reference to the species rates
+     * @return a constant reference to the species passeger rates
      */
-    inline const std::map<std::string, double>& get_species_rates() const
+    inline const std::map<std::string, PassengerRates>& get_passenger_rates() const
     {
-        return rates;
+        return passenger_rates;
     };
 
     /**

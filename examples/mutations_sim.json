@@ -10,11 +10,11 @@
     "mutant properties": [
         {
             "name": "A",
-            "mutation rates": [
-                { "epigenetic status": "-", "rate": 3e-9},
-                { "epigenetic status": "+", "rate": 6e-9}
+            "passenger rates": [
+                { "epistate": "-", "SNV": 3e-9, "CNA": 4e-10},
+                { "epistate": "+", "SNV": 6e-9}
             ],
-            "mutations": [
+            "driver mutations": [
                 {
                     "type": "SNV",
                     "chromosome": "1",
@@ -49,9 +49,9 @@
         },
         {
             "name": "B",
-            "mutation rates": [
-                { "epigenetic status": "-", "rate": 3e-8},
-                { "epigenetic status": "+", "rate": 6e-8}
+            "passenger rates": [
+                { "epistate": "-", "SNV": 3e-8},
+                { "epistate": "+", "SNV": 6e-8}
             ]
         }
     ],

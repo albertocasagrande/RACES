@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.21
- * @date 2023-12-21
+ * @version 0.22
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -62,19 +62,26 @@ ConfigReader::get_corner(const nlohmann::json& sampler_region_json, const std::s
     return corner;
 }
 
-std::pair<std::string, double>
-ConfigReader::get_mutation_rate(const nlohmann::json& mutation_rate_json)
+std::pair<std::string, Races::Mutations::PassengerRates>
+ConfigReader::get_epistate_passenger_rates(const nlohmann::json& epistate_rates_json)
 {
-    if (!mutation_rate_json.is_object()) {
-        throw std::runtime_error("All the elements in \"mutation rates\" "
+    if (!epistate_rates_json.is_object()) {
+        throw std::runtime_error("All the elements in \"passenger rates\" "
                                     "must be objects");
     }
 
+    double SNV_rate{0}, CNA_rate{0};
+    if (epistate_rates_json.contains("SNV")) {
+        SNV_rate = epistate_rates_json["SNV"].get<double>();
+    }
+    if (epistate_rates_json.contains("CNA")) {
+        CNA_rate = epistate_rates_json["CNA"].get<double>();
+    }
+
     return {
-        get_from<std::string>("epigenetic status", mutation_rate_json,
-                                "All the elements in \"mutation rates\""),
-        get_from<double>("rate", mutation_rate_json,
-                            "All the elements in \"mutation rates\"")
+        get_from<std::string>("epistate", epistate_rates_json,
+                                "All the elements in \"passenger rates\""),
+        Races::Mutations::PassengerRates(SNV_rate, CNA_rate)
     };
 }
 
@@ -141,21 +148,21 @@ ConfigReader::add_SNV(const std::string& mutant_name, std::list<Races::Mutations
     SNVs.emplace_back(genomic_position, context, mutated_base[0], mutant_name);
 }
 
-std::map<std::string, double>
-ConfigReader::get_mutation_rates(const nlohmann::json& mutation_rates_json)
+std::map<std::string, Races::Mutations::PassengerRates>
+ConfigReader::get_passenger_rates(const nlohmann::json& passenger_rates_json)
 {
-    std::map<std::string, double> mutational_rates;
+    std::map<std::string, Races::Mutations::PassengerRates> passenger_rates;
 
-    if (!mutation_rates_json.is_array()) {
-        throw std::runtime_error("The \"mutation rates\" field must be an array "
-                                "of mutation rates");
+    if (!passenger_rates_json.is_array()) {
+        throw std::runtime_error("The \"passenger rates\" field must be an array "
+                                "of passenger mutation rates");
     }
 
-    for (const auto& mutation_rate_json : mutation_rates_json) {
-        mutational_rates.insert(get_mutation_rate(mutation_rate_json));
+    for (const auto& passenger_rate_json : passenger_rates_json) {
+        passenger_rates.insert(get_epistate_passenger_rates(passenger_rate_json));
     }
 
-    return mutational_rates;
+    return passenger_rates;
 }
 
 void
@@ -209,11 +216,11 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
     auto mutant_name = get_from<std::string>("name", mutational_properties_json,
                                              "All the elements in \"driver properties\"");
 
-    if (!mutational_properties_json.contains("mutation rates")) {
+    if (!mutational_properties_json.contains("passenger rates")) {
         throw std::runtime_error("All the elements in \"driver properties\" "
-                                "must contain a \"mutation rates\" field");
+                                "must contain a \"passenger rates\" field");
     }
-    auto mutation_rates = get_mutation_rates(mutational_properties_json["mutation rates"]);
+    auto passenger_rates = get_passenger_rates(mutational_properties_json["passenger rates"]);
 
     using namespace Races::Mutations;
     std::list<SNV> SNVs;
@@ -222,7 +229,7 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
         collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["driver mutations"]);
     }
 
-    mutational_properties.add_mutant(mutant_name, mutation_rates, SNVs, CNAs);
+    mutational_properties.add_mutant(mutant_name, passenger_rates, SNVs, CNAs);
 }
 
 Races::Mutations::Exposure

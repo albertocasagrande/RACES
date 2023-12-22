@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.33
- * @date 2023-12-21
+ * @version 0.34
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -255,7 +255,7 @@ class MutationEngine
     /**
      * @brief Get the exposure according to a cell birth time
      *
-     * The active exposure depend on the simulation time. It must be selected in 
+     * The active exposure depend on the simulation time. It must be selected in
      * agreement with cell birth times.
      *
      * @param cell is the cell whose birth time select the exposure
@@ -364,13 +364,12 @@ class MutationEngine
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
-     * @param species_rates is the map associating species ids and mutational rates
+     * @param SNV_rate is the rate of passegers SNVs
      */
     void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
-                    const std::map<Mutants::SpeciesId, double>& species_rates)
+                    const double& SNV_rates)
     {
-        auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(),
-                                          species_rates.at(node.get_species_id()));
+        auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(), SNV_rates);
 
         // get the active SBS exposure
         const auto& exposure = get_active_exposure(node);
@@ -474,14 +473,14 @@ class MutationEngine
      *
      * @param[in] node is a phylogenetic forest node representing a cell
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
-     * @param[in] species_rates is the map associating species ids and mutational rates
+     * @param[in] passenger_rates is the map associating species ids to their passenger rates
      * @param[in] driver_mutations is the map associating mutant ids and mutations
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
     void place_mutations(PhylogeneticForest::node& node, const GenomeMutations& ancestor_mutations,
-                         const std::map<Mutants::SpeciesId, double>& species_rates,
+                         const std::map<Mutants::SpeciesId, PassengerRates>& passenger_rates,
                          const std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
@@ -493,8 +492,15 @@ class MutationEngine
                                            ancestor_mutations);
 
         place_driver_mutations(node, cell_mutations, driver_mutations);
-        place_SNVs(node, cell_mutations, species_rates);
-        //place_CNAs(node, mutations);
+
+        auto rates_it = passenger_rates.find(node.get_species_id());
+        if (rates_it == passenger_rates.end()) {
+            const auto& species_name = node.get_forest().get_species_name(node.get_species_id());
+
+            throw std::runtime_error("Unknown species \""+ species_name +"\"");
+        }
+        place_SNVs(node, cell_mutations, rates_it->second.snv);
+        //place_CNAs(node, mutations, species_rates.cna);
 
         ++visited_nodes;
         if (progress_bar != nullptr) {
@@ -511,7 +517,7 @@ class MutationEngine
             phylo_forest.leaves_mutations[cell_id] = cell_mutations;
         } else {
             for (auto child: node.children()) {
-                place_mutations(child, cell_mutations, species_rates, driver_mutations,
+                place_mutations(child, cell_mutations, passenger_rates, driver_mutations,
                                 visited_nodes, progress_bar);
             }
         }
@@ -576,24 +582,24 @@ public:
     /**
      * @brief Add the properties of a mutant
      *
-     * This method add the properties of a mutant (i.e., its mutation rates, its SNVs and
-     * CNAs) and all its species to the mutations engine.
+     * This method add the properties of a mutant (i.e., its passenger rates,
+     * its driver mutations) and all its species to the mutations engine.
      *
      * @param name is the name of the mutant
-     * @param epistate_mutation_rates is a map from epigenomic status to
-     *          mutational rate
-     * @param mutant_SNVs is a list of SNVs characterizing the mutant
-     * @param mutant_CNAs is a list of CNAs characterizing the mutant
+     * @param epistate_passenger_rates is a map from epigenomic status to
+     *          passenger rate
+     * @param driver_SNVs is a list of driver SNVs
+     * @param driver_CNAs is a list of driver CNAs
      * @return a reference to the updated object
      */
     inline
     MutationEngine& add_mutant(const std::string& name,
-                               const std::map<std::string, double>& epistate_mutation_rates,
-                               const std::list<SNV>& mutant_SNVs={},
-                               const std::list<CopyNumberAlteration>& mutant_CNAs={})
+                               const std::map<std::string, double>& epistate_passenger_rates,
+                               const std::list<SNV>& driver_SNVs={},
+                               const std::list<CopyNumberAlteration>& driver_CNAs={})
     {
-        mutational_properties.add_mutant(name, epistate_mutation_rates, mutant_SNVs,
-                                         mutant_CNAs);
+        mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SNVs,
+                                         driver_CNAs);
 
         return *this;
     }
@@ -695,7 +701,7 @@ public:
 
         GenomeMutations mutations(context_index, alleles_per_chromosome);
 
-        std::map<SpeciesId, double> species_rates;
+        std::map<SpeciesId, PassengerRates> species_rates;
         std::map<MutantId, DriverMutations> driver_mutations;
 
         for (const auto& [species_id, species_data] : descendants_forest.get_species_data()) {
@@ -703,13 +709,13 @@ public:
             const auto species_name = mutant_name
                                       + MutantProperties::signature_to_string(species_data.signature);
 
-            auto species_it = mutational_properties.get_species_rates().find(species_name);
+            auto passenger_it = mutational_properties.get_passenger_rates().find(species_name);
 
-            if (species_it == mutational_properties.get_species_rates().end()) {
+            if (passenger_it == mutational_properties.get_passenger_rates().end()) {
                 throw std::runtime_error("\""+species_name+"\" has no mutational rate");
             }
 
-            species_rates[species_id] = species_it->second;
+            species_rates[species_id] = passenger_it->second;
 
             driver_mutations[species_data.mutant_id] = mutational_properties.get_driver_mutations().at(mutant_name);
         }

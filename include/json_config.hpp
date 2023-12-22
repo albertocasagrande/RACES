@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.15
- * @date 2023-12-21
+ * @version 0.16
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -57,13 +57,13 @@ class ConfigReader
     get_corner(const nlohmann::json& sampler_region_json, const std::string& corner_field_name);
 
     /**
-     * @brief Get a mutation rate
+     * @brief Get the passenger mutation rates of one epigenetic state
      *
-     * @param mutation_rate_json is the JSON of the mutation rate
-     * @return a pair epigenetic status/mutation rate
+     * @param epistate_rates_json is the JSON of the epistate passenger rates
+     * @return a pair epigenetic state/passenger mutation rate
      */
-    static std::pair<std::string, double>
-    get_mutation_rate(const nlohmann::json& mutation_rate_json);
+    static std::pair<std::string, Races::Mutations::PassengerRates>
+    get_epistate_passenger_rates(const nlohmann::json& epistate_rates_json);
 
     /**
      * @brief Get the CNA type
@@ -96,13 +96,13 @@ class ConfigReader
             const nlohmann::json& SNV_json);
 
     /**
-     * @brief Get the mutation rates
+     * @brief Get the passenger rates
      *
-     * @param mutation_rates_json is the JSON of the mutation rates
+     * @param passenger_rates_json is the JSON of the passenger rates
      * @return a map associating an epigenetic status to its mutation rate
      */
-    static std::map<std::string, double>
-    get_mutation_rates(const nlohmann::json& mutation_rates_json);
+    static std::map<std::string, Races::Mutations::PassengerRates>
+    get_passenger_rates(const nlohmann::json& passenger_rates_json);
 
     /**
      * @brief Add the mutations to SNV and CNA lists
