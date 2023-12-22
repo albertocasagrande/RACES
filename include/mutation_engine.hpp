@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.35
+ * @version 0.36
  * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
@@ -413,24 +413,62 @@ class MutationEngine
     }
 
     /**
-     * @brief Try to place a CNA
+     * @brief Try to place a driver CNA
      *
      * @param CNA is the CNA to place
-     * @param cell_mutations are the cell mutations
+     * @param chr_mutations are the chromosome mutations
      * @return `true` if and only if the CNA placement has succeed. This
      *          method returns `false` when the CNA cannot be placed
      *          because no allele are available for it.
      */
-    bool place_CNA(const CopyNumberAlteration& CNA, GenomeMutations& cell_mutations)
+    bool place_driver_CNA(const CopyNumberAlteration& CNA, ChromosomeMutations& chr_mutations) const
     {
         switch(CNA.type) {
             case CopyNumberAlteration::Type::AMPLIFICATION:
-                return cell_mutations.amplify_region(CNA.region, CNA.source);
+                return chr_mutations.amplify_region(CNA.region, CNA.source);
             case CopyNumberAlteration::Type::DELETION:
-                return cell_mutations.remove_region(CNA.region, CNA.source);
+                return chr_mutations.remove_region(CNA.region, CNA.source);
             default:
                 throw std::runtime_error("Unsupported CNA type");
         }
+    }
+
+    /**
+     * @brief Try to place a driver CNA
+     *
+     * @param CNA is the CNA to place
+     * @param chr_mutations are the chromosome mutations
+     * @return `true` if and only if the CNA placement has succeed. This
+     *          method returns `false` when the CNA cannot be placed
+     *          because no allele are available for it.
+     */
+    bool place_driver_CNA(const CopyNumberAlteration& CNA, GenomeMutations& cell_mutations) const
+    {
+        auto& chr_mutations = cell_mutations.get_chromosome(CNA.region.get_chromosome_id());
+
+        return place_driver_CNA(CNA, chr_mutations);
+    }
+
+    /**
+     * @brief Try to place a passenger CNA
+     *
+     * @param CNA is the CNA to place
+     * @param chr_mutations are the chromosome mutations
+     * @return `true` if and only if the CNA placement has succeed. This
+     *          method returns `false` when the CNA cannot be placed
+     *          because either no allele are available for it or the source
+     *          allele contains some driver mutations.
+     */
+    bool place_passenger_CNA(const CopyNumberAlteration& CNA, GenomeMutations& cell_mutations) const
+    {
+        auto& chr_mutations = cell_mutations.get_chromosome(CNA.region.get_chromosome_id());
+
+        const auto& allele = static_cast<const ChromosomeMutations&>(chr_mutations).get_allele(CNA.source);
+        if (allele.has_driver_mutations_in(CNA.region)) {
+            return false;
+        }
+
+        return place_driver_CNA(CNA, chr_mutations);
     }
 
     /**
@@ -458,7 +496,7 @@ class MutationEngine
             }
 
             for (auto CNA : mutant_mp.CNAs) {
-                if (place_CNA(CNA, cell_mutations)) {
+                if (place_driver_CNA(CNA, cell_mutations)) {
                     node.add_new_mutation(CNA);
                 }
             }
@@ -502,7 +540,7 @@ class MutationEngine
             throw std::runtime_error("Unknown species \""+ species_name +"\"");
         }
         place_SNVs(node, cell_mutations, rates_it->second.snv);
-        //place_CNAs(node, mutations, species_rates.cna);
+        //place_CNAs(node, cell_mutations, rates_it->second.cna);
 
         ++visited_nodes;
         if (progress_bar != nullptr) {

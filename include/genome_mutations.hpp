@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.17
- * @date 2023-12-17
+ * @version 0.18
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -75,24 +75,14 @@ private:
     AlleleId next_allele_id;   //!< the identifier of the next allele
 
     /**
-     * @brief Find an allele in the chromosome
-     *
-     * @param allele_id is the identifier of the allele to find
-     * @return a constant reference to the allele
-     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
-     *          chromosome
-     */
-    const Allele& find_allele(const AlleleId& allele_id) const;
-
-    /**
-     * @brief Find an allele in the chromosome
+     * @brief Get an allele in the chromosome
      *
      * @param allele_id is the identifier of the allele to find
      * @return a non-constant reference to the allele
      * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
      *          chromosome
      */
-    Allele& find_allele(const AlleleId& allele_id);
+    Allele& get_allele(const AlleleId& allele_id);
 
 public:
     /**
@@ -156,6 +146,16 @@ public:
     {
         return alleles;
     }
+
+    /**
+     * @brief Get an allele in the chromosome
+     *
+     * @param allele_id is the identifier of the allele to find
+     * @return a constant reference to the allele
+     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
+     *          chromosome
+     */
+    const Allele& get_allele(const AlleleId& allele_id) const;
 
     /**
      * @brief Get the CNAs occurred in the chromosome
@@ -420,6 +420,17 @@ public:
      * @return the mutations of a genome chromosome
      */
     inline const ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id) const
+    {
+        return chromosomes.at(chromosome_id);
+    }
+
+    /**
+     * @brief Get the mutations of a genome chromosome
+     *
+     * @param chromosome_id is the identifier of the aimed chromosome mutations
+     * @return the mutations of a genome chromosome
+     */
+    inline ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id)
     {
         return chromosomes.at(chromosome_id);
     }

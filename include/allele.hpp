@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.9
- * @date 2023-12-20
+ * @version 0.10
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -180,6 +180,15 @@ public:
     AlleleFragment copy(const GenomicRegion& genomic_region) const;
 
     /**
+     * @brief Check whether the fragment contains driver mutations in a genomic region
+     *
+     * @param genomic_region is the genomic region to check
+     * @return `true` if and only if the allele fragment contains some driver
+     *      mutations in `genomic_region`
+     */
+    bool has_driver_mutations_in(const GenomicRegion& genomic_region) const;
+
+    /**
      * @brief Save an allele fragment in an archive
      *
      * @tparam ARCHIVE is the output archive type
@@ -320,6 +329,15 @@ public:
     Allele copy(const GenomicRegion& genomic_region) const;
 
     /**
+     * @brief Check whether the allele contains driver mutations in a genomic region
+     *
+     * @param genomic_region is the genomic region to check
+     * @return `true` if and only if the allele contains some driver
+     *      mutations in `genomic_region`
+     */
+    bool has_driver_mutations_in(const GenomicRegion& genomic_region) const;
+
+    /**
      * @brief Remove part of an allele
      *
      * This method tries to remove the part of an allele
@@ -327,7 +345,7 @@ public:
      * original allele contains the specified genomic
      * region.
      *
-     * @param genomic_region is the genomic region to copy
+     * @param genomic_region is the genomic region to remove
      * @return `true` if and only if the allele contains
      *          `genomic_region`
      */

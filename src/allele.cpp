@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.3
- * @date 2023-12-09
+ * @version 0.4
+ * @date 2023-12-22
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -130,6 +130,19 @@ AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
     return new_fragment; 
 }
 
+bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region) const
+{
+    auto final_position = genomic_region.get_final_position();
+    for (auto it = snvs.lower_bound(genomic_region.get_begin());
+            it != snvs.end() && it->first.position <= final_position; ++it) {
+        if (it->second.type == SNV::Type::DRIVER) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 Allele::Allele()
 {}
 
@@ -237,6 +250,24 @@ Allele Allele::copy(const GenomicRegion& genomic_region) const
 
     return new_sequence;
 }
+
+bool Allele::has_driver_mutations_in(const GenomicRegion& genomic_region) const
+{
+    auto it = fragments.upper_bound(genomic_region.get_begin());
+    if (it != fragments.begin()) {
+        --it;
+    }
+
+    while (it != fragments.end() && !it->second.begins_after(genomic_region.get_end())) {
+        if (it->second.has_driver_mutations_in(genomic_region)) {
+            return true;
+        }
+        ++it;
+    }
+
+    return false;
+}
+
 
 bool Allele::remove(const GenomicRegion& genomic_region)
 {
