@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.36
+ * @version 0.37
  * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
@@ -634,7 +634,7 @@ public:
      */
     inline
     MutationEngine& add_mutant(const std::string& name,
-                               const std::map<std::string, double>& epistate_passenger_rates,
+                               const std::map<std::string, PassengerRates>& epistate_passenger_rates,
                                const std::list<SNV>& driver_SNVs={},
                                const std::list<CopyNumberAlteration>& driver_CNAs={})
     {
