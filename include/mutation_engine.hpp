@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.34
+ * @version 0.35
  * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
@@ -271,17 +271,17 @@ class MutationEngine
     }
 
     /**
-     * @brief Select a random SNV
+     * @brief Select a random passenger SNV
      *
-     * This method selects a random SNV among whose having a specified
-     * mutational type and available in a context index. The selected
-     * SNV is extracted from the context index and inserted into a stack
-     * to revert the selection.
+     * This method selects a random passenger SNV among whose having a
+     * specified mutational type and available in a context index.
+     * The selected SNV is extracted from the context index and inserted
+     * into a stack to revert the selection.
      *
      * @param[in] m_type is the mutational type of the SNV to be selected
      * @param[in] cause is the SNV cause
-     * @return a SNV whose type is `m_type` and which was available in
-     *          `context_index`
+     * @return a passenger SNV whose type is `m_type` and which was
+     *          available in `context_index`
      */
     SNV select_SNV(const MutationalType& m_type, const std::string& cause)
     {
@@ -313,7 +313,8 @@ class MutationEngine
 
         auto genomic_pos = context_index.get_genomic_position(pos);
 
-        return {genomic_pos, context, mutated_base, cause};
+        return {genomic_pos, context, mutated_base, cause,
+                SNV::Type::PASSENGER};
     }
 
     /**
@@ -449,6 +450,7 @@ class MutationEngine
 
             for (auto snv : mutant_mp.SNVs) {
                 snv.cause = mutant_mp.name;
+                snv.type = SNV::Type::DRIVER;
 
                 if (place_SNV(snv, cell_mutations)) {
                     node.add_new_mutation(snv);

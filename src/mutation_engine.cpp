@@ -2,23 +2,23 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 0.8
- * @date 2023-12-09
- * 
+ * @version 0.9
+ * @date 2023-12-22
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -132,30 +132,41 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
 {
     os << "chr" << separator << "from" << separator << "to" << separator
        << "ref" << separator << "alt" << separator
-       << "type" << separator << "context" << separator << "cause";
+       << "type" << separator << "context" << separator << "cause" << separator << "mutation type";
 
-    if (sample_statistics.size()>1) { 
+    if (sample_statistics.size()>1) {
         for (const auto& [sample_name, sample_stat]: sample_statistics) {
-            os << separator << "# of mutated alleles in " << sample_name 
+            os << separator << "# of mutated alleles in " << sample_name
                << separator << "# cells in " << sample_name;
         }
-        os << separator << "# of mutated alleles in total" 
+        os << separator << "# of mutated alleles in total"
            << separator << "# cells in total";
     } else {
-        os << separator << "# of mutated alleles"  
+        os << separator << "# of mutated alleles"
            << separator << "# of cells";
     }
-    
+
     os << std::endl;
 
     for (const auto& [snv, snv_statistics] : overall_statistics.SNVs) {
 
-        os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position 
+        os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position
            << separator << snv.position << separator
            << snv.context.get_central_nucleotide() << separator << snv.mutated_base << separator
-           << "SNV" << separator << snv.context << separator << snv.cause;
+           << "SNV" << separator << snv.context << separator << snv.cause << separator;
 
-        if (sample_statistics.size()>1) { 
+        switch(snv.type) {
+            case SNV::Type::DRIVER:
+                os << "D";
+                break;
+            case SNV::Type::PASSENGER:
+                os << "P";
+                break;
+            default:
+                os << "NA";
+        };
+
+        if (sample_statistics.size()>1) {
             for (const auto& [sample_name, sample_stat]: sample_statistics) {
                 auto found = sample_stat.SNVs.find(snv);
                 if (found != sample_stat.SNVs.end()) {
@@ -182,10 +193,10 @@ std::ostream& MutationStatistics::write_CNAs_table(std::ostream& os, const char 
        << "type" << separator << "major" << separator << "minor" << std::endl;
 
 
-    if (sample_statistics.size()>1) { 
+    if (sample_statistics.size()>1) {
         for (const auto& cna: overall_statistics.CNAs) {
-            os << GenomicPosition::chrtos(cna.region.get_chromosome_id()) << separator 
-               << cna.region.get_initial_position() << separator 
+            os << GenomicPosition::chrtos(cna.region.get_chromosome_id()) << separator
+               << cna.region.get_initial_position() << separator
                << cna.region.get_final_position()  << separator
                << (cna.type == CopyNumberAlteration::Type::AMPLIFICATION?"amplification":"deletion")
                << separator << "???" << separator << "???" << std::endl;
