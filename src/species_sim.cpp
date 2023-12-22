@@ -2,23 +2,23 @@
  * @file mutants_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the mutants simulator
- * @version 0.2
- * @date 2023-12-11
- * 
+ * @version 0.3
+ * @date 2023-12-22
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include <iostream> 
+#include <iostream>
 #include <vector>
 #include <chrono>
 #include <csignal>
@@ -148,9 +148,9 @@ class DriverSimulator : public BasicExecutable
                 throw std::domain_error("Every \"epigenetic rates\" must be an object");
             }
 
-            const auto methylation_rate = get_epigenetic_rate(rate_json, 
+            const auto methylation_rate = get_epigenetic_rate(rate_json,
                                                               {"methylation", "on"});
-            const auto demethylation_rate = get_epigenetic_rate(rate_json, 
+            const auto demethylation_rate = get_epigenetic_rate(rate_json,
                                                                 {"demethylation", "off"});
             epigenetic_rates.push_back({methylation_rate, demethylation_rate});
         }
@@ -248,15 +248,15 @@ class DriverSimulator : public BasicExecutable
                 throw std::domain_error("Every initial cell \"genotoype\" field must contain "
                                          "a \"name\" field");
             }
-    
+
             std::string mutant_name = mutant_json["name"].template get<std::string>();
 
-            if (!mutant_json.contains("epigenetic status")) {
+            if (!mutant_json.contains("epistate")) {
                 throw std::domain_error("Every initial cell \"genotoype\" field must contain "
                                          "a \"epigenetic status\" field");
             }
 
-            std::string epigenetic_status = mutant_json["epigenetic status"].template get<std::string>();
+            std::string epigenetic_status = mutant_json["epistate"].template get<std::string>();
 
             auto& species = mutants.at(mutant_name)[epigenetic_status];
 
@@ -325,11 +325,11 @@ class DriverSimulator : public BasicExecutable
         if (simulation_cfg.contains("timed events")) {
             configure_timed_events(simulation_cfg["timed events"], mutants);
         }
-        
+
         if (simulation_cfg.contains("death activation level")) {
             simulation.death_activation_level = simulation_cfg["death activation level"].template get<size_t>();
         }
-    
+
         using namespace std::chrono_literals;
 
         simulation.set_interval_between_snapshots(5min);
@@ -352,8 +352,8 @@ public:
         namespace po = boost::program_options;
 
         visible_options.at("options").add_options()
-            ("recover-simulation,r", 
-             po::value<std::string>(&snapshot_path)->default_value(""), 
+            ("recover-simulation,r",
+             po::value<std::string>(&snapshot_path)->default_value(""),
              "recover a simulation")
             ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
             ("log directory,o", po::value<std::filesystem::path>(&logging_dir),
@@ -364,15 +364,15 @@ public:
             ("quiet,q", "disable progress bar")
     #endif // WITH_INDICATORS
     #ifdef WITH_SDL2
-            ("plot,p", 
+            ("plot,p",
             "plot a graphical representation of the simulation")
-            ("frames-per-second,f", po::value<unsigned int>(&frames_per_second)->default_value(1), 
+            ("frames-per-second,f", po::value<unsigned int>(&frames_per_second)->default_value(1),
             "the number of frames per second")
     #endif
             ("help,h", "get the help");
 
         hidden_options.add_options()
-            ("simulation file", po::value<std::filesystem::path>(&simulation_filename), 
+            ("simulation file", po::value<std::filesystem::path>(&simulation_filename),
             "the name of the file describing the simulation")
             ("time horizon", po::value<long double>(&time_horizon),
             "the simulation time horizon");

@@ -52,7 +52,7 @@
         {
             "mutant": {
                 "name": "A",
-                "epigenetic status": "-"
+                "epistate": "-"
             },
             "position": [500, 500]
         }
