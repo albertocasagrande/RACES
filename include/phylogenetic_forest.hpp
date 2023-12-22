@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.5
- * @date 2023-12-20
+ * @version 0.6
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -91,10 +91,12 @@ public:
         }
     };
 private:
+    using CellIdSet = std::set<Mutants::CellId>;
+
     std::map<Mutants::CellId, CellGenomeMutations> leaves_mutations;    //!< The mutations of each cells represented as leaves in the forest
     std::map<Mutants::CellId, NovelMutations> novel_mutations;          //!< The mutations introduces by each cell in the forest
-    std::map<SNV, Mutants::CellId> SNV_first_cell;                      //!< A map associating each SNV to the first cell in which it occured
-    std::map<CopyNumberAlteration, Mutants::CellId> CNA_first_cell;     //!< A map associating each CNA to the first cell in which it occured
+    std::map<SNV, CellIdSet> SNV_first_cells;                           //!< A map associating each SNV to the first cells in which it occured
+    std::map<CopyNumberAlteration, CellIdSet> CNA_first_cells;          //!< A map associating each CNA to the first cells in which it occured
 
 public:
     /**
@@ -284,24 +286,25 @@ public:
 
     /**
      * @brief Get map associating each SNV to the first cell in which it occurs
-     * 
+     *
      * @return a constant reference to a map associating each SNV in the phylogenetic
      *         forest to the identifier of the first cell in which the SNV occured
      */
-    inline const std::map<SNV, Mutants::CellId>& get_SNV_first_cell() const
+    inline const std::map<SNV, std::set<Mutants::CellId>>& get_SNV_first_cells() const
     {
-        return SNV_first_cell;
+        return SNV_first_cells;
     }
 
     /**
      * @brief Get map associating each CNA to the first cell in which it occurs
-     * 
+     *
      * @return a constant reference to a map associating each CNA in the phylogenetic
      *         forest to the identifier of the first cell in which the CNA occured
      */
-    inline const std::map<CopyNumberAlteration, Mutants::CellId>& get_CNA_first_cell() const
+    inline const std::map<CopyNumberAlteration, std::set<Mutants::CellId>>&
+    get_CNA_first_cells() const
     {
-        return CNA_first_cell;
+        return CNA_first_cells;
     }
 
     std::list<SampleGenomeMutations> get_samples_mutations() const;
@@ -323,8 +326,8 @@ public:
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
                 & leaves_mutations
                 & novel_mutations
-                & SNV_first_cell
-                & CNA_first_cell;
+                & SNV_first_cells
+                & CNA_first_cells;
     }
 
     /**
@@ -342,8 +345,8 @@ public:
         archive & static_cast<Mutants::DescendantsForest&>(forest)
                 & forest.leaves_mutations
                 & forest.novel_mutations
-                & forest.SNV_first_cell
-                & forest.CNA_first_cell;
+                & forest.SNV_first_cells
+                & forest.CNA_first_cells;
 
         return forest;
     }

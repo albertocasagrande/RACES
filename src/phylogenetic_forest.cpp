@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.3
- * @date 2023-12-20
+ * @version 0.4
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -56,13 +56,13 @@ PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId
 void PhylogeneticForest::node::add_new_mutation(const SNV& snv)
 {
     get_forest().novel_mutations[cell_id].SNVs.insert(snv);
-    get_forest().SNV_first_cell[snv] = cell_id;
+    get_forest().SNV_first_cells[snv].insert(cell_id);
 }
 
 void PhylogeneticForest::node::add_new_mutation(const CopyNumberAlteration& cna)
 {
     get_forest().novel_mutations[cell_id].CNAs.insert(cna);
-    get_forest().CNA_first_cell[cna] = cell_id;
+    get_forest().CNA_first_cells[cna].insert(cell_id);
 }
 
 PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellId& cell_id) const
@@ -107,6 +107,25 @@ std::vector<PhylogeneticForest::node> PhylogeneticForest::get_roots()
     return nodes;
 }
 
+template<typename MUTATION>
+std::map<MUTATION, std::set<Mutants::CellId>>
+filter_by_cells_in(const std::map<MUTATION, std::set<Mutants::CellId>>& mutation_map,
+                   const Mutants::DescendantsForest& forest)
+{
+    std::map<MUTATION, std::set<Mutants::CellId>> filtered_map;
+
+    for (const auto& [mutation, cell_ids]: mutation_map) {
+        auto& in_forest = filtered_map[mutation];
+        for (const auto& cell_id : cell_ids) {
+            if (forest.get_cells().count(cell_id)>0) {
+                in_forest.insert(cell_id);
+            }
+        }
+    }
+
+    return filtered_map;
+}
+
 PhylogeneticForest
 PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_names) const
 {
@@ -121,17 +140,8 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
         }
     }
 
-    for (const auto& [snv, cell_id]: SNV_first_cell) {
-        if (forest.get_cells().count(cell_id)>0) {
-            forest.SNV_first_cell[snv] = cell_id;
-        }
-    }
-
-    for (const auto& [cna, cell_id]: CNA_first_cell) {
-        if (forest.get_cells().count(cell_id)>0) {
-            forest.CNA_first_cell[cna] = cell_id;
-        }
-    }
+    forest.SNV_first_cells = filter_by_cells_in(SNV_first_cells, forest);
+    forest.CNA_first_cells = filter_by_cells_in(CNA_first_cells, forest);
 
     return forest;
 }
@@ -171,8 +181,8 @@ void PhylogeneticForest::clear()
     DescendantsForest::clear();
     leaves_mutations.clear();
     novel_mutations.clear();
-    SNV_first_cell.clear();
-    CNA_first_cell.clear();
+    SNV_first_cells.clear();
+    CNA_first_cells.clear();
 }
 
 }   // Mutants
