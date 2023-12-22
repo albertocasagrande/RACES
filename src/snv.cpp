@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.10
- * @date 2023-12-20
+ * @version 0.11
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -42,31 +42,35 @@ namespace Mutations
 {
 
 SNV::SNV():
-    GenomicPosition(), context(), mutated_base('X')
+    GenomicPosition(), context(), mutated_base('X'), type(UNDEFINED)
 {}
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const MutationalContext& context, const char mutated_base):
-    SNV(chromosome_id, chromosomic_position, context, mutated_base, "")
+         const MutationalContext& context, const char mutated_base, const Type& type):
+    SNV(chromosome_id, chromosomic_position, context, mutated_base, "", type)
 {}
 
 SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
-         const char mutated_base):
-    SNV(position, context, mutated_base, "")
+         const char mutated_base, const Type& type):
+    SNV(position, context, mutated_base, "", type)
 {}
 
-SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const char mutated_base):
-    SNV(position, context, mutated_base, "")
+SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const char mutated_base,
+         const Type& type):
+    SNV(position, context, mutated_base, "", type)
 {}
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const MutationalContext& context, const char mutated_base, const std::string& cause):
-    SNV(GenomicPosition(chromosome_id, chromosomic_position), context, mutated_base, cause)
+         const MutationalContext& context, const char mutated_base, const std::string& cause,
+         const Type& type):
+    SNV(GenomicPosition(chromosome_id, chromosomic_position), context, mutated_base,
+        cause, type)
 {}
 
 SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
-         const char mutated_base, const std::string& cause):
-    GenomicPosition(position), context(context), mutated_base(mutated_base), cause(cause)
+         const char mutated_base, const std::string& cause, const Type& type):
+    GenomicPosition(position), context(context), mutated_base(mutated_base), cause(cause),
+    type(type)
 {
     if (!MutationalContext::is_a_base(mutated_base)) {
         std::ostringstream oss;
@@ -82,8 +86,8 @@ SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
 }
 
 SNV::SNV(GenomicPosition&& position, const MutationalContext& context, const char mutated_base,
-         const std::string& cause):
-    SNV(position, context, mutated_base, cause)
+         const std::string& cause, const Type& type):
+    SNV(position, context, mutated_base, cause, type)
 {}
 
 }   // Mutations
