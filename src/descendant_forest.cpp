@@ -2,8 +2,8 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 0.3
- * @date 2023-12-17
+ * @version 0.4
+ * @date 2023-12-22
  *
  * @copyright Copyright (c) 2023
  *
@@ -118,6 +118,19 @@ std::vector<DescendantsForest::node> DescendantsForest::get_roots()
     }
 
     return nodes;
+}
+
+std::string DescendantsForest::get_species_name(const SpeciesId& species_id) const
+{
+    const auto& species_it = species_data.find(species_id);
+    if (species_it == species_data.end()) {
+        throw std::runtime_error("Unknown species id "+std::to_string(species_id));
+    }
+
+    const auto& data = species_it->second;
+
+    return get_mutant_name(data.mutant_id) +
+                MutantProperties::signature_to_string(data.signature);
 }
 
 std::map<CellId, size_t>
