@@ -2,10 +2,10 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.37
- * @date 2023-12-22
+ * @version 0.38
+ * @date 2024-01-02
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -733,6 +733,11 @@ public:
         using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
 
+        if (!has_default_exposure()) {
+            throw std::runtime_error("The mutation engine default exposure "
+                                     "has not been set yet.");
+        }
+
         generator.seed(seed);
 
         PhylogeneticForest forest;
@@ -781,6 +786,16 @@ public:
                                               UI::ProgressBar &progress_bar, const int& seed=0)
     {
         return place_mutations(descendants_forest, &progress_bar, seed);
+    }
+
+    /**
+     * @brief Check whether a default exposure has been set
+     * 
+     * @return `true` if and only if a default exposure has been set
+     */
+    inline bool has_default_exposure() const
+    {
+        return timed_exposures.find(0.0) != timed_exposures.end();
     }
 
     /**
