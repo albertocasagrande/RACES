@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.9
+ * @version 0.10
  * @date 2024-01-05
  * 
  * @copyright Copyright (c) 2023-2024
@@ -65,6 +65,211 @@ namespace SequencingSimulations
 {
 
 /**
+ * @brief Simulated sequencing chromosome statistics 
+ */
+class ChromosomeStatistics
+{
+    ChromosomeId chr_id;            //!< The chromosome id
+    std::vector<uint16_t> coverage; //!< The chromosome base coverage
+
+    std::map<SNV, size_t> SNV_occurrences;       //!< The SNV occurrences in the simulated reads
+
+    /**
+     * @brief The empty constructor
+     */
+    ChromosomeStatistics();
+public:
+    /**
+     * @brief A constructor
+     * 
+     * @param chromosome_id is the identifier of the chromosome whose sequencing
+     *          statistics are collected
+     * @param size is the size of the chromosome whose sequencing
+     *          statistics are collected
+     */
+    ChromosomeStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
+
+    /**
+     * @brief Increase the coverage of a region
+     * 
+     * @param begin_pos is the initial position of the region whose coverage must be increase
+     * @param read_size is the size of the region whose coverage must be increase
+     */
+    void increase_coverage(const ChrPosition& begin_pos, const size_t& read_size);
+
+    /**
+     * @brief Increase the number of occurrences of an SNV
+     * 
+     * @param snv is the snv whose number of occurrences must be increased
+     */
+    void add_occurrence(const SNV& snv);
+
+    /**
+     * @brief Get the collected SNV occurrences
+     * 
+     * @return a constant reference to the collected SNV occurrences
+     */
+    inline const std::map<SNV, size_t>& get_SNV_occurrences() const
+    {
+        return SNV_occurrences;
+    }
+
+    /**
+     * @brief Get the identifier of the chromosome whose statistics refer to
+     * 
+     * @return a constant reference to the identifier of the chromosome whose
+     *          statistics refer to
+     */
+    inline const ChromosomeId& get_chr_id() const
+    {
+        return chr_id;
+    }
+
+    /**
+     * @brief Get the length of the chromosome whose statistics refer to
+     * 
+     * @return the size of the chromosome whose statistics refer to
+     */
+    inline size_t get_chr_length() const
+    {
+        return coverage.size();
+    }
+
+    /**
+     * @brief Get the collected occurrences of an SNV
+     * 
+     * @param snv is an SNV
+     * @return the number of occurrences of an SNV
+     */
+    size_t number_of_occurrences(const SNV& snv) const;
+
+    /**
+     * @brief Get the coverage in a genomic position
+     * 
+     * @param position is the genomic position whose coverage is aimed
+     * @return a constant reference to the coverage of the aimed position
+     */
+    inline const uint16_t& get_coverage(const GenomicPosition& position) const
+    {
+        return coverage[position.position];
+    }
+
+    /**
+     * @brief Join other chromosome statistics to the current one
+     * 
+     * This method updates the coverage of the current object by 
+     * adding the coverage of the parameter. Moreover, it adds to 
+     * the current object SNV occurrences the occurrences of the 
+     * parameter.
+     * 
+     * @param stats is the sequencing chromosome statistics to join
+     * @return a reference to the updated objects
+     */
+    ChromosomeStatistics& operator+=(ChromosomeStatistics&& stats);
+
+    /**
+     * @brief Join other chromosome statistics to the current one
+     * 
+     * This method updates the coverage of the current object by 
+     * adding the coverage of the parameter. Moreover, it adds to 
+     * the current object SNV occurrences the occurrences of the 
+     * parameter.
+     * 
+     * @param stats is the sequencing chromosome statistics to join
+     * @return a reference to the updated objects
+     */
+    ChromosomeStatistics& operator+=(const ChromosomeStatistics& stats);
+
+    /**
+     * @brief Save sequencing chromosome statistics in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & chr_id
+                & coverage
+                & SNV_occurrences;
+    }
+
+    /**
+     * @brief Load sequencing chromosome statistics from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the sequencing chromosome statistics
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static ChromosomeStatistics load(ARCHIVE& archive)
+    {
+        ChromosomeStatistics stats;
+
+        archive & stats.chr_id
+                & stats.coverage
+                & stats.SNV_occurrences;
+
+        return stats;
+    }
+};
+
+/**
+ * @brief Merge two statistics of the chromosome
+ * 
+ * @param a is a sequencing chromosome statistics
+ * @param b is a sequencing chromosome statistics
+ * @return a chromosome statistics that sums up the coverages and adds
+ *      the SNV occurrences
+ */
+ChromosomeStatistics operator+(const ChromosomeStatistics& a, const ChromosomeStatistics& b);
+
+/**
+ * @brief Merge two statistics of the chromosome
+ * 
+ * @param a is a sequencing chromosome statistics
+ * @param b is a sequencing chromosome statistics
+ * @return a chromosome statistics that sums up the coverages and adds
+ *      the SNV occurrences
+ */
+inline ChromosomeStatistics operator+(ChromosomeStatistics&& a, const ChromosomeStatistics& b)
+{
+    a += b;
+
+    return std::move(a);
+}
+
+/**
+ * @brief Merge two statistics of the chromosome
+ * 
+ * @param a is a sequencing chromosome statistics
+ * @param b is a sequencing chromosome statistics
+ * @return a chromosome statistics that sums up the coverages and adds
+ *      the SNV occurrences
+ */
+inline ChromosomeStatistics operator+(ChromosomeStatistics&& a, ChromosomeStatistics&& b)
+{
+    a += b;
+
+    return std::move(a);
+}
+
+/**
+ * @brief Merge two statistics of the chromosome
+ * 
+ * @param a is a sequencing chromosome statistics
+ * @param b is a sequencing chromosome statistics
+ * @return a chromosome statistics that sums up the coverages and adds
+ *      the SNV occurrences
+ */
+inline ChromosomeStatistics operator+(const ChromosomeStatistics& a, ChromosomeStatistics&& b)
+{
+    b += a;
+
+    return std::move(b);
+}
+
+/**
  * @brief Statistics about simulated sequencing on a set of tissue samples
  */
 struct Statistics
@@ -107,12 +312,12 @@ struct Statistics
         }
 
         /**
-         * @brief Find the coverage in a genomic positions
+         * @brief Find the coverage in a genomic position
          * 
          * @param position is the genomic position whose coverage is aimed
          * @return a constant reference to the coverage of the aimed position
          */
-        const uint16_t& find_coverage(const GenomicPosition& position) const;
+        const uint16_t& get_coverage(const GenomicPosition& position) const;
     };
 
 private:
