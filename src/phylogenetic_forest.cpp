@@ -2,10 +2,10 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.4
- * @date 2023-12-22
+ * @version 0.5
+ * @date 2024-01-05
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -163,7 +163,7 @@ std::list<SampleGenomeMutations> PhylogeneticForest::get_samples_mutations() con
     std::list<SampleGenomeMutations> sample_mutations;
     std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
     for (const auto& sample: get_samples()) {
-        sample_mutations.push_back(SampleGenomeMutations(sample));
+        sample_mutations.push_back(SampleGenomeMutations(sample.get_name()));
         sample_mutation_map.insert({sample.get_id(), &(sample_mutations.back())});
     }
 

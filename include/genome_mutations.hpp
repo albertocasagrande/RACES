@@ -2,10 +2,10 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.18
- * @date 2023-12-22
+ * @version 0.19
+ * @date 2024-01-05
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -605,16 +605,18 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
 /**
  * @brief A structure representing the genome mutations of a tissue sample
  */
-struct SampleGenomeMutations : public Mutants::Evolutions::TissueSample
+struct SampleGenomeMutations
 {
     std::list<CellGenomeMutations> mutations;   //!< The list of cell genome mutations
 
+    const std::string name;                     //!< The sample name
+
     /**
-     * @brief A constructor
+     * @brief The constructor
      *
-     * @param sample is the tissue sample whose cell mutations is represented
+     * @param name is the sample name
      */
-    SampleGenomeMutations(const Mutants::Evolutions::TissueSample& sample);
+    SampleGenomeMutations(const std::string& name);
 };
 
 }   // Mutations

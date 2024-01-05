@@ -2,10 +2,10 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.8
- * @date 2023-12-19
+ * @version 0.9
+ * @date 2024-01-05
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -249,10 +249,10 @@ class MutationsSimulator : public BasicExecutable
             auto found = meth_samples.find(cell_mutations.get_species_id());
 
             if (found == meth_samples.end()) {
-                auto new_name = sample_mutations.get_name()+"_"+
+                auto new_name = sample_mutations.name+"_"+
                                     methylation_map.at(cell_mutations.get_species_id());
 
-                FACS_samples.push_back(SampleGenomeMutations(sample_mutations));
+                FACS_samples.push_back(SampleGenomeMutations(new_name));
 
                 FACS_samples.back().mutations.push_back(cell_mutations);
 

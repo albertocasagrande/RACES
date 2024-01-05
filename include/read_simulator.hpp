@@ -2,10 +2,10 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.8
- * @date 2023-12-11
+ * @version 0.9
+ * @date 2024-01-05
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -228,7 +228,7 @@ private:
          * @param missing_templates is the number of templates to be placed
          */
         ReadSimulationData(const size_t& not_covered_allelic_size,
-                            const size_t& missing_templates):
+                           const size_t& missing_templates):
             not_covered_allelic_size(not_covered_allelic_size), 
             missing_templates(missing_templates)
         {}
@@ -275,7 +275,7 @@ private:
     static size_t get_overall_size(const std::list<SampleGenomeMutations>& mutations_list,
                                    UI::ProgressBar& progress_bar)
     {
-        progress_bar.set_message("Evaluating allelic size");
+        progress_bar.set_message("Evaluating sample overall genomic sizes");
         size_t overall_size{0};
         for (const auto& sample_mutations: mutations_list) {
             for (const auto& mutations: sample_mutations.mutations) {
@@ -285,36 +285,6 @@ private:
         }
 
         return overall_size;
-    }
-
-    /**
-     * @brief Get the overall allelic size for each element in a list of sample mutations
-     * 
-     * This method computes the sum of the allelic sizes of each sample genomic mutations 
-     * in a list of sample mutations.
-     * 
-     * @param mutations_list is a list of sample mutations
-     * @param progress_bar is a progress bar
-     * @return a map associating the sample id to the sum of all the allelic sizes in 
-     *      the sample mutations in `mutation_lists`
-     */
-    static std::map<Races::Mutants::Evolutions::TissueSampleId, size_t>
-    get_sample_allelic_sizes(const std::list<SampleGenomeMutations>& mutations_list,
-                             UI::ProgressBar& progress_bar)
-    {
-        progress_bar.set_message("Evaluating allelic sizes");
-
-        std::map<Races::Mutants::Evolutions::TissueSampleId, size_t> allelic_sizes;
-        for (const auto& sample_mutations: mutations_list) {
-            auto& sample_allelic_size = allelic_sizes[sample_mutations.get_id()];
-            sample_allelic_size = 0;
-            for (const auto& mutations: sample_mutations.mutations) {
-                sample_allelic_size += mutations.allelic_size();
-                progress_bar.update_elapsed_time();
-            }
-        }
-
-        return allelic_sizes;
     }
 
     /**
@@ -662,8 +632,8 @@ private:
      * @brief Generate the reads in an allelic fragment
      * 
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
-     * @param[in] fragment is the allele fragment for which reads must be generated 
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
+     * @param[in] fragment is the allele fragment for which reads must be generated
      * @param[in,out] sample_simulation_data are the read simulation data relative to the considered `sample`
      * @param[in] sample_name is the name of the considered tissue sample
      * @param[in,out] sample_statistics are the statistics of the tissue sample identified by `sample_name`
@@ -674,7 +644,8 @@ private:
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_fragment_reads(const AlleleFragment& fragment, const ChromosomeData<DATA_TYPE>& chr_data,
+    void generate_fragment_reads(const ChromosomeData<DATA_TYPE>& chr_data,
+                                 const AlleleFragment& fragment,
                                  ReadSimulationData& sample_simulation_data, const std::string& sample_name, 
                                  Statistics::SampleStatistics& sample_statistics,
                                  const size_t& total_steps, size_t& steps,
@@ -733,6 +704,7 @@ private:
         steps += fragment.size();
     }
 
+
     /**
      * @brief Generate simulated reads on a chromosome and write their SAM alignments
      * 
@@ -741,9 +713,9 @@ private:
      * and write the corresponding SAM alignments in a stream.
      * 
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
-     * @param[in] mutations_list is a list of sample mutations
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
-     * @param[in,out] read_simulation_data are the read simulation data
+     * @param[in] sample_genome_mutations is a sample genome mutations
+     * @param[in,out] sample_simulation_data is the read simulation data of the sample
      * @param[in] total_steps is the total number of steps required to complete the overall procedure
      * @param[in,out] steps is the number of performed steps
      * @param[in,out] progress_bar is the progress bar
@@ -751,10 +723,52 @@ private:
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_chromosome_reads(const std::list<SampleGenomeMutations>& mutations_list,
-                                   const ChromosomeData<DATA_TYPE>& chr_data, 
-                                   std::map<Races::Mutants::Evolutions::TissueSampleId,
-                                            ReadSimulationData>& read_simulation_data, 
+    void generate_chromosome_reads(const ChromosomeData<DATA_TYPE>& chr_data,
+                                   const SampleGenomeMutations& sample_genome_mutations,
+                                   ReadSimulationData& sample_simulation_data,
+                                   Statistics::SampleStatistics& sample_statistics,
+                                   const size_t& total_steps, size_t& steps, 
+                                   Races::UI::ProgressBar& progress_bar,
+                                   std::ostream* SAM_stream=nullptr)
+    {
+        for (const auto& cell_mutations: sample_genome_mutations.mutations) {
+            const auto& chr_mutations = cell_mutations.get_chromosome(chr_data.chr_id);
+
+            sample_statistics.add_chromosome(chr_data.chr_id, chr_mutations.size());
+
+            for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
+                for (const auto& [position, fragment] : allele.get_fragments()) {
+                    generate_fragment_reads(chr_data, fragment, sample_simulation_data,
+                                            sample_genome_mutations.name, sample_statistics,
+                                            total_steps, steps, progress_bar, SAM_stream);
+                }
+
+                progress_bar.set_progress(100*steps/total_steps);
+            }
+        }
+    }
+
+    /**
+     * @brief Generate simulated reads on a chromosome and write their SAM alignments
+     * 
+     * This method takes a list of genome mutations and a reference genome chromosome, it 
+     * generates simulated reads over it up to a specified coverage of the mutated genomes, 
+     * and write the corresponding SAM alignments in a stream.
+     * 
+     * @tparam DATA_TYPE is the type of information available about the considered chromosome
+     * @param[in] chr_data is the data about the chromosome from which the simulated read come from
+     * @param[in] mutations_list is a list of sample mutations
+     * @param[in,out] simulation_data is a list of simulated data corresponding to `mutations_list` elements
+     * @param[in] total_steps is the total number of steps required to complete the overall procedure
+     * @param[in,out] steps is the number of performed steps
+     * @param[in,out] progress_bar is the progress bar
+     * @param[in,out] SAM_stream is the SAM file output stream
+     */
+    template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
+             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
+    void generate_chromosome_reads(const ChromosomeData<DATA_TYPE>& chr_data,
+                                   const std::list<SampleGenomeMutations>& mutations_list,
+                                   std::list<ReadSimulationData>& simulation_data,
                                    const size_t& total_steps, size_t& steps, 
                                    Races::UI::ProgressBar& progress_bar,
                                    std::ostream* SAM_stream=nullptr)
@@ -763,27 +777,17 @@ private:
 
         Statistics statistics;
 
-        for (const auto& sample_mutations: mutations_list) {
-            const std::string& sample_name = sample_mutations.get_name();
+        auto mutations_it = mutations_list.begin();
+        auto simulation_data_it = simulation_data.begin();
+
+        for (; mutations_it != mutations_list.end(); ++mutations_it, ++simulation_data_it) {
+            const std::string& sample_name = mutations_it->name;
 
             auto& sample_statistics = statistics[sample_name];
-            auto& sample_simulation_data = read_simulation_data[sample_mutations.get_id()];
 
-            for (const auto& cell_mutations: sample_mutations.mutations) {
-                const auto& chr_mutations = cell_mutations.get_chromosome(chr_data.chr_id);
-
-                sample_statistics.add_chromosome(chr_data.chr_id, chr_mutations.size());
-
-                for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
-                    for (const auto& [position, fragment] : allele.get_fragments()) {
-                        generate_fragment_reads(fragment, chr_data, sample_simulation_data,
-                                                sample_name, sample_statistics, total_steps,
-                                                steps, progress_bar, SAM_stream);
-                    }
-
-                    progress_bar.set_progress(100*steps/total_steps);
-                }
-            }
+            generate_chromosome_reads(chr_data, *mutations_it, *simulation_data_it,
+                                      sample_statistics, total_steps, steps, 
+                                      progress_bar, SAM_stream);
         }
 
         progress_bar.set_message("Saving statistics");
@@ -835,7 +839,7 @@ private:
                 << "\tAN:chromosome" << chr_str << ",chr" << chr_str 
                 << ",chromosome_" << chr_str << ",chr_" << chr_str << std::endl;
         for (const auto& sample_mutations : mutations_list) {
-            SAM_stream << "@RG\tID:" << sample_mutations.get_name() << std::endl;
+            SAM_stream << "@RG\tID:" << sample_mutations.name << std::endl;
         }
 
         return SAM_stream;
@@ -846,17 +850,18 @@ private:
      * 
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
-     * @return the initial read simulation data for each sample
+     * @return the list of the initial sample read simulation data. The order 
+     *       of the returned list matches that of `mutations_list`
      */
-    std::map<Races::Mutants::Evolutions::TissueSampleId, ReadSimulationData>
+    std::list<ReadSimulationData>
     get_initial_read_simulation_data(const std::list<SampleGenomeMutations>& mutations_list,
                                      const double& coverage) const
     {
-        std::map<Races::Mutants::Evolutions::TissueSampleId, ReadSimulationData> read_simulation_data;
+        std::list<ReadSimulationData> read_simulation_data;
 
         size_t total_read_size = (read_type==ReadType::PAIRED_READ?2:1)*read_size;
         for (const auto& sample_mutations : mutations_list) {
-            auto& sample_data = read_simulation_data[sample_mutations.get_id()];
+            ReadSimulationData sample_data;
             if (sample_mutations.mutations.size()>0) {
                 sample_data.missing_templates = 
                                  static_cast<size_t>((sample_mutations.mutations.front().size()*
@@ -865,6 +870,8 @@ private:
             for (const auto& cell_mutations: sample_mutations.mutations) {
                 sample_data.not_covered_allelic_size += cell_mutations.allelic_size();
             }
+
+            read_simulation_data.push_back(std::move(sample_data));
         }
 
         return read_simulation_data;
@@ -911,7 +918,7 @@ private:
         size_t steps{0};
         const auto num_of_chr_in_a_genome = get_number_of_chromosomes_in_a_genome(mutations_list);
         size_t total_steps = 2*num_of_chr_in_a_genome*mutations_list.size();
-        for (const auto& [sample_id, sample_data]: read_simulation_data) {
+        for (const auto& sample_data: read_simulation_data) {
             total_steps += sample_data.not_covered_allelic_size;
         }
 
@@ -924,10 +931,10 @@ private:
             if (write_SAM) {
                 std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list);
 
-                generate_chromosome_reads(mutations_list, chr_data, read_simulation_data, 
+                generate_chromosome_reads(chr_data, mutations_list, read_simulation_data, 
                                           total_steps, steps, progress_bar, &SAM_stream);
             } else {
-                generate_chromosome_reads(mutations_list, chr_data, read_simulation_data,
+                generate_chromosome_reads(chr_data, mutations_list, read_simulation_data,
                                           total_steps, steps, progress_bar);
             }
         }
