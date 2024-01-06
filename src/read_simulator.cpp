@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.10
- * @date 2024-01-05
+ * @version 0.11
+ * @date 2024-01-06
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -42,15 +42,15 @@ namespace Mutations
 namespace SequencingSimulations
 {
 
-ChromosomeStatistics::ChromosomeStatistics()
+ChrSampleStatistics::ChrSampleStatistics()
 {}
 
-ChromosomeStatistics::ChromosomeStatistics(const ChromosomeId& chromosome_id,
-                                           const GenomicRegion::Length& size):
+ChrSampleStatistics::ChrSampleStatistics(const ChromosomeId& chromosome_id,
+                                         const GenomicRegion::Length& size):
     chr_id(chromosome_id), coverage(size)
 {}
 
-void ChromosomeStatistics::increase_coverage(const ChrPosition& begin_pos, const size_t& read_size)
+void ChrSampleStatistics::increase_coverage(const ChrPosition& begin_pos, const size_t& read_size)
 {
     if (begin_pos+read_size > coverage.size()) {
         using namespace Races::Mutants;
@@ -80,7 +80,21 @@ void check_in(const SNV& snv, const ChromosomeId& chr_id)
     }
 }
 
-void ChromosomeStatistics::add_occurrence(const SNV& snv)
+void check_in(const GenomicPosition& pos, const ChromosomeId& chr_id)
+{
+    if (pos.chr_id != chr_id) {
+        using namespace Races::Mutants;
+
+        std::ostringstream oss;
+
+        oss << pos << " does not belong to the chromosome " 
+            << GenomicPosition::chrtos(chr_id) << ".";
+
+        throw std::domain_error(oss.str());
+    }
+}
+
+void ChrSampleStatistics::add_occurrence(const SNV& snv)
 {
     check_in(snv, chr_id);
 
@@ -93,7 +107,14 @@ void ChromosomeStatistics::add_occurrence(const SNV& snv)
     }
 }
 
-size_t ChromosomeStatistics::number_of_occurrences(const SNV& snv) const
+const uint16_t& ChrSampleStatistics::get_coverage(const GenomicPosition& position) const
+{
+    check_in(position, chr_id);
+        
+    return coverage[position.position];
+}
+
+size_t ChrSampleStatistics::number_of_occurrences(const SNV& snv) const
 {
     check_in(snv, chr_id);
 
@@ -106,7 +127,7 @@ size_t ChromosomeStatistics::number_of_occurrences(const SNV& snv) const
     return 0;
 }
 
-void check_same_chr(const ChromosomeStatistics& a, const ChromosomeStatistics& b)
+void check_same_chr(const ChrSampleStatistics& a, const ChrSampleStatistics& b)
 {
     if (a.get_chr_id() != b.get_chr_id()) {
         using namespace Races::Mutants;
@@ -152,33 +173,33 @@ find_not_before(const SNV& snv, const std::map<SNV, size_t>& occurrences,
     return it;
 }
 
-ChromosomeStatistics& ChromosomeStatistics::operator+=(const ChromosomeStatistics& stats)
+ChrSampleStatistics& ChrSampleStatistics::operator+=(const ChrSampleStatistics& chr_stats)
 {
-    check_same_chr(*this, stats);
+    check_same_chr(*this, chr_stats);
 
-    update_coverage(coverage, stats.coverage);
+    update_coverage(coverage, chr_stats.coverage);
 
     auto snv_it = SNV_occurrences.begin();
-    auto stats_snv_it = stats.SNV_occurrences.begin();
+    auto chr_stats_snv_it = chr_stats.SNV_occurrences.begin();
 
     std::less<SNV> before;
-    while (stats_snv_it != stats.SNV_occurrences.end()) {
+    while (chr_stats_snv_it != chr_stats.SNV_occurrences.end()) {
 
-        // find occurrence of stats_snv_it->first in SNV_occurrences
-        snv_it = find_not_before(stats_snv_it->first, SNV_occurrences, snv_it);
+        // find occurrence of chr_stats_snv_it->first in SNV_occurrences
+        snv_it = find_not_before(chr_stats_snv_it->first, SNV_occurrences, snv_it);
 
         if (snv_it != SNV_occurrences.end()) {
-            // found an SNV not laying before stats_snv_it->first
+            // found an SNV not laying before chr_stats_snv_it->first
 
-            if (!before(stats_snv_it->first, snv_it->first)) {
-                // if the found SNV does not lay after stats_snv_it->first,
+            if (!before(chr_stats_snv_it->first, snv_it->first)) {
+                // if the found SNV does not lay after chr_stats_snv_it->first,
                 // then it is in the same SNV
 
-                snv_it->second += stats_snv_it->second;
+                snv_it->second += chr_stats_snv_it->second;
             }
         } else {
-            for (; stats_snv_it != stats.SNV_occurrences.end(); ++stats_snv_it) {
-                SNV_occurrences.insert(*stats_snv_it);
+            for (; chr_stats_snv_it != chr_stats.SNV_occurrences.end(); ++chr_stats_snv_it) {
+                SNV_occurrences.insert(*chr_stats_snv_it);
             }
         }
     }
@@ -186,102 +207,101 @@ ChromosomeStatistics& ChromosomeStatistics::operator+=(const ChromosomeStatistic
     return *this;
 }
 
-ChromosomeStatistics& ChromosomeStatistics::operator+=(ChromosomeStatistics&& stats)
+ChrSampleStatistics& ChrSampleStatistics::operator+=(ChrSampleStatistics&& chr_stats)
 {
-    return this->operator+=(stats);
+    return this->operator+=(chr_stats);
 }
 
-ChromosomeStatistics operator+(const ChromosomeStatistics& a, const ChromosomeStatistics& b)
+ChrSampleStatistics operator+(const ChrSampleStatistics& a, const ChrSampleStatistics& b)
 {
-    ChromosomeStatistics result(a);
+    ChrSampleStatistics result(a);
 
     result += b;
 
     return result;
 }
 
-void Statistics::SampleStatistics::increase_coverage(const ChromosomeId& chromosome_id, const ChrPosition& begin_pos, const size_t& read_size)
+ChrSampleStatistics& SampleStatistics::operator[](const ChromosomeId& chr_id)
 {
-    auto& chr_cov = coverage[chromosome_id];
+    auto found = chr_stats.find(chr_id);
 
-    if (begin_pos+read_size > chr_cov.size()) {
+    if (found == chr_stats.end()) {
         using namespace Races::Mutants;
 
-        throw std::runtime_error("The chromosome "+GenomicPosition::chrtos(chromosome_id)
-                                 + " has length "
-                                 + std::to_string(chr_cov.size()) 
-                                 + ". Coverage cannot be incresed up to position "
-                                 + std::to_string(begin_pos) + "+"
-                                 + std::to_string(read_size) + " as requested.");
+        throw std::runtime_error("Statistics does not include chromosome " 
+                                 + GenomicPosition::chrtos(chr_id) + ".");
     }
-
-    for (auto base=chr_cov.begin()+begin_pos;base != chr_cov.begin()+begin_pos+read_size; ++base) {
-        ++(*base);
-    }
+    return found->second;
 }
 
-void Statistics::SampleStatistics::increase_SNV_occurrences(const SNV& snv)
+const ChrSampleStatistics& SampleStatistics::operator[](const ChromosomeId& chr_id) const
 {
-    auto SNV_occ_it = SNV_occurrences.find(snv);
+    auto found = chr_stats.find(chr_id);
 
-    if (SNV_occ_it == SNV_occurrences.end()) {
-        SNV_occurrences.insert({snv, 1});
+    if (found == chr_stats.end()) {
+        using namespace Races::Mutants;
 
-        return;
+        throw std::runtime_error("Statistics does not include chromosome " 
+                                 + GenomicPosition::chrtos(chr_id) + ".");
     }
-
-    ++(SNV_occ_it->second);
+    return found->second;
 }
 
-Statistics::SampleStatistics Statistics::get_total() const
+void SampleStatistics::increase_coverage(const ChromosomeId& chromosome_id, const ChrPosition& begin_pos, 
+                                         const size_t& read_size)
 {
-    Statistics::SampleStatistics total;
+    this->operator[](chromosome_id).increase_coverage(begin_pos, read_size);
+}
+
+void SampleStatistics::add_occurrence(const SNV& snv)
+{
+    this->operator[](snv.chr_id).add_occurrence(snv);
+}
+
+SampleStatistics Statistics::get_total() const
+{
+    SampleStatistics total;
+
+    auto sample_stats_it = sample_statistics.begin();
+    for (const auto& [chr_id, chr_stats]: sample_stats_it->second.get_chr_statistics()) {
+        total.add_chromosome(chr_id, chr_stats.get_chr_length());
+    }    
 
     for (const auto& [sample_name, statistics]: sample_statistics) {
-        for (const auto& [chr_id, coverage]: statistics.coverage) {
-            total.add_chromosome(chr_id, coverage.size());
-        }
-
-        for (const auto& [snv, occurrences]: statistics.SNV_occurrences) {
-            auto SNV_occ_it = total.SNV_occurrences.find(snv);
-            if (SNV_occ_it == total.SNV_occurrences.end()) {
-                total.SNV_occurrences.insert({snv, occurrences});
-            } else {
-                SNV_occ_it->second += occurrences;
-            }
-        }
-    }
-
-    for (const auto& [snv, occurrences]: total.SNV_occurrences) {
-        for (const auto& [sample_name, statistics]: sample_statistics) {
-            auto& total_chr_coverage = total.coverage.at(snv.chr_id);
-            const auto& sample_chr_coverage = statistics.coverage.at(snv.chr_id);
-
-            total_chr_coverage[snv.position] += sample_chr_coverage[snv.position];
+        for (const auto& [chr_id, chr_stats]: statistics.get_chr_statistics()) {
+            total[chr_id] += chr_stats;
         }
     }
 
     return total;
 }
 
-const uint16_t& Statistics::SampleStatistics::get_coverage(const GenomicPosition& position) const
+size_t SampleStatistics::number_of_occurrences(const SNV& snv) const
 {
-    auto it = coverage.find(position.chr_id);
-    if (it == coverage.end()) {
-        throw std::runtime_error("Unknown chromosome "+std::to_string(position.chr_id));
+    auto it = chr_stats.find(snv.chr_id);
+    if (it == chr_stats.end()) {
+        throw std::runtime_error("Unknown chromosome "+std::to_string(snv.chr_id));
     }
-    return it->second[position.position];
+    return it->second.number_of_occurrences(snv);
 }
 
-void print_sample_data_about(std::ofstream& os, const Statistics::SampleStatistics& statistics, 
+const uint16_t& SampleStatistics::get_coverage(const GenomicPosition& position) const
+{
+    auto it = chr_stats.find(position.chr_id);
+    if (it == chr_stats.end()) {
+        throw std::runtime_error("Unknown chromosome "+std::to_string(position.chr_id));
+    }
+    return it->second.get_coverage(position);
+}
+
+void print_sample_data_about(std::ofstream& os, const SampleStatistics& statistics, 
                              const SNV& snv, const char separator='\t')
 {
     const auto& coverage = statistics.get_coverage(snv);
 
-    auto found = statistics.SNV_occurrences.find(snv);
-    if (found != statistics.SNV_occurrences.end()) {
-        const auto& occurrences = found->second;
+    auto occurrences = statistics.number_of_occurrences(snv);
 
+    if (occurrences!=0) {
         os << separator << occurrences
            << separator << coverage 
            << separator << (static_cast<double>(occurrences)/coverage);
@@ -300,7 +320,7 @@ void Statistics::save_VAF_csv(const std::filesystem::path& filename) const
         << "ref" << separator << "alt" << separator
         << "type" << separator << "context" << separator << "cause";
     
-    Statistics::SampleStatistics total = get_total();
+    SampleStatistics total = get_total();
     if (sample_statistics.size()>1) {
         for (const auto& [sample_name, statistics]: sample_statistics) {
             os << separator << sample_name << " occurrences"
@@ -316,22 +336,24 @@ void Statistics::save_VAF_csv(const std::filesystem::path& filename) const
            << separator << "VAF" << std::endl;
     }
 
-    for (const auto& [snv, total_occurrences]: total.SNV_occurrences) {
-        os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position 
-           << separator << snv.position 
-           << separator << snv.context.get_central_nucleotide()
-           << separator << snv.mutated_base << separator << "SNV" 
-           << separator << snv.context << separator << snv.cause;
+    for (const auto& [chr_id, chr_stats]: total.get_chr_statistics()) {
+        for (const auto& [snv, snv_occurrences]: chr_stats.get_SNV_occurrences()) {
+            os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position 
+            << separator << snv.position 
+            << separator << snv.context.get_central_nucleotide()
+            << separator << snv.mutated_base << separator << "SNV" 
+            << separator << snv.context << separator << snv.cause;
 
-        for (const auto& [sample_name, statistics]: sample_statistics) {
-            print_sample_data_about(os, statistics, snv, separator);
+            for (const auto& [sample_name, statistics]: sample_statistics) {
+                print_sample_data_about(os, statistics, snv, separator);
+            }
+
+            if (sample_statistics.size()>1) {
+                print_sample_data_about(os, total, snv, separator);
+            }
+
+            os << std::endl;
         }
-
-        if (sample_statistics.size()>1) {
-            print_sample_data_about(os, total, snv, separator);
-        }
-
-        os << std::endl;
     }
 }
 
@@ -373,7 +395,7 @@ void Statistics::save_coverage_images(const std::filesystem::path& filename, con
     f->size(1500, 1500);
 
     if (num_of_plots==1) {
-        const auto& coverage = (sample_statistics.begin()->second).coverage.find(chromosome_id)->second;
+        const auto& coverage = (sample_statistics.begin()->second)[chromosome_id].get_coverage();
         
         std::vector<std::vector<double>> d_coverage = {down_sample_coverage(coverage, new_size)};
 
@@ -394,7 +416,7 @@ void Statistics::save_coverage_images(const std::filesystem::path& filename, con
         for (const auto& [sample_name, statistics]: sample_statistics) {
             nexttile();
 
-            const auto& coverage = statistics.coverage.find(chromosome_id)->second;
+            const auto& coverage = statistics[chromosome_id].get_coverage();
 
             chr_size = coverage.size();
             
@@ -443,42 +465,39 @@ std::map<SNV, std::pair<double, size_t>> get_total_occurrences(const Statistics&
     std::map<SNV, std::pair<double, size_t>> total_occurrences;
 
     for (const auto& [sample_name, g_statistics]: statistics.sample_statistics) {
-        const auto& coverage = g_statistics.coverage.find(chromosome_id)->second;
+        const auto& chr_stats = g_statistics[chromosome_id];
+        const auto& coverage = chr_stats.get_coverage();
         
-        for (const auto& [snv, occurrences]: g_statistics.SNV_occurrences) {
-            if (snv.chr_id == chromosome_id) {
-                auto total_it = total_occurrences.find(snv);
-                if (total_it == total_occurrences.end()) {
-                    total_occurrences[snv] = {occurrences, coverage[snv.position]};
-                } else {
-                    total_it->second.first += occurrences;
-                    total_it->second.second += coverage[snv.position];
-                };
-            }
+        for (const auto& [snv, occurrences]: chr_stats.get_SNV_occurrences()) {
+            auto total_it = total_occurrences.find(snv);
+            if (total_it == total_occurrences.end()) {
+                total_occurrences[snv] = {occurrences, coverage[snv.position]};
+            } else {
+                total_it->second.first += occurrences;
+                total_it->second.second += coverage[snv.position];
+            };
         }
     }
 
     return total_occurrences;
 }
 
-std::vector<double> get_VAF_data(const Statistics::SampleStatistics& sample_statistics, 
+std::vector<double> get_VAF_data(const SampleStatistics& sample_statistics, 
                                  const ChromosomeId& chromosome_id, const double& threshold=0.0)
 {
     std::vector<double> VAF;
 
-    const auto found = sample_statistics.coverage.find(chromosome_id);
-    if (found == sample_statistics.coverage.end()) {
+    const auto found = sample_statistics.get_chr_statistics().find(chromosome_id);
+    if (found == sample_statistics.get_chr_statistics().end()) {
         return VAF;
     }
 
-    const auto& coverage = found->second;
-    for (const auto& [snv, occurrences]: sample_statistics.SNV_occurrences) {
-        if (snv.chr_id == chromosome_id) {
-            auto value = static_cast<double>(occurrences)/coverage[snv.position];
+    const auto& coverage = found->second.get_coverage();
+    for (const auto& [snv, occurrences]: found->second.get_SNV_occurrences()) {
+        auto value = static_cast<double>(occurrences)/coverage[snv.position];
 
-            if (value > threshold) {
-                VAF.push_back(value);
-            }
+        if (value > threshold) {
+            VAF.push_back(value);
         }
     }
 
@@ -522,7 +541,7 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
         nexttile();
 
-        Statistics::SampleStatistics total = get_total();
+        SampleStatistics total = get_total();
 
         std::vector<double> VAF = get_VAF_data(total, chromosome_id, 0.15);
 
@@ -531,7 +550,6 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
         xlabel("VAF");
         ylabel("Num. of SNVs");
-
     }
 
     sgtitle("Chromosome "+GenomicPosition::chrtos(chromosome_id)+"'s SNV VAF");

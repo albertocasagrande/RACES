@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.10
- * @date 2024-01-05
+ * @version 0.11
+ * @date 2024-01-06
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -67,7 +67,7 @@ namespace SequencingSimulations
 /**
  * @brief Simulated sequencing chromosome statistics 
  */
-class ChromosomeStatistics
+class ChrSampleStatistics
 {
     ChromosomeId chr_id;            //!< The chromosome id
     std::vector<uint16_t> coverage; //!< The chromosome base coverage
@@ -77,7 +77,7 @@ class ChromosomeStatistics
     /**
      * @brief The empty constructor
      */
-    ChromosomeStatistics();
+    ChrSampleStatistics();
 public:
     /**
      * @brief A constructor
@@ -87,7 +87,7 @@ public:
      * @param size is the size of the chromosome whose sequencing
      *          statistics are collected
      */
-    ChromosomeStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
+    ChrSampleStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
 
     /**
      * @brief Increase the coverage of a region
@@ -98,7 +98,7 @@ public:
     void increase_coverage(const ChrPosition& begin_pos, const size_t& read_size);
 
     /**
-     * @brief Increase the number of occurrences of an SNV
+     * @brief Increase the number of occurrences of an SNV by one
      * 
      * @param snv is the snv whose number of occurrences must be increased
      */
@@ -149,9 +149,16 @@ public:
      * @param position is the genomic position whose coverage is aimed
      * @return a constant reference to the coverage of the aimed position
      */
-    inline const uint16_t& get_coverage(const GenomicPosition& position) const
+    const uint16_t& get_coverage(const GenomicPosition& position) const;
+
+    /**
+     * @brief Get the chromosome coverage
+     * 
+     * @return a constant reference to the chromosome coverage
+     */
+    inline const std::vector<uint16_t>& get_coverage() const
     {
-        return coverage[position.position];
+        return coverage;
     }
 
     /**
@@ -162,10 +169,10 @@ public:
      * the current object SNV occurrences the occurrences of the 
      * parameter.
      * 
-     * @param stats is the sequencing chromosome statistics to join
+     * @param chr_stats is the sequencing chromosome statistics to join
      * @return a reference to the updated objects
      */
-    ChromosomeStatistics& operator+=(ChromosomeStatistics&& stats);
+    ChrSampleStatistics& operator+=(ChrSampleStatistics&& chr_stats);
 
     /**
      * @brief Join other chromosome statistics to the current one
@@ -175,10 +182,10 @@ public:
      * the current object SNV occurrences the occurrences of the 
      * parameter.
      * 
-     * @param stats is the sequencing chromosome statistics to join
+     * @param chr_stats is the sequencing chromosome statistics to join
      * @return a reference to the updated objects
      */
-    ChromosomeStatistics& operator+=(const ChromosomeStatistics& stats);
+    ChrSampleStatistics& operator+=(const ChrSampleStatistics& chr_stats);
 
     /**
      * @brief Save sequencing chromosome statistics in an archive
@@ -202,15 +209,15 @@ public:
      * @return the sequencing chromosome statistics
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    inline static ChromosomeStatistics load(ARCHIVE& archive)
+    inline static ChrSampleStatistics load(ARCHIVE& archive)
     {
-        ChromosomeStatistics stats;
+        ChrSampleStatistics chr_stats;
 
-        archive & stats.chr_id
-                & stats.coverage
-                & stats.SNV_occurrences;
+        archive & chr_stats.chr_id
+                & chr_stats.coverage
+                & chr_stats.SNV_occurrences;
 
-        return stats;
+        return chr_stats;
     }
 };
 
@@ -222,7 +229,7 @@ public:
  * @return a chromosome statistics that sums up the coverages and adds
  *      the SNV occurrences
  */
-ChromosomeStatistics operator+(const ChromosomeStatistics& a, const ChromosomeStatistics& b);
+ChrSampleStatistics operator+(const ChrSampleStatistics& a, const ChrSampleStatistics& b);
 
 /**
  * @brief Merge two statistics of the chromosome
@@ -232,7 +239,7 @@ ChromosomeStatistics operator+(const ChromosomeStatistics& a, const ChromosomeSt
  * @return a chromosome statistics that sums up the coverages and adds
  *      the SNV occurrences
  */
-inline ChromosomeStatistics operator+(ChromosomeStatistics&& a, const ChromosomeStatistics& b)
+inline ChrSampleStatistics operator+(ChrSampleStatistics&& a, const ChrSampleStatistics& b)
 {
     a += b;
 
@@ -247,7 +254,7 @@ inline ChromosomeStatistics operator+(ChromosomeStatistics&& a, const Chromosome
  * @return a chromosome statistics that sums up the coverages and adds
  *      the SNV occurrences
  */
-inline ChromosomeStatistics operator+(ChromosomeStatistics&& a, ChromosomeStatistics&& b)
+inline ChrSampleStatistics operator+(ChrSampleStatistics&& a, ChrSampleStatistics&& b)
 {
     a += b;
 
@@ -262,7 +269,7 @@ inline ChromosomeStatistics operator+(ChromosomeStatistics&& a, ChromosomeStatis
  * @return a chromosome statistics that sums up the coverages and adds
  *      the SNV occurrences
  */
-inline ChromosomeStatistics operator+(const ChromosomeStatistics& a, ChromosomeStatistics&& b)
+inline ChrSampleStatistics operator+(const ChrSampleStatistics& a, ChrSampleStatistics&& b)
 {
     b += a;
 
@@ -270,57 +277,94 @@ inline ChromosomeStatistics operator+(const ChromosomeStatistics& a, ChromosomeS
 }
 
 /**
+ * @brief Statistics about simulated sequencing of a tissue sample
+ */
+class SampleStatistics
+{
+    std::map<ChromosomeId, ChrSampleStatistics> chr_stats;  //!< The chromosome statistics
+
+public:
+
+    /**
+     * @brief Increase the coverage of a region
+     * 
+     * @param chromosome_id is the id of the chromosome containing the region whose coverage must be increase
+     * @param begin_pos is the initial position of the region whose coverage must be increase
+     * @param read_size is the size of the region whose coverage must be increase
+     */
+    void increase_coverage(const ChromosomeId& chromosome_id, const ChrPosition& begin_pos,
+                           const size_t& read_size);
+
+    /**
+     * @brief Increase the number of occurrences of an SNV by one
+     * 
+     * @param snv is the snv whose number of occurrences must be increased
+     */
+    void add_occurrence(const SNV& snv);
+
+    /**
+     * @brief Add a chromosome to the statistics
+     * 
+     * @param chromosome_id is the id of the chromosome to be added
+     * @param size is the size of the chromosome
+     */
+    inline void add_chromosome(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size)
+    {
+        if (chr_stats.find(chromosome_id) == chr_stats.end()) {
+            chr_stats.insert({chromosome_id, {chromosome_id, size}});
+        }
+    }
+
+    /**
+     * @brief Get the collected occurrences of an SNV
+     * 
+     * @param snv is an SNV
+     * @return the number of occurrences of an SNV
+     */
+    size_t number_of_occurrences(const SNV& snv) const;
+
+    /**
+     * @brief Find the coverage in a genomic position
+     * 
+     * @param position is the genomic position whose coverage is aimed
+     * @return a constant reference to the coverage of the aimed position
+     */
+    const uint16_t& get_coverage(const GenomicPosition& position) const;
+
+    /**
+     * @brief Find the statistics of a chromosome by id
+     * 
+     * @param chr_id is the id of the chromosome whose sequencing statistics is aimed
+     * @return a reference to the sequencing statistics of the chromosome
+     *          whose id is `chr_id`
+     */
+    ChrSampleStatistics& operator[](const ChromosomeId& chr_id);
+
+    /**
+     * @brief Find the statistics of a chromosome by id
+     * 
+     * @param chr_id is the id of the chromosome whose sequencing statistics is aimed
+     * @return a constant reference to the sequencing statistics of the chromosome
+     *          whose id is `chr_id`
+     */
+    const ChrSampleStatistics& operator[](const ChromosomeId& chr_id) const;
+
+    /**
+     * @brief Get the chromosome statistics
+     * 
+     * @return a constant reference to the chromosome statistics
+     */
+    inline const std::map<ChromosomeId, ChrSampleStatistics>& get_chr_statistics() const
+    {
+        return chr_stats;
+    }
+};
+
+/**
  * @brief Statistics about simulated sequencing on a set of tissue samples
  */
-struct Statistics
+class Statistics
 {
-    /**
-     * @brief Statistics about simulated sequencing on a tissue sample
-     */
-    struct SampleStatistics
-    {
-        std::map<ChromosomeId, std::vector<uint16_t>> coverage;  //!< The coverage profile
-        std::map<SNV, size_t> SNV_occurrences;       //!< The SNV occurrences in the simulated reads
-
-        /**
-         * @brief Increase the coverage of a region
-         * 
-         * @param chromosome_id is the id of the chromosome containing the region whose coverage must be increase
-         * @param begin_pos is the initial position of the region whose coverage must be increase
-         * @param read_size is the size of the region whose coverage must be increase
-         */
-        void increase_coverage(const ChromosomeId& chromosome_id, const ChrPosition& begin_pos, const size_t& read_size);
-
-        /**
-         * @brief Increase the number of occurrences of an SNV
-         * 
-         * @param snv is the snv whose number of occurrences must be increased
-         */
-        void increase_SNV_occurrences(const SNV& snv);
-
-        /**
-         * @brief Add a chromosome to the statistics
-         * 
-         * @param chromosome_id is the id of the chromosome to be added
-         * @param size is the size of the chromosome
-         */
-        inline void add_chromosome(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size)
-        {
-            if (coverage.find(chromosome_id) == coverage.end()) {
-                coverage.insert({chromosome_id, std::vector<uint16_t>(size,0)});
-            }
-        }
-
-        /**
-         * @brief Find the coverage in a genomic position
-         * 
-         * @param position is the genomic position whose coverage is aimed
-         * @return a constant reference to the coverage of the aimed position
-         */
-        const uint16_t& get_coverage(const GenomicPosition& position) const;
-    };
-
-private:
     /**
      * @brief Summarize the statistics of the sample
      * 
@@ -745,7 +789,7 @@ private:
     void collect_template_statistics(const ChromosomeData<DATA_TYPE>& chr_data,
                                      const std::map<GenomicPosition, SNV>& SNVs,
                                      const ChrPosition& template_first_position,
-                                     const size_t& template_size, Statistics::SampleStatistics& sample_statistics)
+                                     const size_t& template_size, SampleStatistics& sample_statistics)
     {
         const auto template_read_data = get_template_read_data(template_first_position, template_size);
         for (const auto& [flags, read_first_position] : template_read_data) {
@@ -755,7 +799,7 @@ private:
             const GenomicPosition genomic_position{chr_data.chr_id, read_first_position};
             for (auto snv_it = SNVs.lower_bound(genomic_position);
                     snv_it != SNVs.end() && snv_it->second.position<read_first_position+read_size; ++snv_it) {
-                sample_statistics.increase_SNV_occurrences(snv_it->second);
+                sample_statistics.add_occurrence(snv_it->second);
             }
         }
     }
@@ -852,7 +896,7 @@ private:
     void generate_fragment_reads(const ChromosomeData<DATA_TYPE>& chr_data,
                                  const AlleleFragment& fragment,
                                  ReadSimulationData& sample_simulation_data, const std::string& sample_name, 
-                                 Statistics::SampleStatistics& sample_statistics,
+                                 SampleStatistics& sample_statistics,
                                  const size_t& total_steps, size_t& steps,
                                  Races::UI::ProgressBar& progress_bar, std::ostream* SAM_stream)
     {
@@ -931,7 +975,7 @@ private:
     void generate_chromosome_reads(const ChromosomeData<DATA_TYPE>& chr_data,
                                    const SampleGenomeMutations& sample_genome_mutations,
                                    ReadSimulationData& sample_simulation_data,
-                                   Statistics::SampleStatistics& sample_statistics,
+                                   SampleStatistics& sample_statistics,
                                    const size_t& total_steps, size_t& steps, 
                                    Races::UI::ProgressBar& progress_bar,
                                    std::ostream* SAM_stream=nullptr)
