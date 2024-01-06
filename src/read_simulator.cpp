@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.11
+ * @version 0.12
  * @date 2024-01-06
  * 
  * @copyright Copyright (c) 2023-2024
@@ -197,6 +197,7 @@ ChrSampleStatistics& ChrSampleStatistics::operator+=(const ChrSampleStatistics& 
 
                 snv_it->second += chr_stats_snv_it->second;
             }
+            ++chr_stats_snv_it;
         } else {
             for (; chr_stats_snv_it != chr_stats.SNV_occurrences.end(); ++chr_stats_snv_it) {
                 SNV_occurrences.insert(*chr_stats_snv_it);
