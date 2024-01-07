@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.12
- * @date 2024-01-06
+ * @version 0.13
+ * @date 2024-01-07
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -519,7 +519,9 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
         const auto& statistics = (sample_statistics.begin()->second);
         std::vector<double> VAF = get_VAF_data(statistics, chromosome_id, 0.15);
 
-        hist(VAF,num_of_bins);
+        if (VAF.size()>0) {
+            hist(VAF,num_of_bins);
+        }
 
         xlabel("VAF");
         ylabel("Num. of SNVs");
@@ -532,8 +534,10 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
             std::vector<double> VAF = get_VAF_data(statistics, chromosome_id, 0.15);
 
-            hist(VAF,num_of_bins);
-
+            if (VAF.size()>0) {
+                hist(VAF,num_of_bins);
+            }
+            
             const auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
             title("Sample \""+latex_name+"\"");
 
@@ -546,7 +550,9 @@ void Statistics::save_SNV_histogram(const std::filesystem::path& filename, const
 
         std::vector<double> VAF = get_VAF_data(total, chromosome_id, 0.15);
 
-        hist(VAF,num_of_bins);
+        if (VAF.size()>0) {
+            hist(VAF,num_of_bins);
+        }
         title("Overall");
 
         xlabel("VAF");
