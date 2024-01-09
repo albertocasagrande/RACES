@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.9
- * @date 2024-01-05
+ * @version 0.10
+ * @date 2024-01-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -304,6 +304,24 @@ class MutationsSimulator : public BasicExecutable
         return Races::ConfigReader::get_number_of_alleles(simulation_cfg, chromosome_ids);
     }
 
+    static void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::Statistics& statistics)
+    {
+        Races::UI::ProgressBar progress_bar;
+        
+        progress_bar.set_message("Saving statistics");
+
+        statistics.save_VAF_CSVs();
+        progress_bar.set_progress(33);
+#if WITH_MATPLOT
+        progress_bar.set_message("Generating images");
+        statistics.save_coverage_images();
+        progress_bar.set_progress(66);
+        progress_bar.update_elapsed_time();
+        statistics.save_SNV_histograms();
+        progress_bar.set_progress(100, "Images generated");
+#endif // WITH_MATPLOT
+    }
+
     template<typename GENOME_WIDE_POSITION>
     void run_abs_position() const
     {
@@ -385,7 +403,9 @@ class MutationsSimulator : public BasicExecutable
         if (coverage>0) {
             read_simulator.enable_SAM_writing(write_SAM);
 
-            read_simulator(mutations_list, coverage);
+            const auto statistics = read_simulator(mutations_list, coverage);
+
+            saving_statistics_data_and_images(statistics);
         }
 
         process_statistics(mutations_list);
