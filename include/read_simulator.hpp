@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.13
- * @date 2024-01-08
+ * @version 0.14
+ * @date 2024-01-09
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -64,15 +64,153 @@ namespace Mutations
 namespace SequencingSimulations
 {
 
+using BaseCoverage = uint16_t;
+
 /**
  * @brief Simulated sequencing chromosome statistics 
  */
-class ChrSampleStatistics
+class ChrCoverage
 {
-    ChromosomeId chr_id;            //!< The chromosome id
-    std::vector<uint16_t> coverage; //!< The chromosome base coverage
+    ChromosomeId chr_id;                //!< The chromosome id
+    std::vector<BaseCoverage> coverage; //!< The chromosome base coverage
+public:
 
-    std::map<SNV, size_t> SNV_occurrences;       //!< The SNV occurrences in the simulated reads
+    /**
+     * @brief The empty constructor
+     */
+    ChrCoverage();
+
+    /**
+     * @brief A constructor
+     * 
+     * @param chromosome_id is the identifier of the chromosome whose coverage refer to
+     * @param size is the size of the chromosome whose coverage refer to
+     */
+    ChrCoverage(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
+
+    /**
+     * @brief Increase the coverage of a region
+     * 
+     * @param begin_pos is the initial position of the region whose coverage must be increase
+     * @param read_size is the size of the region whose coverage must be increase
+     */
+    void increase_coverage(const ChrPosition& begin_pos, const size_t& read_size);
+
+    /**
+     * @brief Get the identifier of the chromosome whose coverage refer to
+     * 
+     * @return a constant reference to the identifier of the chromosome whose
+     *          coverage refer to
+     */
+    inline const ChromosomeId& get_chr_id() const
+    {
+        return chr_id;
+    }
+
+    /**
+     * @brief Get the length of the chromosome whose coverage refer to
+     * 
+     * @return the size of the chromosome whose coverage refer to
+     */
+    inline size_t size() const
+    {
+        return coverage.size();
+    }
+
+    /**
+     * @brief Check whether the chromosome coverage is initialized
+     * 
+     * @return `true` if and only if this object was created by using 
+     *      a non-empty constructor or was copied by an initialized
+     *      object
+     */
+    inline bool is_initialized() const
+    {
+        return coverage.size()!=0;
+    }
+
+    /**
+     * @brief Get the coverage of a genomic position
+     * 
+     * @param position is the genomic position whose coverage is aimed
+     * @return a constant reference to the coverage of the aimed position
+     */
+    const BaseCoverage& get_coverage(const GenomicPosition& position) const;
+
+    /**
+     * @brief Get the chromosome coverage
+     * 
+     * @return a constant reference to the chromosome coverage vector
+     */
+    inline const std::vector<BaseCoverage>& get_coverage_vector() const
+    {
+        return coverage;
+    }
+
+    /**
+     * @brief Join a chromosome coverage to the current one
+     * 
+     * This method updates the coverage of the current object by 
+     * adding the coverage of the parameter. Moreover, it adds to 
+     * the current object SNV occurrences the occurrences of the 
+     * parameter.
+     * 
+     * @param chr_coverage is the sequencing chromosome coverage to join
+     * @return a reference to the updated coverage
+     */
+    ChrCoverage& operator+=(ChrCoverage&& chr_coverage);
+
+    /**
+     * @brief Join a chromosome coverage to the current one
+     * 
+     * This method updates the coverage of the current object by 
+     * adding the coverage of the parameter. Moreover, it adds to 
+     * the current object SNV occurrences the occurrences of the 
+     * parameter.
+     * 
+     * @param chr_coverage is the sequencing chromosome coverage to join
+     * @return a reference to the updated coverage
+     */
+    ChrCoverage& operator+=(const ChrCoverage& chr_coverage);
+
+    /**
+     * @brief Save sequencing chromosome coverage in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & chr_id
+                & coverage;
+    }
+
+    /**
+     * @brief Load sequencing chromosome coverage from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the sequencing chromosome coverage
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static ChrCoverage load(ARCHIVE& archive)
+    {
+        ChrCoverage chr_coverage;
+
+        archive & chr_coverage.chr_id
+                & chr_coverage.coverage;
+
+        return chr_coverage;
+    }
+};
+
+/**
+ * @brief Simulated sequencing chromosome statistics 
+ */
+class ChrSampleStatistics : public ChrCoverage
+{
+    std::map<SNV, BaseCoverage> SNV_occurrences;       //!< The SNV occurrences in the simulated reads
 public:
 
     /**
@@ -91,14 +229,6 @@ public:
     ChrSampleStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
 
     /**
-     * @brief Increase the coverage of a region
-     * 
-     * @param begin_pos is the initial position of the region whose coverage must be increase
-     * @param read_size is the size of the region whose coverage must be increase
-     */
-    void increase_coverage(const ChrPosition& begin_pos, const size_t& read_size);
-
-    /**
      * @brief Increase the number of occurrences of an SNV by one
      * 
      * @param snv is the snv whose number of occurrences must be increased
@@ -110,30 +240,9 @@ public:
      * 
      * @return a constant reference to the collected SNV occurrences
      */
-    inline const std::map<SNV, size_t>& get_SNV_occurrences() const
+    inline const std::map<SNV, BaseCoverage>& get_SNV_occurrences() const
     {
         return SNV_occurrences;
-    }
-
-    /**
-     * @brief Get the identifier of the chromosome whose statistics refer to
-     * 
-     * @return a constant reference to the identifier of the chromosome whose
-     *          statistics refer to
-     */
-    inline const ChromosomeId& get_chr_id() const
-    {
-        return chr_id;
-    }
-
-    /**
-     * @brief Get the length of the chromosome whose statistics refer to
-     * 
-     * @return the size of the chromosome whose statistics refer to
-     */
-    inline size_t get_chr_length() const
-    {
-        return coverage.size();
     }
 
     /**
@@ -142,25 +251,7 @@ public:
      * @param snv is an SNV
      * @return the number of occurrences of an SNV
      */
-    size_t number_of_occurrences(const SNV& snv) const;
-
-    /**
-     * @brief Get the coverage in a genomic position
-     * 
-     * @param position is the genomic position whose coverage is aimed
-     * @return a constant reference to the coverage of the aimed position
-     */
-    const uint16_t& get_coverage(const GenomicPosition& position) const;
-
-    /**
-     * @brief Get the chromosome coverage
-     * 
-     * @return a constant reference to the chromosome coverage
-     */
-    inline const std::vector<uint16_t>& get_coverage() const
-    {
-        return coverage;
-    }
+    BaseCoverage number_of_occurrences(const SNV& snv) const;
 
     /**
      * @brief Join other chromosome statistics to the current one
@@ -189,112 +280,44 @@ public:
     ChrSampleStatistics& operator+=(const ChrSampleStatistics& chr_stats);
 
     /**
-     * @brief Save sequencing chromosome statistics in an archive
+     * @brief Canonize the SNV occurrence domains of a chromosome sample statistics list
      * 
-     * @tparam ARCHIVE is the output archive type
-     * @param archive is the output archive
-     */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
-    inline void save(ARCHIVE& archive) const
-    {
-        archive & chr_id
-                & coverage
-                & SNV_occurrences;
-    }
-
-    /**
-     * @brief Load sequencing chromosome statistics from an archive
+     * This method takes a list of chromosome sample statistics and 
+     * alter them so that the domain of map returned by the method 
+     * `get_SNV_occurrences()` is the union of the domains of the
+     * maps returned by the same method on each of them.
      * 
-     * @tparam ARCHIVE is the input archive type
-     * @param archive is the input archive
-     * @return the sequencing chromosome statistics
+     * @param[in, out] chr_stats_list is a list of chromosome sample statistics
      */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    inline static ChrSampleStatistics load(ARCHIVE& archive)
-    {
-        ChrSampleStatistics chr_stats;
-
-        archive & chr_stats.chr_id
-                & chr_stats.coverage
-                & chr_stats.SNV_occurrences;
-
-        return chr_stats;
-    }
+    static void canonize_SNV_occurrences(std::list<ChrSampleStatistics>& chr_stats_list);
 };
 
 /**
- * @brief Merge two statistics of the chromosome
- * 
- * @param a is a sequencing chromosome statistics
- * @param b is a sequencing chromosome statistics
- * @return a chromosome statistics that sums up the coverages and adds
- *      the SNV occurrences
+ * @brief Statistics about simulated sequencing on a set of tissue samples
  */
-ChrSampleStatistics operator+(const ChrSampleStatistics& a, const ChrSampleStatistics& b);
-
-/**
- * @brief Merge two statistics of the chromosome
- * 
- * @param a is a sequencing chromosome statistics
- * @param b is a sequencing chromosome statistics
- * @return a chromosome statistics that sums up the coverages and adds
- *      the SNV occurrences
- */
-inline ChrSampleStatistics operator+(ChrSampleStatistics&& a, const ChrSampleStatistics& b)
-{
-    a += b;
-
-    return std::move(a);
-}
-
-/**
- * @brief Merge two statistics of the chromosome
- * 
- * @param a is a sequencing chromosome statistics
- * @param b is a sequencing chromosome statistics
- * @return a chromosome statistics that sums up the coverages and adds
- *      the SNV occurrences
- */
-inline ChrSampleStatistics operator+(ChrSampleStatistics&& a, ChrSampleStatistics&& b)
-{
-    a += b;
-
-    return std::move(a);
-}
-
-/**
- * @brief Merge two statistics of the chromosome
- * 
- * @param a is a sequencing chromosome statistics
- * @param b is a sequencing chromosome statistics
- * @return a chromosome statistics that sums up the coverages and adds
- *      the SNV occurrences
- */
-inline ChrSampleStatistics operator+(const ChrSampleStatistics& a, ChrSampleStatistics&& b)
-{
-    b += a;
-
-    return std::move(b);
-}
+class SampleSetStatistics;
 
 /**
  * @brief Statistics about simulated sequencing of a tissue sample
  */
 class SampleStatistics
 {
-    std::filesystem::path data_dir; //!< The directory in which the data is saved
-    std::string sample_name;        //!< The name of the sample
+    std::filesystem::path data_dir;     //!< The directory in which the data is saved
+    std::string sample_name;            //!< The name of the sample
 
-    std::set<ChromosomeId> chr_ids; //!< The identifiers of the chromosomes included in the statistics
+    std::set<ChromosomeId> chr_ids;     //!< The identifiers of the chromosomes included in the statistics
+
+    std::map<SNV, BaseCoverage> SNV_occurrences;    //!< The number of SNV occurrences in the sample
+    std::map<GenomicPosition, BaseCoverage> locus_coverage;   //!< The coverage of any position hosting an SNV 
 
     /**
-     * @brief Get the filename of the chromosome statistics data file
+     * @brief Get the filename of the chromosome coverage file
      * 
-     * @param chr_id is the identifier of the chromosome whose data is 
+     * @param chr_id is the identifier of the chromosome whose coverage is 
      *          going to be saved/load
-     * @return the filename of the chromosome statistics data file
+     * @return the filename of the chromosome coverage file
      */
-    std::filesystem::path get_chr_filename(const ChromosomeId& chr_id) const;
+    std::filesystem::path get_coverage_filename(const ChromosomeId& chr_id) const;
 public:
 
     /**
@@ -325,13 +348,12 @@ public:
     void add_chr_statistics(const ChrSampleStatistics& chr_stats);
 
     /**
-     * @brief Find the statistics of a chromosome by id
+     * @brief Get the chromosome coverage by its identifier
      * 
-     * @param chr_id is the id of the chromosome whose sequencing statistics is aimed
-     * @return a constant reference to the sequencing statistics of the chromosome
-     *          whose id is `chr_id`
+     * @param chr_id is the id of the chromosome whose sequencing coverage is aimed
+     * @return the sequencing coverage of the chromosome whose identifier is `chr_id`
      */
-    ChrSampleStatistics get_chr_statistics(const ChromosomeId& chr_id) const;
+    ChrCoverage get_chr_coverage(const ChromosomeId& chr_id) const;
 
     /**
      * @brief Get the chromosome statistics
@@ -354,6 +376,43 @@ public:
     }
 
     /**
+     * @brief Get the number of SNV occurrences
+     * 
+     * @return a constant reference to the number of SNV occurrences
+     */
+    inline const std::map<SNV, BaseCoverage>& get_SNV_occurrences() const
+    {
+        return SNV_occurrences;
+    }
+
+    /**
+     * @brief Get the number of occurrences of an SNV
+     * 
+     * @param snv is the SNV whose number of occurrences is aimed
+     * @return a constant reference to the number of occurrences of `snv`
+     */
+    BaseCoverage number_of_occurrences(const SNV& snv) const;
+
+    /**
+     * @brief Get the coverage of the positions in which SNVs occurr
+     * 
+     * @return a constant reference to the coverage of the positions in which SNVs 
+     *      occurr
+     */
+    inline const std::map<GenomicPosition, BaseCoverage>& get_SNV_coverage() const
+    {
+        return locus_coverage;
+    }
+
+    /**
+     * @brief Get the coverage of a position in which an SNV occurs
+     * 
+     * @return a constant reference to the coverage of `pos` assuming that 
+     *      `pos` is a possition in which an SNV occurs
+     */
+    const BaseCoverage& get_SNV_coverage(const GenomicPosition& pos) const;
+    
+    /**
      * @brief Get the data directory path
      * 
      * @return as constant reference to the path of the directory 
@@ -363,6 +422,46 @@ public:
     {
         return data_dir;
     }
+
+    /**
+     * @brief Save sequencing sample statistics in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & data_dir
+                & sample_name
+                & chr_ids
+                & SNV_occurrences
+                & locus_coverage;
+    }
+
+    /**
+     * @brief Load sequencing sample statistics from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the sequencing sample statistics
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static SampleStatistics load(ARCHIVE& archive)
+    {
+        std::filesystem::path data_dir;
+        std::string sample_name;
+
+        SampleStatistics sample_stats(data_dir, sample_name);
+
+        archive & sample_stats.chr_ids
+                & sample_stats.SNV_occurrences
+                & sample_stats.locus_coverage;
+
+        return sample_stats;
+    }
+
+    friend class SampleSetStatistics;
 };
 
 /**
@@ -373,11 +472,14 @@ public:
 template<typename RANDOM_GENERATOR=std::mt19937_64>
 class ReadSimulator;
 
-/**
- * @brief Statistics about simulated sequencing on a set of tissue samples
- */
-class Statistics
+class SampleSetStatistics
 {
+    std::map<std::string, SampleStatistics> stats_map;  //!< The map of the sample statistics
+
+    std::set<ChromosomeId> repr_chr_ids; //!< The identifiers of the chromosomes whose statistics have been collected
+
+    std::filesystem::path data_dir; //!< The directory in which the data is saved
+
     /**
      * @brief Stream the header of a VAF csv
      * 
@@ -386,12 +488,6 @@ class Statistics
      * @return the updated stream
      */
     std::ofstream& stream_VAF_csv_header(std::ofstream& os, const char& separator) const;
-
-    std::map<std::string, SampleStatistics> sample_statistics;  //!< The statistics of a sample
-
-    std::set<ChromosomeId> repr_chr_ids; //!< The identifiers of the chromosomes whose statistics have been collected
-
-    std::filesystem::path data_dir; //!< The directory in which the data is saved
 public:
     /**
      * @brief A constructor
@@ -399,7 +495,7 @@ public:
      * @param data_directory is the path of the directory containing the data files
      * @param sample_name is the name of the sample whose statistics refer to
      */
-    Statistics(const std::filesystem::path& data_directory);
+    SampleSetStatistics(const std::filesystem::path& data_directory);
 
     /**
      * @brief Check whether this object contains statistics about a sample
@@ -410,7 +506,7 @@ public:
      */
     inline std::map<std::string, SampleStatistics>::const_iterator find(const std::string& sample_name) const
     {
-        return sample_statistics.find(sample_name);
+        return stats_map.find(sample_name);
     }
 
     /**
@@ -420,7 +516,7 @@ public:
      */
     inline std::map<std::string, SampleStatistics>::const_iterator begin() const
     {
-        return sample_statistics.begin();
+        return stats_map.begin();
     }
 
     /**
@@ -430,7 +526,7 @@ public:
      */
     inline std::map<std::string, SampleStatistics>::const_iterator end() const
     {
-        return sample_statistics.end();
+        return stats_map.end();
     }
 
     /**
@@ -439,21 +535,27 @@ public:
      * @return a constant reference to the identifiers of the chromosomes whose statistics have been 
      *          collected
      */
-    inline const std::set<ChromosomeId>& get_represented_chromosomes() const
-    {
-        return repr_chr_ids;
-    }
+    std::set<ChromosomeId> get_represented_chromosomes() const;
 
     /**
      * @brief Add a new chromosome to the statistics of a sample
      * 
      * @param sample_name is the sample name
      * @param chr_statistics are the statistics about a chromosome
-     * @return a reference to the current statistics of the sample whose name is
+     * @return a constant reference to the current statistics of the sample whose name is
      *          `sample_name`
      */
-    SampleStatistics& add_chr_statistics(const std::string& sample_name,
-                                         const ChrSampleStatistics& chr_statistics);
+    const SampleStatistics& add_chr_statistics(const std::string& sample_name,
+                                               const ChrSampleStatistics& chr_statistics);
+
+    /**
+     * @brief Add a new sample statistics
+     * 
+     * @param sample_name is the sample name
+     * @param sample_statistics are the sample statistics to add
+     * @return a constant reference to the added sample statistics
+     */
+    const SampleStatistics& add_statistics(const SampleStatistics& sample_statistics);
 
     /**
      * @brief Get a sample statistics
@@ -473,6 +575,25 @@ public:
     {
         return data_dir;
     } 
+
+    /**
+     * @brief Check whether the statistics is canonical
+     * 
+     * A statistics is canonical when all its samples stores the occurrences of
+     * the very same SNVs.
+     * 
+     * @return `true` if and only if current statistics is canonical
+     */
+    bool is_canonical() const;
+
+    /**
+     * @brief Canonize the statistics
+     * 
+     * A statistics is canonical when all its samples stores the occurrences of 
+     * the very same SNVs.
+     * This method alters the sample statistics of this object and canonizes it.
+     */
+    void canonize();
 
     /**
      * @brief Save CSV files reporting the SNV VAFs
@@ -541,6 +662,44 @@ public:
     void save_SNV_histogram(const std::filesystem::path& filename,
                             const ChromosomeId& chromosome_id) const;
 #endif // WITH_MATPLOT
+
+    /**
+     * @brief Save sequencing sample set statistics in an archive
+     * 
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & data_dir
+                & stats_map;
+    }
+
+    /**
+     * @brief Load sequencing sample set statistics from an archive
+     * 
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the sequencing sample set statistics
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static SampleSetStatistics load(ARCHIVE& archive)
+    {
+        std::filesystem::path data_dir;
+
+        SampleSetStatistics statistics(data_dir);
+
+        archive & statistics.stats_map;
+
+        for (const auto& [sample_name, sample_stats] : statistics.stats_map ) {
+            for (const auto& chr_id : sample_stats.get_chromosome_ids()) {
+                statistics.repr_chr_ids.insert(chr_id);
+            }
+        }
+
+        return statistics;
+    }
 
     template<typename RANDOM_GENERATOR>
     friend class ReadSimulator;
@@ -1142,7 +1301,7 @@ private:
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_chromosome_reads(Statistics& statistics,
+    void generate_chromosome_reads(SampleSetStatistics& statistics,
                                    const ChromosomeData<DATA_TYPE>& chr_data,
                                    const std::list<SampleGenomeMutations>& mutations_list,
                                    std::list<ReadSimulationData>& simulation_data,
@@ -1153,17 +1312,24 @@ private:
         auto chr_name = GenomicPosition::chrtos(chr_data.chr_id);
         progress_bar.set_message("Processing chr. " + chr_name);
 
-        auto mutations_it = mutations_list.begin();
         auto simulation_data_it = simulation_data.begin();
 
-        for (; mutations_it != mutations_list.end(); ++mutations_it, ++simulation_data_it) {
-            const auto chr_stats = generate_chromosome_reads(chr_data, *mutations_it, 
-                                                             *simulation_data_it, total_steps, steps,
-                                                             progress_bar, SAM_stream);
-
-            statistics.add_chr_statistics(mutations_it->name, chr_stats);
+        std::list<ChrSampleStatistics> chr_stats_list;
+        for (const auto& mutations : mutations_list) {
+            chr_stats_list.push_back(generate_chromosome_reads(chr_data, mutations, 
+                                                               *simulation_data_it, total_steps,
+                                                               steps, progress_bar, SAM_stream));
+            ++simulation_data_it;
         }
 
+        ChrSampleStatistics::canonize_SNV_occurrences(chr_stats_list);
+
+        auto chr_stats_it = chr_stats_list.cbegin();
+        for (const auto& mutations : mutations_list) {
+            statistics.add_chr_statistics(mutations.name, *chr_stats_it);
+
+            ++chr_stats_it;
+        }
     }
 
     /**
@@ -1271,8 +1437,8 @@ private:
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    Statistics generate_reads(const std::list<SampleGenomeMutations>& mutations_list,
-                              const double& coverage, UI::ProgressBar& progress_bar)
+    SampleSetStatistics generate_reads(const std::list<SampleGenomeMutations>& mutations_list,
+                                       const double& coverage, UI::ProgressBar& progress_bar)
     {
         std::ifstream ref_stream(ref_genome_filename);
 
@@ -1285,7 +1451,7 @@ private:
             total_steps += sample_data.not_covered_allelic_size;
         }
 
-        Statistics statistics(output_directory);
+        SampleSetStatistics statistics(output_directory);
         
         ChromosomeData<DATA_TYPE> chr_data;
         progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
@@ -1406,9 +1572,9 @@ public:
     {}
 
     /**
-     * @brief Generate simulated reads for a list of genome mutations
+     * @brief Generate simulated reads for a list of sample genome mutations
      * 
-     * This method generates simulated reads for a set of cell mutated genomes and, 
+     * This method generates simulated reads for a list of sample genome mutations and, 
      * if requested, writes the corresponding SAM alignments. The number of simulated reads 
      * depends on the specified coverage.
      * 
@@ -1416,23 +1582,24 @@ public:
      * @param coverage is the aimed coverage
      * @param save_SAM is a Boolean flag to save the simulated read in a file
      * @param quiet is a Boolean flag to avoid progress bar and user messages
-     * @return the statistics about the generated reads
+     * @return the sample set statistics about the generated reads
      */
-    Statistics operator()(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
-                          const double& coverage, const bool with_sequences=true,
-                          const bool quiet=false)
+    SampleSetStatistics operator()(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
+                                   const double& coverage, const bool with_sequences=true,
+                                   const bool quiet=false)
     {
         using namespace Races;
 
         if (coverage < 0) {
             std::ostringstream oss;
 
-            oss << "coverage must be non-negative. Got " << coverage;
+            oss << "Read simulator coverage must be non-negative. Got " 
+                << coverage << ".";
             throw std::domain_error(oss.str());
         }
 
         if (mutations_list.size()==0) {
-            return Statistics(output_directory);
+            return SampleSetStatistics(output_directory);
         }
 
         UI::ProgressBar progress_bar(quiet);
@@ -1442,6 +1609,31 @@ public:
         }
         
         return generate_reads<Races::IO::FASTA::SequenceInfo>(mutations_list, coverage, progress_bar);
+    }
+
+    /**
+     * @brief Generate simulated reads for a sample genome mutations
+     * 
+     * This method generates simulated reads for a sample genome mutations and, 
+     * if requested, writes the corresponding SAM alignments. The number of simulated reads 
+     * depends on the specified coverage.
+     * 
+     * @param mutations is a sample genome mutations
+     * @param coverage is the aimed coverage
+     * @param save_SAM is a Boolean flag to save the simulated read in a file
+     * @param quiet is a Boolean flag to avoid progress bar and user messages
+     * @return the statistics about the generated reads
+     */
+    SampleStatistics operator()(const Races::Mutations::SampleGenomeMutations& mutations,
+                                const double& coverage, const bool with_sequences=true,
+                                const bool quiet=false)
+    {
+        using namespace Races::Mutations;
+        std::list<SampleGenomeMutations> mutations_list{mutations};
+
+        auto statistics = operator()(mutations_list, coverage, with_sequences, quiet);
+
+        return statistics[mutations.name];
     }
 
     /**
