@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.14
- * @date 2024-01-09
+ * @version 0.15
+ * @date 2024-01-11
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -370,7 +370,7 @@ public:
      * 
      * @return the name of the sample whose data refer to 
      */
-    inline std::string get_sample_name() const
+    inline const std::string& get_sample_name() const
     {
         return sample_name;
     }
@@ -449,8 +449,11 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static SampleStatistics load(ARCHIVE& archive)
     {
-        std::filesystem::path data_dir;
+        std::string data_dir;
         std::string sample_name;
+
+        archive & data_dir
+                & sample_name;
 
         SampleStatistics sample_stats(data_dir, sample_name);
 
