@@ -2,10 +2,10 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.6
- * @date 2023-12-22
+ * @version 0.7
+ * @date 2024-01-22
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -307,7 +307,20 @@ public:
         return CNA_first_cells;
     }
 
-    std::list<SampleGenomeMutations> get_samples_mutations() const;
+    /**
+     * @brief Get the list of sample mutations
+     * 
+     * @return the list of sample mutations
+     */
+    std::list<SampleGenomeMutations> get_sample_mutations_list() const;
+
+    /**
+     * @brief Get the list of sample mutations
+     * 
+     * @param sample_name is the name of the sample whose mutations are aimed
+     * @return the mutations of the sample whose name is `sample_name`
+     */
+    SampleGenomeMutations get_sample_mutations(const std::string& sample_name) const;
 
     /**
      * @brief Clear the forest

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.5
- * @date 2024-01-05
+ * @version 0.6
+ * @date 2024-01-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -156,21 +156,51 @@ PhylogeneticForest::get_leaf_mutations(const Mutants::CellId& cell_id) const
     throw std::domain_error(std::to_string(cell_id)+" is not a leaf of the forest");
 }
 
-std::list<SampleGenomeMutations> PhylogeneticForest::get_samples_mutations() const
+std::list<SampleGenomeMutations> PhylogeneticForest::get_sample_mutations_list() const
 {
     using namespace Mutants::Evolutions;
 
-    std::list<SampleGenomeMutations> sample_mutations;
+    std::list<SampleGenomeMutations> sample_mutations_list;
     std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
     for (const auto& sample: get_samples()) {
-        sample_mutations.push_back(SampleGenomeMutations(sample.get_name()));
-        sample_mutation_map.insert({sample.get_id(), &(sample_mutations.back())});
+        sample_mutations_list.push_back(SampleGenomeMutations(sample.get_name()));
+        sample_mutation_map.insert({sample.get_id(), &(sample_mutations_list.back())});
     }
 
     for (const auto& [cell_id, genome_mutations] : leaves_mutations) {
         const auto& sample = get_samples()[get_coming_from().at(cell_id)];
         auto& sample_genomic_mutations = *(sample_mutation_map.at(sample.get_id()));
         sample_genomic_mutations.mutations.push_back(genome_mutations);
+    }
+
+    return sample_mutations_list;
+}
+
+size_t
+find_sample_index(const std::vector<Races::Mutants::Evolutions::TissueSample>& sample_list,
+                 const std::string& sample_name)
+{
+    size_t idx=0;
+    for (const auto& sample: sample_list) {
+        if (sample.get_name() == sample_name) {
+            return idx;
+        }
+        ++idx;
+    }
+
+    throw std::runtime_error("Unknown sample \""+sample_name+"\".");
+}
+
+SampleGenomeMutations PhylogeneticForest::get_sample_mutations(const std::string& sample_name) const
+{
+    using namespace Mutants::Evolutions;
+
+    SampleGenomeMutations sample_mutations(sample_name);
+
+    const size_t sample_idx = find_sample_index(get_samples(), sample_name);
+
+    for (const auto& cell_id : get_samples()[sample_idx].get_cell_ids()) {
+        sample_mutations.mutations.push_back(leaves_mutations.at(cell_id));
     }
 
     return sample_mutations;

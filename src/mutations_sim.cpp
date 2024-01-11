@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.10
- * @date 2024-01-09
+ * @version 0.11
+ * @date 2024-01-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -304,7 +304,7 @@ class MutationsSimulator : public BasicExecutable
         return Races::ConfigReader::get_number_of_alleles(simulation_cfg, chromosome_ids);
     }
 
-    static void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::Statistics& statistics)
+    static void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics)
     {
         Races::UI::ProgressBar progress_bar;
         
@@ -312,12 +312,14 @@ class MutationsSimulator : public BasicExecutable
 
         statistics.save_VAF_CSVs();
         progress_bar.set_progress(33);
+        progress_bar.update_elapsed_time();
 #if WITH_MATPLOT
         progress_bar.set_message("Generating images");
         statistics.save_coverage_images();
         progress_bar.set_progress(66);
         progress_bar.update_elapsed_time();
         statistics.save_SNV_histograms();
+        progress_bar.update_elapsed_time();
         progress_bar.set_progress(100, "Images generated");
 #endif // WITH_MATPLOT
     }
@@ -394,7 +396,7 @@ class MutationsSimulator : public BasicExecutable
 
         auto phylogenetic_forest = place_mutations(engine, descendants_forest);
 
-        auto mutations_list = phylogenetic_forest.get_samples_mutations();
+        auto mutations_list = phylogenetic_forest.get_sample_mutations_list();
 
         if (epigenetic_FACS) {
             mutations_list = split_by_epigenetic_status(mutations_list, methylation_map);
