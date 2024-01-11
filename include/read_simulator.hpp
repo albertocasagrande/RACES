@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.15
+ * @version 0.16
  * @date 2024-01-11
  * 
  * @copyright Copyright (c) 2023-2024
@@ -728,19 +728,20 @@ public:
         OVERWRITE,  // Overwrite files
         APPEND      // Append files
     };
+
+    ReadType read_type;     //!< The type of the produced reads
+
+    size_t read_size;       //!< The produced-read size
+    size_t insert_size;     //!< The paired-read insert size
+
+    bool write_SAM;         //!< A Boolean flag to write SAM files
 private:
     RANDOM_GENERATOR random_generator;  //!< The random generator
 
     std::filesystem::path output_directory;         //!< The output directory
     std::filesystem::path ref_genome_filename;      //!< The reference genome FASTA filename
 
-    ReadType read_type;     //!< The type of the produced reads
-
-    size_t read_size;       //!< The produced-read size
-    size_t insert_size;     //!< The paired-read insert size
     size_t num_of_reads;    //!< Number of already placed reads
-
-    bool write_SAM;         //!< A Boolean flag to write SAM files
 
     /**
      * @brief A structure to maintain read simulation data
@@ -1493,10 +1494,10 @@ private:
      */
     ReadSimulator(const std::string& output_directory, const std::string& ref_genome_filename,
                   const ReadType read_type, const size_t& read_size, const size_t& insert_size, 
-                  const Mode mode, const int& seed):
-        random_generator(seed), output_directory(output_directory), ref_genome_filename(ref_genome_filename), 
-        read_type(read_type), read_size(read_size), insert_size(insert_size), num_of_reads(0),
-        write_SAM(false)
+                  const Mode mode, const int& seed): 
+        read_type(read_type), read_size(read_size), insert_size(insert_size), write_SAM(false), 
+        random_generator(seed), output_directory(output_directory), ref_genome_filename(ref_genome_filename),
+        num_of_reads(0)
     {
         namespace fs = std::filesystem;
 
@@ -1537,9 +1538,8 @@ public:
      * @brief The empty constructor
      */
     ReadSimulator():
-        random_generator(), output_directory(""), ref_genome_filename(""), 
-        read_type(ReadType::SINGLE_READ), read_size(0), insert_size(0), num_of_reads(0),
-        write_SAM(false)
+        read_type(ReadType::SINGLE_READ), read_size(0), insert_size(0), write_SAM(false),
+        random_generator(), output_directory(""), ref_genome_filename(""), num_of_reads(0)
     {}
 
     /**
