@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.15
- * @date 2024-01-09
+ * @version 0.16
+ * @date 2024-01-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -309,8 +309,10 @@ std::filesystem::path SampleStatistics::get_coverage_filename(const ChromosomeId
 }
 
 SampleStatistics::SampleStatistics(const std::filesystem::path& data_directory,
-                                   const std::string& sample_name):
-    data_dir(data_directory/sample_name), sample_name(sample_name)
+                                   const std::string& sample_name,
+                                   const bool save_coverage):
+    data_dir(data_directory/sample_name), sample_name(sample_name),
+    save_coverage(save_coverage)
 {}
 
 void create_dir(const std::filesystem::path& directory)
@@ -347,15 +349,22 @@ void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
     }
 
     chr_ids.insert(chr_id);
-    create_dir(get_data_directory());
 
-    const auto chr_filename = get_coverage_filename(chr_id);
-    Archive::Binary::Out out_archive(chr_filename);
-    static_cast<const ChrCoverage&>(chr_stats).save(out_archive);
+    if (save_coverage) {
+        create_dir(get_data_directory());
+
+        const auto chr_filename = get_coverage_filename(chr_id);
+        Archive::Binary::Out out_archive(chr_filename);
+        static_cast<const ChrCoverage&>(chr_stats).save(out_archive);
+    }
 }
 
 ChrCoverage SampleStatistics::get_chr_coverage(const ChromosomeId& chr_id) const
 {
+    if (!save_coverage) {
+        throw std::runtime_error("Coverage data is not available.");  
+    }
+
     if (chr_ids.count(chr_id)==0) {
         using namespace Races::Mutants;
 
@@ -508,12 +517,13 @@ bool SampleSetStatistics::is_canonical() const
 }
 
 const SampleStatistics& SampleSetStatistics::add_chr_statistics(const std::string& sample_name,
-                                                       const ChrSampleStatistics& chr_statistics)
+                                                                const ChrSampleStatistics& chr_statistics,
+                                                                const bool coverage_save)
 {
     auto found = stats_map.find(sample_name);
 
     if (found == stats_map.end()) {
-        found = stats_map.insert({sample_name, SampleStatistics(data_dir, sample_name)}).first;
+        found = stats_map.insert({sample_name, SampleStatistics(data_dir, sample_name, coverage_save)}).first;
     }
 
     found->second.add_chr_statistics(chr_statistics);
@@ -542,6 +552,17 @@ const SampleStatistics& SampleSetStatistics::operator[](const std::string& sampl
     }
 
     return found->second;
+}
+
+std::list<std::string> SampleSetStatistics::get_sample_names() const
+{
+    std::list<std::string> sample_names;
+
+    for (const auto& [sample_name, sample_statistics] : stats_map) {
+        sample_names.push_back(sample_name);
+    }
+
+    return sample_names;
 }
 
 void SampleSetStatistics::save_VAF_CSVs(const std::string& base_name) const

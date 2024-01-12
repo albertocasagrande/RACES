@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.16
- * @date 2024-01-11
+ * @version 0.17
+ * @date 2024-01-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -310,6 +310,8 @@ class SampleStatistics
     std::map<SNV, BaseCoverage> SNV_occurrences;    //!< The number of SNV occurrences in the sample
     std::map<GenomicPosition, BaseCoverage> locus_coverage;   //!< The coverage of any position hosting an SNV 
 
+    bool save_coverage; //!< A flag to enable/disable storage of coverage data
+
     /**
      * @brief Get the filename of the chromosome coverage file
      * 
@@ -325,8 +327,10 @@ public:
      * 
      * @param data_directory is the path of the directory containing the data files
      * @param sample_name is the name of the sample whose statistics refer to
+     * @param save_coverage is a flag to enable/disable storage of coverage data 
      */
-    SampleStatistics(const std::filesystem::path& data_directory, const std::string& sample_name);
+    SampleStatistics(const std::filesystem::path& data_directory, const std::string& sample_name,
+                     const bool save_coverage=false);
 
     /**
      * @brief Add a chromosome data to the statistics
@@ -434,6 +438,7 @@ public:
     {
         archive & data_dir
                 & sample_name
+                & save_coverage
                 & chr_ids
                 & SNV_occurrences
                 & locus_coverage;
@@ -449,13 +454,14 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static SampleStatistics load(ARCHIVE& archive)
     {
-        std::string data_dir;
-        std::string sample_name;
+        std::string data_dir, sample_name;
+        bool save_coverage;
 
         archive & data_dir
-                & sample_name;
+                & sample_name
+                & save_coverage;
 
-        SampleStatistics sample_stats(data_dir, sample_name);
+        SampleStatistics sample_stats(data_dir, sample_name, save_coverage);
 
         archive & sample_stats.chr_ids
                 & sample_stats.SNV_occurrences
@@ -496,7 +502,6 @@ public:
      * @brief A constructor
      * 
      * @param data_directory is the path of the directory containing the data files
-     * @param sample_name is the name of the sample whose statistics refer to
      */
     SampleSetStatistics(const std::filesystem::path& data_directory);
 
@@ -545,16 +550,17 @@ public:
      * 
      * @param sample_name is the sample name
      * @param chr_statistics are the statistics about a chromosome
+     * @param save_coverage is a flag to enable/disable storage of coverage data
      * @return a constant reference to the current statistics of the sample whose name is
      *          `sample_name`
      */
     const SampleStatistics& add_chr_statistics(const std::string& sample_name,
-                                               const ChrSampleStatistics& chr_statistics);
+                                               const ChrSampleStatistics& chr_statistics,
+                                               const bool save_coverage=false);
 
     /**
      * @brief Add a new sample statistics
      * 
-     * @param sample_name is the sample name
      * @param sample_statistics are the sample statistics to add
      * @return a constant reference to the added sample statistics
      */
@@ -578,6 +584,23 @@ public:
     {
         return data_dir;
     } 
+
+    /**
+     * @brief Get the list of the sample names
+     * 
+     * @return the list of the sample names
+     */
+    std::list<std::string> get_sample_names() const;
+
+    /**
+     * @brief Get the number of samples in the set
+     * 
+     * @return the number of samples in the set
+     */
+    inline size_t num_of_samples() const
+    {
+        return stats_map.size();
+    }
 
     /**
      * @brief Check whether the statistics is canonical
@@ -689,7 +712,9 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static SampleSetStatistics load(ARCHIVE& archive)
     {
-        std::filesystem::path data_dir;
+        std::string data_dir;
+
+        archive & data_dir;
 
         SampleSetStatistics statistics(data_dir);
 
@@ -735,6 +760,8 @@ public:
     size_t insert_size;     //!< The paired-read insert size
 
     bool write_SAM;         //!< A Boolean flag to write SAM files
+
+    bool save_coverage;     //!< A flag to enable/disable storage of coverage data
 private:
     RANDOM_GENERATOR random_generator;  //!< The random generator
 
@@ -1330,7 +1357,7 @@ private:
 
         auto chr_stats_it = chr_stats_list.cbegin();
         for (const auto& mutations : mutations_list) {
-            statistics.add_chr_statistics(mutations.name, *chr_stats_it);
+            statistics.add_chr_statistics(mutations.name, *chr_stats_it, save_coverage);
 
             ++chr_stats_it;
         }
@@ -1490,14 +1517,15 @@ private:
      * @param read_size is the size of the output reads
      * @param insert_size is the size of the insert
      * @param mode is the SAM generator output mode
+     * @param save_coverage is a flag to enable/disable storage of coverage data
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::string& output_directory, const std::string& ref_genome_filename,
                   const ReadType read_type, const size_t& read_size, const size_t& insert_size, 
-                  const Mode mode, const int& seed): 
+                  const Mode mode, const bool save_coverage, const int& seed): 
         read_type(read_type), read_size(read_size), insert_size(insert_size), write_SAM(false), 
-        random_generator(seed), output_directory(output_directory), ref_genome_filename(ref_genome_filename),
-        num_of_reads(0)
+        save_coverage(save_coverage), random_generator(seed), output_directory(output_directory),
+        ref_genome_filename(ref_genome_filename), num_of_reads(0)
     {
         namespace fs = std::filesystem;
 
@@ -1539,7 +1567,8 @@ public:
      */
     ReadSimulator():
         read_type(ReadType::SINGLE_READ), read_size(0), insert_size(0), write_SAM(false),
-        random_generator(), output_directory(""), ref_genome_filename(""), num_of_reads(0)
+        save_coverage(false), random_generator(), output_directory(""), ref_genome_filename(""),
+        num_of_reads(0)
     {}
 
     /**
@@ -1554,7 +1583,7 @@ public:
     ReadSimulator(const std::string& output_directory, const std::string& ref_genome_filename,
                   const size_t& read_size, const Mode mode=Mode::CREATE, const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::SINGLE_READ, read_size,
-                      0, mode, seed)
+                      0, mode, false, seed)
     {}
 
     /**
@@ -1571,7 +1600,7 @@ public:
                   const size_t& read_size, const size_t& insert_size, const Mode mode=Mode::CREATE, 
                   const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::PAIRED_READ, read_size,
-                      insert_size, mode, seed)
+                      insert_size, mode, false, seed)
     {}
 
     /**
