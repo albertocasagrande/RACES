@@ -2,10 +2,10 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.51
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
+ * @version 0.52
+ * @date 2024-01-15
+ *
+ * @copyright Copyright (c) 2023-24
  * 
  * MIT License
  * 
@@ -280,6 +280,152 @@ const CellInTissue& Simulation::choose_cell_in(const std::string& mutant_name,
     auto mutant_id = find_mutant_id(mutant_name);
 
     return choose_cell_in(mutant_id, rectangle, event_type);
+}
+
+bool border_visible_from(PositionInTissue& pos, const Tissue& tissue, const PositionDelta& delta)
+{
+    pos -= delta;
+    while (tissue.is_valid(pos)) {
+        const auto cell_proxy = tissue(pos);
+
+        if (cell_proxy.is_wild_type()) {
+            pos -= delta;
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool search_tumoral_cell(PositionInTissue& pos, const Tissue& tissue, const PositionDelta& delta,
+                         const std::set<SpeciesId>& species_ids)
+{
+    while (tissue.is_valid(pos)) {
+        const auto cell_proxy = tissue(pos);
+
+        if (cell_proxy.is_wild_type()) {
+            pos += delta;
+        } else {
+            const CellInTissue &cell = cell_proxy;
+
+            return (species_ids.count(cell.get_species_id())>0);
+        }
+    }
+
+    return false;
+}
+
+bool choose_border_cell_in(PositionInTissue& pos, const Tissue& tissue, const Direction& dir,
+                           const std::set<SpeciesId>& species_ids, 
+                           const PositionInTissue& lower_corner, const std::vector<uint16_t>& rect_sizes,
+                           std::mt19937_64& random_gen)
+{
+    PositionDelta delta(dir);
+
+    uint16_t random_init_z = static_cast<int16_t>(random_gen() % rect_sizes[2]);
+    if (delta.x != 0) {
+        uint16_t random_init_y = static_cast<int16_t>(random_gen() % rect_sizes[1]);
+        for (uint16_t y=0; y < rect_sizes[1]; ++y) {
+            pos.y = static_cast<int16_t>((y+random_init_y)%rect_sizes[1])+lower_corner.y;
+            for (uint16_t z=0; z < rect_sizes[2]; ++z) {
+                pos.z = static_cast<int16_t>((z+random_init_z)%rect_sizes[2])+lower_corner.z;
+                pos.x = (delta.x > 0?0:rect_sizes[0]-1)+lower_corner.x;
+
+                PositionInTissue towards_border(pos);
+                if (search_tumoral_cell(pos, tissue, delta, species_ids)
+                        && border_visible_from(towards_border, tissue, delta)) {
+                    return true;
+                }
+            }
+        }
+    }
+    if (delta.y != 0) {
+        uint16_t random_init_x = static_cast<int16_t>(random_gen() % rect_sizes[0]);
+        for (uint16_t x=0; x < rect_sizes[0]; ++x) {
+            pos.x = static_cast<int16_t>((x+random_init_x)%rect_sizes[0])+lower_corner.z;
+            for (uint16_t z=0; z < rect_sizes[2]; ++z) {
+                pos.z = static_cast<int16_t>((z+random_init_z)%rect_sizes[2])+lower_corner.z;
+                pos.y = (delta.y > 0?0:rect_sizes[1]-1)+lower_corner.y;
+
+                PositionInTissue towards_border(pos);
+                if (search_tumoral_cell(pos, tissue, delta, species_ids)
+                        && border_visible_from(towards_border, tissue, delta)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+const CellInTissue& Simulation::choose_border_cell_in(const MutantId& mutant_id,
+                                                      const RectangleSet& rectangle)
+{
+    std::set<SpeciesId> species_ids;
+
+    for (const auto& species : tissue().get_mutant_species(mutant_id)) {
+        species_ids.insert(species.get_id());
+    }
+
+    const std::vector<uint16_t> rect_sizes{static_cast<uint16_t>(rectangle.upper_corner.x-rectangle.lower_corner.x+1),
+                                           static_cast<uint16_t>(rectangle.upper_corner.y-rectangle.lower_corner.y+1),
+                                           static_cast<uint16_t>(rectangle.upper_corner.z-rectangle.lower_corner.z+1)};
+
+    PositionInTissue pos;
+    size_t dir_offset = random_gen()%(valid_directions.size());
+    for (size_t dir_idx=0; dir_idx < valid_directions.size(); ++dir_idx) {
+        const auto& dir = valid_directions[(dir_offset+dir_idx)%valid_directions.size()];
+
+        if (Evolutions::choose_border_cell_in(pos, tissue(), dir, species_ids,
+                                              rectangle.lower_corner, rect_sizes, random_gen)) {
+            return tissue()(pos);
+        }
+    }
+
+    for (const auto& [m_name, m_id]: mutant_name2id) {
+        if (m_id == mutant_id) {
+            throw std::runtime_error("No border cells avaiable for \"" + m_name + "\".");
+        }
+    }
+
+    throw std::runtime_error("No border cells avaiable for unknown mutant (id: "
+                             + std::to_string(mutant_id) + ").");
+}
+
+const CellInTissue& Simulation::choose_border_cell_in(const MutantId& mutant_id)
+{
+    RectangleSet rectangle;
+
+    auto sizes = tissue().size();
+    rectangle.lower_corner.x = 0;
+    rectangle.upper_corner.x = sizes[0];
+    rectangle.lower_corner.y = 0;
+    rectangle.upper_corner.y = sizes[1];
+    rectangle.lower_corner.z = 0;
+    if (sizes.size()==3) {
+        rectangle.upper_corner.y = sizes[2];
+    } else {
+        rectangle.lower_corner.z = 0;
+    }
+
+    return choose_border_cell_in(mutant_id, rectangle);
+}
+
+const CellInTissue& Simulation::choose_border_cell_in(const std::string& mutant_name,
+                                                      const RectangleSet& rectangle)
+{
+    const auto mutant_id = find_mutant_id(mutant_name);
+
+    return choose_border_cell_in(mutant_id, rectangle);
+}
+
+const CellInTissue& Simulation::choose_border_cell_in(const std::string& mutant_name)
+{
+    const auto mutant_id = find_mutant_id(mutant_name);
+
+    return choose_border_cell_in(mutant_id);
 }
 
 /**

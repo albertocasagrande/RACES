@@ -2,10 +2,10 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.44
- * @date 2023-12-15
+ * @version 0.45
+ * @date 2024-01-15
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-24
  *
  * MIT License
  *
@@ -739,6 +739,66 @@ public:
     const CellInTissue& choose_cell_in(const std::string& mutant_name,
                                        const RectangleSet& rectangle,
                                        const CellEventType& event_type=CellEventType::ANY);
+
+    /**
+     * @brief Randomly select a cell on the border of the non-wild-type mass
+     *
+     * This method randomly select a cell on the external border of the 
+     * non-wild-type mass among those belonging to a specified mutant. 
+     *
+     * @param mutant_id is the identifier of the mutant of the selected cell
+     * @return whenever the set of cells having `mutant_id` as mutant
+     *         identifier is not empty, a randomly selected cell in it.
+     *         Otherwise, if the set is empty, a runtime error is thrown.
+     */
+    const CellInTissue& choose_border_cell_in(const MutantId& mutant_id);
+
+    /**
+     * @brief Randomly select a cell on the border of the non-wild-type mass
+     *
+     * This method randomly select a cell on the external border of the 
+     * non-wild-type mass among those belonging to a specified mutant.
+     *
+     * @param mutant_name is the name of the mutant of the selected cell
+     * @return whenever the set of cells having `mutant_name` as mutant
+     *         identifier is not empty, a randomly selected cell in it.
+     *         Otherwise, if the set is empty, a runtime error is thrown.
+     */
+    const CellInTissue& choose_border_cell_in(const std::string& mutant_name);
+
+    /**
+     * @brief Randomly select a cell on the border of the non-wild-type mass
+     *
+     * This method randomly select a cell on the external border of the 
+     * non-wild-type mass among those belonging to a specified mutant in
+     * a specified rectangle.
+     *
+     * @param mutant_id is the identifier of the mutant of the selected cell
+     * @param rectangle is the tissue rectangle in which the cell must be 
+     *          selected
+     * @return whenever the set of cells having `mutant_id` as mutant
+     *         identifier is not empty, a randomly selected cell in it.
+     *         Otherwise, if the set is empty, a runtime error is thrown.
+     */
+    const CellInTissue& choose_border_cell_in(const MutantId& mutant_id,
+                                              const RectangleSet& rectangle);
+
+    /**
+     * @brief Randomly select a cell on the border of the non-wild-type mass
+     *
+     * This method randomly select a cell on the external border of the 
+     * non-wild-type mass among those belonging to a specified mutant in
+     * a specified rectangle.
+     *
+     * @param mutant_name is the name of the mutant of the selected cell
+     * @param rectangle is the tissue rectangle in which the cell must be 
+     *          selected
+     * @return whenever the set of cells having `mutant_name` as mutant
+     *         identifier is not empty, a randomly selected cell in it.
+     *         Otherwise, if the set is empty, a runtime error is thrown.
+     */
+    const CellInTissue& choose_border_cell_in(const std::string& mutant_name,
+                                              const RectangleSet& rectangle);
 
     /**
      * @brief Get the current simulation time
