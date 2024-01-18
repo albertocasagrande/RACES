@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.17
- * @date 2024-01-12
+ * @version 0.18
+ * @date 2024-01-18
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -761,8 +761,9 @@ public:
 
     bool write_SAM;         //!< A Boolean flag to write SAM files
 
-    bool save_coverage;     //!< A flag to enable/disable storage of coverage data
 private:
+    bool save_coverage;     //!< A flag to enable/disable storage of coverage data
+
     RANDOM_GENERATOR random_generator;  //!< The random generator
 
     std::filesystem::path output_directory;         //!< The output directory
@@ -1578,12 +1579,14 @@ public:
      * @param ref_genome_filename is reference genome filename
      * @param read_size is the size of the output reads
      * @param mode is the SAM generator output mode
+     * @param save_coverage is a flag to enable/disable storage of coverage data
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::string& output_directory, const std::string& ref_genome_filename,
-                  const size_t& read_size, const Mode mode=Mode::CREATE, const int& seed=0):
+                  const size_t& read_size, const Mode mode=Mode::CREATE, 
+                  const bool& save_coverage=false, const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::SINGLE_READ, read_size,
-                      0, mode, false, seed)
+                      0, mode, save_coverage, seed)
     {}
 
     /**
@@ -1594,13 +1597,14 @@ public:
      * @param read_size is the size of the output reads
      * @param insert_size is the size of the insert
      * @param mode is the SAM generator output mode
+     * @param save_coverage is a flag to enable/disable storage of coverage data
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::string& output_directory, const std::string& ref_genome_filename,
                   const size_t& read_size, const size_t& insert_size, const Mode mode=Mode::CREATE, 
-                  const int& seed=0):
+                  const bool& save_coverage=false, const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::PAIRED_READ, read_size,
-                      insert_size, mode, false, seed)
+                      insert_size, mode, save_coverage, seed)
     {}
 
     /**
