@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.13
- * @date 2024-01-05
+ * @version 0.14
+ * @date 2024-01-18
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -47,7 +47,7 @@ ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const L
     identifier(identifier), length(size), allelic_length(size*num_of_alleles), alleles(), next_allele_id(0)
 {
     for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
-        alleles.insert({next_allele_id, Allele{identifier, 1, size}});
+        alleles.insert({next_allele_id, Allele{next_allele_id, identifier, 1, size}});
     }
 }
 
@@ -56,7 +56,7 @@ ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region,
     allelic_length(chromosome_region.size()*num_of_alleles), alleles(), next_allele_id(0)        
 {
     for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
-        alleles.insert({next_allele_id, Allele{chromosome_region}});
+        alleles.insert({next_allele_id, Allele{next_allele_id, chromosome_region}});
     }
 }
 
@@ -148,7 +148,7 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
         return false;
     }
 
-    auto new_allele = allele.copy(genomic_region);
+    auto new_allele = allele.copy(next_allele_id, genomic_region);
 
     allelic_length += new_allele.size();
 

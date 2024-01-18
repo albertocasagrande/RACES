@@ -2,10 +2,10 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.10
- * @date 2023-12-22
+ * @version 0.11
+ * @date 2024-01-18
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -32,6 +32,7 @@
 #define __RACES_ALLELE__
 
 #include <map>
+#include <limits>
 
 #include "snv.hpp"
 #include "genomic_region.hpp"
@@ -46,6 +47,9 @@ namespace Mutations
  * @brief A identifier type for alleles
  */
 typedef size_t AlleleId;
+
+// define a random allele identifier
+#define RANDOM_ALLELE std::numeric_limits<Races::Mutations::AlleleId>::max()
 
 /**
  * @brief A class to represent a fragment of an allele
@@ -228,6 +232,8 @@ public:
 class Allele
 {
     std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
+
+    std::list<AlleleId> history;    //!< the allele history
 public:
     /**
      * @brief The allele length
@@ -235,25 +241,56 @@ public:
     using Length = AlleleFragment::Length;
 
     /**
-     * @brief The empty constructor
+     * @brief A constructor
+     * 
+     * @param identifier is the identifier of the allele
+     * @param history is the history of the allele
      */
-    Allele();
+    explicit Allele(const AlleleId& identifier,
+                    const std::list<AlleleId>& history={});
 
     /**
      * @brief A constructor
      *
+     * @param identifier is the identifier of the allele
      * @param chromosome_id is the chromosome identifier
      * @param begin is the initial position of the allele
      * @param end is the final position of the allele
+     * @param history is the history of the allele
      */
-    Allele(const ChromosomeId& chromosome_id, const ChrPosition& begin, const ChrPosition& end);
+    explicit Allele(const AlleleId& identifier, const ChromosomeId& chromosome_id, 
+                    const ChrPosition& begin, const ChrPosition& end,
+                    const std::list<AlleleId>& history={});
 
     /**
      * @brief A constructor
      *
+     * @param identifier is the identifier of the allele
      * @param genomic_region is the genomic region of the allele
+     * @param history is the history of the allele
      */
-    explicit Allele(const GenomicRegion& genomic_region);
+    explicit Allele(const AlleleId& identifier, const GenomicRegion& genomic_region,
+                    const std::list<AlleleId>& history={});
+
+    /**
+     * @brief Get the allele identifier
+     * 
+     * @return the allele identifier
+     */
+    inline const AlleleId& get_id() const
+    {
+        return history.back();
+    }
+
+    /**
+     * @brief Get the allele history
+     * 
+     * @return a constant reference to the allele history
+     */
+    inline const std::list<AlleleId>& get_history() const
+    {
+        return history;
+    }
 
     /**
      * @brief Get the allele fragments
@@ -321,12 +358,14 @@ public:
     /**
      * @brief Copy part of an allele
      *
+     * @param new_allele_id is the identifier of the resulting allele
      * @param genomic_region is the genomic region to copy
      * @return an allelic fragment corresponding to `genomic_region`
      *      that contains all the original allele SNVs
      *      laying in `genomic_region`
      */
-    Allele copy(const GenomicRegion& genomic_region) const;
+    Allele copy(const AlleleId& new_allele_id, 
+                const GenomicRegion& genomic_region) const;
 
     /**
      * @brief Check whether the allele contains driver mutations in a genomic region
@@ -374,7 +413,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & fragments;
+        archive & fragments
+                & history;
     }
 
     /**
@@ -387,9 +427,10 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static Allele load(ARCHIVE& archive)
     {
-        Allele allele;
+        Allele allele(0);
 
-        archive & allele.fragments;
+        archive & allele.fragments
+                & allele.history;
 
         return allele;
     }

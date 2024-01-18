@@ -2,10 +2,10 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.4
- * @date 2023-12-22
+ * @version 0.5
+ * @date 2024-01-18
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -143,16 +143,26 @@ bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region
     return false;
 }
 
-Allele::Allele()
-{}
+Allele::Allele(const AlleleId& identifier, const std::list<AlleleId>& history):
+    history(history)
+{
+    this->history.push_back(identifier);
+}
 
-Allele::Allele(const ChromosomeId& chromosome_id, const ChrPosition& begin, const ChrPosition& end):
-    fragments{{{chromosome_id, begin}, AlleleFragment(chromosome_id, begin, end)}}
-{}
+Allele::Allele(const AlleleId& identifier, const ChromosomeId& chromosome_id,
+               const ChrPosition& begin, const ChrPosition& end,
+               const std::list<AlleleId>& history):
+    fragments{{{chromosome_id, begin}, AlleleFragment(chromosome_id, begin, end)}}, history(history)
+{
+    this->history.push_back(identifier);
+}
 
-Allele::Allele(const GenomicRegion& genomic_region):
-    fragments{{genomic_region.get_begin(), AlleleFragment(genomic_region)}}
-{}
+Allele::Allele(const AlleleId& identifier, const GenomicRegion& genomic_region,
+               const std::list<AlleleId>& history):
+    fragments{{genomic_region.get_begin(), AlleleFragment(genomic_region)}}, history(history)
+{
+    this->history.push_back(identifier);
+}
 
 bool Allele::contains(const GenomicPosition& genomic_position) const
 {
@@ -231,9 +241,9 @@ bool Allele::remove_SNV(const GenomicPosition& genomic_position)
     return false;
 }
 
-Allele Allele::copy(const GenomicRegion& genomic_region) const
+Allele Allele::copy(const AlleleId& new_allele_id, const GenomicRegion& genomic_region) const
 {
-    Allele new_sequence;
+    Allele new_sequence(new_allele_id, history);
 
     auto it = fragments.upper_bound(genomic_region.get_begin());
     if (it != fragments.begin()) {
