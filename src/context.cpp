@@ -2,10 +2,10 @@
  * @file context.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements mutational contexts and extended context automata
- * @version 0.6
- * @date 2023-12-09
+ * @version 0.7
+ * @date 2024-01-18
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -79,7 +79,7 @@ uint8_t encode_base(const char& base)
 }
 
 MutationalContext::MutationalContext():
-    code(0)
+    code(std::numeric_limits<CodeType>::max())
 {}
 
 MutationalContext::MutationalContext(const char* nucleic_triplet):
@@ -119,6 +119,10 @@ std::string MutationalContext::get_sequence() const
 {
     std::string sequence;
 
+    if (!is_defined()) {
+        return "???";
+    }
+
     const uint8_t nucleotide_mask = 0x03;
     
     // this is to have the central nucleotide associated
@@ -134,11 +138,19 @@ std::string MutationalContext::get_sequence() const
 
 char MutationalContext::get_central_nucleotide() const
 {
+    if (!is_defined()) {
+        return '?';
+    }
+
     return static_cast<char>(decode_base((code >> 4)&0x03));
 }
 
 uint8_t MutationalContext::get_complement(const uint8_t& code)
 {
+    if (code == std::numeric_limits<CodeType>::max()) {
+        return code;
+    }
+
     const uint8_t nucleotide_mask = 0x03;
 
     // this is to have the central nucleotide associated
@@ -254,12 +266,13 @@ ExtendedContextAutomaton::ExtendedContextAutomaton():
     state(get_state_for('N','N','N'))
 {
     std::string context{"NNN"};
+    const std::vector<char> alphabet{'A', 'C', 'G', 'T', 'N'};
 
-    for (const auto nucleotide2: {'A', 'C', 'G', 'T', 'N'}) {
+    for (const auto& nucleotide2: alphabet) {
         context[2] = nucleotide2;
-        for (const auto nucleotide1: {'A', 'C', 'G', 'T', 'N'}) {
+        for (const auto& nucleotide1: alphabet) {
             context[1] = nucleotide1;
-            for (const auto nucleotide0: {'A', 'C', 'G', 'T', 'N'}) {
+            for (const auto& nucleotide0: alphabet) {
                 context[0] = nucleotide0;
                 size_t state = get_state_for(nucleotide0, nucleotide1, nucleotide2);
 
@@ -272,7 +285,7 @@ ExtendedContextAutomaton::ExtendedContextAutomaton():
                 }
                 auto& out_edges = edges[state];
 
-                for (const auto read_base: {'A', 'C', 'G', 'T', 'N'}) {
+                for (const auto& read_base: alphabet) {
                     out_edges[base2code(read_base)] = get_state_for(nucleotide1, nucleotide2, read_base);
                 }
             }

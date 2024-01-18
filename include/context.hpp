@@ -2,10 +2,10 @@
  * @file context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.6
- * @date 2023-12-09
+ * @version 0.7
+ * @date 2024-01-18
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -36,6 +36,7 @@
 #include <string>
 #include <iostream>
 #include <array>
+#include <limits>
 
 #include "archive.hpp"
 
@@ -96,6 +97,17 @@ public:
     inline const CodeType& get_code() const
     {
         return code;
+    }
+
+    /**
+     * @brief Check whether the mutational context is defined
+     * 
+     * @return `true` if and only if the nucleic triplet was 
+     *          specified during the object creation
+     */
+    inline bool is_defined() const
+    {
+        return (code == std::numeric_limits<CodeType>::max());
     }
 
     /**
