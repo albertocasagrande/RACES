@@ -2,10 +2,10 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.5
- * @date 2023-12-18
+ * @version 0.6
+ * @date 2024-01-19
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -39,8 +39,8 @@ namespace Mutations
 CopyNumberAlteration::CopyNumberAlteration()
 {}
 
-CopyNumberAlteration::CopyNumberAlteration(const GenomicRegion& region, const AlleleId& source,
-                                             const AlleleId& destination, const CopyNumberAlteration::Type& type):
+CopyNumberAlteration::CopyNumberAlteration(const GenomicRegion& region, const CopyNumberAlteration::Type& type, 
+                                           const AlleleId& source, const AlleleId& destination):
     region(region), source(source), dest(destination), type(type)
 {}
 
@@ -101,6 +101,14 @@ bool less<Races::Mutations::CopyNumberAlteration>::operator()(const Races::Mutat
     return false;
 }
 
+std::string format_allele(const Races::Mutations::AlleleId& allele)
+{
+    if (allele == RANDOM_ALLELE) {
+        return "\"random allele\"";
+    }
+
+    return std::to_string(allele);
+}
 
 std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAlteration& cna)
 {
@@ -108,10 +116,13 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAl
     using namespace Races::Mutations;
     switch(cna.type) {
         case CopyNumberAlteration::Type::AMPLIFICATION:
-            out << "'A'," << cna.region << "," << cna.source << "," << cna.dest;
+            out << "'A'," << cna.region << ","
+                << format_allele(cna.source) << ","
+                << format_allele(cna.dest);
             break;
         case CopyNumberAlteration::Type::DELETION:
-            out << "'D'," << cna.region << "," << cna.dest;
+            out << "'D'," << cna.region << "," 
+                << format_allele(cna.dest);
             break;
         default:
             throw std::runtime_error("Unsupported CNA type "

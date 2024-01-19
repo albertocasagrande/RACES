@@ -2,10 +2,10 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.7
- * @date 2023-12-18
+ * @version 0.8
+ * @date 2024-01-19
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -71,7 +71,9 @@ struct CopyNumberAlteration
      * @param destination is the allele in which the region is copied/removed
      * @param type is the CNA type
      */
-    CopyNumberAlteration(const GenomicRegion& region, const AlleleId& source, const AlleleId& destination, const Type& type);
+    CopyNumberAlteration(const GenomicRegion& region, const Type& type, 
+                         const AlleleId& source=RANDOM_ALLELE,
+                         const AlleleId& destination=RANDOM_ALLELE);
 
     /**
      * @brief Build a new amplification
@@ -81,10 +83,10 @@ struct CopyNumberAlteration
      * @param destination is the allele in which the region is copied
      */
     static inline CopyNumberAlteration new_amplification(const GenomicRegion& region,
-                                                          const AlleleId& source,
-                                                          const AlleleId& destination)
+                                                          const AlleleId& source=RANDOM_ALLELE,
+                                                          const AlleleId& destination=RANDOM_ALLELE)
     {
-        return CopyNumberAlteration(region, source, destination, Type::AMPLIFICATION);
+        return CopyNumberAlteration(region, Type::AMPLIFICATION, source, destination);
     }
 
     /**
@@ -93,9 +95,10 @@ struct CopyNumberAlteration
      * @param region is the region in which CNA occurred
      * @param allele is the allele from which the region is removed
      */
-    static inline CopyNumberAlteration new_deletion(const GenomicRegion& region, const AlleleId& allele)
+    static inline CopyNumberAlteration new_deletion(const GenomicRegion& region,
+                                                    const AlleleId& allele=RANDOM_ALLELE)
     {
-        return CopyNumberAlteration(region, allele, allele, Type::DELETION);
+        return CopyNumberAlteration(region, Type::DELETION, allele, allele);
     }
 
     /**
