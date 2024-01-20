@@ -107,13 +107,19 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAl
     using namespace Races::Mutations;
     switch(cna.type) {
         case CopyNumberAlteration::Type::AMPLIFICATION:
-            out << "\"A\"," << cna.region << ","
-                << Allele::format_id(cna.source) << ","
-                << Allele::format_id(cna.dest);
+            out << "\"A\"," << cna.region; 
+            if (cna.source != RANDOM_ALLELE) {
+                out << ", src: "<< Allele::format_id(cna.source);
+            }
+            if (cna.dest != RANDOM_ALLELE) {
+                out << ", dst: "<< Allele::format_id(cna.dest);
+            }
             break;
         case CopyNumberAlteration::Type::DELETION:
-            out << "\"D\"," << cna.region << "," 
-                << Allele::format_id(cna.dest);
+            out << "\"D\"," << cna.region;
+            if (cna.dest != RANDOM_ALLELE) {
+                out << ", dst: "<< Allele::format_id(cna.dest);
+            }
             break;
         default:
             throw std::runtime_error("Unsupported CNA type "
