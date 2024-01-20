@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.12
- * @date 2024-01-18
+ * @version 0.13
+ * @date 2024-01-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -183,17 +183,19 @@ class MutationsSimulator : public BasicExecutable
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
     Races::Mutations::PhylogeneticForest
     place_mutations(Races::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
-                    const Races::Mutants::DescendantsForest& forest) const
+                    const Races::Mutants::DescendantsForest& forest,
+                    const size_t& num_of_preneoplastic_mutations) const
     {
         if (quiet) {
-            return engine.place_mutations(forest);
+            return engine.place_mutations(forest, num_of_preneoplastic_mutations);
         }
 
         Races::UI::ProgressBar progress_bar;
 
         progress_bar.set_message("Placing mutations");
 
-        auto phylo_forest = engine.place_mutations(forest, progress_bar);
+        auto phylo_forest = engine.place_mutations(forest, num_of_preneoplastic_mutations,
+                                                   progress_bar);
 
         progress_bar.set_message("Mutations placed");
 
@@ -394,7 +396,9 @@ class MutationsSimulator : public BasicExecutable
 
         ConfigReader::add_timed_exposures(engine, exposures_json);
 
-        auto phylogenetic_forest = place_mutations(engine, descendants_forest);
+        auto num_of_pnp_mutations = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg);
+
+        auto phylogenetic_forest = place_mutations(engine, descendants_forest, num_of_pnp_mutations);
 
         auto mutations_list = phylogenetic_forest.get_sample_mutations_list();
 

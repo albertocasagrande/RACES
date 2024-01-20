@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.16
- * @date 2023-12-22
+ * @version 0.17
+ * @date 2024-01-20
  *
  * @copyright Copyright (c) 2023
  *
@@ -304,6 +304,19 @@ public:
      */
     static Races::Mutations::Exposure
     get_exposure(const nlohmann::json& exposure_json);
+
+    /**
+     * @brief Get the number of neoplastic mutations
+     *
+     * @param simulation_json is the JSON simulation configuration
+     * @return the number of neoplastic mutations 
+     */
+    static size_t
+    get_number_of_neoplastic_mutations(const nlohmann::json& simulation_json)
+    {
+        return get_from<size_t>("number of pre-neoplastic mutations", simulation_json,
+                                "The passengers simulation configuration");
+    }
 };
 
 }   // Races

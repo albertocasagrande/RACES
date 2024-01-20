@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.38
- * @date 2024-01-02
+ * @version 0.39
+ * @date 2024-01-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -365,6 +365,49 @@ class MutationEngine
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
+     * @param SBS_name is the name of the SBS used to find the mutations
+     * @param num_of_mutations is the number of SNV to apply
+     * @param cause is the cause of the mutations
+     */
+    void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations, 
+                    const std::string& SBS_name, const size_t& num_of_mutations,
+                    const std::string& cause)
+    {
+        // get the inverse cumulative SBS
+        const auto& inv_cumulative_SBS = inv_cumulative_SBSs.at(SBS_name);
+
+        std::uniform_real_distribution<> u_dist(0,1);
+
+        // while some of the requested SNVs have not been set
+        unsigned int new_SNVs = 0;
+        while (new_SNVs < num_of_mutations) {
+            // randomly pick a mutational type according to the current SBS
+            auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
+
+            if (it != inv_cumulative_SBS.end() &&
+                    context_index[it->second.get_context()].size()>0) {
+
+                // select a SNV among those having the picked mutational type
+                // and that available in the context index
+                SNV snv = select_SNV(it->second, cause);
+
+                if (place_SNV(snv, cell_mutations)) {
+                    // if the SNV has been successfully applied,
+                    // then increase the number of new SNVs
+                    ++new_SNVs;
+
+                    node.add_new_mutation(snv);
+                }
+            }
+        }
+    }    
+
+    /**
+     * @brief Place the mutations associated to a cell in the phylogenetic forest
+     *
+     * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
+     * @param node is a phylogenetic forest node representing a cell
+     * @param cell_mutations are the cell mutations
      * @param SNV_rate is the rate of passegers SNVs
      */
     void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
@@ -372,43 +415,13 @@ class MutationEngine
     {
         auto num_of_SNVs = number_of_SNVs(cell_mutations.allelic_size(), SNV_rates);
 
-        // get the active SBS exposure
-        const auto& exposure = get_active_exposure(node);
+        // for each active SBS probability in the active exposure
+        for (const auto& [SBS_name, probability]: get_active_exposure(node)) {
 
-        // for each active SBS probability
-        for (const auto& [SBS_name, probability]: exposure) {
+            // evaluate how many of the SNVs due to the current SBS
+            const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
 
-            // get the inverse cumulative SBS
-            const auto& inv_cumulative_SBS = inv_cumulative_SBSs.at(SBS_name);
-
-            // evaluate how many of the SNVs occurred to the considered cells
-            // are due to the current SBS
-            size_t SBS_num_of_SNVs = probability*num_of_SNVs;
-
-            std::uniform_real_distribution<> u_dist(0,1);
-
-            // while some of the requested SNVs have not been set
-            unsigned int new_SNVs = 0;
-            while (new_SNVs < SBS_num_of_SNVs) {
-                // randomly pick a mutational type according to the current SBS
-                auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
-
-                if (it != inv_cumulative_SBS.end() &&
-                        context_index[it->second.get_context()].size()>0) {
-
-                    // select a SNV among those having the picked mutational type
-                    // and that available in the context index
-                    SNV snv = select_SNV(it->second, SBS_name);
-
-                    if (place_SNV(snv, cell_mutations)) {
-                        // if the SNV has been successfully applied,
-                        // then increase the number of new SNVs
-                        ++new_SNVs;
-
-                        node.add_new_mutation(snv);
-                    }
-                }
-            }
+            place_SNVs(node, cell_mutations, SBS_name, SBS_num_of_SNVs, SBS_name);
         }
     }
 
@@ -708,25 +721,29 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
+     * @param num_of_preneoplatic_mutations is the number of preneoplastic_mutations
      * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     inline
     PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                                       const size_t& num_of_preneoplatic_mutations,
                                        const int& seed=0)
     {
-        return place_mutations(descendants_forest, nullptr, seed);
+        return place_mutations(descendants_forest, num_of_preneoplatic_mutations, nullptr, seed);
     }
 
     /**
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
+     * @param num_of_preneoplatic_mutations is the number of preneoplastic_mutations
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                                       const size_t& num_of_preneoplatic_mutations,
                                        UI::ProgressBar *progress_bar, const int& seed=0)
     {
         using namespace Races::Mutants;
@@ -767,6 +784,9 @@ public:
 
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
+            // place preneoplastic mutations
+            place_SNVs(root, mutations, "SBS1", num_of_preneoplatic_mutations, "Pre-neoplastic");
+
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
         }
@@ -778,14 +798,16 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
+     * @param num_of_preneoplatic_mutations is the number of preneoplastic_mutations
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     inline PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                                              const size_t& num_of_preneoplatic_mutations,
                                               UI::ProgressBar &progress_bar, const int& seed=0)
     {
-        return place_mutations(descendants_forest, &progress_bar, seed);
+        return place_mutations(descendants_forest, num_of_preneoplatic_mutations, &progress_bar, seed);
     }
 
     /**

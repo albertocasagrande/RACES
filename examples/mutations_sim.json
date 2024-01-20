@@ -7,6 +7,7 @@
             {"chromosome": "Y", "number of alleles": 1}
         ]
     },
+    "number of pre-neoplastic mutations": 1000,
     "mutant properties": [
         {
             "name": "A",
