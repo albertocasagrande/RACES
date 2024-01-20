@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.11
- * @date 2024-01-18
+ * @version 0.12
+ * @date 2024-01-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -403,6 +403,14 @@ public:
      * @return the size of the allele
      */
     Length size() const;
+
+    /**
+     * @brief Get the string representation of an allele identifier
+     * 
+     * @param allele_id is the allele identifier to be formatted 
+     * @return the string representation of `allele_id`
+     */
+    static std::string format_id(const Races::Mutations::AlleleId& allele_id);
 
     /**
      * @brief Save an allele in an archive

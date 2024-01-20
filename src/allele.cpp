@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.5
- * @date 2024-01-18
+ * @version 0.6
+ * @date 2024-01-20
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -340,6 +340,15 @@ Allele::Length Allele::size() const
     }
 
     return total_size;
+}
+
+std::string Allele::format_id(const Races::Mutations::AlleleId& allele_id)
+{
+    if (allele_id == RANDOM_ALLELE) {
+        return "NA";
+    }
+
+    return std::to_string(allele_id);
 }
 
 }   // Mutations

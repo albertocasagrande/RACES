@@ -2,8 +2,8 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.6
- * @date 2024-01-19
+ * @version 0.8
+ * @date 2024-01-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -101,28 +101,19 @@ bool less<Races::Mutations::CopyNumberAlteration>::operator()(const Races::Mutat
     return false;
 }
 
-std::string format_allele(const Races::Mutations::AlleleId& allele)
-{
-    if (allele == RANDOM_ALLELE) {
-        return "\"random allele\"";
-    }
-
-    return std::to_string(allele);
-}
-
 std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAlteration& cna)
 {
     out << "CNA(";
     using namespace Races::Mutations;
     switch(cna.type) {
         case CopyNumberAlteration::Type::AMPLIFICATION:
-            out << "'A'," << cna.region << ","
-                << format_allele(cna.source) << ","
-                << format_allele(cna.dest);
+            out << "\"A\"," << cna.region << ","
+                << Allele::format_id(cna.source) << ","
+                << Allele::format_id(cna.dest);
             break;
         case CopyNumberAlteration::Type::DELETION:
-            out << "'D'," << cna.region << "," 
-                << format_allele(cna.dest);
+            out << "\"D\"," << cna.region << "," 
+                << Allele::format_id(cna.dest);
             break;
         default:
             throw std::runtime_error("Unsupported CNA type "

@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.15
+ * @version 0.16
  * @date 2024-01-20
  * 
  * @copyright Copyright (c) 2023-2024
@@ -94,7 +94,7 @@ const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
         std::ostringstream oss;
 
         oss << "Chromosome " << GenomicPosition::chrtos(identifier)  
-            <<  " has not allele " << allele_id << ".";
+            <<  " has not allele " << Allele::format_id(allele_id) << ".";
         throw std::out_of_range(oss.str());
     }
 
@@ -109,7 +109,7 @@ Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id)
         std::ostringstream oss;
 
         oss << "Chromosome " << GenomicPosition::chrtos(identifier) 
-            <<  " has not allele " << allele_id << ".";
+            <<  " has not allele " << Allele::format_id(allele_id) << ".";
         throw std::out_of_range(oss.str());
     }
 
@@ -367,7 +367,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutations::ChromosomeMut
     os << "Chromosome " << Races::Mutations::GenomicPosition::chrtos(chromosome_mutations.id()) << std::endl;
 
     for (const auto& [allele_id, allele]: chromosome_mutations.get_alleles()) {
-        os << "  " << allele_id << ": " << allele << std::endl;
+        os << "  " << Races::Mutations::Allele::format_id(allele_id) << ": " << allele << std::endl;
     }
 
     return os;
