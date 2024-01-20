@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.14
- * @date 2024-01-18
+ * @version 0.15
+ * @date 2024-01-20
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -93,7 +93,8 @@ const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
     if (it == alleles.end()) {
         std::ostringstream oss;
 
-        oss << "Chromosome " << identifier <<  " has not allele " << allele_id << ".";
+        oss << "Chromosome " << GenomicPosition::chrtos(identifier)  
+            <<  " has not allele " << allele_id << ".";
         throw std::out_of_range(oss.str());
     }
 
@@ -107,7 +108,8 @@ Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id)
     if (it == alleles.end()) {
         std::ostringstream oss;
 
-        oss << "Chromosome " << identifier <<  " has not allele " << allele_id << ".";
+        oss << "Chromosome " << GenomicPosition::chrtos(identifier) 
+            <<  " has not allele " << allele_id << ".";
         throw std::out_of_range(oss.str());
     }
 
