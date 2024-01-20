@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.18
- * @date 2024-01-18
+ * @version 0.19
+ * @date 2024-01-20
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -1003,19 +1003,24 @@ private:
 
                 // extract the part of the SNV context falling inside ``nucleic_sequence` 
                 size_t length = real_context.size();
-                std::string context = snv_it->second.context.get_sequence().substr((SNV_pos==0?1:0), length);
 
-                // if they differ
-                if (real_context!=context) {
-                    std::ostringstream oss;
+                if (snv_it->second.context.is_defined()) {
+                    std::string context = snv_it->second.context.get_sequence().substr((SNV_pos==0?1:0),
+                                                                                       length);
 
-                    oss << "Context mismatch in chr. "<< GenomicPosition::chrtos(genomic_position.chr_id) 
-                        << " in position " << snv_it->second.position << ": \"" 
-                        << context << "\" expected and got \"" 
-                        << real_context << "\"."<< std::endl 
-                        << "Are you using a FASTA file different from that used for the context index?"
-                        << std::endl;
-                    throw std::domain_error(oss.str());
+                    // if they differ
+                    if (real_context!=context) {
+                        std::ostringstream oss;
+
+                        oss << "Context mismatch in chr. "
+                            << GenomicPosition::chrtos(genomic_position.chr_id) 
+                            << " in position " << snv_it->second.position << ": \"" 
+                            << context << "\" expected and got \"" 
+                            << real_context << "\"."<< std::endl 
+                            << "Are you using a FASTA file different from that used for the context index?"
+                            << std::endl;
+                        throw std::domain_error(oss.str());
+                    }
                 }
             }
 

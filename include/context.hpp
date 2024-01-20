@@ -2,8 +2,8 @@
  * @file context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.7
- * @date 2024-01-18
+ * @version 0.8
+ * @date 2024-01-20
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -107,7 +107,7 @@ public:
      */
     inline bool is_defined() const
     {
-        return (code == std::numeric_limits<CodeType>::max());
+        return (code != std::numeric_limits<CodeType>::max());
     }
 
     /**

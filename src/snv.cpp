@@ -2,7 +2,7 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.12
+ * @version 0.13
  * @date 2024-01-18
  * 
  * @copyright Copyright (c) 2023-2024
@@ -104,8 +104,8 @@ SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
         throw std::domain_error(oss.str());
     }
 
-    if (context.get_central_nucleotide() == mutated_base) {
-        throw std::domain_error("the original and the mutated bases are the same");
+    if (context.is_defined() && context.get_central_nucleotide() == mutated_base) {
+        throw std::domain_error("SNV: the original and the mutated bases are the same");
     }
 }
 

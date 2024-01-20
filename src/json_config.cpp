@@ -2,10 +2,10 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.22
- * @date 2023-12-22
+ * @version 0.23
+ * @date 2024-01-20
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -137,8 +137,11 @@ ConfigReader::add_SNV(const std::string& mutant_name, std::list<Races::Mutations
 {
     using namespace Races::Mutations;
 
-    MutationalContext context = get_from<std::string>("context", SNV_json,
-                                                        "All the SNVs");
+    MutationalContext context;
+    
+    if (SNV_json.count("context")>0) {
+        context = get_from<std::string>("context", SNV_json, "All the SNVs");
+    }
     auto chr_str = get_from<std::string>("chromosome", SNV_json, "All the SNVs");
     auto mutated_base = get_from<std::string>("mutated base", SNV_json, "All the SNVs");
     auto position = get_from<ChrPosition>("position", SNV_json, "All the SNVs");
