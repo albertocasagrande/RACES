@@ -2,8 +2,8 @@
  * @file csv_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to read CSV
- * @version 0.1
- * @date 2024-01-18
+ * @version 0.2
+ * @date 2024-01-26
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -111,6 +111,7 @@ CSVReader::CSVReader(const std::filesystem::path& filename, const bool has_heade
 
         size_t i{0};
         while(std::getline(oss_line, column_name, col_sep)) {
+            header.push_back(column_name);
             columns[column_name] = i;
 
             ++i;

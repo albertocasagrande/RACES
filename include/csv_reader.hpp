@@ -2,8 +2,8 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 0.1
- * @date 2024-01-18
+ * @version 0.2
+ * @date 2024-01-26
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -50,9 +50,11 @@ class CSVReader
 
     const char col_sep;             //!< The column separator
 
-    std::map<std::string, size_t> columns; //!< the column positions
+    std::map<std::string, size_t> columns; //!< The column positions
 
-    std::streampos first_row_pos;   //!< the position in the file of the first data row
+    std::vector<std::string> header;    //!< The CSV header
+
+    std::streampos first_row_pos;   //!< The position in the file of the first data row
 
 public:
     /**
@@ -210,6 +212,34 @@ public:
     inline const_iterator end() const
     {
         return const_iterator(this, 0, std::ios_base::end);
+    }
+
+    /**
+     * @brief Get the CSV header vector
+     * 
+     * @return the CSV header vector
+     */
+    inline const std::vector<std::string>& get_header() const
+    {
+        return header;
+    }
+
+    /**
+     * @brief Get the position of a column by name
+     * 
+     * @param column_name is the name of the column whose position is request
+     * @return the position of the column whose name is `column_name`
+     */
+    inline const size_t& get_column_position(const std::string& column_name) const
+    {
+        auto found = columns.find(column_name);
+
+        if (found == columns.end()) {
+            throw std::domain_error("Unknown column name \"" 
+                                    + column_name + "\".");
+        }        
+
+        return found->second;
     }
 
     friend class const_iterator;
