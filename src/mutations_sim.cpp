@@ -55,6 +55,8 @@
 
 #include "progress_bar.hpp"
 
+#include "csv_reader.hpp"
+
 #include "json_config.hpp"
 
 template<>
@@ -114,6 +116,7 @@ class MutationsSimulator : public BasicExecutable
     std::filesystem::path snapshot_path;
     std::filesystem::path context_index_filename;
     std::filesystem::path ref_genome_filename;
+    std::filesystem::path passenger_CNA_filename;
     std::filesystem::path SBS_filename;
 
     double coverage;
@@ -306,6 +309,51 @@ class MutationsSimulator : public BasicExecutable
         return Races::ConfigReader::get_number_of_alleles(simulation_cfg, chromosome_ids);
     }
 
+    static Races::Mutations::GenomicRegion get_CNA_region(const Races::IO::CSVReader::CSVRow& row, const size_t& row_num)
+    {
+        using namespace Races::Mutations;
+
+        if (row.size()<5) {
+            throw std::runtime_error("The CNA CSV must contains at least 5 columns");
+        }
+        ChromosomeId chr_id;
+
+        try {
+            chr_id = GenomicPosition::stochr(row.get_field(0).substr(3));
+        } catch (std::invalid_argument) {
+            throw std::domain_error("Unknown chromosome specification " + row.get_field(0) 
+                                    + " in row number " + std::to_string(row_num) 
+                                    + ".");
+        }
+
+        uint32_t begin_pos;         
+        try {
+            begin_pos = stoul(row.get_field(1));
+        } catch (std::invalid_argument) {
+            throw std::domain_error("Unknown begin specification " + row.get_field(1) 
+                                    + " in row number " + std::to_string(row_num) 
+                                    + ".");
+        }
+
+        GenomicPosition pos(chr_id, begin_pos);
+
+        uint32_t end_pos;                
+        try {
+            end_pos = stoul(row.get_field(2));
+        } catch (std::invalid_argument) {
+            throw std::domain_error("Unknown end specification " + row.get_field(2) 
+                                    + " in row number " + std::to_string(row_num) 
+                                    + ".");
+        }
+
+        if (begin_pos>end_pos) {
+            throw std::domain_error("The CNA begin lays after the end in row number "
+                                    + std::to_string(row_num));
+        }
+        
+        return {pos, end_pos+1-begin_pos};
+    }
+
     static void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics)
     {
         Races::UI::ProgressBar progress_bar;
@@ -386,8 +434,13 @@ class MutationsSimulator : public BasicExecutable
 
         auto num_of_alleles = get_number_of_alleles(context_index, simulation_cfg);
 
+
+        const auto passenger_CNAs = MutationsSimulator::load_passenger_CNAs(passenger_CNA_filename);
+
+
         MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_alleles,
-                                                    signatures, mutational_properties);
+                                                    signatures, mutational_properties,
+                                                    passenger_CNAs);
 
         const auto& exposures_json = simulation_cfg["exposures"];
 
@@ -477,6 +530,20 @@ class MutationsSimulator : public BasicExecutable
                                 + "\"  is not a regular file", 1);
         }
 
+        if (!vm.count("passenger CNAs file")) {
+            print_help_and_exit("The passenger CNA file is mandatory.", 1);
+        }
+
+        if (!fs::exists(passenger_CNA_filename)) {
+            print_help_and_exit("\"" + std::string(passenger_CNA_filename)
+                                + "\"  does not exist", 1);
+        }
+
+        if (!fs::is_regular_file(passenger_CNA_filename)) {
+            print_help_and_exit("\"" + std::string(passenger_CNA_filename)
+                                + "\"  is not a regular file", 1);
+        }
+
         if (vm.count("SNVs-csv")>0 && fs::exists(SNVs_csv_filename)) {
             print_help_and_exit("\"" + std::string(SNVs_csv_filename)
                                 + "\" already exists", 1);
@@ -511,6 +578,46 @@ class MutationsSimulator : public BasicExecutable
     }
 
 public:
+    static std::vector<Races::Mutations::CopyNumberAlteration> load_passenger_CNAs(const std::filesystem::path& CNAs_csv)
+    {
+        using namespace Races::Mutations;
+
+        std::vector<CopyNumberAlteration> CNAs;
+
+        Races::IO::CSVReader csv_reader(CNAs_csv);
+
+        size_t row_num{2};
+        for (const auto& row : csv_reader) {
+            const auto region = get_CNA_region(row, row_num);
+
+            const auto major = row.get_field(3);
+            try {
+                if (major=="NA" || (stoi(major)>1)) {
+                    CNAs.push_back({region, CopyNumberAlteration::Type::AMPLIFICATION});
+                }
+            } catch (std::invalid_argument) {
+                throw std::domain_error("Unknown major specification " + major 
+                                        + " in row number " + std::to_string(row_num) 
+                                        + ".");
+            }
+
+            const auto minor = row.get_field(4);
+            try {
+                if (minor=="NA" || (stoi(minor)<1)) {
+                    CNAs.push_back({region, CopyNumberAlteration::Type::DELETION});
+                }
+            } catch (std::invalid_argument) {
+                throw std::domain_error("Unknown minor specification " + major 
+                                        + " in row number " + std::to_string(row_num) 
+                                        + ".");
+            }
+
+            ++row_num;
+        }
+
+        return CNAs;
+    }
+
     MutationsSimulator(int argc, char* argv[]):
         BasicExecutable(argv[0], {{"mutations", "Mutation simulation options"},
                                   {"sequencing", "Sequencing simulation options"},
@@ -565,6 +672,8 @@ public:
              "the mutational signature")
             ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename),
              "the filename of the reference genome FASTA file")
+            ("passenger CNAs file", po::value<std::filesystem::path>(&passenger_CNA_filename),
+             "the filename of the passenger CNAs")
         ;
 
         po::options_description program_options;
@@ -578,6 +687,7 @@ public:
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
+        positional_options.add("passenger CNAs file", 1);
 
         po::variables_map vm;
 

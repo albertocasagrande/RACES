@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.40
- * @date 2024-01-20
+ * @version 0.41
+ * @date 2024-01-26
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -186,7 +186,7 @@ class MutationEngine
 
 
     /**
-     * @brief The stack of contexts removed from a context index
+     * @brief The stack of contexts removed from the context index
      */
     using ContextStack = std::stack<std::pair<MutationalContext, GENOME_WIDE_POSITION>>;
 
@@ -202,7 +202,7 @@ class MutationEngine
 
     MutationalProperties mutational_properties;  //!< the species mutational properties
 
-    std::vector<CopyNumberAlteration> admissible_CNAs;  //!< the admissible passenger CNAs
+    std::vector<CopyNumberAlteration> passenger_CNAs;   //!< the admissible passenger CNAs
 
     /**
      * @brief Select a random value in a set
@@ -337,6 +337,52 @@ class MutationEngine
     }
 
     /**
+     * @brief Place the CNAs in a cell genome in the phylogenetic forest
+     *
+     * @param node is a phylogenetic forest node representing a cell
+     * @param cell_mutations are the cell mutations
+     * @param num_of_mutations is the number of CNAs to be applied
+     */
+    void place_CNAs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
+                    const size_t& num_of_mutations)
+    {
+        // while some of the requested CNAs have not been set
+        size_t new_CNAs{0};
+        while (new_CNAs < num_of_mutations) {
+            const size_t last_pos = passenger_CNAs.size()-1;
+            std::uniform_int_distribution<size_t> u_dist(0, last_pos);
+
+            // randomly select a CNA
+            size_t index = u_dist(generator);
+
+            CopyNumberAlteration CNA = passenger_CNAs[index];
+
+            if (place_passenger_CNA(CNA, cell_mutations)) {
+                // if the CNA has been successfully applied,
+                // then increase the number of new CNAs
+                ++new_CNAs;
+
+                node.add_new_mutation(CNA);
+            }
+        }
+    }
+
+    /**
+     * @brief Place the CNAs in a cell genome in the phylogenetic forest
+     *
+     * @param node is a phylogenetic forest node representing a cell
+     * @param cell_mutations are the cell mutations
+     * @param CNA_rate is the rate of passegers CNAs
+     */
+    void place_CNAs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
+                    const double& CNA_rate)
+    {
+        const auto num_of_CNAs = number_of_mutations(cell_mutations.allelic_size(), CNA_rate);
+
+        place_CNAs(node, cell_mutations, num_of_CNAs);
+    }
+
+    /**
      * @brief Try to place a SNV
      *
      * @param snv is the SNV to place
@@ -362,7 +408,7 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the SNVs associated to a cell in the phylogenetic forest
+     * @brief Place the SNVs in a cell genome in the phylogenetic forest
      *
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
@@ -380,7 +426,7 @@ class MutationEngine
         std::uniform_real_distribution<> u_dist(0,1);
 
         // while some of the requested SNVs have not been set
-        unsigned int new_SNVs = 0;
+        size_t new_SNVs = 0;
         while (new_SNVs < num_of_mutations) {
             // randomly pick a mutational type according to the current SBS
             auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
@@ -401,10 +447,10 @@ class MutationEngine
                 }
             }
         }
-    }    
+    }
 
     /**
-     * @brief Place the mutations associated to a cell in the phylogenetic forest
+     * @brief Place the SNVs in a cell genome in the phylogenetic forest
      *
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a phylogenetic forest node representing a cell
@@ -655,7 +701,7 @@ class MutationEngine
     {
         using namespace Races::Mutations;
 
-        size_t context_stack_size = context_stack.size();
+        const size_t context_stack_size = context_stack.size();
 
         CellGenomeMutations cell_mutations(static_cast<const Mutants::Cell&>(node),
                                            ancestor_mutations);
@@ -669,7 +715,7 @@ class MutationEngine
             throw std::runtime_error("Unknown species \""+ species_name +"\"");
         }
         place_SNVs(node, cell_mutations, rates_it->second.snv);
-        //place_CNAs(node, cell_mutations, rates_it->second.cna);
+        place_CNAs(node, cell_mutations, rates_it->second.cna);
 
         ++visited_nodes;
         if (progress_bar != nullptr) {
@@ -700,7 +746,7 @@ class MutationEngine
     /**
      * @brief Remove the context stack top and insert it in the context index
      */
-    void reinsert_last_context()
+    inline void reinsert_last_context()
     {
         const auto& top_stack = context_stack.top();
         context_index.insert(top_stack.first, top_stack.second);
@@ -785,14 +831,14 @@ public:
      * @param context_index is the genome context index
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
-     * @param admissible_CNAs is the vector of the admissible passenger CNAs
+     * @param passenger_CNAs is the vector of the admissible passenger CNAs
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
-                   const std::vector<CopyNumberAlteration>& admissible_CNAs={}):
+                   const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
         MutationEngine(context_index, alleles_per_chromosome, mutational_signatures,
-                       MutationalProperties(), admissible_CNAs)
+                       MutationalProperties(), passenger_CNAs)
     {}
 
     /**
@@ -802,15 +848,15 @@ public:
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
      * @param mutational_properties are the mutational properties of all the species
-     * @param admissible_CNAs is the vector of the admissible passenger CNAs
+     * @param passenger_CNAs is the vector of the admissible passenger CNAs
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
                    const MutationalProperties& mutational_properties,
-                   const std::vector<CopyNumberAlteration>& admissible_CNAs={}):
+                   const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
         generator(), context_index(context_index), alleles_per_chromosome(alleles_per_chromosome),
-        mutational_properties(mutational_properties), admissible_CNAs(admissible_CNAs)
+        mutational_properties(mutational_properties), passenger_CNAs(passenger_CNAs)
     {
         for (const auto& [name, mutational_signature]: mutational_signatures) {
             inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
