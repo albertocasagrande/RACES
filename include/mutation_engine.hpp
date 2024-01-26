@@ -818,6 +818,32 @@ class MutationEngine
         return driver_mutations;
     }
 
+    /**
+     * @brief Filter a list of CNAs according the chromosomes in the context index
+     * 
+     * This method returns the vector of CNAs that are contained in the parameter 
+     * vector and lay in one of the chromosomes mentioned in the context index.
+     * 
+     * @param CNAs is a list of CNAs
+     * @return the vector of CNAs that are contained in `CNAs` and lay in one of 
+     *          the chromosomes mentioned in the context index.
+     */
+    std::vector<CopyNumberAlteration> 
+    filter_CNA_by_chromosome_ids(const std::vector<CopyNumberAlteration>& CNAs) const
+    {
+        auto chr_ids = context_index.get_chromosome_ids();
+
+        std::set<ChromosomeId> chr_id_set(chr_ids.begin(),chr_ids.end());
+
+        std::vector<CopyNumberAlteration> filtered;
+        for (const auto& CNA : CNAs) {
+            if (chr_id_set.count(CNA.region.get_chromosome_id())>0) {
+                filtered.push_back(CNA);
+            }
+        }
+
+        return filtered;
+    }
 public:
     /**
      * @brief The empty constructor
@@ -856,11 +882,13 @@ public:
                    const MutationalProperties& mutational_properties,
                    const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
         generator(), context_index(context_index), alleles_per_chromosome(alleles_per_chromosome),
-        mutational_properties(mutational_properties), passenger_CNAs(passenger_CNAs)
+        mutational_properties(mutational_properties)
     {
         for (const auto& [name, mutational_signature]: mutational_signatures) {
             inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
         }
+
+        this->passenger_CNAs = filter_CNA_by_chromosome_ids(passenger_CNAs);
     }
 
     /**
