@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.41
- * @date 2024-01-26
+ * @version 0.42
+ * @date 2024-01-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -348,21 +348,43 @@ class MutationEngine
     {
         // while some of the requested CNAs have not been set
         size_t new_CNAs{0};
+        size_t available{passenger_CNAs.size()};
         while (new_CNAs < num_of_mutations) {
-            const size_t last_pos = passenger_CNAs.size()-1;
+            const size_t last_pos = available-1;
             std::uniform_int_distribution<size_t> u_dist(0, last_pos);
 
             // randomly select a CNA
             size_t index = u_dist(generator);
 
-            CopyNumberAlteration CNA = passenger_CNAs[index];
+            bool to_be_placed = true;
+            while (to_be_placed) {
+                CopyNumberAlteration CNA = passenger_CNAs[index];
 
-            if (place_passenger_CNA(CNA, cell_mutations)) {
-                // if the CNA has been successfully applied,
-                // then increase the number of new CNAs
-                ++new_CNAs;
+                if (place_passenger_CNA(CNA, cell_mutations)) {
+                    // if the CNA has been successfully applied,
+                    // then increase the number of new CNAs
+                    ++new_CNAs;
 
-                node.add_new_mutation(CNA);
+                    node.add_new_mutation(CNA);
+
+                    to_be_placed = false;
+                } else {
+                    if (--available == 0) {
+                        throw std::runtime_error("None of the " 
+                                                + std::to_string(passenger_CNAs.size()) 
+                                                + " admitted CNAs can be applied.");
+                    }
+
+                    if (index<available) {
+                        // here passenger_CNAs is shuffled and it will not be 
+                        // resorted as at the beginning of the computation, but
+                        // this is still acceptable because the CNAs are
+                        // randomly selected
+                        std::swap(passenger_CNAs[index], passenger_CNAs[available]);
+                    } else {
+                        index = available-1;
+                    }
+                }
             }
         }
     }
