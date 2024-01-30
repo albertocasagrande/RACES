@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.19
- * @date 2024-01-20
+ * @version 0.20
+ * @date 2024-01-30
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -41,8 +41,7 @@
 #include "genomic_position.hpp"
 #include "genome_mutations.hpp"
 
-#include "fasta_reader.hpp"
-#include "fasta_utils.hpp"
+#include "fasta_chr_reader.hpp"
 
 #include "progress_bar.hpp"
 #include "variables.hpp"
@@ -800,34 +799,6 @@ private:
     };
 
     /**
-     * @brief Chromosome data
-     * 
-     * This template represents chromosome data. The objects of this class store 
-     * chromosome information, i.e., name, header, size, and chromosome identifier,
-     * and, depending on the parameter, which must be in the hierarchy of the class
-     * `Races::IO::FASTA::SequenceInfo`, may also maintain the chromosome nucleic
-     * sequence.
-     * 
-     * @tparam DATA_TYPE is the base type of the template. It must be a inherited
-     *      from `Races::IO::FASTA::SequenceInfo`
-     */
-    template<typename DATA_TYPE, std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    struct ChromosomeData : public DATA_TYPE
-    {
-        ChromosomeId chr_id;    //!< the chromosome id
-    };
-
-    struct FilterNonChromosomeSequence : public Races::IO::FASTA::SequenceFilter
-    {
-        ChromosomeId last_chr_id;   //!< the identifier of the last processed chromosome header
-
-        inline bool operator()(const std::string& header)
-        {
-            return !Races::IO::FASTA::is_chromosome_header(header, last_chr_id);
-        } 
-    };
-
-    /**
      * @brief Get the overall size of a list of sample mutations
      * 
      * This method computes the sum of the sizes of the genomic 
@@ -1032,33 +1003,6 @@ private:
     }
 
     /**
-     * @brief Read the next chromosome data from the FASTA stream
-     * 
-     * @tparam DATA_TYPE if the type of the data to be read from the stream
-     * @param FASTA_stream is the FASTA stream
-     * @param chr_data is the object that will be filled with the chromosome data if
-     *          some chromosome is read from `FASTA_stream`
-     * @param progress_bar is the progress bar 
-     * @return `true` if and only if a chromosome sequence is read from `FASTA_stream`
-     */
-    template<typename DATA_TYPE, std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    static bool read_next_chromosome_data(std::istream& FASTA_stream, ChromosomeData<DATA_TYPE>& chr_data, 
-                                          UI::ProgressBar& progress_bar)
-    {
-        using namespace Races::IO::FASTA;
-
-        FilterNonChromosomeSequence filter;
-
-        if (DATA_TYPE::read(FASTA_stream, chr_data, filter, progress_bar)) {
-            chr_data.chr_id = filter.last_chr_id;
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * @brief Get the template read data
      * 
      * @param template_first_position is the template first position
@@ -1107,7 +1051,7 @@ private:
      */
     template<typename DATA_TYPE, 
          std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void collect_template_statistics(const ChromosomeData<DATA_TYPE>& chr_data,
+    void collect_template_statistics(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                                      const std::map<GenomicPosition, SNV>& SNVs,
                                      const ChrPosition& template_first_position,
                                      const size_t& template_size, ChrSampleStatistics& chr_statistics)
@@ -1141,7 +1085,8 @@ private:
      */
     template<typename DATA_TYPE, 
          std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void write_SAM_template_alignments(std::ostream& SAM_stream, const ChromosomeData<DATA_TYPE>& chr_data,
+    void write_SAM_template_alignments(std::ostream& SAM_stream,
+                                       const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                                        const std::map<GenomicPosition, SNV>& SNVs,
                                        const ChrPosition& template_first_position,
                                        const size_t& template_size, const std::string& sample_name="")
@@ -1214,7 +1159,7 @@ private:
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_fragment_reads(const ChromosomeData<DATA_TYPE>& chr_data,
+    void generate_fragment_reads(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                                  const AlleleFragment& fragment,
                                  ReadSimulationData& sample_simulation_data, const std::string& sample_name, 
                                  ChrSampleStatistics& chr_statistics,
@@ -1293,7 +1238,7 @@ private:
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    ChrSampleStatistics generate_chromosome_reads(const ChromosomeData<DATA_TYPE>& chr_data,
+    ChrSampleStatistics generate_chromosome_reads(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                                                   const SampleGenomeMutations& sample_genome_mutations,
                                                   ReadSimulationData& sample_simulation_data,
                                                   const size_t& total_steps, size_t& steps, 
@@ -1339,7 +1284,7 @@ private:
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void generate_chromosome_reads(SampleSetStatistics& statistics,
-                                   const ChromosomeData<DATA_TYPE>& chr_data,
+                                   const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                                    const std::list<SampleGenomeMutations>& mutations_list,
                                    std::list<ReadSimulationData>& simulation_data,
                                    const size_t& total_steps, size_t& steps, 
@@ -1380,7 +1325,7 @@ private:
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     std::ofstream
-    get_SAM_stream(const ChromosomeData<DATA_TYPE>& chr_data,
+    get_SAM_stream(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                    const std::list<SampleGenomeMutations>& mutations_list) const
     {
         auto chr_str = GenomicPosition::chrtos(chr_data.chr_id);
@@ -1490,9 +1435,11 @@ private:
 
         SampleSetStatistics statistics(output_directory);
         
+        using namespace Races::IO::FASTA;
+
         ChromosomeData<DATA_TYPE> chr_data;
         progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
-        while (read_next_chromosome_data(ref_stream, chr_data, progress_bar)) {
+        while (ChromosomeData<DATA_TYPE>::read(ref_stream, chr_data, progress_bar)) {
             progress_bar.set_progress((100*(++steps))/total_steps);
 
             if (write_SAM) {
