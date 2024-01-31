@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.19
- * @date 2024-01-05
+ * @version 0.20
+ * @date 2024-01-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -122,7 +122,7 @@ public:
      *
      * @return the chromosome size
      */
-    inline ChromosomeMutations::Length size() const
+    inline const ChromosomeMutations::Length& size() const
     {
         return length;
     }
@@ -132,7 +132,7 @@ public:
      *
      * @return the chromosome allelic size
      */
-    inline ChromosomeMutations::Length allelic_size() const
+    inline const ChromosomeMutations::Length& allelic_size() const
     {
         return allelic_length;
     }
@@ -518,6 +518,16 @@ public:
     bool remove_SNV(const GenomicPosition& genomic_position);
 
     /**
+     * @brief Check whether any SNV occurs in a possible mutational context
+     *
+     * @param genomic_position is the central position of the mutational context
+     * @return `true` if and only if no SNVs occurred in the context centered
+     *          in `genomic_position`
+     * @throw std::domain_error `genomic_position` does not lays in the fragment
+     */
+    bool has_context_free(const GenomicPosition& genomic_position) const;
+
+    /**
      * @brief Save genome mutations in an archive
      *
      * @tparam ARCHIVE is the output archive type
@@ -546,7 +556,6 @@ public:
         return g_mutations;
     }
 };
-
 
 /**
  * @brief A class to represent the mutations of a specific cell
