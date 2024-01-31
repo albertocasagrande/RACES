@@ -2,8 +2,8 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 0.2
- * @date 2024-01-26
+ * @version 0.3
+ * @date 2024-01-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -76,7 +76,23 @@ public:
          */
         CSVRow();
 
+        /**
+         * @brief Get a field by index
+         * 
+         * @param index is the index of the field
+         * @return the value of the field 
+         */
         const std::string& get_field(const size_t& index) const;
+
+        /**
+         * @brief Get the vector of the row fields
+         * 
+         * @return a constant reference to the vector of the fields
+         */
+        inline const std::vector<std::string>& get_fields() const
+        {
+            return fields;
+        }
 
         inline size_t size() const
         {
