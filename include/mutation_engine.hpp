@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.42
- * @date 2024-01-27
+ * @version 0.43
+ * @date 2024-02-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -615,7 +615,7 @@ class MutationEngine
 
         switch(CNA.type) {
             case CopyNumberAlteration::Type::AMPLIFICATION:
-                return chr_mutations.amplify_region(CNA.region, CNA.source);
+                return chr_mutations.amplify_region(CNA.region, CNA.source, CNA.dest);
             case CopyNumberAlteration::Type::DELETION:
                 return chr_mutations.remove_region(CNA.region, CNA.dest);
             default:

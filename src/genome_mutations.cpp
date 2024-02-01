@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.17
- * @date 2024-01-31
+ * @version 0.18
+ * @date 2024-02-01
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -139,7 +139,8 @@ bool ChromosomeMutations::contains(const GenomicRegion& genomic_region) const
             && genomic_region.get_final_position()<=size());
 }
 
-bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
+                                         AlleleId& new_allele_id)
 {
     if (!contains(genomic_region)) {
         throw std::domain_error("The genomic region is not in the chromosome");
@@ -156,13 +157,15 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
 
     alleles.insert({next_allele_id, std::move(new_allele)});
 
-    CNAs.push_back(CopyNumberAlteration::new_amplification(genomic_region, allele_id, next_allele_id));
+    CNAs.push_back(CopyNumberAlteration::new_amplification(genomic_region, allele_id, 
+                                                           this->next_allele_id));
 
-    ++next_allele_id;
+    new_allele_id = this->next_allele_id;
+
+    ++(this->next_allele_id);
 
     return true;
 }
-
 
 bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
 {
@@ -314,11 +317,12 @@ bool GenomeMutations::allele_contains(const AlleleId& allele_id, const GenomicRe
     return chr_it->second.allele_contains(allele_id, genomic_region);
 }
 
-bool GenomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool GenomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                                     AlleleId& new_allele_id)
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.amplify_region(genomic_region, allele_id);
+    return chr_it->second.amplify_region(genomic_region, allele_id, new_allele_id);
 }
 
 bool GenomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)

@@ -2,10 +2,10 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::GenomeMutations class
- * @version 0.5
- * @date 2023-12-09
+ * @version 0.6
+ * @date 2024-02-01
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -210,8 +210,10 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
     // insert snv0 (chromosome1, position 32)
     test_genome_mutations.insert(snv0, 0);
 
+    AlleleId new_allele_id;
+
     // amplify allele 0 from 32 to 64: ok (allele 0 available)
-    BOOST_CHECK(test_genome_mutations.amplify_region(gr_32_64, 0));
+    BOOST_CHECK(test_genome_mutations.amplify_region(gr_32_64, 0, new_allele_id));
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(gr_32_64.get_chromosome_id());
@@ -231,20 +233,21 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
         // snv in a wrong position
         GenomicRegion gr_err(snv0, chr.size()+1);
 
-        BOOST_CHECK_THROW(test_genome_mutations.amplify_region(gr_err, 0), std::domain_error);
+        BOOST_CHECK_THROW(test_genome_mutations.amplify_region(gr_err, 0, new_allele_id), 
+                          std::domain_error);
     }
 
     // insert snv1 (chromosome1, position 64)
     test_genome_mutations.insert(snv1, 0);
 
     // amplify allele 0 from 10 to 110: ok (allele 0 available)
-    BOOST_CHECK(test_genome_mutations.amplify_region(gr_10_110, 0));
+    BOOST_CHECK(test_genome_mutations.amplify_region(gr_10_110, 0, new_allele_id));
 
     // insert snv2 (chromosome1, position 110)
     test_genome_mutations.insert(snv2, 0);
 
     // amplify allele 0 from 60 to 80: ok (allele 0 available)
-    BOOST_CHECK(test_genome_mutations.amplify_region(gr_60_80, 0));
+    BOOST_CHECK(test_genome_mutations.amplify_region(gr_60_80, 0, new_allele_id));
 
     {
         // now the chromosome contains 5 alleles: 
@@ -284,20 +287,22 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
     // insert snv0 (chromosome1, position 32)
     test_genome_mutations.insert(snv0, 0);
 
+    AlleleId new_allele_id;
+
     // amplify from 32 to 64: ok (allele 0 available)
-    test_genome_mutations.amplify_region(gr_32_64, 0);
+    test_genome_mutations.amplify_region(gr_32_64, 0, new_allele_id);
 
     // insert snv1 (chromosome1, position 64)
     test_genome_mutations.insert(snv1, 0);
 
     // amplify from 10 to 110: ok (allele 0 available)
-    test_genome_mutations.amplify_region(gr_10_110, 0);
+    test_genome_mutations.amplify_region(gr_10_110, 0, new_allele_id);
     
     // insert snv2 (chromosome1, position 110)
     test_genome_mutations.insert(snv2, 0);
 
     // amplify from 60 to 80: ok (allele 0 available)
-    test_genome_mutations.amplify_region(gr_60_80, 0);
+    test_genome_mutations.amplify_region(gr_60_80, 0, new_allele_id);
 
     // now the chromosome contains 5 alleles: 
     // - snv0 lays in alleles 0, 2, and 3
@@ -336,7 +341,7 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
     }
 
     // amplify allele 0 from 10 to 110: fail (allele 0 does not contain fragment 60-80 anymore)
-    BOOST_CHECK(!test_genome_mutations.amplify_region(gr_10_110, 0));
+    BOOST_CHECK(!test_genome_mutations.amplify_region(gr_10_110, 0, new_allele_id));
 
     // remove allele 0 from 60 to 80: fail (allele 0 does not contain fragment 60-80 anymore)
     BOOST_CHECK(!test_genome_mutations.remove_region(gr_60_80, 0));

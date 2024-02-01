@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.20
- * @date 2024-01-31
+ * @version 0.21
+ * @date 2024-02-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -232,11 +232,14 @@ public:
      *
      * @param genomic_region is the genomic region whose copy number must be increased
      * @param allele_id is the identifier of the allele that must be amplified
+     * @param new_allele_id is the identifier of the new allele if amplification 
+     *      succeeded
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
+                        AlleleId& new_allele_id);
 
     /**
      * @brief Remove a genomic region
@@ -469,14 +472,18 @@ public:
      * This method increases the number of copies in a genomic region by selecting
      * the same allele in each fragment of the region. If not all the fragments touching
      * the genomic region have the specified allele, the computation ends and the
-     * method returns `false`
+     * method returns `false`.
      *
      * @param genomic_region is the genomic region whose copy number must be increased
-     * @param allele_id is the identifier of the allele to be amplified
+     * @param allele_id is the identifier of the allele that must be amplified
+     * @param new_allele_id is the identifier of the new allele if amplification 
+     *      succeeded
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
+     * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
+                        AlleleId& new_allele_id);
 
     /**
      * @brief Remove a genomic region
