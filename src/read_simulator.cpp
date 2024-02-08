@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.16
- * @date 2024-01-12
+ * @version 0.17
+ * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -56,7 +56,7 @@ ChrCoverage::ChrCoverage(const ChromosomeId& chromosome_id, const GenomicRegion:
 
 void ChrCoverage::increase_coverage(const ChrPosition& begin_pos, const size_t& read_size)
 {
-    if (begin_pos+read_size-1 > coverage.size()) {
+    if (begin_pos+read_size-2 > coverage.size()) {
         using namespace Races::Mutants;
 
         throw std::runtime_error("The chromosome " + GenomicPosition::chrtos(chr_id) + " has length "
@@ -65,7 +65,8 @@ void ChrCoverage::increase_coverage(const ChrPosition& begin_pos, const size_t& 
                                  + std::to_string(read_size) + " as requested.");
     }
 
-    for (auto base=coverage.begin()+begin_pos; base != coverage.begin()+begin_pos+read_size; ++base) {
+    for (auto base=coverage.begin()+begin_pos-1;
+            base != coverage.begin()+begin_pos+read_size-1; ++base) {
         ++(*base);
     }
 }
