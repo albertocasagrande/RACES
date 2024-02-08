@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.21
- * @date 2024-02-01
+ * @version 0.22
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -73,16 +73,6 @@ private:
     std::list<CopyNumberAlteration> CNAs;   //!< the occurred CNAs
 
     AlleleId next_allele_id;   //!< the identifier of the next allele
-
-    /**
-     * @brief Get an allele in the chromosome
-     *
-     * @param allele_id is the identifier of the allele to find
-     * @return a non-constant reference to the allele
-     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
-     *          chromosome
-     */
-    Allele& get_allele(const AlleleId& allele_id);
 
 public:
     /**
@@ -171,17 +161,36 @@ public:
      * @brief Get the identifiers of the alleles containing a genomic position
      *
      * @param genomic_position is a position of the chromosome
-     * @return the identifiers of the alleles containing `genomic_position`
+     * @return a list of the identifiers of the alleles containing `genomic_position`
      */
-    std::set<AlleleId> get_alleles_containing(const GenomicPosition& genomic_position) const;
+    std::list<AlleleId> get_alleles_containing(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Get the identifiers of the alleles that completely include a region
      *
      * @param genomic_region is a region of the chromosome
-     * @return the identifiers of the alleles that completely include `genomic_region`
+     * @return a list of the identifiers of the alleles that completely include `genomic_region`
      */
-    std::set<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
+    std::list<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
+
+    /**
+     * @brief Get the alleles with context free for a genomic position
+     * 
+     * @param genomic_position is a genomic position
+     * @return a list of the identifiers of the allele in which the context of `genomic_position`
+     *      is free
+     */
+    std::list<AlleleId> get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const;
+
+    /**
+     * @brief Get an allele in the chromosome
+     *
+     * @param allele_id is the identifier of the allele to find
+     * @return a non-constant reference to the allele
+     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
+     *          chromosome
+     */
+    Allele& get_allele(const AlleleId& allele_id);
 
     /**
      * @brief Check whether an allele contains a chromosomic region
@@ -275,6 +284,18 @@ public:
     bool insert(const SNV& snv, const AlleleId& allele_id);
 
     /**
+     * @brief Duplicate genomic structure
+     * 
+     * This method duplicates the genomic structure of the current objects. 
+     * It returns a `ChromosomeMutations` object that has the same alleles of
+     * the current objects, but misses the original SNVs and indels.  
+     * 
+     * @return a `ChromosomeMutations` object that has the same alleles of 
+     *      the current objects, but misses the original SNVs and indels
+     */
+    ChromosomeMutations duplicate_structure() const;
+
+    /**
      * @brief Remove a SNV
      *
      * This method tries to remove a SNV from the chromosome.
@@ -357,18 +378,11 @@ public:
      * This constructor builds the genome mutations model corresponding
      * to a set of context positions.
      *
-     * @param context_index is a context index
+     * @param chromosome_regions is a list of the chromosome regions
      * @param num_of_alleles is the initial number of alleles
      */
-    template<typename GENOME_WIDE_POSITIONS>
-    GenomeMutations(const ContextIndex<GENOME_WIDE_POSITIONS>& context_index, const size_t& num_of_alleles)
-    {
-        std::vector<GenomicRegion> chr_regions = context_index.get_chromosome_regions();
-
-        for (const auto& chr_region : chr_regions) {
-            chromosomes[chr_region.get_chromosome_id()] = ChromosomeMutations(chr_region, num_of_alleles);
-        }
-    }
+    GenomeMutations(const std::list<GenomicRegion>& chromosome_regions,
+                    const size_t& num_of_alleles);
 
     /**
      * @brief A constructor
@@ -376,21 +390,39 @@ public:
      * This constructor builds the genome mutations model corresponding
      * to a set of context positions.
      *
-     * @param context_index is a context index
+     * @param chromosome_regions is a list of the chromosome regions
      * @param alleles_per_chromosome is the initial number of alleles per chromosome
      */
-    template<typename GENOME_WIDE_POSITIONS>
-    GenomeMutations(const ContextIndex<GENOME_WIDE_POSITIONS>& context_index,
-                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome)
-    {
-        std::vector<GenomicRegion> chr_regions = context_index.get_chromosome_regions();
+    GenomeMutations(const std::list<GenomicRegion>& chromosome_regions,
+                    const std::map<ChromosomeId, size_t>& alleles_per_chromosome);
 
-        for (const auto& chr_region : chr_regions) {
-            auto chr_id = chr_region.get_chromosome_id();
-            chromosomes[chr_id] = ChromosomeMutations(chr_region,
-                                                      alleles_per_chromosome.at(chr_id));
-        }
-    }
+    /**
+     * @brief A constructor
+     *
+     * This constructor builds the genome mutations model corresponding
+     * to a set of context positions.
+     *
+     * @param chromosome_regions is a list of the chromosome regions
+     * @param num_of_alleles is the initial number of alleles
+     */
+    inline GenomeMutations(std::list<GenomicRegion>&& chromosome_regions,
+                           const size_t& num_of_alleles):
+        GenomeMutations(chromosome_regions, num_of_alleles)
+    {}
+
+    /**
+     * @brief A constructor
+     *
+     * This constructor builds the genome mutations model corresponding
+     * to a set of context positions.
+     *
+     * @param chromosome_regions is a list of the chromosome regions
+     * @param alleles_per_chromosome is the initial number of alleles per chromosome
+     */
+    inline GenomeMutations(std::list<GenomicRegion>&& chromosome_regions,
+                           const std::map<ChromosomeId, size_t>& alleles_per_chromosome):
+        GenomeMutations(chromosome_regions, alleles_per_chromosome)
+    {}
 
     /**
      * @brief Get genome size
@@ -442,17 +474,26 @@ public:
      * @brief Get the identifiers of the alleles containing a genomic position
      *
      * @param genomic_position is a position of the genome
-     * @return the identifiers of the alleles containing `genomic_position`
+     * @return a list of the identifiers of the alleles containing `genomic_position`
      */
-    std::set<AlleleId> get_alleles_containing(const GenomicPosition& genomic_position) const;
+    std::list<AlleleId> get_alleles_containing(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Get the identifiers of the alleles that completely include a region
      *
      * @param genomic_region is a region of the chromosome
-     * @return the identifiers of the allele that completely include `genomic_region`
+     * @return a list of the identifiers of the allele that completely include `genomic_region`
      */
-    std::set<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
+    std::list<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
+
+    /**
+     * @brief Get the alleles with context free for a genomic position
+     * 
+     * @param genomic_position is a genomic position
+     * @return a list of the identifiers of the allele in which the context of `genomic_position`
+     *      is free
+     */
+    std::list<AlleleId> get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Check whether an allele contains a chromosomic region
@@ -533,6 +574,19 @@ public:
      * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
     bool has_context_free(const GenomicPosition& genomic_position) const;
+
+    /**
+     * @brief Duplicate genomic structure
+     * 
+     * This method duplicates the genomic structure of the current objects. 
+     * It returns a `GenomeMutations` object that has the same chromsomes and 
+     * alleles of the current objects, but misses the original SNVs and indels.  
+     * 
+     * @return a `GenomeMutations` object that has the same chromsomes and 
+     *      alleles of the current objects, but misses the original SNVs and 
+     *      indels
+     */
+    GenomeMutations duplicate_structure() const;
 
     /**
      * @brief Save genome mutations in an archive
@@ -623,6 +677,7 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
  */
 struct SampleGenomeMutations
 {
+    GenomeMutations germline_mutations;         //!< The germline mutations
     std::list<CellGenomeMutations> mutations;   //!< The list of cell genome mutations
 
     const std::string name;                     //!< The sample name
@@ -631,8 +686,10 @@ struct SampleGenomeMutations
      * @brief The constructor
      *
      * @param name is the sample name
+     * @param germline_mutations are the germline mutations
      */
-    SampleGenomeMutations(const std::string& name);
+    SampleGenomeMutations(const std::string& name,
+                          const GenomeMutations& germline_mutations);
 };
 
 }   // Mutations

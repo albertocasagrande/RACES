@@ -21,6 +21,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/csv_reader.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/descendant_forest.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_storage.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/event_wrapper.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_reader.cpp
@@ -28,6 +29,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/germline.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_mutation.cpp
@@ -67,6 +69,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/csv_reader.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/descendant_forest.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/driver_storage.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/ending_conditions.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/event_wrapper.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/filter.hpp
@@ -76,6 +79,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genome_mutations.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/germline.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_id.hpp

@@ -2,10 +2,10 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the context index
- * @version 0.7
- * @date 2023-12-09
+ * @version 0.8
+ * @date 2024-02-08
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -36,6 +36,8 @@
 
 #include "genome_mutations.hpp"
 #include "context_index.hpp"
+#include "driver_storage.hpp"
+
 #include "progress_bar.hpp"
 
 class IndexBuilder
@@ -46,30 +48,41 @@ class IndexBuilder
 
     std::string output_filename;
     std::string genome_fasta_filename;
+    std::string driver_mutations_filename;
     size_t sampling_rate;
     unsigned int bits_per_abs_position;
     bool quiet;
 
     template<typename GENOME_WIDE_POSITION>
-    std::vector<Races::Mutations::GenomicRegion> build_and_save_context_index() const
+    std::list<Races::Mutations::GenomicRegion> build_and_save_context_index() const
     {
         using namespace Races;
         using namespace Races::Mutations;
 
-        std::vector<GenomicRegion> chr_regions;
+        std::list<GenomicRegion> chr_regions;
+        std::set<GenomicRegion> regions_to_avoid;
+
+        if (driver_mutations_filename!="") {
+            auto driver_storage = DriverStorage::load(driver_mutations_filename);
+
+            for (const auto& [name, snv] : driver_storage.get_SNVs()) {
+                regions_to_avoid.emplace(snv, 1);
+            }
+        }
+
         {
             using Index = ContextIndex<GENOME_WIDE_POSITION>;
 
             Index context_index;
 
             if (quiet) {
-                context_index = Index::build_index(genome_fasta_filename, sampling_rate);
+                context_index = Index::build_index(genome_fasta_filename, regions_to_avoid, sampling_rate);
             } else {
                 UI::ProgressBar::hide_console_cursor();
 
                 UI::ProgressBar progress_bar;
 
-                context_index = Index::build_index(genome_fasta_filename, sampling_rate, &progress_bar);
+                context_index = Index::build_index(genome_fasta_filename, regions_to_avoid, sampling_rate, &progress_bar);
             }
             
             chr_regions = context_index.get_chromosome_regions();
@@ -131,13 +144,15 @@ public:
         namespace po = boost::program_options;
 
         visible_options.add_options()
+            ("driver-mutations,d", po::value<std::string>(&driver_mutations_filename), 
+             "the driver mutations file")
             ("output-filename,o", po::value<std::string>(&output_filename), 
-            "output filename")
+             "output filename")
             ("sampling-rate,s", po::value<size_t>(&sampling_rate)->default_value(1), 
-            "context sampling rate (to sample contexts and reduce index memory and space requirements)")
+             "context sampling rate (to sample contexts and reduce index memory and space requirements)")
             ("force-overwrite,f", "force overwriting output file")
             ("bytes-per-pos,b", po::value<unsigned int>(&bits_per_abs_position)->default_value(4),
-            "bytes per absolute position (2, 4, or 8)")
+             "bytes per absolute position (2, 4, or 8)")
 #if WITH_INDICATORS
             ("quiet,q", "disable output messages")
 #endif // WITH_INDICATORS
@@ -145,14 +160,14 @@ public:
 
         po::options_description hidden("Hidden options");
         hidden.add_options()
-            ("genome filename", po::value<std::string>(&genome_fasta_filename), 
+            ("genome file", po::value<std::string>(&genome_fasta_filename), 
             "the path to the genome in FASTA file format")
         ;
 
         po::options_description generic;
         generic.add(visible_options).add(hidden);
 
-        positional_options.add("genome filename", 1);
+        positional_options.add("genome file", 1);
 
         po::variables_map vm;
         try {
@@ -172,7 +187,7 @@ public:
 
         quiet = vm.count("quit")>0;
 
-        if (!vm.count("genome filename")) {
+        if (!vm.count("genome file")) {
             std::cerr << "Missing genome FASTA filename" << std::endl << std::endl;
             print_help(std::cerr);
             exit(1);
@@ -197,7 +212,7 @@ public:
 
     }
 
-    std::vector<Races::Mutations::GenomicRegion> run() const
+    std::list<Races::Mutations::GenomicRegion> run() const
     {
         using namespace Races::IO::FASTA;
 

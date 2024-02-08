@@ -7,12 +7,13 @@
             {"chromosome": "Y", "number of alleles": 1}
         ]
     },
+    "germline mutations per kbase": 0.75,
     "number of pre-neoplastic mutations": 1000,
     "mutant properties": [
         {
             "name": "A",
             "passenger rates": [
-                { "epistate": "-", "SNV": 3e-9, "CNA": 4e-10},
+                { "epistate": "-", "SNV": 3e-9, "CNA": 4e-11},
                 { "epistate": "+", "SNV": 6e-9}
             ],
             "driver mutations": [
@@ -24,7 +25,7 @@
                 },
                 {
                     "type": "SNV",
-                    "chromosome": "2",
+                    "chromosome": "1",
                     "position": 10693,
                     "ref base": "A",
                     "alt base": "G"
@@ -32,7 +33,7 @@
                 {
                     "type": "CNA",
                     "subtype": "amplification",
-                    "chromosome": "2",
+                    "chromosome": "1",
                     "position": 10100,
                     "length": 625,
                     "allele": 1

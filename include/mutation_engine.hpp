@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.44
+ * @version 0.45
  * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
@@ -43,6 +43,7 @@
 #include "genome_mutations.hpp"
 #include "snv_signature.hpp"
 #include "mutational_properties.hpp"
+#include "driver_storage.hpp"
 
 #include "filter.hpp"
 
@@ -184,7 +185,6 @@ class MutationEngine
      */
     using InverseCumulativeSBS = std::map<double, Races::Mutations::MutationalType>;
 
-
     /**
      * @brief The stack of contexts removed from the context index
      */
@@ -195,12 +195,14 @@ class MutationEngine
     ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
     ContextStack context_stack;                        //!< the stack of the contexts removed from `context_index`
 
-    std::map<ChromosomeId, size_t> alleles_per_chromosome;   //!< number of initial alleles per chromosome
-
     std::map<Time, Exposure> timed_exposures;          //!< the timed exposures
     std::map<std::string, InverseCumulativeSBS> inv_cumulative_SBSs;        //!< the inverse cumulative SBS
 
     MutationalProperties mutational_properties;  //!< the species mutational properties
+
+    GenomeMutations germline_mutations; //!< the germline mutations
+
+    DriverStorage driver_storage;  //!< the driver storage
 
     std::vector<CopyNumberAlteration> passenger_CNAs;   //!< the admissible passenger CNAs
 
@@ -208,11 +210,11 @@ class MutationEngine
      * @brief Select a random value in a set
      *
      * @tparam T is the type of objects in the set
-     * @param values is the set of values from which a random value must be selected
+     * @param values is a list of values from which a random value must be selected
      * @return a random value among those in `values`
      */
     template<typename T>
-    T select_random_value(const std::set<T>& values)
+    T select_random_value(const std::list<T>& values)
     {
         std::uniform_int_distribution<> u_dist(0,values.size()-1);
         size_t pos = u_dist(generator);
@@ -405,6 +407,38 @@ class MutationEngine
     }
 
     /**
+     * @brief Get the available alleles for placing a SNV
+     * 
+     * @param cell_mutations are the non-germinal mutations of a cell
+     * @param genomic_position is the position in which we want to place the SNV
+     * @return std::list<AlleleId> 
+     */
+    std::list<AlleleId> get_available_alleles_for_SNV(const GenomeMutations& cell_mutations,
+                                                      const GenomicPosition& genomic_position) const
+    {
+        std::list<AlleleId> available_alleles;
+
+        auto germline_alleles = germline_mutations.get_alleles_with_context_free_for(genomic_position);
+
+        if (germline_alleles.size()==0) {
+            return available_alleles;
+        }
+
+        std::set<AlleleId> germline_set(germline_alleles.begin(), germline_alleles.end());
+
+        const auto& chr_mutations = cell_mutations.get_chromosome(genomic_position.chr_id);
+
+        for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
+            if (allele.has_context_free(genomic_position)
+                    && germline_set.count(allele.get_history().front())>0) {
+                available_alleles.push_back(allele_id);
+            }
+        }
+
+        return available_alleles;
+    }
+
+    /**
      * @brief Try to place a SNV
      *
      * @param snv is the SNV to place
@@ -416,9 +450,10 @@ class MutationEngine
      */
     bool place_SNV(const SNV& snv, GenomeMutations& cell_mutations)
     {
-        auto allele_having_pos = cell_mutations.get_alleles_containing(snv);
-        if (allele_having_pos.size()>0) {
-            AlleleId allele_id = select_random_value(allele_having_pos);
+        auto candidate_alleles = get_available_alleles_for_SNV(cell_mutations, snv);
+
+        if (candidate_alleles.size()>0) {
+            AlleleId allele_id = select_random_value(candidate_alleles);
 
             // try to apply the selected SNV
             if (cell_mutations.insert(snv, allele_id)) {
@@ -877,34 +912,38 @@ public:
      * @brief A constructor
      *
      * @param context_index is the genome context index
-     * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
+     * @param germline_mutations are the germline mutations
+     * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                   const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
+                   const GenomeMutations& germline_mutations,
+                   const DriverStorage& driver_storage,
                    const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
-        MutationEngine(context_index, alleles_per_chromosome, mutational_signatures,
-                       MutationalProperties(), passenger_CNAs)
+        MutationEngine(context_index, mutational_signatures, MutationalProperties(),
+                       germline_mutations, driver_storage, passenger_CNAs)
     {}
 
     /**
      * @brief A constructor
      *
      * @param context_index is the genome context index
-     * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param mutational_signatures is the map of the mutational signatures
      * @param mutational_properties are the mutational properties of all the species
+     * @param germline_mutations are the germline mutations
+     * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                   const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
                    const MutationalProperties& mutational_properties,
+                   const GenomeMutations& germline_mutations,
+                   const DriverStorage& driver_storage,
                    const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
-        generator(), context_index(context_index), alleles_per_chromosome(alleles_per_chromosome),
-        mutational_properties(mutational_properties)
+        generator(), context_index(context_index), mutational_properties(mutational_properties), 
+        germline_mutations(germline_mutations), driver_storage(driver_storage)
     {
         for (const auto& [name, mutational_signature]: mutational_signatures) {
             inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
@@ -1040,16 +1079,21 @@ public:
 
         PhylogeneticForest forest;
 
-        static_cast<DescendantsForest&>(forest) = descendants_forest;
+        forest.germline_mutations = germline_mutations;
 
+        static_cast<DescendantsForest&>(forest) = descendants_forest;
 
         auto species_rates = get_species_rate_map(descendants_forest);
         auto driver_mutations = get_driver_mutation_map(descendants_forest);
 
-        GenomeMutations mutations(context_index, alleles_per_chromosome);
+        auto chr_regions = context_index.get_chromosome_regions();
+
+        auto wild_type_structure = germline_mutations.duplicate_structure();
 
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
+            GenomeMutations mutations = wild_type_structure;
+
             // place preneoplastic mutations
             place_SNVs(root, mutations, "SBS1", num_of_preneoplatic_mutations, "Pre-neoplastic");
 

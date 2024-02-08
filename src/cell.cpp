@@ -2,10 +2,10 @@
  * @file cell.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell representation
- * @version 0.17
- * @date 2023-12-11
+ * @version 0.18
+ * @date 2024-02-08
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -53,8 +53,10 @@ Cell::Cell(const SpeciesId species_id):
 }
 
 Cell::Cell(const SpeciesId species_id, const CellId parent_id):
-    Cell(species_id,parent_id,0)
-{}
+    Cell(species_id,parent_id,Cell::counter)
+{
+    ++Cell::counter;
+}
 
 Cell::Cell(const SpeciesId species_id, const CellId parent_id, const Time birth_time):
     id(Cell::counter), parent(parent_id), birth_time(birth_time), species_id(species_id)

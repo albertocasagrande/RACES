@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.6
- * @date 2024-01-11
+ * @version 0.7
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -163,7 +163,7 @@ std::list<SampleGenomeMutations> PhylogeneticForest::get_sample_mutations_list()
     std::list<SampleGenomeMutations> sample_mutations_list;
     std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
     for (const auto& sample: get_samples()) {
-        sample_mutations_list.push_back(SampleGenomeMutations(sample.get_name()));
+        sample_mutations_list.emplace_back(sample.get_name(), germline_mutations);
         sample_mutation_map.insert({sample.get_id(), &(sample_mutations_list.back())});
     }
 
@@ -195,7 +195,7 @@ SampleGenomeMutations PhylogeneticForest::get_sample_mutations(const std::string
 {
     using namespace Mutants::Evolutions;
 
-    SampleGenomeMutations sample_mutations(sample_name);
+    SampleGenomeMutations sample_mutations(sample_name, germline_mutations);
 
     const size_t sample_idx = find_sample_index(get_samples(), sample_name);
 

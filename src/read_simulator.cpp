@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.18
+ * @version 0.19
  * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
@@ -566,11 +566,23 @@ std::list<std::string> SampleSetStatistics::get_sample_names() const
     return sample_names;
 }
 
-void SampleSetStatistics::save_VAF_CSVs(const std::string& base_name) const
+void SampleSetStatistics::save_VAF_CSVs(const std::string& base_name,
+                                        const bool& quiet) const
 {
+    Races::UI::ProgressBar progress_bar(quiet);
+
+    size_t chr_processes{0};
     for (const auto& chr_id : repr_chr_ids) {
-        save_VAF_CSV(base_name+GenomicPosition::chrtos(chr_id)+".csv", chr_id);
+        std::string chr_str = GenomicPosition::chrtos(chr_id);
+
+        progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
+                                  "Saving chr. " + chr_str + " VAFs");
+
+        save_VAF_CSV(base_name + chr_str + ".csv", chr_id);
+
+        ++chr_processes;
     }
+    progress_bar.set_progress(100, "VAFs saved");
 }
 
 std::map<SNV, BaseCoverage>
@@ -637,7 +649,7 @@ void SampleSetStatistics::canonize()
 }
 
 void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename, 
-                              const ChromosomeId& chr_id) const
+                                       const ChromosomeId& chr_id) const
 {
     if (!is_canonical()) {
         throw std::runtime_error("Only canonical statistics can save CAV CSV. Canonize it.");
@@ -705,12 +717,23 @@ std::vector<double> down_sample_coverage(const std::vector<BaseCoverage>& covera
     return down_sampled;
 }
 
-void SampleSetStatistics::save_coverage_images(const std::string& base_name) const
+void SampleSetStatistics::save_coverage_images(const std::string& base_name,
+                                               const bool& quiet) const
 {
+    Races::UI::ProgressBar progress_bar(quiet);
+
+    size_t chr_processes{0};
     for (const auto& chr_id : repr_chr_ids) {
-        save_coverage_image(base_name + GenomicPosition::chrtos(chr_id) + "_coverage.jpg", 
-                            chr_id);
+        std::string chr_str = GenomicPosition::chrtos(chr_id);
+
+        progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
+                                  "Saving chr. " + chr_str + " coverage");
+
+        save_coverage_image( base_name + chr_str + "_coverage.jpg", chr_id);
+
+        ++chr_processes;
     }
+    progress_bar.set_progress(100, "Coverage images saved");
 }
 
 void SampleSetStatistics::save_coverage_image(const std::filesystem::path& filename, 
@@ -825,15 +848,26 @@ get_VAF_data(const SampleStatistics& sample_statistics, const ChromosomeId& chr_
                         chr_id, threshold);
 }
 
-void SampleSetStatistics::save_SNV_histograms(const std::string& base_name) const
+void SampleSetStatistics::save_SNV_histograms(const std::string& base_name, const bool& quiet) const
 {
+    Races::UI::ProgressBar progress_bar(quiet);
+
+    size_t chr_processes{0};
     for (const auto& chr_id : repr_chr_ids) {
-        save_SNV_histogram(base_name + GenomicPosition::chrtos(chr_id) + "_hist.jpg", chr_id);
+        std::string chr_str = GenomicPosition::chrtos(chr_id);
+
+        progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
+                                  "Saving chr. " + chr_str + " histogram");
+
+        save_SNV_histogram( base_name + chr_str + "_hist.jpg", chr_id);
+
+        ++chr_processes;
     }
+    progress_bar.set_progress(100, "Histogram images saved");
 }
 
 void SampleSetStatistics::save_SNV_histogram(const std::filesystem::path& filename,
-                                    const ChromosomeId& chromosome_id) const
+                                             const ChromosomeId& chromosome_id) const
 {
     if (!is_canonical()) {
         throw std::runtime_error("Only canonical statistics can save SNV histogram. Canonize it.");

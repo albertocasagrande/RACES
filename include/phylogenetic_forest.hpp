@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.7
- * @date 2024-01-22
+ * @version 0.8
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -97,6 +97,8 @@ private:
     std::map<Mutants::CellId, NovelMutations> novel_mutations;          //!< The mutations introduces by each cell in the forest
     std::map<SNV, CellIdSet> SNV_first_cells;                           //!< A map associating each SNV to the first cells in which it occured
     std::map<CopyNumberAlteration, CellIdSet> CNA_first_cells;          //!< A map associating each CNA to the first cells in which it occured
+
+    GenomeMutations germline_mutations; //!< The germline mutations
 
 public:
     /**
@@ -340,7 +342,8 @@ public:
                 & leaves_mutations
                 & novel_mutations
                 & SNV_first_cells
-                & CNA_first_cells;
+                & CNA_first_cells
+                & germline_mutations;
     }
 
     /**
@@ -359,7 +362,8 @@ public:
                 & forest.leaves_mutations
                 & forest.novel_mutations
                 & forest.SNV_first_cells
-                & forest.CNA_first_cells;
+                & forest.CNA_first_cells
+                & forest.germline_mutations;
 
         return forest;
     }

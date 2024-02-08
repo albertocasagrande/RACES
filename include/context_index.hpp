@@ -2,10 +2,10 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.15
- * @date 2023-12-12
+ * @version 0.16
+ * @date 2024-02-08
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -124,76 +124,9 @@ protected:
     }
 
     /**
-     * @brief Find the mutational contexts of a FASTA sequence and save their positions in the map
-     *
-     * This method finds the mutational contexts of a FASTA sequence and saves their absolute positions
-     * in `ContextIndex::context2pos`.
-     *
-     * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
-     * @param[in] streamsize is the size of the FASTA stream in bytes
-     * @param[in,out] skipped_contexts is an array counting how many time a context has not been
-     *          inserted into the index since the last insertion
-     * @param[in] sampling_rate is the number of contexts to be found in order to record a context
-     *          in the index
-     * @param[in,out] progress_bar is the progress bar
-     */
-    void build_index_in_seq(std::ifstream& fasta_stream, const std::streampos& streamsize,
-                            std::array<size_t, 125>& skipped_contexts,
-                            const size_t& sampling_rate, UI::ProgressBar* progress_bar)
-    {
-        if (progress_bar != nullptr) {
-            progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
-        }
-
-        ExtendedContextAutomaton c_automata;
-
-        char last_char{'A'};
-        while (last_char != '>' && !fasta_stream.eof()) {
-            fasta_stream.get(last_char);
-
-            if (c_automata.update_state(last_char)) {
-                if (c_automata.read_a_context()) {
-                    if (update_skipped_contexts(skipped_contexts, c_automata.get_state(),
-                                                sampling_rate)) {
-                        (*context2pos)[c_automata.get_context()].emplace_back(genome_size);
-                    }
-                }
-                ++genome_size;
-            }
-
-            // update progress bar once every 2^22-1 nucleotides
-            if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
-                progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
-            }
-        }
-    }
-
-    /**
-     * @brief Skip nucleotides in a FASTA stream up to a specified position in the current sequence
-     *
-     * @param[in,out] fasta_stream is the input FASTA stream
-     * @param[in,out] c_automata is an extended context automaton
-     * @param[in,out] position is the current position
-     * @param[in] aimed_position is the aimed position
-     */
-    void skip_to(std::ifstream& fasta_stream, ExtendedContextAutomaton& c_automata,
-                 ChrPosition& position, ChrPosition aimed_position)
-    {
-        char last_char{'N'};
-        while (last_char != '>' && !fasta_stream.eof() && position < aimed_position) {
-            fasta_stream.get(last_char);
-
-            if (c_automata.update_state(last_char)) {
-                ++position;
-                ++genome_size;
-            }
-        }
-    }
-
-    /**
      * @brief Skip all the remaining nucleotides of the current sequence in a FASTA stream
      *
-     * This method discharge the remaining part of the  current sequence, but it does consider
+     * This method discharge the remaining part of the current sequence, but it does consider
      * it as part of the genome.
      *
      * @param[in,out] fasta_stream is the input FASTA stream
@@ -231,12 +164,13 @@ protected:
     /**
      * @brief Find the mutational contexts in parts of a FASTA sequence and save their positions in the map
      *
-     * This method finds the mutational contexts laying in the specified regions of a FASTA sequence and
-     * saves their absolute positions in `ContextIndex::context2pos`.
+     * This method finds the mutational contexts that lay the chromosome read from a FASTA stream and 
+     * outside a specified set of genomic regions.
      *
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
      * @param[in] streamsize is the size of the FASTA stream in bytes
-     * @param[in] genomic_regions is the set of regions to be considered when searching mutational contexts
+     * @param[in] chr_id is the identifier of the chromosome in the stream
+     * @param[in] regions_to_avoid is a set of regions to avoid
      * @param[in,out] skipped_contexts is an array counting how many time a context has not been
      *          inserted into the index since the last insertion
      * @param[in] sampling_rate is the number of contexts to be found in order to record a context
@@ -244,7 +178,8 @@ protected:
      * @param[in,out] progress_bar is the progress bar
      */
     void build_index_in_seq(std::ifstream& fasta_stream, const std::streampos& streamsize,
-                            const std::set<GenomicRegion>& genomic_regions,
+                            const ChromosomeId& chr_id,
+                            const std::set<GenomicRegion>& regions_to_avoid,
                             std::array<size_t, 125>& skipped_contexts,
                             const size_t& sampling_rate, UI::ProgressBar* progress_bar)
     {
@@ -254,37 +189,36 @@ protected:
 
         ExtendedContextAutomaton c_automata;
 
+        GenomicPosition pos{chr_id, 0};
+        auto region_it = regions_to_avoid.lower_bound({pos, 1});
+
         char last_char{'N'};
-        ChrPosition chr_pos{0};
-        auto region_it = genomic_regions.begin();
-        while (last_char != '>' && !fasta_stream.eof() && region_it != genomic_regions.end()) {
-            skip_to(fasta_stream, c_automata, chr_pos, region_it->get_initial_position()-1);
+        while (last_char != '>' && !fasta_stream.eof()) {
+            fasta_stream.get(last_char);
+            ++pos.position;
 
-            while (last_char != '>' && !fasta_stream.eof() && chr_pos!=region_it->get_final_position()+1) {
-                fasta_stream.get(last_char);
-
-                if (c_automata.update_state(last_char)) {
-                    if (c_automata.read_a_context()) {
-                        if (update_skipped_contexts(skipped_contexts, c_automata.get_state(),
-                                                    sampling_rate)) {
-                            (*context2pos)[c_automata.get_context()].emplace_back(genome_size);
-                        }
-                    }
-                    ++chr_pos;
-                    ++genome_size;
-                }
-
-                // update progress bar once every 2^22-1 nucleotides
-                if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
-                    progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
-                }
+            if (region_it != regions_to_avoid.end() && region_it->ends_before(pos)) {
+                ++region_it;
             }
 
-            ++region_it;
-        }
+            if (region_it != regions_to_avoid.end() && region_it->contains(pos)) {
+                last_char = 'N';
+            }
 
-        if (last_char != '>' && !fasta_stream.eof()) {
-            skip_to_next_seq(fasta_stream);
+            if (c_automata.update_state(last_char)) {
+                if (c_automata.read_a_context()) {
+                    if (update_skipped_contexts(skipped_contexts, c_automata.get_state(),
+                                                sampling_rate)) {
+                        (*context2pos)[c_automata.get_context()].emplace_back(genome_size);
+                    }
+                }
+                ++genome_size;
+            }
+
+            // update progress bar once every 2^22-1 nucleotides
+            if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
+                progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
+            }
         }
     }
 
@@ -295,15 +229,14 @@ protected:
      * @return a map that associates a chromosome id to the the set of genomic regions
      *     laying in the corresponding chromosome
      */
-    static std::map<ChromosomeId, std::set<GenomicRegion> > split_by_chromosome_id(const std::set<GenomicRegion>* genomic_regions)
+    static std::map<ChromosomeId, std::set<GenomicRegion> > split_by_chromosome_id(const std::set<GenomicRegion>& genomic_regions)
     {
         std::map<ChromosomeId, std::set<GenomicRegion> > split;
 
-        if (genomic_regions != nullptr) {
-            for (const auto& genomic_region: *genomic_regions) {
-                split[genomic_region.get_chromosome_id()].insert(genomic_region);
-            }
+        for (const auto& genomic_region: genomic_regions) {
+            split[genomic_region.get_chromosome_id()].insert(genomic_region);
         }
+
         return split;
     }
 
@@ -337,13 +270,13 @@ protected:
      * `ContextIndex::abs_pos2chr`.
      *
      * @param[in,out] fasta_stream is the genome FASTA stream
-     * @param[in] genomic_regions is the vector of the regions to be processed
+     * @param[in] regions_to_avoid is a set of regions to avoid
      * @param[in] sampling_rate is the number of contexts to be found in order to record a context
      *          in the index
      * @param[in,out] progress_bar is the progress bar
      */
-    void reset_with(std::ifstream& fasta_stream, const std::set<GenomicRegion>* genomic_regions=nullptr,
-                    const size_t& sampling_rate=1, UI::ProgressBar* progress_bar=nullptr)
+    void reset_with(std::ifstream& fasta_stream, const std::set<GenomicRegion>& regions_to_avoid,
+                    const size_t& sampling_rate, UI::ProgressBar* progress_bar)
     {
         if (!fasta_stream.good()) {
             throw std::runtime_error("the stream is not readable");
@@ -360,7 +293,7 @@ protected:
         genome_size = 0;
         auto skipped_contexts = init_skipped_contexts();
 
-        auto regions_by_chr = split_by_chromosome_id(genomic_regions);
+        auto regions_to_avoid_by_chr = split_by_chromosome_id(regions_to_avoid);
 
         skip_to_next_seq(fasta_stream);
 
@@ -378,20 +311,8 @@ protected:
                 }
                 abs_pos2chr[genome_size+1] = chr_id;
 
-                if (genomic_regions == nullptr) {
-                    build_index_in_seq(fasta_stream, streamsize, skipped_contexts, sampling_rate,
-                                       progress_bar);
-                } else {
-                    auto regions_in = regions_by_chr.find(chr_id);
-
-                    // if one of the selected region belongs to the current chromosome
-                    if (regions_in != regions_by_chr.end()) {
-                        build_index_in_seq(fasta_stream, streamsize, regions_in->second,
-                                           skipped_contexts, sampling_rate, progress_bar);
-                    } else {
-                        skip_to_next_seq(fasta_stream);
-                    }
-                }
+                build_index_in_seq(fasta_stream, streamsize, chr_id, regions_to_avoid_by_chr[chr_id],
+                                   skipped_contexts, sampling_rate, progress_bar);
             } else {
                 if (progress_bar != nullptr) {
                     progress_bar->set_message("Discharging a sequence");
@@ -405,6 +326,39 @@ protected:
             progress_bar->set_progress(100, "Context index built");
         }
     }
+
+    /**
+     * @brief Reset the object and find the mutational contexts in a FASTA file
+     *
+     * This method resets the current object, finds the mutational contexts in the chromosome sequences
+     * contained in a FASTA file, and saves their absolute positions in the object member
+     * `ContextIndex::context2pos`. The chromosome sequences are identified by their names according
+     * to the method template parameter.
+     * At the same time, this method stores the absolute positions of each chromosome in the member
+     * `ContextIndex::abs_pos2chr`.
+     *
+     * @param[in,out] fasta_filename is the FASTA filename
+     * @param[in] regions_to_avoid is a set of regions to avoid
+     * @param[in] sampling_rate is the number of contexts to be found in order to record a context
+     *          in the index
+     * @param[in,out] progress_bar is the progress bar
+     */
+    inline void reset_with(const std::filesystem::path& fasta_filename, const std::set<GenomicRegion>& regions_to_avoid,
+                           const size_t& sampling_rate, UI::ProgressBar* progress_bar)
+    {
+
+        std::ifstream genome_fasta_stream(fasta_filename);
+
+        if (!genome_fasta_stream.good()) {
+            std::ostringstream oss;
+
+            oss << "\"" << fasta_filename << "\" does not exist";
+            throw std::runtime_error(oss.str());
+        }
+
+        reset_with(genome_fasta_stream, regions_to_avoid, sampling_rate, progress_bar);
+    }
+
 public:
 
     /**
@@ -415,169 +369,75 @@ public:
     {}
 
     /**
-     * @brief Find the context positions in a FASTA stream
+     * @brief Find the context positions in a FASTA file
      *
-     * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
-     * @param[in] sampling_rate is the number of contexts to be found in order to record a context
-     *          in the index
+     * @param[in] genome_fasta is the path of a FASTA file
      * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the FASTA sequences whose name
-     *      corresponds to a chromosome according to
-     *      `Races::IO::FASTA::seq_name_decoders`
+     * @return the index of the contexts that lay in the sequences corresponding to a
+     *          chromosome according to `Races::IO::FASTA::seq_name_decoders`
      */
-    static ContextIndex build_index(std::ifstream& genome_fasta_stream,
-                                    const size_t& sampling_rate,
-                                    UI::ProgressBar* progress_bar=nullptr)
+    static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
+                                           UI::ProgressBar* progress_bar=nullptr)
     {
-        ContextIndex context_index;
-
-        context_index.reset_with(genome_fasta_stream, nullptr, sampling_rate, progress_bar);
-
-        return context_index;
+        return build_index(genome_fasta, {}, 1, progress_bar);
     }
 
     /**
      * @brief Find the context positions in a FASTA file
      *
-     * @param[in] genome_fasta genome_fasta is a path of a FASTA file
+     * @param[in] genome_fasta is the path of a FASTA file
      * @param[in] sampling_rate is the number of contexts to be found in order to record a context
      *          in the index
      * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the FASTA file whose name
-     *      corresponds to a chromosome  according to
-     *      `Races::IO::FASTA::seq_name_decoders`
+     * @return the index of the contexts that lay in the sequences corresponding to a
+     *          chromosome according to `Races::IO::FASTA::seq_name_decoders`
      */
-    static ContextIndex build_index(const std::filesystem::path& genome_fasta,
-                                    const size_t& sampling_rate,
-                                    UI::ProgressBar* progress_bar=nullptr)
+    static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
+                                           const size_t& sampling_rate,
+                                           UI::ProgressBar* progress_bar=nullptr)
     {
-        std::ifstream genome_fasta_stream(genome_fasta);
-
-        if (!genome_fasta_stream.good()) {
-            std::ostringstream oss;
-
-            oss << "\"" << genome_fasta << "\" does not exist";
-            throw std::runtime_error(oss.str());
-        }
-
-        return build_index(genome_fasta_stream, sampling_rate, progress_bar);
+        return build_index(genome_fasta, {}, sampling_rate, progress_bar);
     }
 
     /**
-     * @brief Find the context positions in some genomic fragments of a FASTA stream
+     * @brief Find the context positions in some genomic fragments of a FASTA file
      *
-     * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
-     * @param[in] genomic_regions is the set of the genomic regions in which contexts will be searched
+     * @param[in] genome_fasta is the path of a FASTA file
+     * @param[in] regions_to_avoid is a set of regions to avoid
+     * @param[in,out] progress_bar is the progress bar
+     * @return the index of the contexts that lay in the sequences corresponding 
+     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`, 
+     *      but that are located outside the regions in `regions_to_avoid`
+     */
+    static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
+                                           const std::set<GenomicRegion>& regions_to_avoid,
+                                           UI::ProgressBar* progress_bar=nullptr)
+    {
+        return build_index(genome_fasta, regions_to_avoid, 1, progress_bar);
+    }
+
+    /**
+     * @brief Find the context positions in some genomic fragments of a FASTA file
+     *
+     * @param[in] genome_fasta is the path of a FASTA file
+     * @param[in] regions_to_avoid is a set of regions to avoid
      * @param[in] sampling_rate is the number of contexts to be found in order to record a context
      *          in the index
      * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the regions `genomic_regions` of the FASTA
-     *      sequences whose name corresponds to a chromosome according to
-     *      `Races::IO::FASTA::seq_name_decoders`
+     * @return the index of the contexts that lay in the sequences corresponding 
+     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`, 
+     *      but that are located outside the regions in `regions_to_avoid`
      */
-    static ContextIndex build_index(std::ifstream& genome_fasta_stream,
-                                    const std::set<GenomicRegion>& genomic_regions,
+    static ContextIndex build_index(const std::filesystem::path& genome_fasta,
+                                    const std::set<GenomicRegion>& regions_to_avoid,
                                     const size_t& sampling_rate,
                                     UI::ProgressBar* progress_bar=nullptr)
     {
         ContextIndex context_index;
 
-        context_index.reset_with(genome_fasta_stream, &genomic_regions, sampling_rate, progress_bar);
+        context_index.reset_with(genome_fasta, regions_to_avoid, sampling_rate, progress_bar);
 
         return context_index;
-    }
-
-    /**
-     * @brief Find the context positions in some genomic fragments of a FASTA file
-     *
-     * @param[in] genome_fasta genome_fasta is a path of a FASTA file
-     * @param[in] genomic_regions is the set of the genomic regions in which contexts will be searched
-     * @param[in] sampling_rate is the number of contexts to be found in order to record a context
-     *          in the index
-     * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the regions `genomic_regions` of the FASTA
-     *      sequences whose name corresponds to a chromosome according to
-     *      `Races::IO::FASTA::seq_name_decoders`
-     */
-    static ContextIndex build_index(const std::filesystem::path& genome_fasta,
-                                    const std::set<GenomicRegion>& genomic_regions,
-                                    const size_t& sampling_rate,
-                                    UI::ProgressBar* progress_bar=nullptr)
-    {
-        std::ifstream genome_fasta_stream(genome_fasta);
-
-        if (!genome_fasta_stream.good()) {
-            std::ostringstream oss;
-
-            oss << "\"" << genome_fasta << "\" does not exist";
-            throw std::runtime_error(oss.str());
-        }
-
-        return build_index(genome_fasta_stream, genomic_regions, sampling_rate, progress_bar);
-    }
-
-    /**
-     * @brief Find the context positions in a FASTA stream
-     *
-     * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
-     * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the FASTA sequences whose name
-     *      corresponds to a chromosome according to
-     *      `Races::IO::FASTA::seq_name_decoders`
-     */
-    static inline ContextIndex build_index(std::ifstream& genome_fasta_stream,
-                                           UI::ProgressBar* progress_bar=nullptr)
-    {
-        return build_index(genome_fasta_stream, 1, progress_bar);
-    }
-
-    /**
-     * @brief Find the context positions in a FASTA file
-     *
-     * @param[in] genome_fasta genome_fasta is a path of a FASTA file
-     * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the FASTA file whose name
-     *      corresponds to a chromosome  according to
-     *      `Races::IO::FASTA::seq_name_decoders`
-     */
-    static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
-                                           UI::ProgressBar* progress_bar=nullptr)
-    {
-        return build_index(genome_fasta, 1, progress_bar);
-    }
-
-    /**
-     * @brief Find the context positions in some genomic fragments of a FASTA stream
-     *
-     * @param[in,out] genome_fasta_stream is a input file stream in FASTA format
-     * @param[in] genomic_regions is the set of the genomic regions in which contexts will be searched
-     * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the regions `genomic_regions` of the FASTA
-     *      sequences whose name corresponds to a chromosome according to
-     *      `Races::IO::FASTA::seq_name_decoders`
-     */
-    static inline ContextIndex build_index(std::ifstream& genome_fasta_stream,
-                                           const std::set<GenomicRegion>& genomic_regions,
-                                           UI::ProgressBar* progress_bar=nullptr)
-    {
-        return build_index(genome_fasta_stream, genomic_regions, 1, progress_bar);
-    }
-
-    /**
-     * @brief Find the context positions in some genomic fragments of a FASTA file
-     *
-     * @param[in] genome_fasta genome_fasta is a path of a FASTA file
-     * @param[in] genomic_regions is the set of the genomic regions in which contexts will be searched
-     * @param[in,out] progress_bar is the progress bar
-     * @return the positions of the contexts in the regions `genomic_regions` of the FASTA
-     *      sequences whose name corresponds to a chromosome according to
-     *      `Races::IO::FASTA::seq_name_decoders`
-     */
-    static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
-                                           const std::set<GenomicRegion>& genomic_regions,
-                                           UI::ProgressBar* progress_bar=nullptr)
-    {
-        return build_index(genome_fasta, genomic_regions, 1, progress_bar);
     }
 
     /**
@@ -670,9 +530,9 @@ public:
      *
      * @return the regions of the chromosomes
      */
-    std::vector<GenomicRegion> get_chromosome_regions() const
+    std::list<GenomicRegion> get_chromosome_regions() const
     {
-        std::vector<GenomicRegion> chr_regions;
+        std::list<GenomicRegion> chr_regions;
 
         if (abs_pos2chr.size()>0) {
             auto it = abs_pos2chr.begin();

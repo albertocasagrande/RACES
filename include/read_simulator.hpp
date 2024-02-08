@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.21
+ * @version 0.22
  * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
@@ -628,9 +628,29 @@ public:
      * chromosome.
      * 
      * @param base_name is the prefix of the name of the CSV files.
-     *          The filename syntax is "<base_name><chromosome_name>.csv"
+     *          The filename format is "<base_name><chromosome_name>.csv"
+     * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    void save_VAF_CSVs(const std::string& base_name = "chr_") const;
+    void save_VAF_CSVs(const std::string& base_name,
+                       const bool& quiet = false) const;
+
+
+    /**
+     * @brief Save CSV files reporting the SNV VAFs
+     * 
+     * This method saves one CSV for each chromosome in the reference 
+     * sequence. Each CSV reports the SNV VAFs in the corresponding 
+     * chromosome. The file names will have the format 
+     * "chr_<chromosome_name>.csv".
+     * 
+     * @param base_name is the prefix of the name of the CSV files.
+     *          The file name format is "<base_name><chromosome_name>.csv"
+     * @param quiet is a Boolean flag to enable/disable a progress bar
+     */
+    inline void save_VAF_CSVs(const bool& quiet = false) const
+    {
+        save_VAF_CSVs("chr_", quiet);
+    }
 
     /**
      * @brief Save a CSV file reporting the SNV VAFs in a chromosome
@@ -651,9 +671,26 @@ public:
      * chromosome.
      * 
      * @param base_name is the prefix of the name of the CSV files.
-     *          The filename syntax is "<base_name><chromosome_name>_coverage.jpg"
+     *          The filename format is "<base_name><chromosome_name>_coverage.jpg"
+     * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    void save_coverage_images(const std::string& base_name = "chr_") const;
+    void save_coverage_images(const std::string& base_name,
+                              const bool& quiet = false) const;
+
+    /**
+     * @brief Save images representing the chromosome coverages
+     * 
+     * This method saves one image for each chromosome in the reference 
+     * sequence. Each image depicts the coverage of the corresponding 
+     * chromosome. The file names will have the format 
+     * "chr_<chromosome_name>_coverage.jpg".
+     * 
+     * @param quiet is a Boolean flag to enable/disable a progress bar
+     */
+    inline void save_coverage_images(const bool& quiet = false) const
+    {
+        save_coverage_images("chr_", quiet);
+    }
 
     /**
      * @brief Save a image representing the coverage of a chromosome
@@ -674,8 +711,26 @@ public:
      * 
      * @param base_name is the prefix of the name of the CSV files.
      *          The filename syntax is "<base_name><chromosome_name>_hist.jpg"
+     * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    void save_SNV_histograms(const std::string& base_name = "chr_") const;
+    void save_SNV_histograms(const std::string& base_name,
+                             const bool& quiet = false) const;
+
+
+    /**
+     * @brief Save images representing the histogram of SNVs
+     * 
+     * This method saves one image for each chromosome in the reference 
+     * sequence. Each image depicts the SNV histogram of the corresponding 
+     * chromosome. The file names will have the format 
+     * "chr_<chromosome_name>_hist.jpg".
+     * 
+     * @param quiet is a Boolean flag to enable/disable a progress bar
+     */
+    inline void save_SNV_histograms(const bool& quiet = false) const
+    {
+        save_SNV_histograms("chr_", quiet);
+    }
 
     /**
      * @brief Save a image representing the histogram of a chromosome SNVs
@@ -1036,6 +1091,7 @@ private:
      * 
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
+     * @param[in] germline_SNVs is a map from genomic positions to the corresponding germline SNVs
      * @param[in] SNVs is a map from genomic positions to the corresponding SNVs
      * @param[in] read_first_position is the first position of the simulated read
      * @param[in] template_size is the size of the template
@@ -1044,6 +1100,7 @@ private:
     template<typename DATA_TYPE, 
          std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void collect_template_statistics(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+                                     const std::map<GenomicPosition, SNV>& germline_SNVs,
                                      const std::map<GenomicPosition, SNV>& SNVs,
                                      const ChrPosition& template_first_position,
                                      const size_t& template_size, ChrSampleStatistics& chr_statistics)
@@ -1058,6 +1115,10 @@ private:
                     snv_it != SNVs.end() && snv_it->second.position<read_first_position+read_size; ++snv_it) {
                 chr_statistics.add_occurrence(snv_it->second);
             }
+            for (auto snv_it = germline_SNVs.lower_bound(genomic_position);
+                    snv_it != germline_SNVs.end() && snv_it->second.position<read_first_position+read_size; ++snv_it) {
+                chr_statistics.add_occurrence(snv_it->second);
+            }
         }
     }
 
@@ -1070,6 +1131,7 @@ private:
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
      * @param SAM_stream is the SAM file output stream
      * @param chr_data is the data about the chromosome from which the simulated read come from
+     * @param germline_SNVs is a map from genomic positions to the corresponding germline SNVs
      * @param SNVs is a map from genomic positions to the corresponding SNVs
      * @param read_first_position is the first position of the simulated read
      * @param template_size is the size of the template
@@ -1079,6 +1141,7 @@ private:
          std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void write_SAM_template_alignments(std::ostream& SAM_stream,
                                        const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+                                       const std::map<GenomicPosition, SNV>& germline_SNVs,
                                        const std::map<GenomicPosition, SNV>& SNVs,
                                        const ChrPosition& template_first_position,
                                        const size_t& template_size, const std::string& sample_name="")
@@ -1097,6 +1160,7 @@ private:
             if constexpr(std::is_base_of_v<Races::IO::FASTA::Sequence, DATA_TYPE>) {
                 read = chr_data.nucleotides.substr(read_first_position-1, read_size);
                 apply_SNVs(read, SNVs, genomic_position);
+                apply_SNVs(read, germline_SNVs, genomic_position);
             } else {
                 read = "*";
             }
@@ -1152,6 +1216,7 @@ private:
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     void generate_fragment_reads(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+                                 const AlleleFragment& germline_fragment,
                                  const AlleleFragment& fragment,
                                  ReadSimulationData& sample_simulation_data, const std::string& sample_name, 
                                  ChrSampleStatistics& chr_statistics,
@@ -1173,36 +1238,29 @@ private:
 
             const double current_progress = 100*static_cast<double>(steps)/total_steps;
 
+            const auto& germline_SNVs = germline_fragment.get_SNVs();
             const auto& SNVs = fragment.get_SNVs();
-
+            
             auto first_possible_begin = fragment.get_initial_position();
-            auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())-read_size+1;
+            auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())-template_size+1;
 
             std::uniform_int_distribution<ChrPosition> dist(first_possible_begin, last_possible_begin);
             size_t simulated_templates = 0;
             while (simulated_templates < num_of_frag_templates) {
                 auto begin_pos = dist(random_generator);
-                auto new_template_size = ((read_type==ReadType::PAIRED_READ)
-                                            ?2*read_size+insert_size:read_size);
-                auto end_pos = begin_pos + new_template_size - 1;
-                if (end_pos > fragment.get_final_position() && begin_pos+1>new_template_size) {
-                    end_pos = begin_pos;
 
-                    begin_pos = end_pos+1-new_template_size-read_size; 
+                if (SAM_stream != nullptr) {
+                    write_SAM_template_alignments(*SAM_stream, chr_data, germline_SNVs, SNVs, begin_pos, 
+                                                  template_size, sample_name);
                 }
 
-                if (begin_pos >= fragment.get_initial_position()) {
-                    if (SAM_stream != nullptr) {
-                        write_SAM_template_alignments(*SAM_stream, chr_data, SNVs, begin_pos, 
-                                                      new_template_size, sample_name);
-                    }
-                    collect_template_statistics(chr_data, SNVs, begin_pos,
-                                                new_template_size, chr_statistics);
-                    
-                    num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
-                    ++simulated_templates;
-                    --sample_simulation_data.missing_templates;
-                }
+                collect_template_statistics(chr_data, germline_SNVs, SNVs, begin_pos,
+                                            template_size, chr_statistics);
+
+                num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
+                ++simulated_templates;
+                --sample_simulation_data.missing_templates;
+
                 progress_bar.set_progress(current_progress+simulated_templates*fragment_progress_ratio);
             }
         }
@@ -1241,12 +1299,25 @@ private:
 
         for (const auto& cell_mutations: sample_genome_mutations.mutations) {
             const auto& chr_mutations = cell_mutations.get_chromosome(chr_data.chr_id);
+            const auto& germline_chr_mut = sample_genome_mutations.germline_mutations.get_chromosome(chr_data.chr_id);
 
             for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
+                const auto& germline_allele_id = allele.get_history().front();
+                const auto& germline_allele = germline_chr_mut.get_allele(germline_allele_id);
+
                 for (const auto& [position, fragment] : allele.get_fragments()) {
-                    generate_fragment_reads(chr_data, fragment, sample_simulation_data,
-                                            sample_genome_mutations.name, chr_stats,
-                                            total_steps, steps, progress_bar, SAM_stream);
+                    // searching for the germline fragment AFTER `fragment`
+                    auto germline_it = germline_allele.get_fragments().upper_bound(position);
+
+                    // update `germline_mutations` so to the last germline fragment starting 
+                    // BEFORE or in the SAME POSITION of `fragment`
+                    --germline_it;
+
+                    // since `cell_mutations` derives from `germline_mutations`, `germline_allele` 
+                    // fully contains `allele`
+                    generate_fragment_reads(chr_data, germline_it->second, fragment, 
+                                            sample_simulation_data, sample_genome_mutations.name,
+                                            chr_stats, total_steps, steps, progress_bar, SAM_stream);
                 }
 
                 progress_bar.set_progress(100*steps/total_steps);

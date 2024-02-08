@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.12
- * @date 2024-01-20
+ * @version 0.13
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -234,6 +234,11 @@ class Allele
     std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
 
     std::list<AlleleId> history;    //!< the allele history
+
+    /**
+     * @brief The empty constructor
+     */
+    Allele();
 public:
     /**
      * @brief The allele length
@@ -411,6 +416,18 @@ public:
      * @return the string representation of `allele_id`
      */
     static std::string format_id(const Races::Mutations::AlleleId& allele_id);
+
+    /**
+     * @brief Duplicate genomic structure
+     * 
+     * This method duplicates the genomic structure of the current objects. 
+     * It returns an `Allele` object that has the same fragments of the current 
+     * objects, but misses the original SNVs and indels.  
+     * 
+     * @return an `Allele` object that has the same fragments of the current 
+     *      objects, but misses the original SNVs and indels
+     */
+    Allele duplicate_structure() const;
 
     /**
      * @brief Save an allele in an archive

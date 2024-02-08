@@ -2,7 +2,7 @@
  * @file snv.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.12
+ * @version 0.13
  * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
@@ -51,11 +51,12 @@ struct SNV : public GenomicPosition
      *
      * This enumeration defines the types of an SNV.
      * An object of this type can either be DRIVER,
-     * PASSENGER, or UNDEFINED.
+     * PASSENGER, GERMLINE, or UNDEFINED.
      */
     enum Type {
         DRIVER,
         PASSENGER,
+        GERMLINE,
         UNDEFINED
     };
 

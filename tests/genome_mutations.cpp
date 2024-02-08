@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::GenomeMutations class
- * @version 0.7
+ * @version 0.8
  * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
@@ -56,7 +56,9 @@ BOOST_AUTO_TEST_CASE(genome_mutations_creation)
 
     auto index = ContextIndex<>::build_index(FASTA_FILE);
 
-    BOOST_CHECK_NO_THROW(GenomeMutations(index, 2));
+    auto chr_regions = index.get_chromosome_regions();
+
+    BOOST_CHECK_NO_THROW(GenomeMutations(chr_regions, 2));
 
     BOOST_CHECK_THROW(GenomeMutations({{1, 100, 3}, {1, 100, 2}}), std::domain_error);
 }
@@ -70,7 +72,10 @@ struct GenomeMutationsFixture
         using namespace Races::Mutations;
 
         auto index = ContextIndex<>::build_index(FASTA_FILE);
-        genome_mutations = GenomeMutations(index, 2);
+
+        auto chr_regions = index.get_chromosome_regions();
+
+        genome_mutations = GenomeMutations(chr_regions, 2);
     }
 };
 

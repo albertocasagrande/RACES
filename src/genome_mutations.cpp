@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.18
- * @date 2024-02-01
+ * @version 0.19
+ * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -60,30 +60,43 @@ ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region,
     }
 }
 
-std::set<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
+std::list<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
 {
-    std::set<AlleleId> allele_ids;
+    std::list<AlleleId> allele_ids;
 
     for (const auto& [allele_id, allele]: alleles) {
         if (allele.contains(genomic_position)) {
-            allele_ids.insert(allele_id);
+            allele_ids.push_back(allele_id);
         }
     }
 
     return allele_ids;
 }
 
-std::set<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
+std::list<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
 {
-    std::set<AlleleId> allele_ids;
+    std::list<AlleleId> allele_ids;
 
     for (const auto& [allele_id, allele]: alleles) {
         if (allele.contains(genomic_region)) {
-            allele_ids.insert(allele_id);
+            allele_ids.push_back(allele_id);
         }
     }
 
     return allele_ids;
+}
+
+std::list<AlleleId> ChromosomeMutations::get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const
+{
+    std::list<AlleleId> context_free_alleles;
+
+    for (const auto& [allele_id, allele]: alleles) {
+        if (allele.has_context_free(genomic_position)) {
+            context_free_alleles.push_back(allele_id);
+        }
+    }
+
+    return context_free_alleles;
 }
 
 const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
@@ -206,11 +219,13 @@ bool ChromosomeMutations::insert(const SNV& snv, const AlleleId& allele_id)
         throw std::domain_error("The genomic position of the SNV is not in the chromosome");
     }
 
-    if (!has_context_free(snv)) {
+    Allele& allele = get_allele(allele_id);
+
+    if (!allele.has_context_free(snv)) {
         return false;
     }
 
-    return get_allele(allele_id).insert(snv);
+    return allele.insert(snv);
 }
 
 bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
@@ -228,6 +243,23 @@ bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
     return false;
 }
 
+ChromosomeMutations ChromosomeMutations::duplicate_structure() const
+{
+    ChromosomeMutations duplicate;
+
+    duplicate.identifier = identifier;
+    duplicate.length = length;
+    duplicate.allelic_length = allelic_length;
+    duplicate.CNAs = CNAs;
+    duplicate.next_allele_id = next_allele_id;
+
+    for (const auto& [allele_id, allele] : alleles) {
+        duplicate.alleles.emplace(allele_id, allele.duplicate_structure());
+    }
+
+    return duplicate;
+}
+
 GenomeMutations::GenomeMutations()
 {}
 
@@ -243,6 +275,24 @@ GenomeMutations::GenomeMutations(const std::vector<ChromosomeMutations>& chromos
             throw std::domain_error(oss.str());
         }
         this->chromosomes[chromosome.id()] = chromosome;
+    }
+}
+
+GenomeMutations::GenomeMutations(const std::list<GenomicRegion>& chromosome_regions,
+                                 const size_t& num_of_alleles)
+{
+    for (const auto& chr_region : chromosome_regions) {
+        chromosomes[chr_region.get_chromosome_id()] = ChromosomeMutations(chr_region, num_of_alleles);
+    }
+}
+
+GenomeMutations::GenomeMutations(const std::list<GenomicRegion>& chromosome_regions,
+                                 const std::map<ChromosomeId, size_t>& alleles_per_chromosome)
+{
+    for (const auto& chr_region : chromosome_regions) {
+        auto chr_id = chr_region.get_chromosome_id();
+        chromosomes[chr_id] = ChromosomeMutations(chr_region,
+                                                    alleles_per_chromosome.at(chr_id));
     }
 }
 
@@ -296,18 +346,25 @@ auto find_chromosome(const std::map<ChromosomeId, ChromosomeMutations>& chromoso
     return chr_it;   
 }
 
-std::set<AlleleId> GenomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
+std::list<AlleleId> GenomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
 {
     auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
 
     return chr_it->second.get_alleles_containing(genomic_position);
 }
 
-std::set<AlleleId> GenomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
+std::list<AlleleId> GenomeMutations::get_alleles_containing(const GenomicRegion& genomic_region) const
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
     return chr_it->second.get_alleles_containing(genomic_region);
+}
+
+std::list<AlleleId> GenomeMutations::get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const
+{
+    auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
+
+    return chr_it->second.get_alleles_with_context_free_for(genomic_position);
 }
 
 bool GenomeMutations::allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const
@@ -353,6 +410,17 @@ bool GenomeMutations::has_context_free(const GenomicPosition& genomic_position) 
     return chr_it->second.has_context_free(genomic_position);
 }
 
+GenomeMutations GenomeMutations::duplicate_structure() const
+{
+    GenomeMutations duplicate;
+
+    for (const auto& [chr_id, chromosome] : chromosomes) {
+        duplicate.chromosomes.emplace(chr_id, chromosome.duplicate_structure());
+    }
+
+    return duplicate;
+}
+
 CellGenomeMutations::CellGenomeMutations():
     Cell(), GenomeMutations()
 {}
@@ -362,8 +430,9 @@ CellGenomeMutations::CellGenomeMutations(const Mutants::Cell& cell, const Genome
     Cell(cell), GenomeMutations(genome_mutations)
 {}
 
-SampleGenomeMutations::SampleGenomeMutations(const std::string& name):
-    name(name)
+SampleGenomeMutations::SampleGenomeMutations(const std::string& name,
+                                             const GenomeMutations& germline_mutations):
+    germline_mutations(germline_mutations), mutations(), name(name)
 {}
 
 }   // Mutations

@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.13
- * @date 2024-01-20
+ * @version 0.14
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,25 +39,19 @@
 #include "common.hpp"
 
 #include "simulation.hpp"
-
 #include "descendant_forest.hpp"
-
 #include "context_index.hpp"
-
 #include "mutation_engine.hpp"
-
-#include "fasta_utils.hpp"
-#include "fasta_reader.hpp"
-
+#include "germline.hpp"
 #include "read_simulator.hpp"
 
-#include "filter.hpp"
-
-#include "progress_bar.hpp"
+#include "driver_storage.hpp"
 
 #include "csv_reader.hpp"
 
 #include "json_config.hpp"
+
+#include "progress_bar.hpp"
 
 template<>
 std::string
@@ -114,6 +108,7 @@ class MutationsSimulator : public BasicExecutable
     std::filesystem::path simulation_filename;
     std::filesystem::path species_directory;
     std::filesystem::path snapshot_path;
+    std::filesystem::path driver_mutations_filename;
     std::filesystem::path context_index_filename;
     std::filesystem::path ref_genome_filename;
     std::filesystem::path passenger_CNA_filename;
@@ -127,6 +122,8 @@ class MutationsSimulator : public BasicExecutable
     size_t insert_size;
     std::string SNVs_csv_filename;
     std::string CNAs_csv_filename;
+    std::string germline_csv_filename;
+    std::string germline_subject;
     bool epigenetic_FACS;
     bool write_SAM;
 
@@ -257,7 +254,7 @@ class MutationsSimulator : public BasicExecutable
                 auto new_name = sample_mutations.name+"_"+
                                     methylation_map.at(cell_mutations.get_species_id());
 
-                FACS_samples.push_back(SampleGenomeMutations(new_name));
+                FACS_samples.emplace_back(new_name, sample_mutations.germline_mutations);
 
                 FACS_samples.back().mutations.push_back(cell_mutations);
 
@@ -354,23 +351,12 @@ class MutationsSimulator : public BasicExecutable
         return {pos, end_pos+1-begin_pos};
     }
 
-    static void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics)
+    void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics) const
     {
-        Races::UI::ProgressBar progress_bar;
-        
-        progress_bar.set_message("Saving statistics");
-
-        statistics.save_VAF_CSVs();
-        progress_bar.set_progress(33);
-        progress_bar.update_elapsed_time();
+        statistics.save_VAF_CSVs(quiet);
 #if WITH_MATPLOT
-        progress_bar.set_message("Generating images");
-        statistics.save_coverage_images();
-        progress_bar.set_progress(66);
-        progress_bar.update_elapsed_time();
-        statistics.save_SNV_histograms();
-        progress_bar.update_elapsed_time();
-        progress_bar.set_progress(100, "Images generated");
+        statistics.save_coverage_images(quiet);
+        statistics.save_SNV_histograms(quiet);
 #endif // WITH_MATPLOT
     }
 
@@ -434,13 +420,25 @@ class MutationsSimulator : public BasicExecutable
 
         auto num_of_alleles = get_number_of_alleles(context_index, simulation_cfg);
 
-
         const auto passenger_CNAs = MutationsSimulator::load_passenger_CNAs(passenger_CNA_filename);
 
+        const auto driver_storage = DriverStorage::load(driver_mutations_filename);
 
-        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, num_of_alleles,
-                                                    signatures, mutational_properties,
-                                                    passenger_CNAs);
+        auto germline_mutations_per_kbase = ConfigReader::get_number_of_germline_mutations_per_kbase(simulation_cfg);
+
+        auto chromosome_regions = context_index.get_chromosome_regions();
+
+        GenomeMutations germline;
+
+        if (germline_csv_filename.size()==0) {
+            germline = GermlineMutations::generate(ref_genome_filename, chromosome_regions, driver_storage,
+                                                   num_of_alleles, germline_mutations_per_kbase, 0, false);
+        } else {
+            germline = GermlineMutations::load(germline_csv_filename, num_of_alleles, germline_subject);
+        }
+
+        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, signatures, mutational_properties,
+                                                    germline, driver_storage, passenger_CNAs);
 
         const auto& exposures_json = simulation_cfg["exposures"];
 
@@ -487,6 +485,21 @@ class MutationsSimulator : public BasicExecutable
             print_help_and_exit("\"" + std::string(species_directory) + "\"  does not exist", 1);
         }
 
+        if (!vm.count("driver mutations")) {
+            print_help_and_exit("The driver mutation file is mandatory. "
+                                "You can produce it by using `races_build_index`", 1);
+        }
+
+        if (!fs::exists(driver_mutations_filename)) {
+            print_help_and_exit("\"" + std::string(driver_mutations_filename)
+                                + "\"  does not exist", 1);
+        }
+
+        if (!fs::is_regular_file(driver_mutations_filename)) {
+            print_help_and_exit("\"" + std::string(driver_mutations_filename)
+                                + "\"  is not a regular file", 1);
+        }
+
         if (!vm.count("context index")) {
             print_help_and_exit("The context index is mandatory. "
                                 "You can produce it by using `races_build_index`", 1);
@@ -528,6 +541,27 @@ class MutationsSimulator : public BasicExecutable
         if (!fs::is_regular_file(ref_genome_filename)) {
             print_help_and_exit("\"" + std::string(ref_genome_filename)
                                 + "\"  is not a regular file", 1);
+        }
+
+        if (vm.count("germline-file") > 1) {
+            print_help_and_exit("One germline file can be specified at most", 1);
+        }
+
+        if (vm.count("germline-subject") > 1) {
+            print_help_and_exit("One germline subject can be specified at most", 1);
+        }
+
+        if (vm.count("germline-file") != vm.count("germline-subject")) {
+            if (vm.count("germline-file")>0) {
+                print_help_and_exit("A germline file has been specified. Please, "
+                                    "specify a subject among those in the IGSR "
+                                    "VCF files.", 1);
+            }
+
+            if (vm.count("germline-subject")>0) {
+                print_help_and_exit("A germline subject has been specified. Please, "
+                                    "specify a germline file.", 1);
+            }
         }
 
         if (!vm.count("passenger CNAs file")) {
@@ -631,6 +665,10 @@ public:
         using namespace Races::Mutations::SequencingSimulations;
 
         visible_options.at("mutations").add_options()
+            ("germline-file,G", po::value<std::string>(&germline_csv_filename),
+             "a CSV file reporting the IGSR VCF file of each chromosome")
+            ("germline-subject,J", po::value<std::string>(&germline_subject),
+             "the name of the subject whose germline is to be used" )
             ("SNVs-CSV,S", po::value<std::string>(&SNVs_csv_filename),
              "the SNVs CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
@@ -672,6 +710,8 @@ public:
              "the mutational signature")
             ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename),
              "the filename of the reference genome FASTA file")
+            ("driver mutations",  po::value<std::filesystem::path>(&driver_mutations_filename),
+             "the name of file containing the driver mutations")
             ("passenger CNAs file", po::value<std::filesystem::path>(&passenger_CNA_filename),
              "the filename of the passenger CNAs")
         ;
@@ -687,6 +727,7 @@ public:
         positional_options.add("context index", 1);
         positional_options.add("mutational signature", 1);
         positional_options.add("reference genome", 1);
+        positional_options.add("driver mutations", 1);
         positional_options.add("passenger CNAs file", 1);
 
         po::variables_map vm;

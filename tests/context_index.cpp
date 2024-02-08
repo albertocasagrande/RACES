@@ -2,10 +2,10 @@
  * @file context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::ContextIndex class
- * @version 0.6
- * @date 2023-12-09
+ * @version 0.7
+ * @date 2024-02-08
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -52,25 +52,7 @@ BOOST_AUTO_TEST_CASE(context_index_creation)
 
     BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(FASTA_FILE, regions));
 
-    {
-        std::ifstream is(FASTA_FILE, std::ios::in);
-
-        BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(is));
-    }
-
-    {
-        std::ifstream is(FASTA_FILE, std::ios::in);
-
-        BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(is, regions));
-    }
-
-    {
-        std::ifstream is(FASTA_FILE, std::ios::in);
-
-        BOOST_CHECK_NO_THROW(ContextIndex<>::build_index(is));
-
-        BOOST_CHECK_THROW(ContextIndex<>::build_index(is), std::runtime_error);
-    }
+    BOOST_CHECK_THROW(ContextIndex<>::build_index("/TEST-ERROR"), std::runtime_error);
 }
 
 template<typename GENOME_WIDE_POSITION>

@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.6
- * @date 2024-01-20
+ * @version 0.7
+ * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -51,6 +51,10 @@ AlleleFragment::AlleleFragment(const GenomicRegion& genomic_region):
 
 bool AlleleFragment::has_context_free(const GenomicPosition& genomic_position) const
 {
+    if (!strictly_contains(genomic_position)) {
+        return false;
+    }
+
     GenomicPosition g_pos(genomic_position);
     if (g_pos.position>0) {
         g_pos.position -= 1;
@@ -142,6 +146,9 @@ bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region
 
     return false;
 }
+
+Allele::Allele()
+{}
 
 Allele::Allele(const AlleleId& identifier, const std::list<AlleleId>& history):
     history(history)
@@ -349,6 +356,20 @@ std::string Allele::format_id(const Races::Mutations::AlleleId& allele_id)
     }
 
     return std::to_string(allele_id);
+}
+
+Allele Allele::duplicate_structure() const
+{
+    Allele duplicate;
+
+    duplicate.history = history;
+
+    for (const auto& [pos, fragment] : fragments) {
+        AlleleFragment d_frag(static_cast<const GenomicRegion&>(fragment));
+        duplicate.fragments.emplace(pos, std::move(d_frag));
+    }
+
+    return duplicate;
 }
 
 }   // Mutations

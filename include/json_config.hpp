@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.17
- * @date 2024-01-20
+ * @version 0.18
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023
  *
@@ -304,6 +304,19 @@ public:
      */
     static Races::Mutations::Exposure
     get_exposure(const nlohmann::json& exposure_json);
+
+    /**
+     * @brief Get the number of germline mutations per kilobase
+     *
+     * @param simulation_json is the JSON simulation configuration
+     * @return the number of germline mutations per kilobase
+     */
+    static double
+    get_number_of_germline_mutations_per_kbase(const nlohmann::json& simulation_json)
+    {
+        return get_from<double>("germline mutations per kbase", simulation_json,
+                                "The passengers simulation configuration");
+    }
 
     /**
      * @brief Get the number of neoplastic mutations
