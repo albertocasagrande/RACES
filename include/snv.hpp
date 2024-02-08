@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.11
- * @date 2024-01-18
+ * @version 0.12
+ * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,6 @@
 #include <ostream>
 
 #include "genomic_position.hpp"
-#include "context.hpp"
 
 namespace Races
 {
@@ -60,10 +59,10 @@ struct SNV : public GenomicPosition
         UNDEFINED
     };
 
-    MutationalContext context;  //!< The context base
-    char mutated_base;          //!< The mutated base
-    std::string cause;          //!< The cause of the SNV
-    Type type;                  //!< The type of the SNV
+    char ref_base;      //!< The ref_base base
+    char alt_base;      //!< The altered base
+    std::string cause;  //!< The cause of the SNV
+    Type type;          //!< The type of the SNV
 
     /**
      * @brief The empty constructor
@@ -75,84 +74,84 @@ struct SNV : public GenomicPosition
      *
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
-     * @param mutated_base is the mutated base
+     * @param alt_base is the altered base
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
     SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-        const char mutated_base, const Type& type=UNDEFINED);
+        const char alt_base, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
-     * @param context is the SNV context
-     * @param mutated_base is the mutated base
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
     SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-        const MutationalContext& context, const char mutated_base, const Type& type=UNDEFINED);
+        const char ref_base, const char alt_base, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param mutated_base is the mutated base
+     * @param alt_base is the altered base
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(const GenomicPosition& genomic_position, const char mutated_base, 
+    SNV(const GenomicPosition& genomic_position, const char alt_base, 
         const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param context is the SNV context
-     * @param mutated_base is the mutated base
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(const GenomicPosition& genomic_position, const MutationalContext& context,
-        const char mutated_base, const Type& type=UNDEFINED);
+    SNV(const GenomicPosition& genomic_position, const char ref_base,
+        const char alt_base, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param mutated_base is the mutated base
+     * @param alt_base is the altered base
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(GenomicPosition&& genomic_position, const char mutated_base,
+    SNV(GenomicPosition&& genomic_position, const char alt_base,
         const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param context is the SNV context
-     * @param mutated_base is the mutated base
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(GenomicPosition&& genomic_position, const MutationalContext& context,
-        const char mutated_base, const Type& type=UNDEFINED);
+    SNV(GenomicPosition&& genomic_position, const char ref_base,
+        const char alt_base, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
-     * @param mutated_base is the mutated base
+     * @param alt_base is the altered base
      * @param cause is the cause of the SNV
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
     SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-        const char mutated_base, const std::string& cause,
+        const char alt_base, const std::string& cause,
         const Type& type=UNDEFINED);
 
     /**
@@ -160,65 +159,65 @@ struct SNV : public GenomicPosition
      *
      * @param chromosome_id is the id of the SNV chromosome
      * @param chromosomic_position is the SNV position in the chromosome
-     * @param context is the SNV context
-     * @param mutated_base is the mutated base
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param cause is the cause of the SNV
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
     SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-        const MutationalContext& context, const char mutated_base,
+        const char ref_base, const char alt_base,
         const std::string& cause, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param mutated_base is the mutated base
+     * @param alt_base is the altered base
      * @param cause is the cause of the SNV
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(const GenomicPosition& genomic_position, const char mutated_base,
+    SNV(const GenomicPosition& genomic_position, const char alt_base,
         const std::string& cause, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param context is the SNV context
-     * @param mutated_base is the mutated base
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param cause is the cause of the SNV
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(const GenomicPosition& genomic_position, const MutationalContext& context,
-        const char mutated_base, const std::string& cause, const Type& type=UNDEFINED);
+    SNV(const GenomicPosition& genomic_position, const char ref_base,
+        const char alt_base, const std::string& cause, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param mutated_base is the mutated base
+     * @param alt_base is the altered base
      * @param cause is the cause of the SNV
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(GenomicPosition&& genomic_position, const char mutated_base, 
+    SNV(GenomicPosition&& genomic_position, const char alt_base, 
         const std::string& cause, const Type& type=UNDEFINED);
 
     /**
      * @brief A constructor
      *
      * @param genomic_position is the SNV genomic_position
-     * @param context is the SNV context
-     * @param mutated_base is the mutated base
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param cause is the cause of the SNV
      * @param type is the type of the SNV
-     * @throw std::domain_error `original_base` and `mutated_base` are the same
+     * @throw std::domain_error reference and altered bases are the same
      */
-    SNV(GenomicPosition&& genomic_position, const MutationalContext& context,
-        const char mutated_base, const std::string& cause, const Type& type=UNDEFINED);
+    SNV(GenomicPosition&& genomic_position, const char ref_base,
+        const char alt_base, const std::string& cause, const Type& type=UNDEFINED);
 
     /**
      * @brief Save a SNV in an archive
@@ -230,8 +229,8 @@ struct SNV : public GenomicPosition
     inline void save(ARCHIVE& archive) const
     {
         archive & static_cast<const GenomicPosition&>(*this)
-                & context
-                & mutated_base
+                & ref_base
+                & alt_base
                 & cause
                 & type;
     }
@@ -250,8 +249,8 @@ struct SNV : public GenomicPosition
         SNV snv;
 
         archive & static_cast<GenomicPosition&>(snv)
-                & snv.context
-                & snv.mutated_base
+                & snv.ref_base
+                & snv.alt_base
                 & snv.cause
                 & snv.type;
 

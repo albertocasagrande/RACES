@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.43
- * @date 2024-02-01
+ * @version 0.44
+ * @date 2024-02-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -301,12 +301,12 @@ class MutationEngine
             index = u_dist(generator);
         }
 
-        char mutated_base = m_type.get_replace_base();
+        char alt_base = m_type.get_replace_base();
         if (index >= context_index[context].size()) {
             index -= context_index[context].size();
             context = complement_context;
 
-            mutated_base = MutationalContext::get_complement(mutated_base);
+            alt_base = MutationalContext::get_complement(alt_base);
         }
 
         GENOME_WIDE_POSITION pos = context_index.extract(context, index);
@@ -315,7 +315,7 @@ class MutationEngine
 
         auto genomic_pos = context_index.get_genomic_position(pos);
 
-        return {genomic_pos, context, mutated_base, cause,
+        return {genomic_pos, context.get_central_nucleotide(), alt_base, cause,
                 SNV::Type::PASSENGER};
     }
 

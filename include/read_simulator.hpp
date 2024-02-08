@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.20
- * @date 2024-01-30
+ * @version 0.21
+ * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -960,35 +960,27 @@ private:
                 snv_it != SNVs.end() && snv_it->second.position<=last_position; ++snv_it) {
             const size_t SNV_pos = snv_it->second.position-genomic_position.position;
 
-            {   // check the match between the SNV context and the corresponding nucleic 
-                // triplet in `nucleic_sequence`
+            {   // check the match between the SNV reference base and the corresponding base 
+                // in `nucleic_sequence`
 
-                // identify the first position in `nucleic_sequence` of the context
-                size_t first_nucleotide = (SNV_pos==0?0:SNV_pos-1);
+                const char snv_ref = snv_it->second.ref_base;
 
-                // extract the `nucleic_sequence` nucleotides corresponding to the context
-                std::string real_context = nucleic_sequence.substr(first_nucleotide, (SNV_pos==0?2:3));
-                for (auto str_c: real_context) {
-                    str_c = toupper(str_c);
-                }
+                if (snv_ref != '?') {
 
-                // extract the part of the SNV context falling inside ``nucleic_sequence` 
-                size_t length = real_context.size();
+                    // if the SNV reference base differs from the corresponding 
+                    // `nucleic_sequence` base
+                    const char ref_base = toupper(nucleic_sequence[SNV_pos]);
 
-                if (snv_it->second.context.is_defined()) {
-                    std::string context = snv_it->second.context.get_sequence().substr((SNV_pos==0?1:0),
-                                                                                       length);
-
-                    // if they differ
-                    if (real_context!=context) {
+                    if (snv_ref!=ref_base) {
                         std::ostringstream oss;
 
-                        oss << "Context mismatch in chr. "
+                        oss << "Reference base mismatch in chr. "
                             << GenomicPosition::chrtos(genomic_position.chr_id) 
-                            << " in position " << snv_it->second.position << ": \"" 
-                            << context << "\" expected and got \"" 
-                            << real_context << "\"."<< std::endl 
-                            << "Are you using a FASTA file different from that used for the context index?"
+                            << " in position " << snv_it->second.position << ": expected '" 
+                            << snv_ref << "' and got \"" 
+                            << ref_base << "\"."<< std::endl 
+                            << "Are you using a FASTA file different from that used for "
+                            << "building the context index?"
                             << std::endl;
                         throw std::domain_error(oss.str());
                     }
@@ -996,7 +988,7 @@ private:
             }
 
             // change the `nucleic_sequence` nucleotide according to the considered SNV
-            nucleic_sequence[SNV_pos] = snv_it->second.mutated_base;
+            nucleic_sequence[SNV_pos] = snv_it->second.alt_base;
         }
 
         return nucleic_sequence;

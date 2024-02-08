@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.17
+ * @version 0.18
  * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
@@ -420,7 +420,7 @@ std::ofstream& SampleSetStatistics::stream_VAF_csv_header(std::ofstream& os, con
 {
     os << "chr" << separator << "from" << separator << "to" << separator
         << "ref" << separator << "alt" << separator
-        << "type" << separator << "context" << separator << "cause";
+        << "type" << separator << "cause";
 
     if (stats_map.size()>1) {
         for (const auto& [sample_name, sample_stats]: stats_map) {
@@ -658,9 +658,8 @@ void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
     for (const auto& [snv, total_snv_occurrences]: total_SNV_occurrences) {
         os << GenomicPosition::chrtos(chr_id) << separator << snv.position 
         << separator << snv.position 
-        << separator << snv.context.get_central_nucleotide()
-        << separator << snv.mutated_base << separator << "SNV" 
-        << separator << snv.context << separator << snv.cause;
+        << separator << snv.ref_base  << separator << snv.alt_base 
+        << separator << "SNV" << separator << snv.cause;
 
         size_t total_snv_coverage{0};
         for (const auto& [sample_name, sample_stats]: stats_map) {

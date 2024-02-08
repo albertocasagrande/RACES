@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 0.10
- * @date 2024-01-05
+ * @version 0.11
+ * @date 2024-01-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -132,7 +132,7 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
 {
     os << "chr" << separator << "from" << separator << "to" << separator
        << "ref" << separator << "alt" << separator
-       << "type" << separator << "context" << separator << "cause" << separator << "mutation type";
+       << "type" << separator << "cause" << separator << "mutation type";
 
     if (sample_statistics.size()>1) {
         for (const auto& [sample_name, sample_stat]: sample_statistics) {
@@ -152,8 +152,8 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
 
         os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position
            << separator << snv.position << separator
-           << snv.context.get_central_nucleotide() << separator << snv.mutated_base << separator
-           << "SNV" << separator << snv.context << separator << snv.cause << separator;
+           << snv.ref_base << separator << snv.alt_base << separator
+           << "SNV" << separator << snv.cause << separator;
 
         switch(snv.type) {
             case SNV::Type::DRIVER:

@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.13
- * @date 2024-01-18
+ * @version 0.14
+ * @date 2024-02-08
  * 
  * @copyright Copyright (c) 2023-2024
  *
@@ -42,81 +42,81 @@ namespace Mutations
 {
 
 SNV::SNV():
-    GenomicPosition(), context(), mutated_base('X'), type(UNDEFINED)
+    GenomicPosition(), ref_base('?'), alt_base('?'), type(UNDEFINED)
 {}
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char mutated_base, const Type& type):
-    SNV(chromosome_id, chromosomic_position, MutationalContext(), mutated_base, "", type)
+         const char alt_base, const Type& type):
+    SNV(chromosome_id, chromosomic_position, '?', alt_base, "", type)
 {}
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const MutationalContext& context, const char mutated_base, const Type& type):
-    SNV(chromosome_id, chromosomic_position, context, mutated_base, "", type)
+         const char ref_base, const char alt_base, const Type& type):
+    SNV(chromosome_id, chromosomic_position, ref_base, alt_base, "", type)
 {}
 
-SNV::SNV(const GenomicPosition& position, const char mutated_base, const Type& type):
-    SNV(position, MutationalContext(), mutated_base, "", type)
+SNV::SNV(const GenomicPosition& position, const char alt_base, const Type& type):
+    SNV(position, '?', alt_base, "", type)
 {}
 
-SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
-         const char mutated_base, const Type& type):
-    SNV(position, context, mutated_base, "", type)
+SNV::SNV(const GenomicPosition& position, const char ref_base,
+         const char alt_base, const Type& type):
+    SNV(position, ref_base, alt_base, "", type)
 {}
 
-SNV::SNV(GenomicPosition&& position, const char mutated_base, const Type& type):
-    SNV(position, MutationalContext(), mutated_base, "", type)
+SNV::SNV(GenomicPosition&& position, const char alt_base, const Type& type):
+    SNV(position, '?', alt_base, "", type)
 {}
 
-SNV::SNV(GenomicPosition&& position, const MutationalContext& context,
-         const char mutated_base, const Type& type):
-    SNV(position, context, mutated_base, "", type)
+SNV::SNV(GenomicPosition&& position, const char ref_base,
+         const char alt_base, const Type& type):
+    SNV(position, ref_base, alt_base, "", type)
 {}
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char mutated_base, const std::string& cause, const Type& type):
-    SNV(GenomicPosition(chromosome_id, chromosomic_position), mutated_base,
+         const char alt_base, const std::string& cause, const Type& type):
+    SNV(GenomicPosition(chromosome_id, chromosomic_position), alt_base,
         cause, type)
 {}
 
 SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const MutationalContext& context, const char mutated_base,
+         const char ref_base, const char alt_base,
          const std::string& cause, const Type& type):
-    SNV(GenomicPosition(chromosome_id, chromosomic_position), context, mutated_base,
+    SNV(GenomicPosition(chromosome_id, chromosomic_position), ref_base, alt_base,
         cause, type)
 {}
 
-SNV::SNV(const GenomicPosition& position, const char mutated_base,
+SNV::SNV(const GenomicPosition& position, const char alt_base,
          const std::string& cause, const Type& type):
-    SNV(position, MutationalContext(), mutated_base, cause, type)
+    SNV(position, '?', alt_base, cause, type)
 {}
 
-SNV::SNV(const GenomicPosition& position, const MutationalContext& context,
-         const char mutated_base, const std::string& cause, const Type& type):
-    GenomicPosition(position), context(context), mutated_base(mutated_base), cause(cause),
+SNV::SNV(const GenomicPosition& position, const char ref_base,
+         const char alt_base, const std::string& cause, const Type& type):
+    GenomicPosition(position), ref_base(ref_base), alt_base(alt_base), cause(cause),
     type(type)
 {
-    if (!MutationalContext::is_a_base(mutated_base)) {
+    if (!MutationalContext::is_a_base(alt_base)) {
         std::ostringstream oss;
 
-        oss << "expected a base; got " << mutated_base << std::endl;
+        oss << "expected a base; got " << alt_base << std::endl;
 
         throw std::domain_error(oss.str());
     }
 
-    if (context.is_defined() && context.get_central_nucleotide() == mutated_base) {
-        throw std::domain_error("SNV: the original and the mutated bases are the same");
+    if (ref_base == alt_base) {
+        throw std::domain_error("SNV: the reference and altered bases are the same");
     }
 }
 
-SNV::SNV(GenomicPosition&& position, const char mutated_base,
+SNV::SNV(GenomicPosition&& position, const char alt_base,
          const std::string& cause, const Type& type):
-    SNV(position, mutated_base, cause, type)
+    SNV(position, alt_base, cause, type)
 {}
 
-SNV::SNV(GenomicPosition&& position, const MutationalContext& context,
-         const char mutated_base, const std::string& cause, const Type& type):
-    SNV(position, context, mutated_base, cause, type)
+SNV::SNV(GenomicPosition&& position, const char ref_base,
+         const char alt_base, const std::string& cause, const Type& type):
+    SNV(position, ref_base, alt_base, cause, type)
 {}
 
 }   // Mutations
@@ -141,17 +141,13 @@ bool less<Races::Mutations::SNV>::operator()(const Races::Mutations::SNV &lhs,
         }
     }
 
-    return (lhs.mutated_base < rhs.mutated_base);
+    return (lhs.alt_base < rhs.alt_base);
 }
 
 std::ostream& operator<<(std::ostream& out, const Races::Mutations::SNV& snv)
 {
-    std::string snv_sequence = snv.context.get_sequence();
-
-    out << static_cast<Races::Mutations::GenomicPosition>(snv) << "("
-        << snv_sequence[0]
-        << "[" << snv_sequence[1] << ">" <<  snv.mutated_base << "]"
-        << snv_sequence[2] << ")";
+    out << static_cast<Races::Mutations::GenomicPosition>(snv)
+        << "[" << snv.ref_base << ">" <<  snv.alt_base << "]";
 
     return out;
 }

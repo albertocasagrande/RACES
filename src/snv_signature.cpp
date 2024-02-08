@@ -2,10 +2,10 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.14
- * @date 2023-12-09
+ * @version 0.15
+ * @date 2024-02-08
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -208,7 +208,7 @@ MutationalSignature::MutationalSignature():
 
 bool is_about(double x, double y)
 {
-    return std::fabs(x - y) <= 10*std::numeric_limits<double>::epsilon();
+    return std::fabs(x - y) <= 1e-6;
 }
 
 MutationalSignature::MutationalSignature(const std::map<MutationalType, double>& distribution):

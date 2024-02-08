@@ -20,14 +20,14 @@
                     "type": "SNV",
                     "chromosome": "1",
                     "position": 11266,
-                    "mutated base": "A"
+                    "alt base": "A"
                 },
                 {
                     "type": "SNV",
                     "chromosome": "2",
                     "position": 10693,
-                    "context": "CAG",
-                    "mutated base": "G"
+                    "ref base": "A",
+                    "alt base": "G"
                 },
                 {
                     "type": "CNA",
@@ -59,7 +59,7 @@
         "default": [
             { "SBS": "SBS3", "fraction": 0.6 },
             { "SBS": "SBS13", "fraction": 0.3 },
-            { "SBS": "SBS40", "fraction": 0.1 }
+            { "SBS": "SBS41", "fraction": 0.1 }
         ],
         "timed": [
             {
@@ -67,7 +67,7 @@
                 "exposure": [
                     { "SBS": "SBS3", "fraction": 0.5 },
                     { "SBS": "SBS13", "fraction": 0.3 },
-                    { "SBS": "SBS40", "fraction": 0.2 }
+                    { "SBS": "SBS41", "fraction": 0.2 }
                 ]
             }
         ]
