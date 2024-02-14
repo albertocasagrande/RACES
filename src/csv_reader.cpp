@@ -2,8 +2,8 @@
  * @file csv_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to read CSV
- * @version 0.2
- * @date 2024-01-26
+ * @version 0.3
+ * @date 2024-02-14
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -79,12 +79,11 @@ bool CSVReader::const_iterator::get_row(CSVReader::CSVRow& row)
 
 CSVReader::const_iterator::const_iterator(const CSVReader* reader, const std::streamoff& off, 
                                           const std::ios_base::seekdir& way):
-    reader(reader), ifs(reader->filename), eof(way==std::ios_base::end)
+    reader(reader), ifs(reader->filename)
 {
     ifs.seekg(off, way);
-    if (!eof) {
-        get_row(curr_row);
-    }
+
+    eof = !get_row(curr_row);
 }
 
 CSVReader::const_iterator& CSVReader::const_iterator::operator++()

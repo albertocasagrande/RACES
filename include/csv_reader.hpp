@@ -2,8 +2,8 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 0.3
- * @date 2024-01-31
+ * @version 0.4
+ * @date 2024-02-14
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -182,7 +182,8 @@ public:
          */
         inline bool operator==(const_iterator& other) 
         { 
-            return reader == other.reader && ifs.tellg() == other.ifs.tellg();
+            return reader == other.reader && ifs.tellg() == other.ifs.tellg()
+                    && eof == other.eof;
         }
 
         /**
