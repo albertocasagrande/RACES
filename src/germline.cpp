@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.1
- * @date 2024-02-08
+ * @version 0.2
+ * @date 2024-02-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -437,6 +437,7 @@ get_alleles_ids(const std::string& line, size_t pos, size_t end)
 
         if (read_int(allele, line, pos, end)) {
             alleles.push_back(allele);
+            ++pos;
         } else {
             return alleles;
         }
@@ -470,11 +471,15 @@ void add_mutation(GenomeMutations& mutations, const std::string& line,
     auto allele_ids = get_alleles_ids(line, column_separators[subject_column-1]+1,
                                       column_separators[subject_column]);
 
+    if (allele_ids.size()==0) {
+        return;
+    }
+
     bool in_first_allele = (allele_ids[0] == 1);
     bool in_second_allele = (num_of_alleles>1 && allele_ids.size()>1 
                                 && allele_ids[1]==1);
 
-    if (in_first_allele || in_second_allele) {       
+    if (in_first_allele || in_second_allele) {
         switch (get_mutation_type(line, column_separators[6])) {
             case MutationType::SNP:
                 add_SNP(mutations, line, column_separators, 
@@ -527,7 +532,7 @@ void add_VCF_mutations(GenomeMutations& mutations, const std::filesystem::path& 
 
     std::string line;
     std::size_t line_num{0};
-    std::streampos last_pos = 0;
+    std::streampos last_pos{0};
     while (std::getline(VCF_stream, line)) {
         ++line_num;
 
