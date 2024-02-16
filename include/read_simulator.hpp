@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.22
- * @date 2024-02-08
+ * @version 0.23
+ * @date 2024-02-16
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -1032,8 +1032,8 @@ private:
                         oss << "Reference base mismatch in chr. "
                             << GenomicPosition::chrtos(genomic_position.chr_id) 
                             << " in position " << snv_it->second.position << ": expected '" 
-                            << snv_ref << "' and got \"" 
-                            << ref_base << "\"."<< std::endl 
+                            << snv_ref << "' and got '" 
+                            << ref_base << "'."<< std::endl 
                             << "Are you using a FASTA file different from that used for "
                             << "building the context index?"
                             << std::endl;
@@ -1451,20 +1451,30 @@ private:
     }
 
     /**
-     * @brief Get the number of chromosomes in a genome
+     * @brief Get the identifiers of the chromosomes in the genome
+     * 
+     * This method deduces the identifiers of the chromosomes in the 
+     * considered genome. The method assumes all the samples in the 
+     * mutations list to have the same chromosomes.
      * 
      * @param mutations_list is a list of sample mutations
-     * @return the number of chromosomes in a genome 
+     * @return the set of identifiers of the genome chromosomes
      */
-    static size_t get_number_of_chromosomes_in_a_genome(const std::list<SampleGenomeMutations>& mutations_list)
+    static std::set<ChromosomeId>
+    get_genome_chromosome_ids(const std::list<SampleGenomeMutations>& mutations_list)
     {
         for (const auto& sample_mutations : mutations_list) {
             for (const auto& mutations : sample_mutations.mutations) {
-                return mutations.get_chromosomes().size();
+                std::set<ChromosomeId> ids;
+                for (const auto& [chr_id, chr_mutations] : mutations.get_chromosomes()) {
+                    ids.insert(chr_id);
+                }
+
+                return ids;
             }
         }
 
-        return 0;
+        return {};
     }
 
     /**
@@ -1490,8 +1500,8 @@ private:
         auto read_simulation_data = get_initial_read_simulation_data(mutations_list, coverage);
 
         size_t steps{0};
-        const auto num_of_chr_in_a_genome = get_number_of_chromosomes_in_a_genome(mutations_list);
-        size_t total_steps = 2*num_of_chr_in_a_genome*mutations_list.size();
+        const auto chromosome_ids = get_genome_chromosome_ids(mutations_list);
+        size_t total_steps = 2*chromosome_ids.size()*mutations_list.size();
         for (const auto& sample_data: read_simulation_data) {
             total_steps += sample_data.not_covered_allelic_size;
         }
@@ -1503,23 +1513,24 @@ private:
         ChromosomeData<DATA_TYPE> chr_data;
         progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
         while (ChromosomeData<DATA_TYPE>::read(ref_stream, chr_data, progress_bar)) {
-            progress_bar.set_progress((100*(++steps))/total_steps);
+            if (chromosome_ids.count(chr_data.chr_id)>0) {
+                progress_bar.set_progress((100*(++steps))/total_steps);
 
-            if (write_SAM) {
-                std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list);
+                if (write_SAM) {
+                    std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list);
 
-                generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data, 
-                                          total_steps, steps, progress_bar, &SAM_stream);
-            } else {
-                generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data,
-                                          total_steps, steps, progress_bar);
+                    generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data, 
+                                              total_steps, steps, progress_bar, &SAM_stream);
+                } else {
+                    generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data,
+                                              total_steps, steps, progress_bar);
+                }
+
+                statistics.repr_chr_ids.insert(chr_data.chr_id);
             }
-
-            statistics.repr_chr_ids.insert(chr_data.chr_id);
         }
-        
-        progress_bar.set_message("Read simulated");
-        progress_bar.set_progress(100);
+
+        progress_bar.set_progress(100, "Read simulated");
 
         return statistics;
     }
