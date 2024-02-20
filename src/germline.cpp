@@ -2,7 +2,7 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.4
+ * @version 0.5
  * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
@@ -275,7 +275,8 @@ get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::pa
                                  + "\" is not readable.");
     }
 
-    const std::regex chr_regex("^##contig=<ID=([0-9]+|X|Y),assembly=[a-b0-9_]+,length=([0-9]+)>");
+    const std::regex chr_regex("^##contig=<([0-9a-zA-Z=]+,)*ID=([0-9]+|X|Y).*");
+    const std::regex chr_length("^.*(<|,)length=([0-9]+)(,|>).*");
     std::smatch matches;
 
     std::list<GenomicRegion> chr_regions;
@@ -283,9 +284,11 @@ get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::pa
     std::string line;
     while (std::getline(VCF_stream, line) && line.size()>0 && line[0] == '#') {
         if (std::regex_match(line, matches, chr_regex)) {
-            auto chr_id = GenomicPosition::stochr(matches[1].str());
+            auto chr_id = GenomicPosition::stochr(matches[2].str());
 
-            if (germline_chr_map.count(chr_id)) {
+            if (germline_chr_map.count(chr_id)>0 
+                    && std::regex_match(line, matches, chr_length)) {
+
                 GenomicRegion::Length length = std::stoul(matches[2].str());
                 chr_regions.push_back({chr_id, length});
             }
