@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.23
- * @date 2024-02-16
+ * @version 0.24
+ * @date 2024-02-20
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -870,7 +870,7 @@ private:
         size_t overall_size{0};
         for (const auto& sample_mutations: mutations_list) {
             for (const auto& mutations: sample_mutations.mutations) {
-                overall_size += mutations.size();
+                overall_size += mutations->size();
                 progress_bar.update_elapsed_time();
             }
         }
@@ -1298,7 +1298,7 @@ private:
         ChrSampleStatistics chr_stats{chr_data.chr_id, chr_data.length};
 
         for (const auto& cell_mutations: sample_genome_mutations.mutations) {
-            const auto& chr_mutations = cell_mutations.get_chromosome(chr_data.chr_id);
+            const auto& chr_mutations = cell_mutations->get_chromosome(chr_data.chr_id);
             const auto& germline_chr_mut = sample_genome_mutations.germline_mutations.get_chromosome(chr_data.chr_id);
 
             for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
@@ -1437,11 +1437,11 @@ private:
             ReadSimulationData sample_data;
             if (sample_mutations.mutations.size()>0) {
                 sample_data.missing_templates = 
-                                 static_cast<size_t>((sample_mutations.mutations.front().size()*
+                                 static_cast<size_t>((sample_mutations.mutations.front()->size()*
                                                      coverage)/total_read_size);
             }
             for (const auto& cell_mutations: sample_mutations.mutations) {
-                sample_data.not_covered_allelic_size += cell_mutations.allelic_size();
+                sample_data.not_covered_allelic_size += cell_mutations->allelic_size();
             }
 
             read_simulation_data.push_back(std::move(sample_data));
@@ -1466,7 +1466,7 @@ private:
         for (const auto& sample_mutations : mutations_list) {
             for (const auto& mutations : sample_mutations.mutations) {
                 std::set<ChromosomeId> ids;
-                for (const auto& [chr_id, chr_mutations] : mutations.get_chromosomes()) {
+                for (const auto& [chr_id, chr_mutations] : mutations->get_chromosomes()) {
                     ids.insert(chr_id);
                 }
 

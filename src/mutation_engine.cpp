@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 0.12
- * @date 2024-02-08
+ * @version 0.13
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -109,8 +109,8 @@ MutationStatistics& MutationStatistics::record(const std::list<Races::Mutations:
 
     for (const auto& sample_mutations : mutations_list) {
         const auto& sample_name = sample_mutations.name;
-        for (const auto& cell_mutations: sample_mutations.mutations) {
-            record(sample_name, cell_mutations);
+        for (const auto& mut_ptr: sample_mutations.mutations) {
+            record(sample_name, *mut_ptr);
 
             if (progress_bar!=nullptr) {
                 size_t percentage = 100*(++recorded)/total_steps;

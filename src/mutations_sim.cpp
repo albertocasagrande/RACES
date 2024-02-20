@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.14
- * @date 2024-02-08
+ * @version 0.15
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -248,17 +248,17 @@ class MutationsSimulator : public BasicExecutable
         std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
 
         for (const auto& cell_mutations : sample_mutations.mutations) {
-            auto found = meth_samples.find(cell_mutations.get_species_id());
+            auto found = meth_samples.find(cell_mutations->get_species_id());
 
             if (found == meth_samples.end()) {
                 auto new_name = sample_mutations.name+"_"+
-                                    methylation_map.at(cell_mutations.get_species_id());
+                                    methylation_map.at(cell_mutations->get_species_id());
 
                 FACS_samples.emplace_back(new_name, sample_mutations.germline_mutations);
 
                 FACS_samples.back().mutations.push_back(cell_mutations);
 
-                meth_samples.insert({cell_mutations.get_species_id(), &(FACS_samples.back())});
+                meth_samples.insert({cell_mutations->get_species_id(), &(FACS_samples.back())});
             } else {
                 (found->second)->mutations.push_back(cell_mutations);
             }

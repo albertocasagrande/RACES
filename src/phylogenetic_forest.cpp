@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.7
- * @date 2024-02-08
+ * @version 0.8
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -150,7 +150,7 @@ const CellGenomeMutations&
 PhylogeneticForest::get_leaf_mutations(const Mutants::CellId& cell_id) const
 {
     if (is_leaf(cell_id)) {
-        return leaves_mutations.at(cell_id);
+        return *(leaves_mutations.at(cell_id));
     }
 
     throw std::domain_error(std::to_string(cell_id)+" is not a leaf of the forest");
@@ -167,10 +167,10 @@ std::list<SampleGenomeMutations> PhylogeneticForest::get_sample_mutations_list()
         sample_mutation_map.insert({sample.get_id(), &(sample_mutations_list.back())});
     }
 
-    for (const auto& [cell_id, genome_mutations] : leaves_mutations) {
+    for (const auto& [cell_id, mutations_ptr] : leaves_mutations) {
         const auto& sample = get_samples()[get_coming_from().at(cell_id)];
         auto& sample_genomic_mutations = *(sample_mutation_map.at(sample.get_id()));
-        sample_genomic_mutations.mutations.push_back(genome_mutations);
+        sample_genomic_mutations.mutations.push_back(mutations_ptr);
     }
 
     return sample_mutations_list;

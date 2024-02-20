@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.22
- * @date 2024-02-08
+ * @version 0.23
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -677,10 +677,12 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
  */
 struct SampleGenomeMutations
 {
-    GenomeMutations germline_mutations;         //!< The germline mutations
-    std::list<CellGenomeMutations> mutations;   //!< The list of cell genome mutations
+    using CellMutationsPtr = std::shared_ptr<CellGenomeMutations>;
 
-    const std::string name;                     //!< The sample name
+    GenomeMutations germline_mutations;      //!< The germline mutations
+    std::list<CellMutationsPtr> mutations;   //!< The list of cell genome mutations
+
+    const std::string name;                  //!< The sample name
 
     /**
      * @brief The constructor

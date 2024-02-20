@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.8
- * @date 2024-02-08
+ * @version 0.9
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,6 +30,8 @@
 
 #ifndef __RACES_PHYLOGENETIC_FOREST__
 #define __RACES_PHYLOGENETIC_FOREST__
+
+#include <memory>
 
 #include "descendant_forest.hpp"
 
@@ -93,10 +95,12 @@ public:
 private:
     using CellIdSet = std::set<Mutants::CellId>;
 
-    std::map<Mutants::CellId, CellGenomeMutations> leaves_mutations;    //!< The mutations of each cells represented as leaves in the forest
-    std::map<Mutants::CellId, NovelMutations> novel_mutations;          //!< The mutations introduces by each cell in the forest
-    std::map<SNV, CellIdSet> SNV_first_cells;                           //!< A map associating each SNV to the first cells in which it occured
-    std::map<CopyNumberAlteration, CellIdSet> CNA_first_cells;          //!< A map associating each CNA to the first cells in which it occured
+    using CellMutationsPtr = std::shared_ptr<CellGenomeMutations>;
+
+    std::map<Mutants::CellId, CellMutationsPtr> leaves_mutations;   //!< The mutations of each cells represented as leaves in the forest
+    std::map<Mutants::CellId, NovelMutations> novel_mutations;      //!< The mutations introduces by each cell in the forest
+    std::map<SNV, CellIdSet> SNV_first_cells;                       //!< A map associating each SNV to the first cells in which it occured
+    std::map<CopyNumberAlteration, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occured
 
     GenomeMutations germline_mutations; //!< The germline mutations
 
@@ -124,7 +128,7 @@ public:
         inline const CellGenomeMutations& cell_mutations() const
         {
             if (is_leaf()) {
-                return forest->leaves_mutations.at(cell_id);
+                return *(forest->leaves_mutations.at(cell_id));
             }
 
             throw std::domain_error("The node is not a leaf");
@@ -211,7 +215,7 @@ public:
         inline CellGenomeMutations& cell_mutations()
         {
             if (is_leaf()) {
-                return forest->leaves_mutations[cell_id];
+                return *(forest->leaves_mutations[cell_id]);
             }
 
             throw std::domain_error("The node is not a leaf");
@@ -280,7 +284,7 @@ public:
      * @return a constant reference to a map associating all the leaves cell
      *      identifiers to the corresponding genome mutations
      */
-    inline const std::map<Mutants::CellId, CellGenomeMutations>&
+    inline const std::map<Mutants::CellId, std::shared_ptr<CellGenomeMutations>>&
     get_leaves_mutations() const
     {
         return leaves_mutations;
@@ -339,11 +343,15 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
-                & leaves_mutations
                 & novel_mutations
                 & SNV_first_cells
                 & CNA_first_cells
                 & germline_mutations;
+
+        archive & leaves_mutations.size();
+        for (const auto& [cell_id, ptr]: leaves_mutations) {
+            archive & cell_id & *ptr;
+        }
     }
 
     /**
@@ -359,11 +367,21 @@ public:
         PhylogeneticForest forest;
 
         archive & static_cast<Mutants::DescendantsForest&>(forest)
-                & forest.leaves_mutations
                 & forest.novel_mutations
                 & forest.SNV_first_cells
                 & forest.CNA_first_cells
                 & forest.germline_mutations;
+
+        size_t num_of_leaves;
+        archive & num_of_leaves;
+        for (size_t i{0}; i<num_of_leaves; ++i) {
+            Mutants::CellId cell_id;
+            archive & cell_id;
+
+            auto mut_ptr = std::make_shared<CellGenomeMutations>();
+            archive & *mut_ptr;
+            forest.leaves_mutations[cell_id] = mut_ptr;
+        }
 
         return forest;
     }

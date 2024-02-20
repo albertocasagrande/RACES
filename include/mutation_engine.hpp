@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.45
- * @date 2024-02-08
+ * @version 0.46
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -784,9 +784,14 @@ class MutationEngine
         }
 
         if (node.is_leaf()) {
+            auto mut_ptr = std::make_shared<CellGenomeMutations>();
+
+            std::swap(cell_mutations, *mut_ptr);
+
             auto& phylo_forest = node.get_forest();
             auto cell_id = static_cast<const Mutants::Cell&>(node).get_id();
-            phylo_forest.leaves_mutations[cell_id] = cell_mutations;
+
+            phylo_forest.leaves_mutations[cell_id] = mut_ptr;
         } else {
             for (auto child: node.children()) {
                 place_mutations(child, cell_mutations, passenger_rates, driver_mutations,
