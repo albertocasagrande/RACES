@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.2
- * @date 2024-02-15
+ * @version 0.3
+ * @date 2024-02-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -262,12 +262,16 @@ bool is_male(const std::map<ChromosomeId, std::filesystem::path>& germline_chr_m
 }
 
 std::list<GenomicRegion>
-get_chromosome_regions_from_VCF(const std::filesystem::path& VCF_file)
+get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::path>& germline_chr_map)
 {
-    std::ifstream VCF_stream(VCF_file);
+    if (germline_chr_map.size() == 0) {
+        return {};
+    }
+    
+    std::ifstream VCF_stream(germline_chr_map.begin()->second);
 
     if (!VCF_stream.good()) {
-        throw std::runtime_error("The file \"" + std::string(VCF_file)
+        throw std::runtime_error("The file \"" + std::string(germline_chr_map.begin()->second)
                                  + "\" is not readable.");
     }
 
@@ -280,8 +284,11 @@ get_chromosome_regions_from_VCF(const std::filesystem::path& VCF_file)
     while (std::getline(VCF_stream, line) && line.size()>0 && line[0] == '#') {
         if (std::regex_match(line, matches, chr_regex)) {
             auto chr_id = GenomicPosition::stochr(matches[1].str());
-            auto length = std::stoul(matches[2].str());
-            chr_regions.push_back({chr_id, static_cast<GenomicRegion::Length>(length)});
+
+            if (germline_chr_map.count(chr_id)) {
+                GenomicRegion::Length length = std::stoul(matches[2].str());
+                chr_regions.push_back({chr_id, length});
+            }
         }
     }
 
@@ -297,7 +304,7 @@ init_genome_mutations_from_VCF(const std::map<ChromosomeId, std::filesystem::pat
         return {};
     }
 
-    auto chr_regions = get_chromosome_regions_from_VCF(germline_chr_map.begin()->second);
+    auto chr_regions = get_chromosome_regions_from_VCF(germline_chr_map);
 
     return {chr_regions, alleles_per_chromosome};
 }
