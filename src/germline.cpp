@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.3
- * @date 2024-02-16
+ * @version 0.4
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -611,7 +611,7 @@ GermlineMutations::load(const std::filesystem::path& germline_data_file,
                               total_VCF_size, processed_VCF, progress_bar);
         }
     }
-    progress_bar.set_message("Germline loaded");
+    progress_bar.set_progress(100, "Germline loaded");
 
     return mutations;
 }
