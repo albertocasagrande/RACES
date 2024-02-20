@@ -2,8 +2,8 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 0.4
- * @date 2024-02-14
+ * @version 0.5
+ * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,6 +34,7 @@
 #include <map>
 #include <vector>
 #include <fstream>
+#include <filesystem>
 
 namespace Races
 {

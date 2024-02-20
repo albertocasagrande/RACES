@@ -2,7 +2,7 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.15
+ * @version 0.16
  * @date 2024-02-20
  *
  * @copyright Copyright (c) 2023-2024
@@ -317,7 +317,7 @@ class MutationsSimulator : public BasicExecutable
 
         try {
             chr_id = GenomicPosition::stochr(row.get_field(0).substr(3));
-        } catch (std::invalid_argument) {
+        } catch (std::invalid_argument const&) {
             throw std::domain_error("Unknown chromosome specification " + row.get_field(0) 
                                     + " in row number " + std::to_string(row_num) 
                                     + ".");
@@ -326,7 +326,7 @@ class MutationsSimulator : public BasicExecutable
         uint32_t begin_pos;         
         try {
             begin_pos = stoul(row.get_field(1));
-        } catch (std::invalid_argument) {
+        } catch (std::invalid_argument const&) {
             throw std::domain_error("Unknown begin specification " + row.get_field(1) 
                                     + " in row number " + std::to_string(row_num) 
                                     + ".");
@@ -337,7 +337,7 @@ class MutationsSimulator : public BasicExecutable
         uint32_t end_pos;                
         try {
             end_pos = stoul(row.get_field(2));
-        } catch (std::invalid_argument) {
+        } catch (std::invalid_argument const&) {
             throw std::domain_error("Unknown end specification " + row.get_field(2) 
                                     + " in row number " + std::to_string(row_num) 
                                     + ".");
@@ -629,7 +629,7 @@ public:
                 if (major=="NA" || (stoi(major)>1)) {
                     CNAs.push_back({region, CopyNumberAlteration::Type::AMPLIFICATION});
                 }
-            } catch (std::invalid_argument) {
+            } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown major specification " + major 
                                         + " in row number " + std::to_string(row_num) 
                                         + ".");
@@ -640,7 +640,7 @@ public:
                 if (minor=="NA" || (stoi(minor)<1)) {
                     CNAs.push_back({region, CopyNumberAlteration::Type::DELETION});
                 }
-            } catch (std::invalid_argument) {
+            } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown minor specification " + major 
                                         + " in row number " + std::to_string(row_num) 
                                         + ".");

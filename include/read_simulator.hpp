@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.24
+ * @version 0.25
  * @date 2024-02-20
  * 
  * @copyright Copyright (c) 2023-2024
@@ -1295,7 +1295,8 @@ private:
                                                   Races::UI::ProgressBar& progress_bar,
                                                   std::ostream* SAM_stream=nullptr)
     {
-        ChrSampleStatistics chr_stats{chr_data.chr_id, chr_data.length};
+        ChrSampleStatistics chr_stats{chr_data.chr_id,
+				                      static_cast<GenomicRegion::Length>(chr_data.length)};
 
         for (const auto& cell_mutations: sample_genome_mutations.mutations) {
             const auto& chr_mutations = cell_mutations->get_chromosome(chr_data.chr_id);
