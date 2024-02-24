@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.25
- * @date 2024-02-20
+ * @version 0.26
+ * @date 2024-02-24
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -1384,17 +1384,19 @@ private:
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
      * @param chr_data in the information available about the chromosome to be considered
      * @param mutations_list is a list of sample mutations
+     * @param base_name is the prefix of the filename
      * @return the SAM stream
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     std::ofstream
     get_SAM_stream(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
-                   const std::list<SampleGenomeMutations>& mutations_list) const
+                   const std::list<SampleGenomeMutations>& mutations_list,
+                   const std::string& base_name="chr_") const
     {
         auto chr_str = GenomicPosition::chrtos(chr_data.chr_id);
 
-        std::string SAM_filename = "chr_"+chr_str+".sam";
+        std::string SAM_filename = base_name + chr_str + ".sam";
         auto SAM_file_path = output_directory/SAM_filename;
 
         if (std::filesystem::exists(SAM_file_path)) {
@@ -1488,13 +1490,15 @@ private:
      * @tparam DATA_TYPE is the type of information available about the considered chromosome
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
+     * @param base_name is the prefix of the filename
      * @param progress_bar is the progress bar
      * @return the statistics about the generated reads
      */
     template<typename DATA_TYPE=Races::IO::FASTA::Sequence, 
              std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     SampleSetStatistics generate_reads(const std::list<SampleGenomeMutations>& mutations_list,
-                                       const double& coverage, UI::ProgressBar& progress_bar)
+                                       const double& coverage, const std::string& base_name, 
+                                       UI::ProgressBar& progress_bar)
     {
         std::ifstream ref_stream(ref_genome_filename);
 
@@ -1518,7 +1522,7 @@ private:
                 progress_bar.set_progress((100*(++steps))/total_steps);
 
                 if (write_SAM) {
-                    std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list);
+                    std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list, base_name);
 
                     generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data, 
                                               total_steps, steps, progress_bar, &SAM_stream);
@@ -1643,13 +1647,14 @@ public:
      * 
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
+     * @param base_name is the prefix of the filename
      * @param save_SAM is a Boolean flag to save the simulated read in a file
      * @param quiet is a Boolean flag to avoid progress bar and user messages
      * @return the sample set statistics about the generated reads
      */
     SampleSetStatistics operator()(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
-                                   const double& coverage, const bool with_sequences=true,
-                                   const bool quiet=false)
+                                   const double& coverage, const std::string& base_name="chr_", 
+                                   const bool with_sequences=true, const bool quiet=false)
     {
         using namespace Races;
 
@@ -1668,10 +1673,12 @@ public:
         UI::ProgressBar progress_bar(quiet);
 
         if (with_sequences) {
-            return generate_reads<Races::IO::FASTA::Sequence>(mutations_list, coverage, progress_bar);
+            return generate_reads<Races::IO::FASTA::Sequence>(mutations_list, coverage,
+                                                              base_name, progress_bar);
         }
         
-        return generate_reads<Races::IO::FASTA::SequenceInfo>(mutations_list, coverage, progress_bar);
+        return generate_reads<Races::IO::FASTA::SequenceInfo>(mutations_list, coverage,
+                                                              base_name, progress_bar);
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.46
- * @date 2024-02-20
+ * @version 0.47
+ * @date 2024-02-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -295,7 +295,7 @@ class MutationEngine
         MutationalContext complement_context = context.get_complement();
 
         size_t total_pos = context_index[context].size();
-            total_pos += context_index[complement_context].size();
+        total_pos += context_index[complement_context].size();
 
         size_t index;
         {
@@ -345,7 +345,7 @@ class MutationEngine
      * @param cell_mutations are the cell mutations
      * @param num_of_mutations is the number of CNAs to be applied
      */
-    void place_CNAs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
+    void place_CNAs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
                     const size_t& num_of_mutations)
     {
         // while some of the requested CNAs have not been set
@@ -367,7 +367,9 @@ class MutationEngine
                     // then increase the number of new CNAs
                     ++new_CNAs;
 
-                    node.add_new_mutation(CNA);
+                    if (node != nullptr) {
+                        node->add_new_mutation(CNA);
+                    }
 
                     to_be_placed = false;
                 } else {
@@ -403,7 +405,7 @@ class MutationEngine
     {
         const auto num_of_CNAs = number_of_mutations(cell_mutations.allelic_size(), CNA_rate);
 
-        place_CNAs(node, cell_mutations, num_of_CNAs);
+        place_CNAs(&node, cell_mutations, num_of_CNAs);
     }
 
     /**
@@ -473,7 +475,7 @@ class MutationEngine
      * @param num_of_mutations is the number of SNV to apply
      * @param cause is the cause of the mutations
      */
-    void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations, 
+    void place_SNVs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations, 
                     const std::string& SBS_name, const size_t& num_of_mutations,
                     const std::string& cause)
     {
@@ -500,7 +502,9 @@ class MutationEngine
                     // then increase the number of new SNVs
                     ++new_SNVs;
 
-                    node.add_new_mutation(snv);
+                    if (node != nullptr) {
+                        node->add_new_mutation(snv);
+                    }
                 }
             }
         }
@@ -525,7 +529,7 @@ class MutationEngine
             // evaluate how many of the SNVs due to the current SBS
             const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
 
-            place_SNVs(node, cell_mutations, SBS_name, SBS_num_of_SNVs, SBS_name);
+            place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs, SBS_name);
         }
     }
 
@@ -1046,7 +1050,7 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_mutations is the number of preneoplastic_mutations
+     * @param num_of_preneoplatic_mutations is the number of preneoplastic mutations
      * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
@@ -1062,7 +1066,7 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_mutations is the number of preneoplastic_mutations
+     * @param num_of_preneoplatic_mutations is the number of preneoplastic mutations
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
@@ -1100,7 +1104,8 @@ public:
             GenomeMutations mutations = wild_type_structure;
 
             // place preneoplastic mutations
-            place_SNVs(root, mutations, "SBS1", num_of_preneoplatic_mutations, "Pre-neoplastic");
+            place_SNVs(&root, mutations, "SBS1", num_of_preneoplatic_mutations,
+                       "Pre-neoplastic");
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
@@ -1113,7 +1118,7 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_mutations is the number of preneoplastic_mutations
+     * @param num_of_preneoplatic_mutations is the number of preneoplastic mutations
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
      * @return a phylogenetic forest having the structure of `descendants_forest`
@@ -1123,6 +1128,34 @@ public:
                                               UI::ProgressBar &progress_bar, const int& seed=0)
     {
         return place_mutations(descendants_forest, num_of_preneoplatic_mutations, &progress_bar, seed);
+    }
+
+    /**
+     * @brief Get the a sample of wild-type cells
+     * 
+     * @param num_of_cells is the number of cells in the wild-type sample
+     * @param num_of_somatic_mutations is the number of somatic mutations
+     * @return a sample of `num_of_cells` wild-type cells
+     */
+    SampleGenomeMutations get_wild_type_sample(const size_t& num_of_cells,
+                                               const size_t& num_of_somatic_mutations)
+    {
+        using namespace Mutants::Evolutions;
+
+        SampleGenomeMutations sample_mutations("wild-type", germline_mutations);
+
+        auto germline_structure = germline_mutations.duplicate_structure();
+        for (size_t i=0; i<num_of_cells; ++i) {
+            auto mutations = std::make_shared<CellGenomeMutations>(germline_structure);
+
+            // place preneoplastic mutations
+            place_SNVs(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
+                       "Somatic mutation");
+            
+            sample_mutations.mutations.push_back(mutations);
+        }
+
+        return sample_mutations;
     }
 
     /**

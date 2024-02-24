@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.23
- * @date 2024-02-20
+ * @version 0.24
+ * @date 2024-02-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -634,9 +634,17 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
     CellGenomeMutations();
 
     /**
+     * @brief A constructor for wild-type cells
+     *
+     * @param germline_mutations are the germline mutations
+     */
+    explicit CellGenomeMutations(const GenomeMutations& germline_mutations);
+
+    /**
      * @brief A constructor
      *
-     * @param chromosomes is the vector of genome chromosomes
+     * @param cell is the cell
+     * @param genome_mutations are the genome mutations
      */
     explicit CellGenomeMutations(const Mutants::Cell& cell, const GenomeMutations& genome_mutations);
 

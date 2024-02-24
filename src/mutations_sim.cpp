@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.16
- * @date 2024-02-20
+ * @version 0.17
+ * @date 2024-02-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -126,6 +126,7 @@ class MutationsSimulator : public BasicExecutable
     std::string germline_subject;
     bool epigenetic_FACS;
     bool write_SAM;
+    bool analyze_wild_type;
 
     int seed;
     size_t bytes_per_abs_position;
@@ -351,12 +352,13 @@ class MutationsSimulator : public BasicExecutable
         return {pos, end_pos+1-begin_pos};
     }
 
-    void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics) const
+    void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics,
+                                           const std::string& base_name="chr_") const
     {
-        statistics.save_VAF_CSVs(quiet);
+        statistics.save_VAF_CSVs(base_name, quiet);
 #if WITH_MATPLOT
-        statistics.save_coverage_images(quiet);
-        statistics.save_SNV_histograms(quiet);
+        statistics.save_coverage_images(base_name, quiet);
+        statistics.save_SNV_histograms(base_name, quiet);
 #endif // WITH_MATPLOT
     }
 
@@ -463,6 +465,16 @@ class MutationsSimulator : public BasicExecutable
             const auto statistics = read_simulator(mutations_list, coverage);
 
             saving_statistics_data_and_images(statistics);
+
+            if (analyze_wild_type) {
+                auto wild_type_sample = engine.get_wild_type_sample(100, num_of_pnp_mutations);
+
+                std::list<SampleGenomeMutations> wild_type_list_sample{std::move(wild_type_sample)};
+
+                const auto statistics = read_simulator(wild_type_list_sample, coverage, "wild_type_chr_");
+
+                saving_statistics_data_and_images(statistics, "wild_type_");
+            }
         }
 
         process_statistics(mutations_list);
@@ -673,6 +685,7 @@ public:
              "the SNVs CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
              "the CNAs CSV output file")
+            ("wild-type,t", "analyze wild-type cells too")
         ;
 
         visible_options.at("sequencing").add_options()
@@ -758,6 +771,7 @@ public:
 
         epigenetic_FACS = vm.count("epigenetic-FACS")>0;
         write_SAM = vm.count("write-SAM")>0;
+        analyze_wild_type = vm.count("wild-type")>0;
 
         try {
             using namespace Races::Mutations;
