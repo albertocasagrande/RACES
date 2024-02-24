@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.24
- * @date 2024-02-08
+ * @version 0.25
+ * @date 2024-02-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -137,7 +137,7 @@ ConfigReader::add_SNV(const std::string& mutant_name, std::list<Races::Mutations
 {
     using namespace Races::Mutations;
 
-    std::string ref_base;
+    std::string ref_base = "?";
     
     if (SNV_json.count("ref base")>0) {
         ref_base = get_from<std::string>("ref base", SNV_json, "All the SNVs");
