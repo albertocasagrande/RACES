@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.5
- * @date 2024-02-20
+ * @version 0.6
+ * @date 2024-02-28
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -478,8 +478,16 @@ void add_mutation(GenomeMutations& mutations, const std::string& line,
                   const std::vector<size_t>& column_separators,
                   const size_t& num_of_alleles, const size_t& subject_column)
 {
+    size_t last_char_position;
+    
+    if (subject_column<column_separators.size()) {
+        last_char_position = column_separators[subject_column];
+    } else {
+        last_char_position = line.size();
+    }
+
     auto allele_ids = get_alleles_ids(line, column_separators[subject_column-1]+1,
-                                      column_separators[subject_column]);
+                                      last_char_position);
 
     if (allele_ids.size()==0) {
         return;
