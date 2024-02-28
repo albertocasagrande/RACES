@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::GenomeMutations class
- * @version 0.8
- * @date 2024-02-08
+ * @version 0.9
+ * @date 2024-02-28
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -110,8 +110,11 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         BOOST_CHECK_THROW(test_genome_mutations.insert(snv_err, 0), std::domain_error);
     }
 
+    // insert snv0 in allele 1: true (free context, non-free context in a different allele)
+    BOOST_CHECK(test_genome_mutations.insert(snv0, 1));
+
     // insert snv0 in allele 1: false (non-free context)
-    BOOST_CHECK(!test_genome_mutations.insert(snv0, 1));
+    BOOST_CHECK(!test_genome_mutations.insert(snv0, 0));
 
     // insert snv1 in allele 1: false (non-free context)
     BOOST_CHECK(!test_genome_mutations.insert(snv1, 1));
