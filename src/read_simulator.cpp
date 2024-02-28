@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.20
+ * @version 0.21
  * @date 2024-02-28
  * 
  * @copyright Copyright (c) 2023-2024
@@ -86,14 +86,20 @@ void check_in(const GenomicPosition& pos, const ChromosomeId& chr_id)
     }
 }
 
-
 const BaseCoverage& ChrCoverage::get_coverage(const GenomicPosition& position) const
 {
     check_in(position, chr_id);
-        
+
+    if (position.position == 0 && coverage.size() < position.position) {
+        throw std::out_of_range("Position must lay in the interval [1,"
+                                + std::to_string(coverage.size())
+                                + "]: requested coverage of position "
+                                + std::to_string(position.position)
+                                + ".");
+    }
+
     return coverage[position.position-1];
 }
-
 
 void check_same_chr(const ChrCoverage& a, const ChrCoverage& b)
 {
