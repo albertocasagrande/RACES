@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.20
- * @date 2023-12-17
+ * @version 0.21
+ * @date 2024-02-28
  *
  * @copyright Copyright (c) 2023
  *
@@ -997,7 +997,7 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 
         archive & key & value;
 
-        m.emplace(key, value);
+        m.emplace(std::move(key), std::move(value));
     }
 
     return archive;
@@ -1033,7 +1033,7 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 
         archive & value;
 
-        m.emplace(key, value);
+        m.emplace(std::move(key), std::move(value));
     }
 
     return archive;
@@ -1064,7 +1064,10 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
     m.clear();
 
     for (size_t i=0; i<size; ++i) {
-        m.emplace(Key::load(archive), T::load(archive));
+        auto key = Key::load(archive);
+        auto value = T::load(archive);
+
+        m.emplace(std::move(key), std::move(value));
     }
 
     return archive;
