@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.19
- * @date 2024-02-08
+ * @version 0.20
+ * @date 2024-02-28
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -91,7 +91,7 @@ const BaseCoverage& ChrCoverage::get_coverage(const GenomicPosition& position) c
 {
     check_in(position, chr_id);
         
-    return coverage[position.position];
+    return coverage[position.position-1];
 }
 
 
