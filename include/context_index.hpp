@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.17
- * @date 2024-02-20
+ * @version 0.18
+ * @date 2024-02-28
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -195,7 +195,7 @@ protected:
         char last_char{'N'};
         while (last_char != '>' && !fasta_stream.eof()) {
             fasta_stream.get(last_char);
-            if (c_automata.update_state(last_char)) {
+            if (MutationalContext::is_a_base(last_char) || last_char == 'N') {
                 ++pos.position;
 
                 if (region_it != regions_to_avoid.end() && region_it->ends_before(pos)) {
@@ -205,6 +205,8 @@ protected:
                 if (region_it != regions_to_avoid.end() && region_it->contains(pos)) {
                     last_char = 'N';
                 }
+                
+                c_automata.update_state(last_char);
 
                 if (c_automata.read_a_context()) {
                     if (update_skipped_contexts(skipped_contexts, c_automata.get_state(),

@@ -2,8 +2,8 @@
  * @file context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::ContextIndex class
- * @version 0.7
- * @date 2024-02-08
+ * @version 0.8
+ * @date 2024-02-28
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -135,19 +135,19 @@ BOOST_AUTO_TEST_CASE(context_index_regions)
     const std::set<GenomicRegion> regions{{{2,115}, 20}, {{1,5}, 73},
                                           {{2,247}, 11}};
 
-    decltype(test_positions) filtered_test_positions;
+    decltype(test_positions) in_context_positions;
 
     for (const auto& [context_test, positions_test]: test_positions) {
         for (const auto& position_test: positions_test) {
-            if (in_regions(regions, position_test)) {
-                filtered_test_positions[context_test].insert(position_test);
+            if (!in_regions(regions, position_test)) {
+                in_context_positions[context_test].insert(position_test);
             }
         }
     }
 
     auto context_index = ContextIndex<>::build_index(FASTA_FILE, regions);
 
-    for (const auto& [context_test, positions_test]: filtered_test_positions) {
+    for (const auto& [context_test, positions_test]: in_context_positions) {
         std::set<Races::Mutations::GenomicPosition> positions;
 
         if (positions_test.size() != 0) {
