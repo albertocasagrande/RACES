@@ -2,10 +2,10 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.26
- * @date 2023-12-11
+ * @version 0.27
+ * @date 2024-02-29
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -146,12 +146,10 @@ BinaryLogger& BinaryLogger::operator=(const BinaryLogger& orig)
     return *this;
 }
 
-std::streampos compute_bytes_per_cell(const std::filesystem::path& directory)
+inline std::streampos compute_bytes_per_cell()
 { 
-    const auto first_archive_name = BinaryLogger::get_cell_archive_path(directory, 0);
-    Races::Archive::Binary::In cell_archive(first_archive_name);
+    Cell cell(WILD_TYPE_SPECIES);
 
-    const auto cell = Cell::load(cell_archive); 
     return Archive::Binary::ByteCounter::bytes_required_by(cell);
 }
 
@@ -167,7 +165,7 @@ BinaryLogger::CellReader::CellReader(const std::filesystem::path& directory):
         return;
     }
 
-    bytes_per_cell = compute_bytes_per_cell(directory);
+    bytes_per_cell = compute_bytes_per_cell();
 
     {   // compute the total number of cells
         const auto filename = get_cell_archive_path(directory, last_file_number);
@@ -175,7 +173,7 @@ BinaryLogger::CellReader::CellReader(const std::filesystem::path& directory):
         const auto lastfile_bytes = Archive::Binary::In(filename).size();
 
         number_of_cells = static_cast<uint64_t>(lastfile_bytes/bytes_per_cell)
-                            + cells_per_archive * last_file_number;
+                            + cells_per_archive * (last_file_number-1);
     }
 }
 

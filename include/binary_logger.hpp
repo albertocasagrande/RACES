@@ -2,10 +2,10 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.23
- * @date 2023-12-11
+ * @version 0.24
+ * @date 2024-02-29
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -132,6 +132,15 @@ public:
         inline Cell at(const CellId& cell_id)
         {
             return operator[](cell_id);
+        }
+
+        /**
+         * @brief Get the number of cells
+         * 
+         * @return the number of cells
+         */
+        inline uint64_t get_number_of_cells() const {
+            return number_of_cells;
         }
     };
 
