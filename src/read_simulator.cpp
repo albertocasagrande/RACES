@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.22
+ * @version 0.23
  * @date 2024-03-01
  * 
  * @copyright Copyright (c) 2023-2024
@@ -715,22 +715,7 @@ std::set<std::string> get_descriptions(const std::set<SNV::Type>& types)
     std::set<std::string> string_types;
 
     for (const auto& type: types) {
-        switch(type) {
-            case SNV::Type::DRIVER:
-                string_types.insert("driver");
-                break;
-            case SNV::Type::PASSENGER:
-                string_types.insert("passenger");
-                break;
-            case SNV::Type::PRENEOPLASTIC:
-                string_types.insert("pre-neoplastic");
-                break;
-            case SNV::Type::GERMINAL:
-                string_types.insert("germinal");
-                break;
-            default:
-                string_types.insert("unknown");
-        }
+        string_types.insert(SNV::get_type_description(type));
     }
 
     return string_types;
