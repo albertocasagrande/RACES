@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.20
- * @date 2024-02-24
+ * @version 0.21
+ * @date 2024-03-01
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -243,6 +243,21 @@ bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
     return false;
 }
 
+bool ChromosomeMutations::includes(const SNV& snv) const
+{
+    if (snv.chr_id != identifier) {
+        return false;
+    }
+
+    for (auto& [allele_id, allele]: alleles) {
+        if (allele.includes(snv)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 ChromosomeMutations ChromosomeMutations::duplicate_structure() const
 {
     ChromosomeMutations duplicate;
@@ -408,6 +423,17 @@ bool GenomeMutations::has_context_free(const GenomicPosition& genomic_position) 
     auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
 
     return chr_it->second.has_context_free(genomic_position);
+}
+
+bool GenomeMutations::includes(const SNV& snv) const
+{
+    auto chr_it = chromosomes.find(snv.chr_id);
+
+    if (chr_it == chromosomes.end()) {
+        return false;
+    }
+
+    return chr_it->second.includes(snv);
 }
 
 GenomeMutations GenomeMutations::duplicate_structure() const

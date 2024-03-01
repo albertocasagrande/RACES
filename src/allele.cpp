@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.7
- * @date 2024-02-08
+ * @version 0.8
+ * @date 2024-03-01
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -101,6 +101,21 @@ bool AlleleFragment::remove_SNV(const GenomicPosition& genomic_position)
     return true;
 }
 
+bool AlleleFragment::includes(const SNV& snv) const
+{
+    if (!contains(snv)) {
+        return false;
+    }
+
+    auto it = snvs.find(snv);
+
+    if (it == snvs.end()) {
+        return false;
+    }
+
+    return (it->second.alt_base == snv.alt_base);
+}
+
 AlleleFragment AlleleFragment::split(const GenomicPosition& split_point)
 {
     if (!contains(split_point)) {
@@ -179,13 +194,8 @@ bool Allele::contains(const GenomicPosition& genomic_position) const
         --it;
     }
 
-    if (it != fragments.end() && it->second.contains(genomic_position)) {
-        return true;
-    }
-
-    return false;
+    return (it != fragments.end() && it->second.contains(genomic_position));
 }
-
 
 bool Allele::contains(const GenomicRegion& genomic_region) const
 {
@@ -195,11 +205,18 @@ bool Allele::contains(const GenomicRegion& genomic_region) const
         --it;
     }
 
-    if (it != fragments.end() && it->second.contains(genomic_region)) {
-        return true;
+    return (it != fragments.end() && it->second.contains(genomic_region));
+}
+
+bool Allele::includes(const SNV& snv) const
+{
+    auto it = fragments.upper_bound(snv);
+
+    if (it != fragments.begin()) {
+        --it;
     }
 
-    return false;
+    return (it != fragments.end() && it->second.includes(snv));
 }
 
 bool Allele::has_context_free(const GenomicPosition& genomic_position) const

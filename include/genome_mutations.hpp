@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.24
- * @date 2024-02-24
+ * @version 0.25
+ * @date 2024-03-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -310,6 +310,14 @@ public:
     bool remove_SNV(const GenomicPosition& genomic_position);
 
     /**
+     * @brief Check whether a SNV is included among the chromosome mutations
+     * 
+     * @param snv is the SNV whose inclusion among the chromosome mutations is tested
+     * @return `true` if and only if `snv` is contained among the chromosome mutations
+     */
+    bool includes(const SNV& snv) const;
+
+    /**
      * @brief Save chromosome mutations in an archive
      *
      * @tparam ARCHIVE is the output archive type
@@ -574,6 +582,14 @@ public:
      * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
     bool has_context_free(const GenomicPosition& genomic_position) const;
+
+    /**
+     * @brief Check whether a SNV is included among the genome mutations
+     * 
+     * @param snv is the SNV whose inclusion among the genome mutations is tested
+     * @return `true` if and only if `snv` is contained among the genome mutations
+     */
+    bool includes(const SNV& snv) const;
 
     /**
      * @brief Duplicate genomic structure

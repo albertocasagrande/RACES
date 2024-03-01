@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.13
- * @date 2024-02-08
+ * @version 0.14
+ * @date 2024-03-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -174,6 +174,16 @@ public:
     bool remove_SNV(const GenomicPosition& genomic_position);
 
     /**
+     * @brief Check whether a SNV is included among the fragment allele mutations
+     * 
+     * @param snv is the SNV whose inclusion among the fragment allele mutations is 
+     *          tested
+     * @return `true` if and only if `snv` is contained among the fragment allele
+     *          mutations
+     */
+    bool includes(const SNV& snv) const;
+
+    /**
      * @brief Copy part of an allele fragment
      *
      * @param genomic_region is the genomic region to copy
@@ -324,6 +334,14 @@ public:
      *          contains `genomic_regions`
      */
     bool contains(const GenomicRegion& genomic_region) const;
+
+    /**
+     * @brief Check whether a SNV is included among the allele mutations
+     * 
+     * @param snv is the SNV whose inclusion among the allele mutations is tested
+     * @return `true` if and only if `snv` is contained among the allele mutations
+     */
+    bool includes(const SNV& snv) const;
 
     /**
      * @brief Check whether the fragment context is free
