@@ -2,8 +2,8 @@
  * @file snv.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Nucleotide Variation
- * @version 0.13
- * @date 2024-02-08
+ * @version 0.14
+ * @date 2024-03-01
  * 
  * @copyright Copyright (c) 2023-2024
  *
@@ -56,7 +56,8 @@ struct SNV : public GenomicPosition
     enum Type {
         DRIVER,
         PASSENGER,
-        GERMLINE,
+        PRENEOPLASTIC,
+        GERMINAL,
         UNDEFINED
     };
 
@@ -221,6 +222,24 @@ struct SNV : public GenomicPosition
         const char alt_base, const std::string& cause, const Type& type=UNDEFINED);
 
     /**
+     * @brief Get a string describing a SNV type
+     * 
+     * @param type is the type whose description is required
+     * @return a string describing the SNV type
+     */
+    static std::string get_type_description(const SNV::Type& type);
+
+    /**
+     * @brief Get a string describing the SNV type
+     * 
+     * @return a string describing the SNV type
+     */
+    inline std::string get_type_description() const
+    {
+        return SNV::get_type_description(type);
+    }
+
+    /**
      * @brief Save a SNV in an archive
      *
      * @tparam ARCHIVE is the output archive type
@@ -235,7 +254,6 @@ struct SNV : public GenomicPosition
                 & cause
                 & type;
     }
-
 
     /**
      * @brief Load a SNV from an archive

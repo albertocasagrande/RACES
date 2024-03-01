@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.14
- * @date 2024-02-08
+ * @version 0.15
+ * @date 2024-03-01
  * 
  * @copyright Copyright (c) 2023-2024
  *
@@ -118,6 +118,23 @@ SNV::SNV(GenomicPosition&& position, const char ref_base,
          const char alt_base, const std::string& cause, const Type& type):
     SNV(position, ref_base, alt_base, cause, type)
 {}
+
+std::string SNV::get_type_description(const SNV::Type& type)
+{
+    switch(type) {
+      case SNV::Type::DRIVER:
+        return "driver";
+      case SNV::Type::PASSENGER:
+        return "passenger";
+      case SNV::Type::PRENEOPLASTIC:
+        return "pre-neoplastic";
+      case SNV::Type::GERMINAL:
+        return "germinal";
+      default:
+        return "unknown";
+    }
+}
+
 
 }   // Mutations
 

@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 0.13
- * @date 2024-02-20
+ * @version 0.14
+ * @date 2024-03-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -132,7 +132,7 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
 {
     os << "chr" << separator << "from" << separator << "to" << separator
        << "ref" << separator << "alt" << separator
-       << "type" << separator << "cause" << separator << "mutation type";
+       << "type" << separator << "cause" << separator << "class";
 
     if (sample_statistics.size()>1) {
         for (const auto& [sample_name, sample_stat]: sample_statistics) {
@@ -153,21 +153,8 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
         os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position
            << separator << snv.position << separator
            << snv.ref_base << separator << snv.alt_base << separator
-           << "SNV" << separator << snv.cause << separator;
-
-        switch(snv.type) {
-            case SNV::Type::DRIVER:
-                os << "D";
-                break;
-            case SNV::Type::PASSENGER:
-                os << "P";
-                break;
-            case SNV::Type::GERMLINE:
-                os << "G";
-                break;
-            default:
-                os << "NA";
-        };
+           << "SNV" << separator << snv.cause << separator
+           << snv.get_type_description();
 
         if (sample_statistics.size()>1) {
             for (const auto& [sample_name, sample_stat]: sample_statistics) {

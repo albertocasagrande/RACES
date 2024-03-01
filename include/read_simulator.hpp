@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.26
- * @date 2024-02-24
+ * @version 0.27
+ * @date 2024-03-01
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -32,13 +32,14 @@
 #define __RACES_READ_SIMULATOR__
 
 #include <list>
+#include <set>
 #include <map>
 #include <string>
 #include <sstream>
 #include <filesystem>
 #include <random>
 
-#include "genomic_position.hpp"
+#include "snv.hpp"
 #include "genome_mutations.hpp"
 
 #include "fasta_chr_reader.hpp"
@@ -205,11 +206,62 @@ public:
 };
 
 /**
+ * @brief Sequencing data of any SNV
+ */
+struct SNVData
+{
+    BaseCoverage num_of_occurrences;    //!< The number of occurrences
+    std::set<std::string> causes;       //!< The causes of the SNV
+    std::set<SNV::Type> types;          //!< The types of the SNV
+
+    /**
+     * @brief The empty contructor
+     */
+    SNVData();
+
+    /**
+     * @brief Construct a new SNVData object
+     * 
+     * @param snv is the snv whose data refer to
+     * @param num_of_occurrences is the number of occurrences of `snv`
+     */
+    SNVData(const SNV& snv, const BaseCoverage num_of_occurrences);
+
+    /**
+     * @brief Update the SNV data
+     * 
+     * This method increases the number of occurrences of the 
+     * SNV and adds the cause and type of a SNV to the 
+     * causes and types stored in the SNV data.
+     * 
+     * @param snv is the SNV whose cause and type should be 
+     *          added to the causes and types stored in the 
+     *          data
+     */
+    void account_for(const SNV& snv);
+
+    /**
+     * @brief Update the current object 
+     * 
+     * This method adds all the data contained in an SNVData
+     * object to the current object. It sums the number of
+     * occurrences of the parameter to those of the current 
+     * object. Moreover, it also adds the causes and the 
+     * types of the parameter to the current object causes
+     * and types.
+     * 
+     * @param data is the SNVData object whose data is added
+     *          to the current object
+     */
+    void update(const SNVData& data);
+};
+
+/**
  * @brief Simulated sequencing chromosome statistics 
  */
 class ChrSampleStatistics : public ChrCoverage
 {
-    std::map<SNV, BaseCoverage> SNV_occurrences;       //!< The SNV occurrences in the simulated reads
+    std::map<SNV, SNVData> SNV_data;    //!< The SNV data about the simulated reads
 public:
 
     /**
@@ -228,29 +280,29 @@ public:
     ChrSampleStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
 
     /**
-     * @brief Increase the number of occurrences of an SNV by one
+     * @brief Update the data associated to an SNV
      * 
-     * @param snv is the snv whose number of occurrences must be increased
+     * @param snv is the SNV whose data must be updated
      */
-    void add_occurrence(const SNV& snv);
+    void account_for(const SNV& snv);
 
     /**
-     * @brief Get the collected SNV occurrences
+     * @brief Get the collected SNV data
      * 
-     * @return a constant reference to the collected SNV occurrences
+     * @return a constant reference to the collected SNV data
      */
-    inline const std::map<SNV, BaseCoverage>& get_SNV_occurrences() const
+    inline const std::map<SNV, SNVData>& get_SNV_data() const
     {
-        return SNV_occurrences;
+        return SNV_data;
     }
 
     /**
-     * @brief Get the collected occurrences of an SNV
+     * @brief Get the collected data of an SNV
      * 
      * @param snv is an SNV
-     * @return the number of occurrences of an SNV
+     * @return the data of `snv`
      */
-    BaseCoverage number_of_occurrences(const SNV& snv) const;
+    SNVData get_SNV_data(const SNV& snv) const;
 
     /**
      * @brief Join other chromosome statistics to the current one
@@ -279,16 +331,16 @@ public:
     ChrSampleStatistics& operator+=(const ChrSampleStatistics& chr_stats);
 
     /**
-     * @brief Canonize the SNV occurrence domains of a chromosome sample statistics list
+     * @brief Canonize the SNV data domains of a chromosome sample statistics list
      * 
-     * This method takes a list of chromosome sample statistics and 
-     * alter them so that the domain of map returned by the method 
-     * `get_SNV_occurrences()` is the union of the domains of the
-     * maps returned by the same method on each of them.
+     * This method takes a list of chromosome sample statistics and  alter them
+     * so that the domain of map returned by the method `get_SNV_data()` is the
+     * union of the domains of the maps returned by the same method on each of
+     * them.
      * 
      * @param[in, out] chr_stats_list is a list of chromosome sample statistics
      */
-    static void canonize_SNV_occurrences(std::list<ChrSampleStatistics>& chr_stats_list);
+    static void canonize_SNV_data(std::list<ChrSampleStatistics>& chr_stats_list);
 };
 
 /**
@@ -306,7 +358,7 @@ class SampleStatistics
 
     std::set<ChromosomeId> chr_ids;     //!< The identifiers of the chromosomes included in the statistics
 
-    std::map<SNV, BaseCoverage> SNV_occurrences;    //!< The number of SNV occurrences in the sample
+    std::map<SNV, SNVData> SNV_data;    //!< The SNV data in the sample
     std::map<GenomicPosition, BaseCoverage> locus_coverage;   //!< The coverage of any position hosting an SNV 
 
     bool save_coverage; //!< A flag to enable/disable storage of coverage data
@@ -379,22 +431,22 @@ public:
     }
 
     /**
-     * @brief Get the number of SNV occurrences
+     * @brief Get the SNV data
      * 
-     * @return a constant reference to the number of SNV occurrences
+     * @return a constant reference to the SNV data
      */
-    inline const std::map<SNV, BaseCoverage>& get_SNV_occurrences() const
+    inline const std::map<SNV, SNVData>& get_SNV_data() const
     {
-        return SNV_occurrences;
+        return SNV_data;
     }
 
     /**
-     * @brief Get the number of occurrences of an SNV
+     * @brief Get the collected data of an SNV
      * 
-     * @param snv is the SNV whose number of occurrences is aimed
-     * @return a constant reference to the number of occurrences of `snv`
+     * @param snv is an SNV
+     * @return the data of `snv`
      */
-    BaseCoverage number_of_occurrences(const SNV& snv) const;
+    SNVData get_SNV_data(const SNV& snv) const;
 
     /**
      * @brief Get the coverage of the positions in which SNVs occurr
@@ -439,7 +491,7 @@ public:
                 & sample_name
                 & save_coverage
                 & chr_ids
-                & SNV_occurrences
+                & SNV_data
                 & locus_coverage;
     }
 
@@ -463,7 +515,7 @@ public:
         SampleStatistics sample_stats(data_dir, sample_name, save_coverage);
 
         archive & sample_stats.chr_ids
-                & sample_stats.SNV_occurrences
+                & sample_stats.SNV_data
                 & sample_stats.locus_coverage;
 
         return sample_stats;
@@ -1113,11 +1165,11 @@ private:
             const GenomicPosition genomic_position{chr_data.chr_id, read_first_position};
             for (auto snv_it = SNVs.lower_bound(genomic_position);
                     snv_it != SNVs.end() && snv_it->second.position<read_first_position+read_size; ++snv_it) {
-                chr_statistics.add_occurrence(snv_it->second);
+                chr_statistics.account_for(snv_it->second);
             }
             for (auto snv_it = germline_SNVs.lower_bound(genomic_position);
                     snv_it != germline_SNVs.end() && snv_it->second.position<read_first_position+read_size; ++snv_it) {
-                chr_statistics.add_occurrence(snv_it->second);
+                chr_statistics.account_for(snv_it->second);
             }
         }
     }
@@ -1368,7 +1420,7 @@ private:
             ++simulation_data_it;
         }
 
-        ChrSampleStatistics::canonize_SNV_occurrences(chr_stats_list);
+        ChrSampleStatistics::canonize_SNV_data(chr_stats_list);
 
         auto chr_stats_it = chr_stats_list.cbegin();
         for (const auto& mutations : mutations_list) {

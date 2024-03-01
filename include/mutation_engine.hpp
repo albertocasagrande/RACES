@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.47
- * @date 2024-02-24
+ * @version 0.48
+ * @date 2024-03-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -283,11 +283,10 @@ class MutationEngine
      * into a stack to revert the selection.
      *
      * @param[in] m_type is the mutational type of the SNV to be selected
-     * @param[in] cause is the SNV cause
      * @return a passenger SNV whose type is `m_type` and which was
      *          available in `context_index`
      */
-    SNV select_SNV(const MutationalType& m_type, const std::string& cause)
+    SNV select_SNV(const MutationalType& m_type)
     {
         using namespace Races::Mutations;
 
@@ -317,8 +316,7 @@ class MutationEngine
 
         auto genomic_pos = context_index.get_genomic_position(pos);
 
-        return {genomic_pos, context.get_central_nucleotide(), alt_base, cause,
-                SNV::Type::PASSENGER};
+        return {genomic_pos, context.get_central_nucleotide(), alt_base};
     }
 
     /**
@@ -473,11 +471,11 @@ class MutationEngine
      * @param cell_mutations are the cell mutations
      * @param SBS_name is the name of the SBS used to find the mutations
      * @param num_of_mutations is the number of SNV to apply
-     * @param cause is the cause of the mutations
+     * @param type is type of the mutations
      */
     void place_SNVs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations, 
                     const std::string& SBS_name, const size_t& num_of_mutations,
-                    const std::string& cause)
+                    const SNV::Type& type)
     {
         // get the inverse cumulative SBS
         const auto& inv_cumulative_SBS = inv_cumulative_SBSs.at(SBS_name);
@@ -495,7 +493,10 @@ class MutationEngine
 
                 // select a SNV among those having the picked mutational type
                 // and that available in the context index
-                SNV snv = select_SNV(it->second, cause);
+                SNV snv = select_SNV(it->second);
+
+                snv.cause = SBS_name;
+                snv.type = type;
 
                 if (place_SNV(snv, cell_mutations)) {
                     // if the SNV has been successfully applied,
@@ -529,7 +530,8 @@ class MutationEngine
             // evaluate how many of the SNVs due to the current SBS
             const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
 
-            place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs, SBS_name);
+            place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs, 
+                       SNV::Type::PASSENGER);
         }
     }
 
@@ -1105,7 +1107,7 @@ public:
 
             // place preneoplastic mutations
             place_SNVs(&root, mutations, "SBS1", num_of_preneoplatic_mutations,
-                       "Pre-neoplastic");
+                       SNV::Type::PRENEOPLASTIC);
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
@@ -1150,7 +1152,7 @@ public:
 
             // place preneoplastic mutations
             place_SNVs(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
-                       "Somatic mutation");
+                       SNV::Type::PRENEOPLASTIC);
             
             sample_mutations.mutations.push_back(mutations);
         }
