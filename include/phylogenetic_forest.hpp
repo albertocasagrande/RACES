@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.9
- * @date 2024-02-20
+ * @version 0.10
+ * @date 2024-03-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -327,6 +327,16 @@ public:
      * @return the mutations of the sample whose name is `sample_name`
      */
     SampleGenomeMutations get_sample_mutations(const std::string& sample_name) const;
+
+    /**
+     * @brief Get the germline mutations
+     * 
+     * @return A constant reference to germline mutations
+     */
+    inline const GenomeMutations& get_germline_mutations() const
+    {
+        return germline_mutations;
+    }
 
     /**
      * @brief Clear the forest
