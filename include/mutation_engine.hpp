@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.48
- * @date 2024-03-01
+ * @version 0.49
+ * @date 2024-03-03
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -418,6 +418,19 @@ class MutationEngine
     {
         std::list<AlleleId> available_alleles;
 
+        if (infinite_sites_model) {
+            const auto& chr_mutations = cell_mutations.get_chromosome(genomic_position.chr_id);
+            if (germline_mutations.has_context_free(genomic_position) &&
+                    chr_mutations.has_context_free(genomic_position)) {
+
+                for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
+                    available_alleles.push_back(allele_id);
+                }
+            }
+
+            return available_alleles;
+        }
+
         auto germline_alleles = germline_mutations.get_alleles_with_context_free_for(genomic_position);
 
         if (germline_alleles.size()==0) {
@@ -805,9 +818,11 @@ class MutationEngine
             }
         }
 
-        // reverse context index extractions
-        while (context_stack.size() > context_stack_size) {
-            reinsert_last_context();
+        if (!infinite_sites_model) {
+            // reverse context index extractions
+            while (context_stack.size() > context_stack_size) {
+                reinsert_last_context();
+            }
         }
     }
 
@@ -913,10 +928,13 @@ class MutationEngine
         return filtered;
     }
 public:
+    bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
+
     /**
      * @brief The empty constructor
      */
-    MutationEngine()
+    MutationEngine():
+        infinite_sites_model(true)
     {}
 
     /**
@@ -954,7 +972,8 @@ public:
                    const DriverStorage& driver_storage,
                    const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
         generator(), context_index(context_index), mutational_properties(mutational_properties), 
-        germline_mutations(germline_mutations), driver_storage(driver_storage)
+        germline_mutations(germline_mutations), driver_storage(driver_storage),
+        infinite_sites_model(true)
     {
         for (const auto& [name, mutational_signature]: mutational_signatures) {
             inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
@@ -1111,6 +1130,11 @@ public:
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
+        }
+
+        // reverse context index extractions
+        while (context_stack.size() > 0) {
+            reinsert_last_context();
         }
 
         return forest;
