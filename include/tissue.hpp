@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.36
- * @date 2023-12-11
+ * @version 0.37
+ * @date 2024-03-04
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -451,8 +451,8 @@ public:
                 pos.y = (position.y>0?position.y-1:0);
                 for (; (pos.y < position.y+2 &&  pos.y < sizes[1]); ++pos.y) {
                     pos.z = (position.z>0?position.z-1:0);
-                    for (; (pos.z < position.z+2 &&  pos.z < sizes[2])
-                            || (sizes[2]==0 && pos.z==0); ++pos.z) {
+                    for (; ((sizes.size()==3 && pos.z < position.z+2 &&  pos.z < sizes[2])
+                            || (sizes.size()==2 && pos.z==0)); ++pos.z) {
                         if (tissue.cell_pointer(pos)==nullptr) {
                             return true;
                         }
