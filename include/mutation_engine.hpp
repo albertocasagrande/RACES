@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.49
- * @date 2024-03-03
+ * @version 0.50
+ * @date 2024-03-05
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -310,10 +310,15 @@ class MutationEngine
             alt_base = MutationalContext::get_complement(alt_base);
         }
 
-        GENOME_WIDE_POSITION pos = context_index.extract(context, index);
+        GENOME_WIDE_POSITION pos;
 
-        context_stack.push({context, pos});
+        if (infinite_sites_model) {
+            pos = context_index.extract(context, index);
 
+            context_stack.push({context, pos});
+        } else {
+            pos = context_index[context][index];
+        }
         auto genomic_pos = context_index.get_genomic_position(pos);
 
         return {genomic_pos, context.get_central_nucleotide(), alt_base};
@@ -496,13 +501,15 @@ class MutationEngine
         std::uniform_real_distribution<> u_dist(0,1);
 
         // while some of the requested SNVs have not been set
-        size_t new_SNVs = 0;
+        size_t new_SNVs{0}, context_misses{0};
         while (new_SNVs < num_of_mutations) {
             // randomly pick a mutational type according to the current SBS
             auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
 
             if (it != inv_cumulative_SBS.end() &&
                     context_index[it->second.get_context()].size()>0) {
+                
+                context_misses = 0;
 
                 // select a SNV among those having the picked mutational type
                 // and that available in the context index
@@ -519,6 +526,16 @@ class MutationEngine
                     if (node != nullptr) {
                         node->add_new_mutation(snv);
                     }
+                }
+            } else {
+                const size_t max_context_misses{1000};
+
+                if (++context_misses >= max_context_misses) {
+                    throw std::runtime_error("Missed available context for \""
+                                             + SBS_name + "\" for " 
+                                             + std::to_string(max_context_misses)
+                                             + " in row. Try to reduce the "
+                                             + "context sampling.");
                 }
             }
         }
