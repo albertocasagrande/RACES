@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.21
- * @date 2024-03-01
+ * @version 0.22
+ * @date 2024-03-05
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -204,13 +204,18 @@ bool ChromosomeMutations::has_context_free(const GenomicPosition& genomic_positi
         throw std::domain_error("The genomic position is not in the chromosome");
     }
 
+    bool some_allele_contains_pos{false};
+
     for (const auto& [allele_id, allele]: alleles) {
-        if (!allele.has_context_free(genomic_position)) {
-            return false;
+        if (allele.strictly_contains(genomic_position)) {
+            some_allele_contains_pos = true;
+            if (!allele.has_context_free(genomic_position)) {
+                return false;
+            }
         }
     }
 
-    return true;
+    return some_allele_contains_pos;
 }
 
 bool ChromosomeMutations::insert(const SNV& snv, const AlleleId& allele_id)

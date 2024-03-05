@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.8
- * @date 2024-03-01
+ * @version 0.9
+ * @date 2024-03-05
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -186,35 +186,56 @@ Allele::Allele(const AlleleId& identifier, const GenomicRegion& genomic_region,
     this->history.push_back(identifier);
 }
 
-bool Allele::contains(const GenomicPosition& genomic_position) const
+template<typename KEY, typename VALUE>
+typename std::map<KEY, VALUE>::const_iterator 
+find_not_after(const std::map<KEY, VALUE>& value_map, const KEY& key)
 {
-    auto it = fragments.upper_bound(genomic_position);
+    auto it = value_map.upper_bound(key);
 
-    if (it != fragments.begin()) {
+    if (it != value_map.begin()) {
         --it;
     }
+
+    return it;
+}
+
+template<typename KEY, typename VALUE>
+typename std::map<KEY, VALUE>::iterator 
+find_not_after(std::map<KEY, VALUE>& value_map, const KEY& key)
+{
+    auto it = value_map.upper_bound(key);
+
+    if (it != value_map.begin()) {
+        --it;
+    }
+
+    return it;
+}
+
+bool Allele::strictly_contains(const GenomicPosition& genomic_position) const
+{
+    auto it = find_not_after(fragments, genomic_position);
+
+    return (it != fragments.end() && it->second.strictly_contains(genomic_position));
+}
+
+bool Allele::contains(const GenomicPosition& genomic_position) const
+{
+    auto it = find_not_after(fragments, genomic_position);
 
     return (it != fragments.end() && it->second.contains(genomic_position));
 }
 
 bool Allele::contains(const GenomicRegion& genomic_region) const
 {
-    auto it = fragments.upper_bound(genomic_region.get_begin());
-
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, genomic_region.get_begin());
 
     return (it != fragments.end() && it->second.contains(genomic_region));
 }
 
 bool Allele::includes(const SNV& snv) const
 {
-    auto it = fragments.upper_bound(snv);
-
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(snv));
 
     return (it != fragments.end() && it->second.includes(snv));
 }
@@ -224,11 +245,7 @@ bool Allele::has_context_free(const GenomicPosition& genomic_position) const
     GenomicPosition g_pos(genomic_position);
     g_pos.position -=1;
 
-    auto it = fragments.upper_bound(g_pos);
-
-    if (it!=fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, g_pos);
 
     return it->second.has_context_free(genomic_position);
 }
@@ -239,10 +256,7 @@ bool Allele::insert(const SNV& snv)
         return false;
     }
 
-    auto it = fragments.upper_bound(snv);
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(snv));
     
     if (it != fragments.end() && it->second.contains(snv)) {
         return it->second.insert(snv);
@@ -253,10 +267,7 @@ bool Allele::insert(const SNV& snv)
 
 bool Allele::remove_SNV(const GenomicPosition& genomic_position)
 {
-    auto it = fragments.upper_bound(genomic_position);
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, genomic_position);
 
     if (it != fragments.end() && it->second.contains(genomic_position)) {
         return it->second.remove_SNV(genomic_position);
@@ -269,10 +280,7 @@ Allele Allele::copy(const AlleleId& new_allele_id, const GenomicRegion& genomic_
 {
     Allele new_sequence(new_allele_id, history);
 
-    auto it = fragments.upper_bound(genomic_region.get_begin());
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, genomic_region.get_begin());
 
     if (it == fragments.end() || !it->second.contains(genomic_region)) {
         throw std::domain_error("The allele does not fully contain the genomic region.");
@@ -287,10 +295,7 @@ Allele Allele::copy(const AlleleId& new_allele_id, const GenomicRegion& genomic_
 
 bool Allele::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 {
-    auto it = fragments.upper_bound(genomic_region.get_begin());
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, genomic_region.get_begin());
 
     while (it != fragments.end() && !it->second.begins_after(genomic_region.get_end())) {
         if (it->second.has_driver_mutations_in(genomic_region)) {
@@ -305,10 +310,7 @@ bool Allele::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 
 bool Allele::remove(const GenomicRegion& genomic_region)
 {
-    auto it = fragments.upper_bound(genomic_region.get_begin());
-    if (it != fragments.begin()) {
-        --it;
-    }
+    auto it = find_not_after(fragments, genomic_region.get_begin());
 
     if (it == fragments.end() || !it->second.contains(genomic_region)) {
         return false;

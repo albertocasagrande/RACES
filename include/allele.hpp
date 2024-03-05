@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.14
- * @date 2024-03-01
+ * @version 0.15
+ * @date 2024-03-05
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -316,6 +316,17 @@ public:
     {
         return fragments;
     }
+
+    /**
+     * @brief Test whether the allele strictly contains a genomic position
+     *
+     * @param genomic_position is a genomic position
+     * @return `true` if and only if one of the allele fragments
+     *          strictly contains `genomic_position`, i.e., 
+     *          `genomic_position` belongs to the allele and it is
+     *          not in one of its borders
+     */
+    bool strictly_contains(const GenomicPosition& genomic_position) const;
 
     /**
      * @brief Test whether the allele contains a genomic position
