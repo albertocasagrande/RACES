@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.50
- * @date 2024-03-05
+ * @version 0.51
+ * @date 2024-03-06
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -579,10 +579,10 @@ class MutationEngine
      *          When `no_driver_mutations` is set to `true`, the search
      *          must avoid alleles containing driver mutations in `region`.
      */
-    bool find_allele_containing(AlleleId& allele_id,
-                                const ChromosomeMutations& chr_mutations,
-                                const GenomicRegion& region,
-                                const bool& no_driver_mutations)
+    bool select_allele_containing(AlleleId& allele_id,
+                                  const ChromosomeMutations& chr_mutations,
+                                  const GenomicRegion& region,
+                                  const bool& no_driver_mutations)
     {
         const auto& chr_alleles = chr_mutations.get_alleles();
 
@@ -590,7 +590,7 @@ class MutationEngine
             return false;
         }
 
-        size_t first_idx_to_test = (random() % chr_alleles.size());
+        size_t first_idx_to_test = (generator() % chr_alleles.size());
         size_t idx{0};
         for (const auto& [a_id, allele]: chr_alleles) {
             if (idx >= first_idx_to_test) {
@@ -644,14 +644,14 @@ class MutationEngine
         switch(CNA.type) {
             case CopyNumberAlteration::Type::AMPLIFICATION:
                 if (CNA.source == RANDOM_ALLELE) {
-                    return find_allele_containing(CNA.source, chr_mutations, 
-                                                  CNA.region, no_driver_mutations);
+                    return select_allele_containing(CNA.source, chr_mutations, 
+                                                    CNA.region, no_driver_mutations);
                 }
                 return true;
             case CopyNumberAlteration::Type::DELETION:
                 if (CNA.dest == RANDOM_ALLELE) {
-                    return find_allele_containing(CNA.dest, chr_mutations,
-                                                  CNA.region, no_driver_mutations);
+                    return select_allele_containing(CNA.dest, chr_mutations,
+                                                    CNA.region, no_driver_mutations);
                 }
                 return true;
             default:
