@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.25
- * @date 2024-03-01
+ * @version 0.26
+ * @date 2024-03-06
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -330,7 +330,8 @@ public:
                 & length
                 & allelic_length
                 & alleles
-                & CNAs;
+                & CNAs
+                & next_allele_id;
     }
 
     /**
@@ -349,7 +350,8 @@ public:
                 & chr_mutations.length
                 & chr_mutations.allelic_length
                 & chr_mutations.alleles
-                & chr_mutations.CNAs;
+                & chr_mutations.CNAs
+                & chr_mutations.next_allele_id;
 
         return chr_mutations;
     }
