@@ -1699,27 +1699,54 @@ public:
      * 
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
+     * @param purity is ratio between the number of sampled tumoral cells, which are 
+     *              represented in the mutation list, and that of the overall sampled 
+     *              cells which contains normal cells too
      * @param base_name is the prefix of the filename
      * @param save_SAM is a Boolean flag to save the simulated read in a file
      * @param quiet is a Boolean flag to avoid progress bar and user messages
      * @return the sample set statistics about the generated reads
      */
-    SampleSetStatistics operator()(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
-                                   const double& coverage, const std::string& base_name="chr_", 
-                                   const bool with_sequences=true, const bool quiet=false)
+    SampleSetStatistics operator()(std::list<Races::Mutations::SampleGenomeMutations> mutations_list,
+                                   const double& coverage, const double purity=1.0, 
+                                   const std::string& base_name="chr_", const bool with_sequences=true,
+                                   const bool quiet=false)
     {
         using namespace Races;
 
         if (coverage < 0) {
-            std::ostringstream oss;
+            throw std::domain_error("The coverage value must be non-negative: got " 
+                                    + std::to_string(coverage) + ".");
+        }
 
-            oss << "Read simulator coverage must be non-negative. Got " 
-                << coverage << ".";
-            throw std::domain_error(oss.str());
+        if (purity < 0 || purity > 1) {
+            throw std::domain_error("The purity value must be in [0,1]: got " 
+                                    + std::to_string(purity) + ".");
+
         }
 
         if (mutations_list.size()==0) {
             return SampleSetStatistics(output_directory);
+        }
+
+        std::shared_ptr<CellGenomeMutations> normal_mutations;
+        
+        if (purity<1) {
+            const auto& germline = mutations_list.front().germline_mutations;
+            normal_mutations = std::make_shared<CellGenomeMutations>(germline);
+        }
+
+        for (auto& mutation_list : mutations_list) {
+            if (purity>0) {
+                size_t tumor_number = mutation_list.mutations.size();
+                size_t normal_number = static_cast<size_t>(tumor_number*(1-purity)/purity);
+
+                for (size_t i=0; i<normal_number; ++i) {
+                    mutation_list.mutations.push_back(normal_mutations);
+                }
+            } else {
+                mutation_list.mutations = {normal_mutations};
+            }
         }
 
         UI::ProgressBar progress_bar(quiet);
@@ -1742,18 +1769,22 @@ public:
      * 
      * @param mutations is a sample genome mutations
      * @param coverage is the aimed coverage
+     * @param purity is ratio between the number of sampled tumoral cells, which are 
+     *              represented in the mutation list, and that of the overall sampled 
+     *              cells which contains normal cells too
      * @param save_SAM is a Boolean flag to save the simulated read in a file
      * @param quiet is a Boolean flag to avoid progress bar and user messages
      * @return the statistics about the generated reads
      */
     SampleStatistics operator()(const Races::Mutations::SampleGenomeMutations& mutations,
-                                const double& coverage, const bool with_sequences=true,
-                                const bool quiet=false)
+                                const double& coverage, const double purity=1.0,
+                                const bool with_sequences=true, const bool quiet=false)
     {
         using namespace Races::Mutations;
         std::list<SampleGenomeMutations> mutations_list{mutations};
 
-        auto statistics = operator()(mutations_list, coverage, with_sequences, quiet);
+        auto statistics = operator()(mutations_list, coverage, purity, 
+                                     with_sequences, quiet);
 
         return statistics[mutations.name];
     }

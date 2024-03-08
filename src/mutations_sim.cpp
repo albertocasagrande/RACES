@@ -115,6 +115,7 @@ class MutationsSimulator : public BasicExecutable
     std::filesystem::path SBS_filename;
 
     double coverage;
+    double purity;
     std::string seq_output_directory;
     Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
     bool paired_read;
@@ -126,7 +127,6 @@ class MutationsSimulator : public BasicExecutable
     std::string germline_subject;
     bool epigenetic_FACS;
     bool write_SAM;
-    bool analyze_wild_type;
 
     int seed;
     size_t bytes_per_abs_position;
@@ -462,19 +462,9 @@ class MutationsSimulator : public BasicExecutable
         if (coverage>0) {
             read_simulator.enable_SAM_writing(write_SAM);
 
-            const auto statistics = read_simulator(mutations_list, coverage);
+            const auto statistics = read_simulator(mutations_list, coverage, purity);
 
             saving_statistics_data_and_images(statistics);
-
-            if (analyze_wild_type) {
-                auto wild_type_sample = engine.get_wild_type_sample(100, num_of_pnp_mutations);
-
-                std::list<SampleGenomeMutations> wild_type_list_sample{std::move(wild_type_sample)};
-
-                const auto statistics = read_simulator(wild_type_list_sample, coverage, "wild_type_chr_");
-
-                saving_statistics_data_and_images(statistics, "wild_type_");
-            }
         }
 
         process_statistics(mutations_list);
@@ -685,12 +675,13 @@ public:
              "the SNVs CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
              "the CNAs CSV output file")
-            ("wild-type,t", "analyze wild-type cells too")
         ;
 
         visible_options.at("sequencing").add_options()
             ("coverage,c", po::value<double>(&coverage)->default_value(0.0),
              "coverage for the simulated reads (>0 to simulate sequencing)")
+            ("purity,p", po::value<double>(&purity)->default_value(1.0),
+             "purity of the sample (a value in [0,1])")
             ("output-directory,d", po::value<std::string>(&seq_output_directory),
              "the output directory for sequencing simulation")
             ("overwrite,o", "overwrite the output directory")
@@ -771,7 +762,6 @@ public:
 
         epigenetic_FACS = vm.count("epigenetic-FACS")>0;
         write_SAM = vm.count("write-SAM")>0;
-        analyze_wild_type = vm.count("wild-type")>0;
 
         try {
             using namespace Races::Mutations;
