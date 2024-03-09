@@ -2,10 +2,10 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.6
- * @date 2023-12-22
+ * @version 0.7
+ * @date 2024-03-09
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -204,6 +204,20 @@ private:
 
         grow_from(cell_ids, cell_storage);
     }
+
+    /**
+     * @brief Collect sticks below a node
+     * 
+     * See `DescendantForest::get_sticks() const` for the definition of stick.
+     * 
+     * @param sticks is the list of sticks in the subtree rooted in `cell_id`
+     * @param cell_id is the identifier of a cell represented in the descendant
+     *              forest
+     * @return the tail of a candidate stick that ends in the deepest crucial node
+     *              in the subtree rooted in `cell_id`
+     */
+    std::list<CellId>
+    collect_sticks_from(std::list<std::list<CellId>>& sticks, const CellId& cell_id) const;
 
 protected:
 
@@ -647,6 +661,19 @@ public:
     {
         return cells;
     }
+
+    /**
+     * @brief Get the forest sticks
+     * 
+     * A _crucial node_ is a root of the forest, a node whose parent
+     * belongs to a different mutant, or the most recent common 
+     * ancestor of two crucial nodes.
+     * A _stick_ is a path of the forest in which the only crucial 
+     * nodes are the first and the last.
+     * 
+     * @return a list of all the forest sticks
+     */
+    std::list<std::list<CellId>> get_sticks() const;
 
     /**
      * @brief Clear the forest

@@ -2,10 +2,10 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 0.4
- * @date 2023-12-22
+ * @version 0.5
+ * @date 2024-03-09
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -131,6 +131,68 @@ std::string DescendantsForest::get_species_name(const SpeciesId& species_id) con
 
     return get_mutant_name(data.mutant_id) +
                 MutantProperties::signature_to_string(data.signature);
+}
+
+bool is_crucial(const DescendantsForest::const_node& node, const std::list<std::list<CellId>>& sticks_from)
+{
+    if (sticks_from.size()>1) {
+        // if sticks_from contains more than one stick, then this node is
+        // the MRCA of two crucial nodes and it is a crucial node too.
+        return true;
+    }
+
+    if (node.is_root()) {
+            // if node is a root, then it is crucial.
+        return true;
+    }
+
+    // if the node and its parent have different species id,
+    // then it is crucial 
+    return node.get_species_id() != node.parent().get_species_id();  
+}
+
+std::list<CellId>
+DescendantsForest::collect_sticks_from(std::list<std::list<CellId>>& sticks, const CellId& cell_id) const
+{
+    std::list<std::list<CellId>> sticks_from;
+    for (const auto& child_id : branches.at(cell_id)) {
+        auto stick_from = collect_sticks_from(sticks, child_id);
+
+        if (stick_from.size()>0) {
+            stick_from.push_front(cell_id);
+
+            sticks_from.push_back(std::move(stick_from));
+        }
+    }
+
+    const auto node = get_node(cell_id);
+
+    // if sticks_from contains more than one stick, then this node is the MRCA of two
+    // crucial nodes and it is a crucial node too.
+    // if node is the tree root
+    if (is_crucial(node, sticks_from))  { 
+        std::move(std::begin(sticks_from), std::end(sticks_from),
+                  std::back_inserter(sticks));
+
+        return {cell_id};
+    }
+
+    if (sticks_from.size()==1) {
+        return sticks_from.front();
+    }
+
+    return {};
+}
+
+std::list<std::list<CellId>> DescendantsForest::get_sticks() const
+{
+    std::list<std::list<CellId>> sticks;
+
+    for (const auto& root_id : roots) {
+        collect_sticks_from(sticks, root_id);
+    }
+
+    return sticks;
 }
 
 std::map<CellId, size_t>
