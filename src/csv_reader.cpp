@@ -2,8 +2,8 @@
  * @file csv_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to read CSV
- * @version 0.4
- * @date 2024-02-20
+ * @version 0.5
+ * @date 2024-03-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -31,6 +31,8 @@
 #include <sstream>
 
 #include "csv_reader.hpp"
+
+#include "utils.hpp"
 
 namespace Races
 {
@@ -102,7 +104,7 @@ CSVReader::CSVReader(const std::filesystem::path& filename, const bool has_heade
         std::string line;
         
         if (!getline(ifs, line)) {
-            throw std::runtime_error("\"" + std::string(filename) 
+            throw std::runtime_error("\"" + to_string(filename) 
                                      + "\" does not have a header row.");
         }
 

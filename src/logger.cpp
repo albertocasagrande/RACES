@@ -2,10 +2,10 @@
  * @file logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation loggers
- * @version 0.15
- * @date 2023-12-11
+ * @version 0.16
+ * @date 2024-03-09
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -34,6 +34,8 @@
 
 #include "logger.hpp"
 #include "tissue.hpp"
+
+#include "utils.hpp"
 
 namespace Races 
 {
@@ -70,7 +72,9 @@ BasicLogger::BasicLogger(const std::filesystem::path& simulation_dir)
 void BasicLogger::reset(const std::filesystem::path& new_directory)
 {   
     if (std::filesystem::exists(new_directory)) {
-        throw std::runtime_error("The directory \""+std::string(new_directory)+"\" already exists");
+        throw std::runtime_error("The directory \""
+                                 + to_string(new_directory)
+                                 + "\" already exists");
     }
 
     close();

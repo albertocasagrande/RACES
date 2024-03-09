@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.23
- * @date 2024-03-01
+ * @version 0.24
+ * @date 2024-03-09
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -34,6 +34,8 @@
 #include <algorithm>
 
 #include "read_simulator.hpp"
+
+#include "utils.hpp"
 
 namespace Races
 {
@@ -372,8 +374,8 @@ void create_dir(const std::filesystem::path& directory)
     }
 
     if (!is_directory(directory)) {
-        throw std::runtime_error(std::string(directory)
-                                 + " exists, but it is not a directory.");
+        throw std::runtime_error("\"" + to_string(directory)
+                                 + "\" exists, but it is not a directory.");
     }
 }
 

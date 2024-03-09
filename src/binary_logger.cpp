@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.27
- * @date 2024-02-29
+ * @version 0.28
+ * @date 2024-03-09
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -38,6 +38,7 @@
 #include "tissue.hpp"
 
 #include "simulation.hpp"
+#include "utils.hpp"
 
 namespace Races 
 {
@@ -108,13 +109,13 @@ std::filesystem::path BinaryLogger::find_last_snapshot_in(const std::filesystem:
         throw std::runtime_error(oss.str());
     }
 
-    std::regex re(std::string(directory / (snapshot_prefix+"_\\d+-\\d+.dat")));
+    std::regex re(to_string(directory / (snapshot_prefix+"_\\d+-\\d+.dat")));
 
     bool found{false};
     std::string last;
     for (const auto & entry : fs::directory_iterator(directory)) {
         if (entry.is_regular_file()) {
-            const std::string e_string = entry.path();
+            const auto e_string = to_string(entry.path());
             if (std::regex_match(e_string, re)) {
                 if (!found || e_string.compare(last)>0) {
                     last = e_string;
@@ -277,7 +278,7 @@ void BinaryLogger::snapshot(const Simulation& simulation)
     archive & simulation;
 }
 
-void BinaryLogger::reset(const std::string& output_directory)
+void BinaryLogger::reset(const std::filesystem::path& output_directory)
 {
     close();
 

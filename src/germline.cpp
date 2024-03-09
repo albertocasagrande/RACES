@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.8
- * @date 2024-03-01
+ * @version 0.9
+ * @date 2024-03-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -38,6 +38,8 @@
 
 #include "csv_reader.hpp"
 #include "fasta_chr_reader.hpp"
+
+#include "utils.hpp"
 
 namespace Races
 {
@@ -141,7 +143,7 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
     std::ifstream fasta_stream(reference_fasta_filename);
 
     if (!fasta_stream.good()) {
-        throw std::domain_error("The file \""+std::string(reference_fasta_filename)
+        throw std::domain_error("The file \"" + to_string(reference_fasta_filename) 
                                 + "\" cannot be read");
     }
 
@@ -246,7 +248,7 @@ bool is_male(const std::map<ChromosomeId, std::filesystem::path>& germline_chr_m
 
     std::ifstream VCF_X_stream(chr_it->second);
     if (!VCF_X_stream.good()) {
-        throw std::runtime_error("The file \"" + std::string(chr_it->second)
+        throw std::runtime_error("The file \"" + to_string(chr_it->second)
                                  + "\" is not readable.");
     }
 
@@ -271,7 +273,7 @@ get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::pa
     std::ifstream VCF_stream(germline_chr_map.begin()->second);
 
     if (!VCF_stream.good()) {
-        throw std::runtime_error("The file \"" + std::string(germline_chr_map.begin()->second)
+        throw std::runtime_error("The file \"" + to_string(germline_chr_map.begin()->second)
                                  + "\" is not readable.");
     }
 
@@ -527,13 +529,13 @@ void add_VCF_mutations(GenomeMutations& mutations, const std::filesystem::path& 
     std::ifstream VCF_stream(VCF_file);
 
     if (!VCF_stream.good()) {
-        throw std::runtime_error("The file \"" + std::string(VCF_file)
+        throw std::runtime_error("The file \"" + to_string(VCF_file)
                                  + "\" is not readable.");
     }
 
     std::string header;
     if (!read_up_to_header(header, VCF_stream)) {
-        throw std::runtime_error("The VCF file \"" + std::string(VCF_file)
+        throw std::runtime_error("The VCF file \"" + to_string(VCF_file)
                                  + "\" misses the standard header line.");
     }
 
@@ -542,7 +544,7 @@ void add_VCF_mutations(GenomeMutations& mutations, const std::filesystem::path& 
     try {
         subject_column = get_subject_column(header, subject);
     } catch(std::runtime_error& ex) {
-        throw std::runtime_error("\""+ std::string(VCF_file)
+        throw std::runtime_error("\"" + to_string(VCF_file)
                                  + "\" does not contains "
                                  + subject + "'s mutations.");
     }
@@ -558,7 +560,7 @@ void add_VCF_mutations(GenomeMutations& mutations, const std::filesystem::path& 
 
             if (column_separators.size()+1 < subject_column) {
                 throw std::runtime_error("Wrong number of columns in file \""
-                                         + std::string(VCF_file)
+                                         + to_string(VCF_file)
                                          + "\" line number "
                                          + std::to_string(line_num) + ".");
             }

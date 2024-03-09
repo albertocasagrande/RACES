@@ -2,10 +2,10 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements some archive classes and their methods
- * @version 0.7
- * @date 2023-10-02
+ * @version 0.8
+ * @date 2024-03-09
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -133,28 +133,9 @@ Out::Out(std::filesystem::path position, std::ios_base::openmode mode):
     Archive::Basic::Out(position, mode | std::fstream::binary), ProgressViewer()
 {}
 
-Out& Out::operator&(const std::string& text)
-{
-    const size_t size = text.size();
-    fs.write((char const*)(&size), sizeof(size_t));
-    fs.write(text.c_str(), size*sizeof(char));
-
-    advance(sizeof(size_t)+size*sizeof(char));
-
-    return *this;
-}
-
 ByteCounter::ByteCounter():
     Out(), bytes(0)
 {}
-
-ByteCounter& ByteCounter::operator&(const std::string& text)
-{
-    bytes += sizeof(size_t);
-    bytes += text.size()*sizeof(char);
-
-    return *this;
-}
 
 In::In(std::filesystem::path position):
     Archive::Basic::In(position, std::fstream::binary), ProgressViewer()
@@ -163,26 +144,6 @@ In::In(std::filesystem::path position):
 In::In(std::filesystem::path position, std::ios_base::openmode mode):
     Archive::Basic::In(position, std::fstream::binary | mode), ProgressViewer()
 {}
-
-In& In::operator&(std::string& text)
-{
-    size_t size;
-    fs.read((char *)(&size), sizeof(size_t));
-
-    char* buffer = new char[size+1];
-
-    fs.read(buffer, size*sizeof(char));
-
-    buffer[size] = '\0';
-
-    text = std::string(buffer);
-
-    delete[] buffer;
-
-    advance(sizeof(size_t)+size*sizeof(char));
-
-    return *this;
-}
 
 }
 

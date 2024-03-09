@@ -2,10 +2,10 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.21
- * @date 2024-02-28
+ * @version 0.22
+ * @date 2024-03-09
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -457,7 +457,17 @@ struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
      * @param text is the string to save
      * @return a reference to the updated archive
      */
-    Out& operator&(const std::string& text);
+    template<typename charT>
+    Out& operator&(const std::basic_string<charT>& text)
+    {
+        const size_t size = text.size();
+        fs.write((char const*)(&size), sizeof(size_t));
+        fs.write((const char*)text.c_str(), size*sizeof(charT));
+
+        advance(sizeof(size_t)+size*sizeof(charT));
+
+        return *this;
+    }
 
     /**
      * @brief Save an arithmetic value in the archive
@@ -510,7 +520,14 @@ public:
      * @param text is the string whose archive space is required
      * @return a reference to the updated archive
      */
-    ByteCounter& operator&(const std::string& text);
+    template<typename charT>
+    ByteCounter& operator&(const std::basic_string<charT>& text)
+    {
+        bytes += sizeof(size_t);
+        bytes += text.size()*sizeof(charT);
+
+        return *this;
+    }
 
     /**
      * @brief Measure the space required by an arithmetic value
@@ -628,7 +645,26 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
      * @param text is the object in which the string is loaded
      * @return a reference to the updated archive
      */
-    In& operator&(std::string& text);
+    template<typename charT>
+    In& operator&(std::basic_string<charT>& text)
+    {
+        size_t size;
+        fs.read((char *)(&size), sizeof(size_t));
+
+        charT* buffer = new charT[size+1];
+
+        fs.read((char *)buffer, size*sizeof(charT));
+
+        buffer[size] = '\0';
+
+        text = std::basic_string<charT>(buffer);
+
+        delete[] buffer;
+
+        advance(sizeof(size_t)+size*sizeof(charT));
+
+        return *this;
+    }
 
     /**
      * @brief Load an object

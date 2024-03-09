@@ -111,6 +111,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_plotter.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_sample.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/utils.hpp
 )
 
 set(WITH_MATPLOT false)

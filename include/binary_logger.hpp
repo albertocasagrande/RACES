@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.24
- * @date 2024-02-29
+ * @version 0.25
+ * @date 2024-03-09
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -227,7 +227,7 @@ public:
      * 
      * @param output_directory is the output directory name
      */
-    void reset(const std::string& directory);
+    void reset(const std::filesystem::path& directory);
 
     /**
      * @brief Reset the logger
@@ -246,7 +246,13 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & static_cast<std::string>(directory)
+#if defined(__WIN32__) || defined(__WIN64__)
+        std::wstring output_directory(directory);
+#else
+        std::string output_directory(directory);
+#endif
+
+        archive & output_directory
                 & cells_per_file
                 & cell_in_current_file
                 & current_file_number;
@@ -264,7 +270,11 @@ public:
     {
         BinaryLogger logger;
 
+#if defined(__WIN32__) || defined(__WIN64__)
+        std::wstring output_directory;
+#else
         std::string output_directory;
+#endif
 
         archive & output_directory
                 & logger.cells_per_file
