@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.28
- * @date 2024-03-09
+ * @version 0.29
+ * @date 2024-03-10
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -149,7 +149,7 @@ BinaryLogger& BinaryLogger::operator=(const BinaryLogger& orig)
 
 inline std::streampos compute_bytes_per_cell()
 { 
-    Cell cell(WILD_TYPE_SPECIES);
+    Cell cell;
 
     return Archive::Binary::ByteCounter::bytes_required_by(cell);
 }

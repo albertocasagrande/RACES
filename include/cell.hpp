@@ -2,10 +2,10 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.24
- * @date 2023-12-11
+ * @version 0.25
+ * @date 2024-03-10
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -69,12 +69,12 @@ protected:
 
     SpeciesId species_id;  //!< cell species reference
 
+public:
     /**
      * @brief The empty constructor
      */
-    Cell();
+    explicit Cell();
 
-public:
     /**
      * @brief Create a new cell with no mutations
      * 
