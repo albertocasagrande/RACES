@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.28
- * @date 2024-03-09
+ * @version 0.29
+ * @date 2024-03-11
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -683,9 +683,11 @@ public:
      * 
      * @param base_name is the prefix of the name of the CSV files.
      *          The filename format is "<base_name><chromosome_name>.csv"
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
     void save_VAF_CSVs(const std::string& base_name,
+                       std::ostream& progress_bar_stream=std::cout,
                        const bool& quiet = false) const;
 
 
@@ -699,11 +701,13 @@ public:
      * 
      * @param base_name is the prefix of the name of the CSV files.
      *          The file name format is "<base_name><chromosome_name>.csv"
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    inline void save_VAF_CSVs(const bool& quiet = false) const
+    inline void save_VAF_CSVs(std::ostream& progress_bar_stream=std::cout,
+                              const bool& quiet = false) const
     {
-        save_VAF_CSVs("chr_", quiet);
+        save_VAF_CSVs("chr_", progress_bar_stream, quiet);
     }
 
     /**
@@ -726,9 +730,11 @@ public:
      * 
      * @param base_name is the prefix of the name of the CSV files.
      *          The filename format is "<base_name><chromosome_name>_coverage.jpg"
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
     void save_coverage_images(const std::string& base_name,
+                              std::ostream& progress_bar_stream=std::cout,
                               const bool& quiet = false) const;
 
     /**
@@ -739,11 +745,13 @@ public:
      * chromosome. The file names will have the format 
      * "chr_<chromosome_name>_coverage.jpg".
      * 
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    inline void save_coverage_images(const bool& quiet = false) const
+    inline void save_coverage_images(std::ostream& progress_bar_stream=std::cout,
+                                     const bool& quiet = false) const
     {
-        save_coverage_images("chr_", quiet);
+        save_coverage_images("chr_", progress_bar_stream, quiet);
     }
 
     /**
@@ -765,9 +773,11 @@ public:
      * 
      * @param base_name is the prefix of the name of the CSV files.
      *          The filename syntax is "<base_name><chromosome_name>_hist.jpg"
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
     void save_SNV_histograms(const std::string& base_name,
+                             std::ostream& progress_bar_stream=std::cout,
                              const bool& quiet = false) const;
 
 
@@ -779,11 +789,13 @@ public:
      * chromosome. The file names will have the format 
      * "chr_<chromosome_name>_hist.jpg".
      * 
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    inline void save_SNV_histograms(const bool& quiet = false) const
+    inline void save_SNV_histograms(std::ostream& progress_bar_stream=std::cout,
+                                    const bool& quiet = false) const
     {
-        save_SNV_histograms("chr_", quiet);
+        save_SNV_histograms("chr_", progress_bar_stream, quiet);
     }
 
     /**
@@ -1715,12 +1727,14 @@ public:
      *              cells which contains normal cells too
      * @param base_name is the prefix of the filename
      * @param save_SAM is a Boolean flag to save the simulated read in a file
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to avoid progress bar and user messages
      * @return the sample set statistics about the generated reads
      */
     SampleSetStatistics operator()(std::list<Races::Mutations::SampleGenomeMutations> mutations_list,
                                    const double& coverage, const double purity=1.0, 
                                    const std::string& base_name="chr_", const bool with_sequences=true,
+                                   std::ostream& progress_bar_stream=std::cout,
                                    const bool quiet=false)
     {
         using namespace Races;
@@ -1760,7 +1774,7 @@ public:
             }
         }
 
-        UI::ProgressBar progress_bar(quiet);
+        UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
         if (with_sequences) {
             return generate_reads<Races::IO::FASTA::Sequence>(mutations_list, coverage,

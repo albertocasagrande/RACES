@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.22
- * @date 2024-03-09
+ * @version 0.23
+ * @date 2024-03-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -493,9 +493,12 @@ struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
      * @param object is the object to save
      * @param description is a description of the object to
      *          be loaded
+     * @param progress_bar_stream is the output stream for 
+     *          the progress bar
      */
     template<typename T>
-    void save(const T& object, const std::string& description="");
+    void save(const T& object, const std::string& description="",
+              std::ostream& progress_bar_stream=std::cout);
 };
 
 /**
@@ -674,9 +677,12 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
      *          data is placed
      * @param description is a description of the object to
      *          be loaded
+     * @param progress_bar_stream is the output stream for 
+     *          the progress bar
      */
     template<typename T>
-    void load(T& object, const std::string& description="");
+    void load(T& object, const std::string& description="",
+              std::ostream& progress_bar_stream=std::cout);
 };
 
 }   // Binary
@@ -1279,11 +1285,12 @@ namespace Binary
 {
 
 template<typename T>
-void Out::save(const T& object, const std::string& description)
+void Out::save(const T& object, const std::string& description,
+               std::ostream& progress_bar_stream)
 {
     UI::ProgressBar::hide_console_cursor();
 
-    Races::UI::ProgressBar bar;
+    Races::UI::ProgressBar bar(progress_bar_stream);
 
     if (description=="") {
         bar.set_message("Saving...");
@@ -1311,11 +1318,12 @@ void Out::save(const T& object, const std::string& description)
 }
 
 template<typename T>
-void In::load(T& object, const std::string& description)
+void In::load(T& object, const std::string& description,
+              std::ostream& progress_bar_stream)
 {
     UI::ProgressBar::hide_console_cursor();
 
-    Races::UI::ProgressBar bar;
+    Races::UI::ProgressBar bar(progress_bar_stream);
 
     if (description=="") {
         bar.set_message("Loading...");

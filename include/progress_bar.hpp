@@ -2,10 +2,10 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a progress bar
- * @version 0.11
- * @date 2023-10-26
+ * @version 0.12
+ * @date 2024-03-11
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -39,6 +39,10 @@
 #if WITH_INDICATORS
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
+
+#if defined(__WIN32__) || defined(__WIN64__)
+#pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
 
 #include "indicators.hpp"
 
@@ -79,14 +83,14 @@ public:
     /**
      * @brief The constructor
      */
-    ProgressBar();
+    ProgressBar(std::ostream& out);
 
     /**
      * @brief A constructor
      * 
      * @param hide is a hide/show flag 
      */
-    ProgressBar(const bool hide);
+    ProgressBar(std::ostream& out, const bool hide);
 
     /**
      * @brief Set a message in the progress bar

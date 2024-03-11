@@ -2,10 +2,10 @@
  * @file mutants_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the mutants simulator
- * @version 0.3
- * @date 2023-12-22
+ * @version 0.4
+ * @date 2024-03-11
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -425,7 +425,7 @@ public:
         if (!quiet) {
             UI::ProgressBar::hide_console_cursor();
 
-            bar = new UI::ProgressBar();
+            bar = new UI::ProgressBar(std::cout);
             bar->set_message("Creating tissue");
         }
 

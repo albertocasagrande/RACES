@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.17
- * @date 2024-02-24
+ * @version 0.18
+ * @date 2024-03-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -191,7 +191,7 @@ class MutationsSimulator : public BasicExecutable
             return engine.place_mutations(forest, num_of_preneoplastic_mutations);
         }
 
-        Races::UI::ProgressBar progress_bar;
+        Races::UI::ProgressBar progress_bar(std::cout);
 
         progress_bar.set_message("Placing mutations");
 
@@ -217,7 +217,7 @@ class MutationsSimulator : public BasicExecutable
 
         if ((SNVs_csv_filename != "") || (CNAs_csv_filename != "")) {
 
-            ProgressBar bar;
+            ProgressBar bar(std::cout);
 
             MutationStatistics statistics;
 
@@ -355,10 +355,10 @@ class MutationsSimulator : public BasicExecutable
     void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics,
                                            const std::string& base_name="chr_") const
     {
-        statistics.save_VAF_CSVs(base_name, quiet);
+        statistics.save_VAF_CSVs(base_name, std::cout, quiet);
 #if WITH_MATPLOT
-        statistics.save_coverage_images(base_name, quiet);
-        statistics.save_SNV_histograms(base_name, quiet);
+        statistics.save_coverage_images(base_name, std::cout, quiet);
+        statistics.save_SNV_histograms(base_name, std::cout, quiet);
 #endif // WITH_MATPLOT
     }
 
@@ -434,7 +434,8 @@ class MutationsSimulator : public BasicExecutable
 
         if (germline_csv_filename.size()==0) {
             germline = GermlineMutations::generate(ref_genome_filename, chromosome_regions, driver_storage,
-                                                   num_of_alleles, germline_mutations_per_kbase, 0, false);
+                                                   num_of_alleles, germline_mutations_per_kbase,
+                                                   0, std::cout, false);
         } else {
             germline = GermlineMutations::load(germline_csv_filename, num_of_alleles, germline_subject);
         }

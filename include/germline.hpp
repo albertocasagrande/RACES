@@ -2,8 +2,8 @@
  * @file germline.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines the functions to generate and load germline mutations
- * @version 0.1
- * @date 2024-02-08
+ * @version 0.2
+ * @date 2024-03-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -111,6 +111,7 @@ public:
      * @param mutations_per_ref_kbase is the number of germline mutations
      *              per kilobase of reference genome
      * @param seed is the seed of the random generator
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is Boolean flag to disable/enable a progress bar
      * @return the germline mutations 
      */
@@ -120,7 +121,8 @@ public:
              const DriverStorage& driver_storage,
              const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
              const double& mutations_per_ref_kbase, 
-             const int& seed=0, const bool quiet=true);
+             const int& seed=0, std::ostream& progress_bar_stream=std::cout,
+             const bool quiet=true);
 
     /**
      * @brief Load germline mutations
@@ -135,13 +137,16 @@ public:
      * @param germline_data_file is a germline data file
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param subject is the subject whose germline mutations must be loaded
+     * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable progress messages
      * @return The genome mutations of `subject` if they are contained in the 
      *       VCF files
      */
     static GenomeMutations load(const std::filesystem::path& germline_data_file,
                                 const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
-                                const std::string& subject, const bool quiet=false);
+                                const std::string& subject,
+                                std::ostream& progress_bar_stream=std::cout,
+                                const bool quiet=false);
 };
 
 }   // Mutations

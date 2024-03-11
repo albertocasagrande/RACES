@@ -2,10 +2,10 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a progress bar
- * @version 0.10
- * @date 2023-10-26
+ * @version 0.11
+ * @date 2024-03-11
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -36,11 +36,11 @@ namespace Races
 namespace UI
 {
 
-ProgressBar::ProgressBar():
-    ProgressBar(false)
+ProgressBar::ProgressBar(std::ostream& out):
+    ProgressBar(out, false)
 {}
 
-ProgressBar::ProgressBar(const bool hide):
+ProgressBar::ProgressBar(std::ostream& out, const bool hide):
     last_update(std::chrono::system_clock::now()), percentage(0), message(), updated(false)
 #if WITH_INDICATORS
     , indicator(nullptr)
@@ -66,7 +66,8 @@ ProgressBar::ProgressBar(const bool hide):
             option::ForegroundColor{Color::yellow},
             option::ShowElapsedTime{true},
             option::ShowPercentage{true},
-            option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
+            option::FontStyles{std::vector<FontStyle>{FontStyle::bold}},
+            option::Stream{out}
         };
 #endif  // WITH_INDICATORS
     }

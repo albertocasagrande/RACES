@@ -2,10 +2,10 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief The main source file for context index sampler
- * @version 0.9
- * @date 2023-12-09
+ * @version 0.10
+ * @date 2024-03-11
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -72,7 +72,7 @@ class ContextSampler
             if (!quiet) {
                 Races::UI::ProgressBar::hide_console_cursor();
 
-                bar = new Races::UI::ProgressBar();
+                bar = new Races::UI::ProgressBar(std::cout);
                 bar->set_message("Sampling context index");
             }
 

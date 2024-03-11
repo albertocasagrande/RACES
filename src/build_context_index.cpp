@@ -2,8 +2,8 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the context index
- * @version 0.8
- * @date 2024-02-08
+ * @version 0.9
+ * @date 2024-03-11
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -80,7 +80,7 @@ class IndexBuilder
             } else {
                 UI::ProgressBar::hide_console_cursor();
 
-                UI::ProgressBar progress_bar;
+                UI::ProgressBar progress_bar(std::cout);
 
                 context_index = Index::build_index(genome_fasta_filename, regions_to_avoid, sampling_rate, &progress_bar);
             }

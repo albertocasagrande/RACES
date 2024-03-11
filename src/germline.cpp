@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.9
- * @date 2024-03-09
+ * @version 0.10
+ * @date 2024-03-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -134,9 +134,10 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
                             const DriverStorage& driver_storage,
                             const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
                             const double& mutations_per_ref_kbase,
-                            const int& seed, const bool quiet)
+                            const int& seed, std::ostream& progress_bar_stream,
+                            const bool quiet)
 {
-    Races::UI::ProgressBar progress_bar(quiet);
+    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     progress_bar.set_message("Generating germline");
 
@@ -602,9 +603,10 @@ size_t get_total_VCF_size(const std::map<ChromosomeId, std::filesystem::path>& g
 GenomeMutations
 GermlineMutations::load(const std::filesystem::path& germline_data_file,
                         const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
-                        const std::string& subject, const bool quiet)
+                        const std::string& subject, std::ostream& progress_bar_stream,
+                        const bool quiet)
 {
-    Races::UI::ProgressBar progress_bar(quiet);
+    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     progress_bar.set_message("Loading germline");
 

@@ -2,8 +2,8 @@
  * @file fasta_chr_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to read chromosomes from FASTA streams
- * @version 0.2
- * @date 2024-02-08
+ * @version 0.3
+ * @date 2024-03-11
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -119,11 +119,13 @@ struct ChromosomeData : public DATA_TYPE
      * @param FASTA_stream[in,out] is the FASTA stream
      * @param chr_data[out] is the object that will be filled with the chromosome data if
      *          some chromosome is read from `FASTA_stream`
+     * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a chromosome sequence is read from `FASTA_stream`
      */
-    inline static bool read(std::istream& FASTA_stream, ChromosomeData<DATA_TYPE>& chr_data)
+    inline static bool read(std::istream& FASTA_stream, ChromosomeData<DATA_TYPE>& chr_data,
+                            std::ostream& progress_bar_stream=std::cout)
     {
-        UI::ProgressBar progress_bar(true);
+        UI::ProgressBar progress_bar(progress_bar_stream, true);
 
         return read(FASTA_stream, chr_data, progress_bar);
     }

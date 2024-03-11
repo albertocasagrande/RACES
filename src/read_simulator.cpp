@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.24
- * @date 2024-03-09
+ * @version 0.25
+ * @date 2024-03-11
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -618,9 +618,10 @@ std::list<std::string> SampleSetStatistics::get_sample_names() const
 }
 
 void SampleSetStatistics::save_VAF_CSVs(const std::string& base_name,
+                                        std::ostream& progress_bar_stream,
                                         const bool& quiet) const
 {
-    Races::UI::ProgressBar progress_bar(quiet);
+    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     size_t chr_processes{0};
     for (const auto& chr_id : repr_chr_ids) {
@@ -801,9 +802,10 @@ std::vector<double> down_sample_coverage(const std::vector<BaseCoverage>& covera
 }
 
 void SampleSetStatistics::save_coverage_images(const std::string& base_name,
+                                               std::ostream& progress_bar_stream,
                                                const bool& quiet) const
 {
-    Races::UI::ProgressBar progress_bar(quiet);
+    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     size_t chr_processes{0};
     for (const auto& chr_id : repr_chr_ids) {
@@ -931,9 +933,11 @@ get_VAF_data(const SampleStatistics& sample_statistics, const ChromosomeId& chr_
                         chr_id, threshold);
 }
 
-void SampleSetStatistics::save_SNV_histograms(const std::string& base_name, const bool& quiet) const
+void SampleSetStatistics::save_SNV_histograms(const std::string& base_name,
+                                              std::ostream& progress_bar_stream,
+                                              const bool& quiet) const
 {
-    Races::UI::ProgressBar progress_bar(quiet);
+    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     size_t chr_processes{0};
     for (const auto& chr_id : repr_chr_ids) {

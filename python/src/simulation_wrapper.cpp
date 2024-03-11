@@ -2,10 +2,10 @@
  * @file simulation_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Simulation`
- * @version 0.16
- * @date 2023-12-11
+ * @version 0.17
+ * @date 2024-03-11
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -104,7 +104,7 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool quie
     if (quiet) {
         obj_ptr->simulation.run(done, plotter, bar);
     } else {
-        bar = new ProgressBar();
+        bar = new ProgressBar(std::cout);
         obj_ptr->simulation.run(done, plotter, bar);
 
         delete bar;

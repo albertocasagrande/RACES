@@ -2,10 +2,10 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 0.7
- * @date 2023-11-01
+ * @version 0.8
+ * @date 2024-03-11
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -211,11 +211,13 @@ public:
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] seq_info is the object that will be filled by the read information
+     * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence has been read from `fasta_stream`.
      *           If the method returns `true`, then `seq_info` is updated 
      *           according to the read values
      */
-    static bool read(std::istream& fasta_stream, SequenceInfo& seq_info);
+    static bool read(std::istream& fasta_stream, SequenceInfo& seq_info,
+                     std::ostream& progress_bar_stream=std::cout);
 
     /**
      * @brief Read FASTA sequence information from a stream
@@ -225,14 +227,16 @@ public:
      * @param[out] seq_info is the object that will be filled by the read information
      * @param[in] filter is the filter selecting the appropriate FASTA sequences
      *              according to their headers
+     * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
      *           has been read from `fasta_stream`. If the method returns `true`, 
      *           then `seq_info` is updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
-    inline static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, FILTER& filter)
+    inline static bool read(std::istream& fasta_stream, SequenceInfo& seq_info, FILTER& filter,
+                            std::ostream& progress_bar_stream=std::cout)
     {
-        UI::ProgressBar progress_bar(true);
+        UI::ProgressBar progress_bar(progress_bar_stream, true);
 
         return SequenceInfo::read(fasta_stream, seq_info, filter, progress_bar);
     }
@@ -282,11 +286,13 @@ struct Sequence : public SequenceInfo
      * 
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] sequence is the object that will be filled by the read sequence
+     * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence has been read from `fasta_stream`. 
      *           If the method returns `true`, then `sequence` is updated
      *           according to the read values
      */
-    static bool read(std::istream& fasta_stream, Sequence& sequence);
+    static bool read(std::istream& fasta_stream, Sequence& sequence,
+                     std::ostream& progress_bar_stream=std::cout);
 
     /**
      * @brief Read FASTA sequence from a stream
@@ -296,14 +302,16 @@ struct Sequence : public SequenceInfo
      * @param[out] sequence is the object that will be filled by the read sequence
      * @param[in] filter is the filter selecting the appropriate FASTA sequences
      *              according to their headers
+     * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
      *           has been read from `fasta_stream`. If the method returns `true`, 
      *           then `seq_info` is updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
-    inline static bool read(std::istream& fasta_stream, Sequence& sequence, FILTER& filter)
+    inline static bool read(std::istream& fasta_stream, Sequence& sequence, FILTER& filter,
+                            std::ostream& progress_bar_stream=std::cout)
     {
-        UI::ProgressBar progress_bar(true);
+        UI::ProgressBar progress_bar(progress_bar_stream, true);
 
         return Sequence::read(fasta_stream, sequence, filter, progress_bar);
     }

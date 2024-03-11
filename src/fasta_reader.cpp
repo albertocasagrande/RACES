@@ -2,10 +2,10 @@
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a FASTA file reader and support structures
- * @version 0.7
- * @date 2023-11-01
+ * @version 0.8
+ * @date 2024-03-11
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -69,9 +69,10 @@ bool SequenceInfo::read(std::istream& fasta_stream, SequenceInfo& seq_info, UI::
     return read(fasta_stream, seq_info, nullptr, filter, progress_bar);
 }
 
-bool SequenceInfo::read(std::istream& fasta_stream, SequenceInfo& seq_info)
+bool SequenceInfo::read(std::istream& fasta_stream, SequenceInfo& seq_info,
+                        std::ostream& progress_bar_stream)
 {
-    UI::ProgressBar progress_bar(true);
+    UI::ProgressBar progress_bar(progress_bar_stream, true);
 
     return SequenceInfo::read(fasta_stream, seq_info, progress_bar);
 }
@@ -83,9 +84,10 @@ bool Sequence::read(std::istream& fasta_stream, Sequence& sequence, UI::Progress
     return SequenceInfo::read(fasta_stream, sequence, &(sequence.nucleotides), filter, progress_bar);
 }
 
-bool Sequence::read(std::istream& fasta_stream, Sequence& sequence)
+bool Sequence::read(std::istream& fasta_stream, Sequence& sequence,
+                        std::ostream& progress_bar_stream)
 {
-    UI::ProgressBar progress_bar(true);
+    UI::ProgressBar progress_bar(progress_bar_stream, true);
     SequenceFilter filter;
 
     return Sequence::read(fasta_stream, sequence, filter, progress_bar);
