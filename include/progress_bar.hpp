@@ -2,7 +2,7 @@
  * @file progress_bar.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a progress bar
- * @version 0.12
+ * @version 0.13
  * @date 2024-03-11
  * 
  * @copyright Copyright (c) 2023-2024
@@ -83,7 +83,7 @@ public:
     /**
      * @brief The constructor
      */
-    ProgressBar(std::ostream& out);
+    explicit ProgressBar(std::ostream& out);
 
     /**
      * @brief A constructor
