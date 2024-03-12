@@ -2,10 +2,10 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.22
- * @date 2023-12-11
+ * @version 0.23
+ * @date 2024-03-12
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -318,35 +318,6 @@ BOOST_AUTO_TEST_CASE(binary_map)
     std::filesystem::remove(filename);
 }
 
-BOOST_AUTO_TEST_CASE(binary_cell)
-{
-    using namespace Races::Mutants;
-
-    std::vector<Cell> to_save{Cell(0), Cell(1,300), Cell(2, 200)};
-
-    auto filename = get_a_temporary_path();
-    {
-        Races::Archive::Binary::Out o_archive(filename);
-
-        for (const auto& value : to_save) {
-            o_archive & value;
-        }
-    }
-
-    {
-        Races::Archive::Binary::In i_archive(filename);
-
-        for (auto& value : to_save) {
-            Cell read_value = Cell::load(i_archive);
-
-            BOOST_CHECK(read_value.get_id()==value.get_id());
-            BOOST_CHECK(read_value.get_parent_id()==value.get_parent_id());
-            BOOST_CHECK(read_value.get_species_id()==value.get_species_id());
-        }
-    }
-
-    std::filesystem::remove(filename);
-}
 
 BOOST_AUTO_TEST_CASE(binary_timed_mutation)
 {

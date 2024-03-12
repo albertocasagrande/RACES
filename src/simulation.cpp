@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.52
- * @date 2024-01-15
+ * @version 0.53
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-24
  * 
@@ -53,7 +53,8 @@ Simulation::AddedCell::AddedCell(const SpeciesId& species, const PositionInTissu
 
 Simulation::Simulation(int random_seed):
     logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
-    time(0), death_activation_level(1), duplicate_internal_cells(true), storage_enabled(true)
+    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(true),
+    storage_enabled(true)
 {
     random_gen.seed(random_seed);
 
@@ -63,7 +64,8 @@ Simulation::Simulation(int random_seed):
 
 Simulation::Simulation(const std::filesystem::path& log_directory, int random_seed):
     logger(log_directory), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
-    time(0), death_activation_level(1), duplicate_internal_cells(true), storage_enabled(true)
+    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(true),
+    storage_enabled(true)
 {
     random_gen.seed(random_seed);
 
@@ -96,6 +98,7 @@ Simulation& Simulation::operator=(Simulation&& orig)
     std::swap(valid_directions, orig.valid_directions);
     std::swap(last_snapshot_time, orig.last_snapshot_time);
     std::swap(random_gen, orig.random_gen);
+    std::swap(next_cell_id, orig.next_cell_id);
 
     return *this;
 }
@@ -772,7 +775,8 @@ Simulation::simulate_mutation(const Position& position, const SpeciesId& final_i
 
     parent_cell.species_id = final_id;
 
-    tissue(position) = parent_cell.generate_descendent(time);
+    tissue(position) = parent_cell.generate_descendent(next_cell_id, time);
+    ++next_cell_id;
 
     return {{tissue(position)},{}};
 }
@@ -821,7 +825,8 @@ Simulation::simulate_duplication(const Position& position)
     
     Tissue::CellInTissueProxy cell_in_tissue = tissue(position);
 
-    cell_in_tissue = parent_cell.generate_descendent(time);
+    cell_in_tissue = parent_cell.generate_descendent(next_cell_id, time);
+    ++next_cell_id;
 
     affected.new_cells.push_back(cell_in_tissue);
 
@@ -829,7 +834,8 @@ Simulation::simulate_duplication(const Position& position)
     if (tissue.is_valid(new_cell_position)) {
         Tissue::CellInTissueProxy cell_in_tissue = tissue(new_cell_position);
 
-        cell_in_tissue = parent_cell.generate_descendent(time);
+        cell_in_tissue = parent_cell.generate_descendent(next_cell_id, time);
+        ++next_cell_id;
 
         if (!duplicate_internal_cells) {
             disable_duplication_on_neighborhood_internals(tissue, new_cell_position);
@@ -975,7 +981,9 @@ void Simulation::reset()
     added_cells.clear();
 
     statistics = TissueStatistics();
-    time = 0; 
+    time = 0;
+
+    next_cell_id = 0;
     
     death_enabled.clear();
 
@@ -999,7 +1007,9 @@ Simulation& Simulation::add_mutant(const MutantProperties& mutant)
 
 Simulation& Simulation::place_cell(const SpeciesId& species_id, const PositionInTissue& position)
 {
-    tissue().place_cell(species_id, position);
+    tissue().place_cell(next_cell_id, species_id, position);
+
+    ++next_cell_id;
 
     added_cells.emplace_back(species_id, position, time);
 
@@ -1023,8 +1033,6 @@ Simulation& Simulation::set_tissue(const std::string& name, const std::vector<Ax
     if (tissues.size()>0) {
         reset();
     }
-
-    Cell::counter = 0;
 
     tissues.push_back(Tissue(name, sizes));
 

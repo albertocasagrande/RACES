@@ -2,10 +2,10 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.37
- * @date 2024-03-04
+ * @version 0.38
+ * @date 2024-03-12
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -136,11 +136,13 @@ class Tissue {
     /**
      * @brief Place a cell in the tissue
      * 
+     * @param id is the cell identifier
      * @param species_id is the species identifier of the new cell
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    Tissue& place_cell(const SpeciesId& species_id, const PositionInTissue position);
+    Tissue& place_cell(const CellId& id, const SpeciesId& species_id,
+                       const PositionInTissue position);
 public:
 
     /**

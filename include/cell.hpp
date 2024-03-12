@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 0.25
- * @date 2024-03-10
+ * @version 0.26
+ * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -61,7 +61,6 @@ using CellId = uint64_t;
  */
 class Cell {
 protected:
-    static uint64_t counter;             //!< Total number of cell along the computation
     CellId id;                           //!< Cell identifier
     CellId parent;                       //!< Parent cell identifier
 
@@ -69,35 +68,50 @@ protected:
 
     SpeciesId species_id;  //!< cell species reference
 
+    /**
+     * @brief Create a new cell with no mutations
+     * 
+     * @param id is the cell identifier
+     * @param species_id is the species identifier
+     */
+    Cell(const CellId& id, const SpeciesId species_id);
+
+    /**
+     * @brief Create a new cell
+     * 
+     * @param id is the cell identifier
+     * @param species_id is the species identifier
+     * @param parent_id is the parent cell identifier
+     */
+    Cell(const CellId& id, const SpeciesId species_id, const CellId parent_id);
+
+    /**
+     * @brief Create a new cell
+     * 
+     * @param id is the cell identifier
+     * @param species_id is the species identifier
+     * @param parent_id is the parent cell identifier
+     * @param birth_time is the cell birth time
+     */
+    Cell(const CellId& id, const SpeciesId species_id, const CellId parent_id, const Time birth_time);
+
+    /**
+     * @brief Generate a descendent cell
+     * 
+     * @param id is the descendent identifier
+     * @param time is the descendent birth time
+     * @return the generated cell
+     */
+    inline Cell generate_descendent(const CellId& id, const Time& time) const
+    {        
+        return Cell(id, get_species_id(), get_id(), time);
+    }
+
 public:
     /**
      * @brief The empty constructor
      */
     explicit Cell();
-
-    /**
-     * @brief Create a new cell with no mutations
-     * 
-     * @param species_id is the species identifier
-     */
-    explicit Cell(const SpeciesId species_id);
-
-    /**
-     * @brief Create a new cell
-     * 
-     * @param species_id is the species identifier
-     * @param parent_id is the parent cell identifier
-     */
-    Cell(const SpeciesId species_id, const CellId parent_id);
-
-    /**
-     * @brief Create a new cell
-     * 
-     * @param species_id is the species identifier
-     * @param parent_id is the parent cell identifier
-     * @param birth_time is the cell birth time
-     */
-    Cell(const SpeciesId species_id, const CellId parent_id, const Time birth_time);
 
     /**
      * @brief Get the cell identifier
@@ -137,16 +151,6 @@ public:
     inline const SpeciesId& get_species_id() const
     {
         return species_id;
-    }
-
-    /**
-     * @brief Generate a descendent cell
-     * 
-     * @return the generated cell
-     */
-    inline Cell generate_descendent(const Time& time) const
-    {
-        return Cell(get_species_id(), get_id(), time);
     }
 
     /**
@@ -299,10 +303,12 @@ protected:
     /**
      * @brief A cell in tissue constructor
      * 
+     * @param id is the cell identifier
      * @param species_id is the cell species id
      * @param position is the cell position
      */
-    CellInTissue(const SpeciesId& species_id, const PositionInTissue& position);
+    CellInTissue(const CellId& id, const SpeciesId& species_id,
+                 const PositionInTissue& position);
 
     /**
      * @brief A cell in tissue constructor

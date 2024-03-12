@@ -2,8 +2,8 @@
  * @file cell.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell representation
- * @version 0.18
- * @date 2024-02-08
+ * @version 0.19
+ * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -39,30 +39,21 @@ namespace Races
 namespace Mutants
 {
 
-uint64_t Cell::counter = 0;
-
 Cell::Cell():
-    id(0), parent(0), birth_time(0), species_id(WILD_TYPE_SPECIES)
-{
-}
+    Cell(0, WILD_TYPE_SPECIES, 0, 0)
+{}
 
-Cell::Cell(const SpeciesId species_id):
-    id(Cell::counter), parent(Cell::counter), birth_time(0), species_id(species_id)
-{
-    ++Cell::counter;
-}
+Cell::Cell(const CellId& id, const SpeciesId species_id):
+    Cell(id, species_id, id, 0)
+{}
 
-Cell::Cell(const SpeciesId species_id, const CellId parent_id):
-    Cell(species_id,parent_id,Cell::counter)
-{
-    ++Cell::counter;
-}
+Cell::Cell(const CellId& id, const SpeciesId species_id, const CellId parent_id):
+    Cell(id, species_id, parent_id, 0)
+{}
 
-Cell::Cell(const SpeciesId species_id, const CellId parent_id, const Time birth_time):
-    id(Cell::counter), parent(parent_id), birth_time(birth_time), species_id(species_id)
-{
-    ++Cell::counter;
-}
+Cell::Cell(const CellId& id, const SpeciesId species_id, const CellId parent_id, const Time birth_time):
+    id(id), parent(parent_id), birth_time(birth_time), species_id(species_id)
+{}
 
 void swap(Cell& a, Cell &b)
 {
@@ -80,8 +71,8 @@ CellInTissue::CellInTissue():
     Cell(), PositionInTissue()
 {}
 
-CellInTissue::CellInTissue(const SpeciesId& species_id, const PositionInTissue& position):
-    Cell(species_id), PositionInTissue(position)
+CellInTissue::CellInTissue(const CellId& id, const SpeciesId& species_id, const PositionInTissue& position):
+    Cell(id, species_id), PositionInTissue(position)
 {
 }
 

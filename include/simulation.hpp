@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.45
- * @date 2024-01-15
+ * @version 0.46
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-24
  *
@@ -165,6 +165,8 @@ protected:
     using SampleConstIt = std::list<TissueSample>::const_iterator;
 
     std::map<std::string, SampleConstIt> name2sample; //!< A map associating each sample name to the sample
+
+    CellId next_cell_id;    //!< The next cell id
 
     /**
      * @brief Simulate a cell duplication
@@ -1060,7 +1062,7 @@ public:
                 & duplicate_internal_cells
                 & storage_enabled
                 & samples
-                & Cell::counter;
+                & next_cell_id;
     }
 
     /**
@@ -1088,7 +1090,7 @@ public:
                 & simulation.duplicate_internal_cells
                 & simulation.storage_enabled
                 & simulation.samples
-                & Cell::counter;
+                & simulation.next_cell_id;
 
         for (auto sample_it=simulation.samples.begin();
                 sample_it != simulation.samples.end(); ++sample_it) {

@@ -2,10 +2,10 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.32
- * @date 2023-12-11
+ * @version 0.33
+ * @date 2024-03-12
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -294,7 +294,8 @@ Species& Tissue::get_species(const std::string& species_name)
     return species[pos_it->second];
 }
 
-Tissue& Tissue::place_cell(const SpeciesId& species_id, const PositionInTissue position)
+Tissue& Tissue::place_cell(const CellId& id, const SpeciesId& species_id,
+                           const PositionInTissue position)
 {
     if (!is_valid(position)) {
         throw std::runtime_error("The position is not in the tissue");
@@ -308,7 +309,7 @@ Tissue& Tissue::place_cell(const SpeciesId& species_id, const PositionInTissue p
 
     Species& species = get_species(species_id);
 
-    cell_ptr = species.add(CellInTissue(species_id, position));
+    cell_ptr = species.add(CellInTissue(id, species_id, position));
 
     return *this;
 }
