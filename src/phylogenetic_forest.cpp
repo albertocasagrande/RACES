@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.8
- * @date 2024-02-20
+ * @version 0.9
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -59,7 +59,7 @@ void PhylogeneticForest::node::add_new_mutation(const SNV& snv)
     get_forest().SNV_first_cells[snv].insert(cell_id);
 }
 
-void PhylogeneticForest::node::add_new_mutation(const CopyNumberAlteration& cna)
+void PhylogeneticForest::node::add_new_mutation(const CNA& cna)
 {
     get_forest().novel_mutations[cell_id].CNAs.insert(cna);
     get_forest().CNA_first_cells[cna].insert(cell_id);

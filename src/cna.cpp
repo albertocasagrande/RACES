@@ -2,8 +2,8 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.8
- * @date 2024-01-20
+ * @version 0.9
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,11 +36,11 @@ namespace Races
 namespace Mutations
 {
 
-CopyNumberAlteration::CopyNumberAlteration()
+CNA::CNA()
 {}
 
-CopyNumberAlteration::CopyNumberAlteration(const GenomicRegion& region, const CopyNumberAlteration::Type& type, 
-                                           const AlleleId& source, const AlleleId& destination):
+CNA::CNA(const GenomicRegion& region, const CNA::Type& type, 
+         const AlleleId& source, const AlleleId& destination):
     region(region), source(source), dest(destination), type(type)
 {}
 
@@ -52,8 +52,8 @@ CopyNumberAlteration::CopyNumberAlteration(const GenomicRegion& region, const Co
 namespace std
 {
 
-bool less<Races::Mutations::CopyNumberAlteration>::operator()(const Races::Mutations::CopyNumberAlteration &lhs,
-                                                              const Races::Mutations::CopyNumberAlteration &rhs) const
+bool less<Races::Mutations::CNA>::operator()(const Races::Mutations::CNA &lhs,
+                                             const Races::Mutations::CNA &rhs) const
 {
     using namespace Races::Mutations;
 
@@ -93,7 +93,7 @@ bool less<Races::Mutations::CopyNumberAlteration>::operator()(const Races::Mutat
     }
 
     // differences in type
-    if ((lhs.type == CopyNumberAlteration::Type::AMPLIFICATION)
+    if ((lhs.type == CNA::Type::AMPLIFICATION)
             && (lhs.type != rhs.type)) {
         return true;
     }
@@ -101,12 +101,12 @@ bool less<Races::Mutations::CopyNumberAlteration>::operator()(const Races::Mutat
     return false;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAlteration& cna)
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna)
 {
     out << "CNA(";
     using namespace Races::Mutations;
     switch(cna.type) {
-        case CopyNumberAlteration::Type::AMPLIFICATION:
+        case CNA::Type::AMPLIFICATION:
             out << "\"A\"," << cna.region; 
             if (cna.source != RANDOM_ALLELE) {
                 out << ", src: "<< Allele::format_id(cna.source);
@@ -115,7 +115,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAl
                 out << ", dst: "<< Allele::format_id(cna.dest);
             }
             break;
-        case CopyNumberAlteration::Type::DELETION:
+        case CNA::Type::DELETION:
             out << "\"D\"," << cna.region;
             if (cna.dest != RANDOM_ALLELE) {
                 out << ", dst: "<< Allele::format_id(cna.dest);

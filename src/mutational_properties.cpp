@@ -2,10 +2,10 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.15
- * @date 2023-12-22
+ * @version 0.16
+ * @date 2024-03-12
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -49,7 +49,7 @@ DriverMutations::DriverMutations()
 
 DriverMutations::DriverMutations(const std::string& mutant_name,
                                  const std::list<SNV>& SNVs,
-                                 const std::list<CopyNumberAlteration>& CNAs):
+                                 const std::list<CNA>& CNAs):
     name(mutant_name), SNVs(SNVs.begin(), SNVs.end()), CNAs(CNAs.begin(), CNAs.end())
 {}
 
@@ -60,7 +60,7 @@ MutationalProperties&
 MutationalProperties::add_mutant(const std::string& mutant_name,
                                  const std::map<std::string, PassengerRates>& epistate_passenger_rates,
                                  const std::list<SNV>& driver_SNVs,
-                                 const std::list<CopyNumberAlteration>& driver_CNAs)
+                                 const std::list<CNA>& driver_CNAs)
 {
     if (driver_mutations.count(mutant_name)>0) {
         throw std::domain_error("The mutational properties of mutant \""+mutant_name+

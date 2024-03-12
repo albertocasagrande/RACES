@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.25
- * @date 2024-02-24
+ * @version 0.26
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -85,7 +85,7 @@ ConfigReader::get_epistate_passenger_rates(const nlohmann::json& epistate_rates_
     };
 }
 
-Races::Mutations::CopyNumberAlteration::Type
+Races::Mutations::CNA::Type
 ConfigReader::get_CNA_type(const nlohmann::json& CNA_json)
 {
     auto subtype_str = get_from<std::string>("subtype", CNA_json, "All the CNAs");
@@ -94,11 +94,11 @@ ConfigReader::get_CNA_type(const nlohmann::json& CNA_json)
     }
 
     if (subtype_str == "amplification") {
-        return Races::Mutations::CopyNumberAlteration::Type::AMPLIFICATION;
+        return Races::Mutations::CNA::Type::AMPLIFICATION;
     }
 
     if (subtype_str == "deletion") {
-        return Races::Mutations::CopyNumberAlteration::Type::DELETION;
+        return Races::Mutations::CNA::Type::DELETION;
     }
 
     throw std::runtime_error("Unknown CNA \""+
@@ -106,7 +106,7 @@ ConfigReader::get_CNA_type(const nlohmann::json& CNA_json)
 }
 
 void
-ConfigReader::add_CNA(std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+ConfigReader::add_CNA(std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& CNA_json)
 {
     using namespace Races::Mutations;
@@ -119,12 +119,12 @@ ConfigReader::add_CNA(std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
     GenomicPosition genomic_position(GenomicPosition::stochr(chr_str), position);
 
     switch (get_CNA_type(CNA_json)) {
-        case CopyNumberAlteration::Type::AMPLIFICATION:
-            CNAs.push_back(CopyNumberAlteration::new_amplification({genomic_position, length},
+        case CNA::Type::AMPLIFICATION:
+            CNAs.push_back(CNA::new_amplification({genomic_position, length},
                                                                    allele, 0));
             break;
-        case CopyNumberAlteration::Type::DELETION:
-            CNAs.push_back(CopyNumberAlteration::new_deletion({genomic_position, length}, allele));
+        case CNA::Type::DELETION:
+            CNAs.push_back(CNA::new_deletion({genomic_position, length}, allele));
             break;
         default:
             throw std::runtime_error("Unsupported CNA type");
@@ -171,7 +171,7 @@ ConfigReader::get_passenger_rates(const nlohmann::json& passenger_rates_json)
 void
 ConfigReader::schedule_mutation(const std::string& mutant_name,
                                 std::list<Races::Mutations::SNV>& SNVs,
-                                std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+                                std::list<Races::Mutations::CNA>& CNAs,
                                 const nlohmann::json& mutation_json)
 {
     if (!mutation_json.is_object()) {
@@ -227,7 +227,7 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
 
     using namespace Races::Mutations;
     std::list<SNV> SNVs;
-    std::list<CopyNumberAlteration> CNAs;
+    std::list<CNA> CNAs;
     if (mutational_properties_json.contains("driver mutations")) {
         collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["driver mutations"]);
     }
@@ -299,7 +299,7 @@ ConfigReader::get_sample_region(const nlohmann::json& sample_region_json,
 void
 ConfigReader::collect_mutations(const std::string& mutant_name,
                                 std::list<Races::Mutations::SNV>& SNVs,
-                                std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+                                std::list<Races::Mutations::CNA>& CNAs,
                                 const nlohmann::json& mutations_json)
 {
     if (!mutations_json.is_array()) {

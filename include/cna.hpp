@@ -2,8 +2,8 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.8
- * @date 2024-01-19
+ * @version 0.9
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -43,7 +43,7 @@ namespace Mutations
 /**
  * @brief Copy Number Alteration type
  */
-struct CopyNumberAlteration
+struct CNA
 {
     /**
      * @brief The CNA type
@@ -61,7 +61,7 @@ struct CopyNumberAlteration
     /**
      * @brief The empty constructor
      */
-    CopyNumberAlteration();
+    CNA();
 
     /**
      * @brief A constructor
@@ -71,9 +71,9 @@ struct CopyNumberAlteration
      * @param destination is the allele in which the region is copied/removed
      * @param type is the CNA type
      */
-    CopyNumberAlteration(const GenomicRegion& region, const Type& type, 
-                         const AlleleId& source=RANDOM_ALLELE,
-                         const AlleleId& destination=RANDOM_ALLELE);
+    CNA(const GenomicRegion& region, const Type& type, 
+        const AlleleId& source=RANDOM_ALLELE,
+        const AlleleId& destination=RANDOM_ALLELE);
 
     /**
      * @brief Build a new amplification
@@ -82,11 +82,11 @@ struct CopyNumberAlteration
      * @param source is the allele from which the region is copied
      * @param destination is the allele in which the region is copied
      */
-    static inline CopyNumberAlteration new_amplification(const GenomicRegion& region,
-                                                          const AlleleId& source=RANDOM_ALLELE,
-                                                          const AlleleId& destination=RANDOM_ALLELE)
+    static inline CNA new_amplification(const GenomicRegion& region,
+                                        const AlleleId& source=RANDOM_ALLELE,
+                                        const AlleleId& destination=RANDOM_ALLELE)
     {
-        return CopyNumberAlteration(region, Type::AMPLIFICATION, source, destination);
+        return CNA(region, Type::AMPLIFICATION, source, destination);
     }
 
     /**
@@ -95,10 +95,10 @@ struct CopyNumberAlteration
      * @param region is the region in which CNA occurred
      * @param allele is the allele from which the region is removed
      */
-    static inline CopyNumberAlteration new_deletion(const GenomicRegion& region,
-                                                    const AlleleId& allele=RANDOM_ALLELE)
+    static inline CNA new_deletion(const GenomicRegion& region,
+                                   const AlleleId& allele=RANDOM_ALLELE)
     {
-        return CopyNumberAlteration(region, Type::DELETION, allele, allele);
+        return CNA(region, Type::DELETION, allele, allele);
     }
 
     /**
@@ -121,7 +121,7 @@ struct CopyNumberAlteration
             case Type::DELETION:
                 return;
             default:
-                throw std::runtime_error("CopyNumberAlteration::save: Unsupported CopyNumberAlteration::type "+
+                throw std::runtime_error("CNA::save: Unsupported CNA::type "+
                                          std::to_string(static_cast<int>(type)));
         }
     }
@@ -134,16 +134,16 @@ struct CopyNumberAlteration
      * @return the load CNA
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    inline static CopyNumberAlteration load(ARCHIVE& archive)
+    inline static CNA load(ARCHIVE& archive)
     {
         int type;
-        CopyNumberAlteration cna;
+        CNA cna;
 
         archive & type
                 & cna.region
                 & cna.dest;
 
-        cna.type = static_cast<CopyNumberAlteration::Type>(type);
+        cna.type = static_cast<CNA::Type>(type);
 
         switch (cna.type) {
             case Type::AMPLIFICATION:
@@ -153,7 +153,7 @@ struct CopyNumberAlteration
                 cna.source = cna.dest;
                 break;
             default:
-                throw std::runtime_error("CopyNumberAlteration::save: Unsupported CopyNumberAlteration::type "+
+                throw std::runtime_error("CNA::save: Unsupported CNA::type "+
                                          std::to_string(type));
         }
 
@@ -169,10 +169,10 @@ namespace std
 {
 
 template<>
-struct less<Races::Mutations::CopyNumberAlteration>
+struct less<Races::Mutations::CNA>
 {
-    bool operator()(const Races::Mutations::CopyNumberAlteration &lhs,
-                    const Races::Mutations::CopyNumberAlteration &rhs) const;
+    bool operator()(const Races::Mutations::CNA &lhs,
+                    const Races::Mutations::CNA &rhs) const;
 };
 
 /**
@@ -182,7 +182,7 @@ struct less<Races::Mutations::CopyNumberAlteration>
  * @param cna is the CNA to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::CopyNumberAlteration& cna);
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna);
 
 };
 

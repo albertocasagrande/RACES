@@ -2,10 +2,10 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.16
- * @date 2023-12-22
+ * @version 0.17
+ * @date 2024-03-12
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -55,7 +55,7 @@ struct DriverMutations
 {
     std::string name;                      //!< The mutant name
     std::set<SNV> SNVs;                    //!< The mutant SNVs
-    std::set<CopyNumberAlteration> CNAs;   //!< The mutant CNAs
+    std::set<CNA> CNAs;   //!< The mutant CNAs
 
     /**
      * @brief The empty constructor
@@ -71,7 +71,7 @@ struct DriverMutations
      */
     DriverMutations(const std::string& mutant_name,
                     const std::list<SNV>& SNVs,
-                    const std::list<CopyNumberAlteration>& CNAs);
+                    const std::list<CNA>& CNAs);
 };
 
 /**
@@ -125,7 +125,7 @@ public:
     MutationalProperties& add_mutant(const std::string& mutant_name,
                                      const std::map<std::string, PassengerRates>& epistate_passenger_rates,
                                      const std::list<SNV>& driver_SNVs={},
-                                     const std::list<CopyNumberAlteration>& driver_CNAs={});
+                                     const std::list<CNA>& driver_CNAs={});
 
     /**
      * @brief Get the species passeger rates

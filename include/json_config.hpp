@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.18
- * @date 2024-02-08
+ * @version 0.19
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023
  *
@@ -71,8 +71,7 @@ class ConfigReader
      * @param CNA_json is the JSON of the CNA
      * @return the type of the CNA
      */
-    static Races::Mutations::CopyNumberAlteration::Type
-    get_CNA_type(const nlohmann::json& CNA_json);
+    static Races::Mutations::CNA::Type get_CNA_type(const nlohmann::json& CNA_json);
 
     /**
      * @brief Add a CNA to a list
@@ -80,9 +79,8 @@ class ConfigReader
      * @param CNAs is the list of CNA in which the read CNA should be inserted
      * @param CNA_json is the JSON of the CNA to be inserted into the list
      */
-    static void
-    add_CNA(std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
-            const nlohmann::json& CNA_json);
+    static void add_CNA(std::list<Races::Mutations::CNA>& CNAs,
+                        const nlohmann::json& CNA_json);
 
     /**
      * @brief Add a SNV to a list
@@ -115,7 +113,7 @@ class ConfigReader
     static void
     schedule_mutation(const std::string& mutant_name,
                       std::list<Races::Mutations::SNV>& SNVs,
-                      std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+                      std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutation_json);
 
     /**
@@ -227,7 +225,7 @@ public:
     static void
     collect_mutations(const std::string& mutant_name,
                       std::list<Races::Mutations::SNV>& SNVs,
-                      std::list<Races::Mutations::CopyNumberAlteration>& CNAs,
+                      std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutations_json);
 
     /**

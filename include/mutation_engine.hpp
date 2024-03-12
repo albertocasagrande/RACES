@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.51
- * @date 2024-03-06
+ * @version 0.52
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -78,7 +78,7 @@ class MutationStatistics
         size_t num_of_cells;          //!< Number of recorded cells
 
         std::map<SNV, SNVStatistics> SNVs;      //!< SNVs
-        std::list<CopyNumberAlteration> CNAs;   //!< CNAs
+        std::list<CNA> CNAs;   //!< CNAs
 
         /**
          * @brief The empty constructor
@@ -204,7 +204,7 @@ class MutationEngine
 
     DriverStorage driver_storage;  //!< the driver storage
 
-    std::vector<CopyNumberAlteration> passenger_CNAs;   //!< the admissible passenger CNAs
+    std::vector<CNA> passenger_CNAs;   //!< the admissible passenger CNAs
 
     /**
      * @brief Select a random value in a set
@@ -363,15 +363,15 @@ class MutationEngine
 
             bool to_be_placed = true;
             while (to_be_placed) {
-                CopyNumberAlteration CNA = passenger_CNAs[index];
+                CNA cna = passenger_CNAs[index];
 
-                if (place_passenger_CNA(CNA, cell_mutations)) {
+                if (place_passenger_CNA(cna, cell_mutations)) {
                     // if the CNA has been successfully applied,
                     // then increase the number of new CNAs
                     ++new_CNAs;
 
                     if (node != nullptr) {
-                        node->add_new_mutation(CNA);
+                        node->add_new_mutation(cna);
                     }
 
                     to_be_placed = false;
@@ -623,35 +623,34 @@ class MutationEngine
     /**
      * @brief Seach for an allele in which the CNA can be applied
      * 
-     * @param[in,out] CNA is the CNA which should be applied
+     * @param[in,out] cna is the CNA which should be applied
      * @param[in] chr_mutations is the chromosome in which the allele is searched
      * @param[in] no_driver_mutations is a Boolean flag to establish whether 
      *          alleles containing driver mutations in the region are discharged
      * @return `true` if and only if one of the alleles of `chr_mutations` 
-     *          admits the application of `CNA`.
+     *          admits the application of `cna`.
      *          When `no_driver_mutations` is set to `true`, the search
      *          must avoid alleles containing driver mutations in `region`.
-     *          If `CNA` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `CNA` is a deletion and the destination is `RANDOM_ALLELE`, 
+     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
+     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
      *          then, when `true` is returned the source or the destination of 
-     *          `CNA`, respectively, are updated to the identifier of the found 
+     *          `cna`, respectively, are updated to the identifier of the found 
      *          allele.
      */
-    bool find_allele_for(CopyNumberAlteration& CNA,
-                         ChromosomeMutations& chr_mutations,
+    bool find_allele_for(CNA& cna, ChromosomeMutations& chr_mutations,
                          const bool& no_driver_mutations)
     {
-        switch(CNA.type) {
-            case CopyNumberAlteration::Type::AMPLIFICATION:
-                if (CNA.source == RANDOM_ALLELE) {
-                    return select_allele_containing(CNA.source, chr_mutations, 
-                                                    CNA.region, no_driver_mutations);
+        switch(cna.type) {
+            case CNA::Type::AMPLIFICATION:
+                if (cna.source == RANDOM_ALLELE) {
+                    return select_allele_containing(cna.source, chr_mutations, 
+                                                    cna.region, no_driver_mutations);
                 }
                 return true;
-            case CopyNumberAlteration::Type::DELETION:
-                if (CNA.dest == RANDOM_ALLELE) {
-                    return select_allele_containing(CNA.dest, chr_mutations,
-                                                    CNA.region, no_driver_mutations);
+            case CNA::Type::DELETION:
+                if (cna.dest == RANDOM_ALLELE) {
+                    return select_allele_containing(cna.dest, chr_mutations,
+                                                    cna.region, no_driver_mutations);
                 }
                 return true;
             default:
@@ -662,7 +661,7 @@ class MutationEngine
     /**
      * @brief Try to place a CNA
      *
-     * @param[in,out] CNA is the CNA to place
+     * @param[in,out] cna is the CNA to place
      * @param[in,out] chr_mutations are the chromosome mutations
      * @param[in] no_driver_mutations is a Boolean flag to establish whether 
      *          alleles containing driver mutations in the region are discharged
@@ -671,24 +670,24 @@ class MutationEngine
      *          are available for it.
      *          When `no_driver_mutations` is set to `true`, the search
      *          must avoid alleles containing driver mutations in `region`.
-     *          If `CNA` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `CNA` is a deletion and the destination is `RANDOM_ALLELE`, 
+     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
+     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
      *          then, when `true` is returned the source or the destination of 
-     *          `CNA`, respectively, are updated to the identifier of the found 
+     *          `cna`, respectively, are updated to the identifier of the found 
      *          allele.
      */
-    bool place_CNA(CopyNumberAlteration& CNA, ChromosomeMutations& chr_mutations,
+    bool place_CNA(CNA& cna, ChromosomeMutations& chr_mutations,
                    const bool& no_driver_mutations)
     {
-        if (!find_allele_for(CNA, chr_mutations, no_driver_mutations)) {
+        if (!find_allele_for(cna, chr_mutations, no_driver_mutations)) {
             return false;
         }
 
-        switch(CNA.type) {
-            case CopyNumberAlteration::Type::AMPLIFICATION:
-                return chr_mutations.amplify_region(CNA.region, CNA.source, CNA.dest);
-            case CopyNumberAlteration::Type::DELETION:
-                return chr_mutations.remove_region(CNA.region, CNA.dest);
+        switch(cna.type) {
+            case CNA::Type::AMPLIFICATION:
+                return chr_mutations.amplify_region(cna.region, cna.source, cna.dest);
+            case CNA::Type::DELETION:
+                return chr_mutations.remove_region(cna.region, cna.dest);
             default:
                 throw std::runtime_error("Unsupported CNA type");
         }
@@ -697,46 +696,46 @@ class MutationEngine
     /**
      * @brief Try to place a driver CNA
      *
-     * @param[in,out] CNA is the CNA to place
+     * @param[in,out] cna is the CNA to place
      * @param cell_mutations are the cell mutations
      * @return `true` if and only if the CNA placement has succeed. This
      *          method returns `false` when the CNA cannot be placed
      *          because no allele are available for it.
      *          When `no_driver_mutations` is set to `true`, the search
      *          must avoid alleles containing driver mutations in `region`.
-     *          If `CNA` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `CNA` is a deletion and the destination is `RANDOM_ALLELE`, 
+     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
+     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
      *          then, when `true` is returned the source or the destination of 
-     *          `CNA`, respectively, are updated to the identifier of the found 
+     *          `cna`, respectively, are updated to the identifier of the found 
      *          allele.
      */
-    bool place_driver_CNA(CopyNumberAlteration& CNA, GenomeMutations& cell_mutations)
+    bool place_driver_CNA(CNA& cna, GenomeMutations& cell_mutations)
     {
-        auto& chr_mutations = cell_mutations.get_chromosome(CNA.region.get_chromosome_id());
+        auto& chr_mutations = cell_mutations.get_chromosome(cna.region.get_chromosome_id());
 
-        return place_CNA(CNA, chr_mutations, false);
+        return place_CNA(cna, chr_mutations, false);
     }
 
     /**
      * @brief Try to place a passenger CNA
      *
-     * @param[in,out] CNA is the CNA to place
+     * @param[in,out] cna is the CNA to place
      * @param cell_mutations are the cell mutations
      * @return `true` if and only if the CNA placement has succeed. This
      *          method returns `false` when the CNA cannot be placed
      *          because either no allele are available for it or the source
      *          allele contains some driver mutations.
-     *          If `CNA` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `CNA` is a deletion and the destination is `RANDOM_ALLELE`, 
+     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
+     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
      *          then, when `true` is returned the source or the destination of 
-     *          `CNA`, respectively, are updated to the identifier of the found 
+     *          `cna`, respectively, are updated to the identifier of the found 
      *          allele.
      */
-    bool place_passenger_CNA(CopyNumberAlteration& CNA, GenomeMutations& cell_mutations)
+    bool place_passenger_CNA(CNA& cna, GenomeMutations& cell_mutations)
     {
-        auto& chr_mutations = cell_mutations.get_chromosome(CNA.region.get_chromosome_id());
+        auto& chr_mutations = cell_mutations.get_chromosome(cna.region.get_chromosome_id());
 
-        return place_CNA(CNA, chr_mutations, true);
+        return place_CNA(cna, chr_mutations, true);
     }
 
     /**
@@ -763,9 +762,9 @@ class MutationEngine
                 }
             }
 
-            for (auto CNA : mutant_mp.CNAs) {
-                if (place_driver_CNA(CNA, cell_mutations)) {
-                    node.add_new_mutation(CNA);
+            for (auto cna : mutant_mp.CNAs) {
+                if (place_driver_CNA(cna, cell_mutations)) {
+                    node.add_new_mutation(cna);
                 }
             }
         }
@@ -928,17 +927,17 @@ class MutationEngine
      * @return the vector of CNAs that are contained in `CNAs` and lay in one of 
      *          the chromosomes mentioned in the context index.
      */
-    std::vector<CopyNumberAlteration> 
-    filter_CNA_by_chromosome_ids(const std::vector<CopyNumberAlteration>& CNAs) const
+    std::vector<CNA> 
+    filter_CNA_by_chromosome_ids(const std::vector<CNA>& CNAs) const
     {
         auto chr_ids = context_index.get_chromosome_ids();
 
         std::set<ChromosomeId> chr_id_set(chr_ids.begin(),chr_ids.end());
 
-        std::vector<CopyNumberAlteration> filtered;
-        for (const auto& CNA : CNAs) {
-            if (chr_id_set.count(CNA.region.get_chromosome_id())>0) {
-                filtered.push_back(CNA);
+        std::vector<CNA> filtered;
+        for (const auto& cna : CNAs) {
+            if (chr_id_set.count(cna.region.get_chromosome_id())>0) {
+                filtered.push_back(cna);
             }
         }
 
@@ -967,7 +966,7 @@ public:
                    const std::map<std::string, MutationalSignature>& mutational_signatures,
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
-                   const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
+                   const std::vector<CNA>& passenger_CNAs={}):
         MutationEngine(context_index, mutational_signatures, MutationalProperties(),
                        germline_mutations, driver_storage, passenger_CNAs)
     {}
@@ -987,7 +986,7 @@ public:
                    const MutationalProperties& mutational_properties,
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
-                   const std::vector<CopyNumberAlteration>& passenger_CNAs={}):
+                   const std::vector<CNA>& passenger_CNAs={}):
         generator(), context_index(context_index), mutational_properties(mutational_properties), 
         germline_mutations(germline_mutations), driver_storage(driver_storage),
         infinite_sites_model(true)
@@ -1016,7 +1015,7 @@ public:
     MutationEngine& add_mutant(const std::string& name,
                                const std::map<std::string, PassengerRates>& epistate_passenger_rates,
                                const std::list<SNV>& driver_SNVs={},
-                               const std::list<CopyNumberAlteration>& driver_CNAs={})
+                               const std::list<CNA>& driver_CNAs={})
     {
         mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SNVs,
                                          driver_CNAs);

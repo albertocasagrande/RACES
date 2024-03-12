@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.10
- * @date 2024-03-01
+ * @version 0.11
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -59,7 +59,7 @@ public:
     struct NovelMutations
     {
         std::set<SNV> SNVs;                     //!< The newly introduced SNVs
-        std::set<CopyNumberAlteration> CNAs;    //!< The newly introduced CNAs
+        std::set<CNA> CNAs;    //!< The newly introduced CNAs
 
         /**
          * @brief Save novel mutations in an archive
@@ -100,7 +100,7 @@ private:
     std::map<Mutants::CellId, CellMutationsPtr> leaves_mutations;   //!< The mutations of each cells represented as leaves in the forest
     std::map<Mutants::CellId, NovelMutations> novel_mutations;      //!< The mutations introduces by each cell in the forest
     std::map<SNV, CellIdSet> SNV_first_cells;                       //!< A map associating each SNV to the first cells in which it occured
-    std::map<CopyNumberAlteration, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occured
+    std::map<CNA, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occured
 
     GenomeMutations germline_mutations; //!< The germline mutations
 
@@ -204,7 +204,7 @@ public:
          * @param cna is a CNA that was introduced in the corresponding
          *      cell and was not present in the cell parent
          */
-        void add_new_mutation(const CopyNumberAlteration& cna);
+        void add_new_mutation(const CNA& cna);
 
         /**
          * @brief Get the genome mutations of the cell represented by the node
@@ -307,8 +307,7 @@ public:
      * @return a constant reference to a map associating each CNA in the phylogenetic
      *         forest to the identifier of the first cell in which the CNA occured
      */
-    inline const std::map<CopyNumberAlteration, std::set<Mutants::CellId>>&
-    get_CNA_first_cells() const
+    inline const std::map<CNA, std::set<Mutants::CellId>>& get_CNA_first_cells() const
     {
         return CNA_first_cells;
     }

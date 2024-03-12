@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.18
- * @date 2024-03-11
+ * @version 0.19
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -615,11 +615,11 @@ class MutationsSimulator : public BasicExecutable
     }
 
 public:
-    static std::vector<Races::Mutations::CopyNumberAlteration> load_passenger_CNAs(const std::filesystem::path& CNAs_csv)
+    static std::vector<Races::Mutations::CNA> load_passenger_CNAs(const std::filesystem::path& CNAs_csv)
     {
         using namespace Races::Mutations;
 
-        std::vector<CopyNumberAlteration> CNAs;
+        std::vector<CNA> CNAs;
 
         Races::IO::CSVReader csv_reader(CNAs_csv);
 
@@ -630,7 +630,7 @@ public:
             const auto major = row.get_field(3);
             try {
                 if (major=="NA" || (stoi(major)>1)) {
-                    CNAs.push_back({region, CopyNumberAlteration::Type::AMPLIFICATION});
+                    CNAs.push_back({region, CNA::Type::AMPLIFICATION});
                 }
             } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown major specification " + major 
@@ -641,7 +641,7 @@ public:
             const auto minor = row.get_field(4);
             try {
                 if (minor=="NA" || (stoi(minor)<1)) {
-                    CNAs.push_back({region, CopyNumberAlteration::Type::DELETION});
+                    CNAs.push_back({region, CNA::Type::DELETION});
                 }
             } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown minor specification " + major 

@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.26
- * @date 2024-03-06
+ * @version 0.27
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -70,9 +70,9 @@ private:
 
     std::map<AlleleId, Allele> alleles;  //!< the chromosome alleles
 
-    std::list<CopyNumberAlteration> CNAs;   //!< the occurred CNAs
+    std::list<CNA> CNAs;        //!< the occurred CNAs
 
-    AlleleId next_allele_id;   //!< the identifier of the next allele
+    AlleleId next_allele_id;    //!< the identifier of the next allele
 
 public:
     /**
@@ -152,7 +152,7 @@ public:
      *
      * @return the list of the CNAs occurred in the chromosome
      */
-    inline const std::list<CopyNumberAlteration>& get_CNAs() const
+    inline const std::list<CNA>& get_CNAs() const
     {
         return CNAs;
     }
