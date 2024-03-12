@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.25
- * @date 2024-03-11
+ * @version 0.26
+ * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -191,7 +191,7 @@ SNVData::SNVData(const SNV& snv, const BaseCoverage num_of_occurrences):
     num_of_occurrences(num_of_occurrences)
 {
     causes.insert(snv.cause);
-    types.insert(snv.type);
+    nature_set.insert(snv.nature);
 }
 
 void SNVData::account_for(const SNV& snv)
@@ -199,7 +199,7 @@ void SNVData::account_for(const SNV& snv)
     ++num_of_occurrences;
 
     causes.insert(snv.cause);
-    types.insert(snv.type);
+    nature_set.insert(snv.nature);
 }
 
 template<typename T>
@@ -217,7 +217,7 @@ void SNVData::update(const SNVData& snv_data)
     num_of_occurrences += snv_data.num_of_occurrences;
 
     update_set(causes, snv_data.causes);
-    update_set(types, snv_data.types);
+    update_set(nature_set, snv_data.nature_set);
 }
 
 ChrSampleStatistics::ChrSampleStatistics():
@@ -713,12 +713,12 @@ std::ostream& print_join(std::ostream& os, const std::set<std::string>& S, const
     return os;
 }
 
-std::set<std::string> get_descriptions(const std::set<SNV::Type>& types)
+std::set<std::string> get_descriptions(const std::set<Mutation::Nature>& types)
 {
     std::set<std::string> string_types;
 
     for (const auto& type: types) {
-        string_types.insert(SNV::get_type_description(type));
+        string_types.insert(SNV::get_nature_description(type));
     }
 
     return string_types;
@@ -753,7 +753,7 @@ void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
 
         os << separator;
 
-        auto descriptions = get_descriptions(total_snv_data.types); 
+        auto descriptions = get_descriptions(total_snv_data.nature_set); 
 
         print_join(os, descriptions, ';');
 

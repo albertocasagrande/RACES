@@ -2,7 +2,7 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.26
+ * @version 0.27
  * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
@@ -120,11 +120,12 @@ ConfigReader::add_CNA(std::list<Races::Mutations::CNA>& CNAs,
 
     switch (get_CNA_type(CNA_json)) {
         case CNA::Type::AMPLIFICATION:
-            CNAs.push_back(CNA::new_amplification({genomic_position, length},
-                                                                   allele, 0));
+            CNAs.push_back(CNA::new_amplification(genomic_position, length,
+                                                  allele, 0, Mutation::DRIVER));
             break;
         case CNA::Type::DELETION:
-            CNAs.push_back(CNA::new_deletion({genomic_position, length}, allele));
+            CNAs.push_back(CNA::new_deletion(genomic_position, length, allele, 
+                                             Mutation::DRIVER));
             break;
         default:
             throw std::runtime_error("Unsupported CNA type");

@@ -2,7 +2,7 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.27
+ * @version 0.28
  * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
@@ -243,12 +243,14 @@ public:
      * @param allele_id is the identifier of the allele that must be amplified
      * @param new_allele_id is the identifier of the new allele if amplification 
      *      succeeded
+     * @param nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
     bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
-                        AlleleId& new_allele_id);
+                        AlleleId& new_allele_id,
+                        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
      * @brief Remove a genomic region
@@ -260,11 +262,13 @@ public:
      *
      * @param genomic_region is the genomic region whose copy number must be decrease
      * @param allele_id is the identifier of the allele that must be deleted
+     * @param nature is the nature of the deletion
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the allele has been removed
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                       const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
      * @brief Insert a SNV in a context free position
@@ -529,12 +533,14 @@ public:
      * @param allele_id is the identifier of the allele that must be amplified
      * @param new_allele_id is the identifier of the new allele if amplification 
      *      succeeded
+     * @param nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
     bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
-                        AlleleId& new_allele_id);
+                        AlleleId& new_allele_id,
+                        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
      * @brief Remove a genomic region
@@ -546,10 +552,12 @@ public:
      *
      * @param genomic_region is the genomic region whose copy number must be decrease
      * @param allele_id is the identifier of the allele from which the region must be removed
+     * @param nature is the nature of the deletion
      * @return `true` if and only if deletion has been successful
      * @throw std::domain_error no allele can be removed
      */
-    bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id);
+    bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                       const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
      * @brief Insert a SNV in a context free position

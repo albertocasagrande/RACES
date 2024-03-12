@@ -2,7 +2,7 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.9
+ * @version 0.10
  * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
@@ -39,9 +39,22 @@ namespace Mutations
 CNA::CNA()
 {}
 
-CNA::CNA(const GenomicRegion& region, const CNA::Type& type, 
-         const AlleleId& source, const AlleleId& destination):
-    region(region), source(source), dest(destination), type(type)
+CNA::CNA(const GenomicPosition& initial_position, const CNA::Length& length,
+         const CNA::Type& type, const Mutation::Nature& nature):
+    CNA(initial_position, length, type, RANDOM_ALLELE, RANDOM_ALLELE, nature)
+{}
+
+CNA::CNA(const GenomicPosition& initial_position, const CNA::Length& length,
+         const CNA::Type& type, const AlleleId& source,
+         const Mutation::Nature& nature):
+    CNA(initial_position, length, type, source, RANDOM_ALLELE, nature)
+{}
+
+CNA::CNA(const GenomicPosition& initial_position, const CNA::Length& length,
+         const CNA::Type& type, const AlleleId& source, const AlleleId& destination,
+         const Mutation::Nature& nature):
+    Mutation(initial_position, nature), length(length), 
+    source(source), dest(destination), type(type)
 {}
 
 }   // Mutations
@@ -57,15 +70,26 @@ bool less<Races::Mutations::CNA>::operator()(const Races::Mutations::CNA &lhs,
 {
     using namespace Races::Mutations;
 
-    // differences in region
+    // differences in initial position
     {
-        less<GenomicRegion> gr_op;
+        less<GenomicPosition> gr_op;
 
-        if (gr_op(lhs.region, rhs.region)) {
+        if (gr_op(lhs, rhs)) {
             return true;
         }
 
-        if (gr_op(rhs.region, lhs.region)) {
+        if (gr_op(rhs, lhs)) {
+            return false;
+        }
+    }
+
+    // differences in size
+    {
+        if (lhs.length<rhs.length) {
+            return true;
+        }
+
+        if (rhs.length<lhs.length) {
             return false;
         }
     }
@@ -107,7 +131,8 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna)
     using namespace Races::Mutations;
     switch(cna.type) {
         case CNA::Type::AMPLIFICATION:
-            out << "\"A\"," << cna.region; 
+            out << "\"A\"," << static_cast<const GenomicPosition&>(cna)
+                << ", len: " << cna.length; 
             if (cna.source != RANDOM_ALLELE) {
                 out << ", src: "<< Allele::format_id(cna.source);
             }
@@ -116,7 +141,8 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna)
             }
             break;
         case CNA::Type::DELETION:
-            out << "\"D\"," << cna.region;
+            out << "\"D\"," << static_cast<const GenomicPosition&>(cna)
+                << ", len: " << cna.length;
             if (cna.dest != RANDOM_ALLELE) {
                 out << ", dst: "<< Allele::format_id(cna.dest);
             }

@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.29
- * @date 2024-03-11
+ * @version 0.30
+ * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -212,9 +212,9 @@ public:
  */
 struct SNVData
 {
-    BaseCoverage num_of_occurrences;    //!< The number of occurrences
-    std::set<std::string> causes;       //!< The causes of the SNV
-    std::set<SNV::Type> types;          //!< The types of the SNV
+    BaseCoverage num_of_occurrences;        //!< The number of occurrences
+    std::set<std::string> causes;           //!< The causes of the SNV
+    std::set<Mutation::Nature> nature_set;  //!< The nature of the SNV
 
     /**
      * @brief The empty contructor

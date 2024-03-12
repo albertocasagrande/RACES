@@ -2,7 +2,7 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.19
+ * @version 0.20
  * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
@@ -630,7 +630,7 @@ public:
             const auto major = row.get_field(3);
             try {
                 if (major=="NA" || (stoi(major)>1)) {
-                    CNAs.push_back({region, CNA::Type::AMPLIFICATION});
+                    CNAs.emplace_back(region.get_begin(), region.size(), CNA::Type::AMPLIFICATION);
                 }
             } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown major specification " + major 
@@ -641,7 +641,7 @@ public:
             const auto minor = row.get_field(4);
             try {
                 if (minor=="NA" || (stoi(minor)<1)) {
-                    CNAs.push_back({region, CNA::Type::DELETION});
+                    CNAs.emplace_back(region.get_begin(), region.size(), CNA::Type::DELETION);
                 }
             } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown minor specification " + major 

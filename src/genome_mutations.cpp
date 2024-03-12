@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.23
+ * @version 0.24
  * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
@@ -153,7 +153,7 @@ bool ChromosomeMutations::contains(const GenomicRegion& genomic_region) const
 }
 
 bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
-                                         AlleleId& new_allele_id)
+                                         AlleleId& new_allele_id, const Mutation::Nature& nature)
 {
     if (!contains(genomic_region)) {
         throw std::domain_error("The genomic region is not in the chromosome");
@@ -170,7 +170,8 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
 
     alleles.insert({next_allele_id, std::move(new_allele)});
 
-    CNAs.push_back(CNA::new_amplification(genomic_region, allele_id, this->next_allele_id));
+    CNAs.push_back(CNA::new_amplification(genomic_region.get_begin(), genomic_region.size(),
+                                          allele_id, this->next_allele_id, nature));
 
     new_allele_id = this->next_allele_id;
 
@@ -179,7 +180,8 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
     return true;
 }
 
-bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                                        const Mutation::Nature& nature)
 {
     if (!contains(genomic_region)) {
         throw std::domain_error("The genomic region is not in the chromosome");
@@ -192,7 +194,8 @@ bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, con
 
     allele.remove(genomic_region);
 
-    CNAs.push_back(CNA::new_deletion(genomic_region, allele_id));
+    CNAs.push_back(CNA::new_deletion(genomic_region.get_begin(), genomic_region.size(),
+                                     allele_id, nature));
 
     return true;
 }
@@ -394,18 +397,19 @@ bool GenomeMutations::allele_contains(const AlleleId& allele_id, const GenomicRe
 }
 
 bool GenomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
-                                     AlleleId& new_allele_id)
+                                     AlleleId& new_allele_id, const Mutation::Nature& nature)
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.amplify_region(genomic_region, allele_id, new_allele_id);
+    return chr_it->second.amplify_region(genomic_region, allele_id, new_allele_id, nature);
 }
 
-bool GenomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id)
+bool GenomeMutations::remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                                    const Mutation::Nature& nature)
 {
     auto chr_it = find_chromosome(chromosomes, genomic_region.get_chromosome_id());
 
-    return chr_it->second.remove_region(genomic_region, allele_id);
+    return chr_it->second.remove_region(genomic_region, allele_id, nature);
 }
 
 bool GenomeMutations::insert(const SNV& snv, const AlleleId& allele_id)

@@ -2,8 +2,8 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.15
- * @date 2024-03-01
+ * @version 0.16
+ * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
  *
@@ -42,59 +42,60 @@ namespace Mutations
 {
 
 SNV::SNV():
-    GenomicPosition(), ref_base('?'), alt_base('?'), type(UNDEFINED)
+    Mutation(), ref_base('?'), alt_base('?')
 {}
 
-SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char alt_base, const Type& type):
-    SNV(chromosome_id, chromosomic_position, '?', alt_base, "", type)
+SNV::SNV(const ChromosomeId& chr_id, const ChrPosition& chr_position,
+         const char alt_base, const Mutation::Nature& nature):
+    SNV(chr_id, chr_position, '?', alt_base, "", nature)
 {}
 
-SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char ref_base, const char alt_base, const Type& type):
-    SNV(chromosome_id, chromosomic_position, ref_base, alt_base, "", type)
-{}
-
-SNV::SNV(const GenomicPosition& position, const char alt_base, const Type& type):
-    SNV(position, '?', alt_base, "", type)
-{}
-
-SNV::SNV(const GenomicPosition& position, const char ref_base,
-         const char alt_base, const Type& type):
-    SNV(position, ref_base, alt_base, "", type)
-{}
-
-SNV::SNV(GenomicPosition&& position, const char alt_base, const Type& type):
-    SNV(position, '?', alt_base, "", type)
-{}
-
-SNV::SNV(GenomicPosition&& position, const char ref_base,
-         const char alt_base, const Type& type):
-    SNV(position, ref_base, alt_base, "", type)
-{}
-
-SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char alt_base, const std::string& cause, const Type& type):
-    SNV(GenomicPosition(chromosome_id, chromosomic_position), alt_base,
-        cause, type)
-{}
-
-SNV::SNV(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char ref_base, const char alt_base,
-         const std::string& cause, const Type& type):
-    SNV(GenomicPosition(chromosome_id, chromosomic_position), ref_base, alt_base,
-        cause, type)
+SNV::SNV(const ChromosomeId& chr_id, const ChrPosition& chr_position,
+         const char ref_base, const char alt_base, const Mutation::Nature& nature):
+    SNV(chr_id, chr_position, ref_base, alt_base, "", nature)
 {}
 
 SNV::SNV(const GenomicPosition& position, const char alt_base,
-         const std::string& cause, const Type& type):
-    SNV(position, '?', alt_base, cause, type)
+         const Mutation::Nature& nature):
+    SNV(position.chr_id, position.position, '?', alt_base, "", nature)
 {}
 
 SNV::SNV(const GenomicPosition& position, const char ref_base,
-         const char alt_base, const std::string& cause, const Type& type):
-    GenomicPosition(position), ref_base(ref_base), alt_base(alt_base), cause(cause),
-    type(type)
+         const char alt_base, const Mutation::Nature& nature):
+    SNV(position.chr_id, position.position, ref_base, alt_base, "", nature)
+{}
+
+SNV::SNV(GenomicPosition&& position, const char alt_base, const Mutation::Nature& nature):
+    SNV(position.chr_id, position.position, '?', alt_base, "", nature)
+{}
+
+SNV::SNV(GenomicPosition&& position, const char ref_base,
+         const char alt_base, const Mutation::Nature& nature):
+    SNV(position.chr_id, position.position, ref_base, alt_base, "", nature)
+{}
+
+SNV::SNV(const ChromosomeId& chr_id, const ChrPosition& chr_position,
+         const char alt_base, const std::string& cause, const Mutation::Nature& nature):
+    SNV(chr_id, chr_position, '?', alt_base, cause, nature)
+{}
+
+SNV::SNV(const ChromosomeId& chr_id, const ChrPosition& chr_position,
+         const char ref_base, const char alt_base,
+         const std::string& cause, const Mutation::Nature& nature):
+    Mutation(chr_id, chr_position, nature, cause), 
+    ref_base(ref_base), alt_base(alt_base)
+{}
+
+SNV::SNV(const GenomicPosition& position, const char alt_base,
+         const std::string& cause, const Mutation::Nature& nature):
+    SNV(position.chr_id, position.position, '?',
+        alt_base, cause, nature)
+{}
+
+SNV::SNV(const GenomicPosition& position, const char ref_base,
+         const char alt_base, const std::string& cause,
+         const Mutation::Nature& nature):
+    Mutation(position, nature, cause), ref_base(ref_base), alt_base(alt_base)
 {
     if (!MutationalContext::is_a_base(alt_base)) {
         std::ostringstream oss;
@@ -110,30 +111,15 @@ SNV::SNV(const GenomicPosition& position, const char ref_base,
 }
 
 SNV::SNV(GenomicPosition&& position, const char alt_base,
-         const std::string& cause, const Type& type):
-    SNV(position, alt_base, cause, type)
+         const std::string& cause, const Mutation::Nature& nature):
+    SNV(position, alt_base, cause, nature)
 {}
 
 SNV::SNV(GenomicPosition&& position, const char ref_base,
-         const char alt_base, const std::string& cause, const Type& type):
-    SNV(position, ref_base, alt_base, cause, type)
+         const char alt_base, const std::string& cause,
+         const Mutation::Nature& nature):
+    SNV(position, ref_base, alt_base, cause, nature)
 {}
-
-std::string SNV::get_type_description(const SNV::Type& type)
-{
-    switch(type) {
-      case SNV::Type::DRIVER:
-        return "driver";
-      case SNV::Type::PASSENGER:
-        return "passenger";
-      case SNV::Type::PRENEOPLASTIC:
-        return "pre-neoplastic";
-      case SNV::Type::GERMINAL:
-        return "germinal";
-      default:
-        return "unknown";
-    }
-}
 
 
 }   // Mutations

@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.9
- * @date 2024-03-05
+ * @version 0.10
+ * @date 2024-03-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -154,7 +154,7 @@ bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region
     auto final_position = genomic_region.get_final_position();
     for (auto it = snvs.lower_bound(genomic_region.get_begin());
             it != snvs.end() && it->first.position <= final_position; ++it) {
-        if (it->second.type == SNV::Type::DRIVER) {
+        if (it->second.nature == Mutation::DRIVER) {
             return true;
         }
     }

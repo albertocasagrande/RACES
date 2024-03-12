@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.10
- * @date 2024-03-11
+ * @version 0.11
+ * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -72,7 +72,7 @@ SNV GermlineMutations::get_candidate_germline_SNV(const Chromosome& chromosome,
     const char alt_base = bases[(orig_base_pos+base_dist(rand_gen))%4];
 
     return SNV(chromosome.chr_id, position, sequence[position],
-               alt_base, SNV::Type::GERMINAL);
+               alt_base, Mutation::GERMINAL);
 }
 
 
@@ -437,7 +437,7 @@ SNV get_SNV_from_line(const std::string& line,
     read_int(chr_pos, line, pos, column_separators[1]);
 
     return {chr_id, chr_pos, line[column_separators[2]+1],
-            line[column_separators[3]+1], SNV::Type::GERMINAL};
+            line[column_separators[3]+1], Mutation::GERMINAL};
 }
 
 std::vector<AlleleId>

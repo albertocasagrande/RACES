@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.52
+ * @version 0.53
  * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
@@ -346,10 +346,11 @@ class MutationEngine
      *
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
-     * @param num_of_mutations is the number of CNAs to be applied
+     * @param num_of_mutations is the number of CNA to apply
+     * @param nature is the nature of the mutations
      */
-    void place_CNAs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
-                    const size_t& num_of_mutations)
+    void place_CNAs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations, 
+                    const size_t& num_of_mutations, const Mutation::Nature& nature)
     {
         // while some of the requested CNAs have not been set
         size_t new_CNAs{0};
@@ -365,7 +366,8 @@ class MutationEngine
             while (to_be_placed) {
                 CNA cna = passenger_CNAs[index];
 
-                if (place_passenger_CNA(cna, cell_mutations)) {
+                cna.nature = nature;
+                if (place_CNA(cna, cell_mutations)) {
                     // if the CNA has been successfully applied,
                     // then increase the number of new CNAs
                     ++new_CNAs;
@@ -408,7 +410,7 @@ class MutationEngine
     {
         const auto num_of_CNAs = number_of_mutations(cell_mutations.allelic_size(), CNA_rate);
 
-        place_CNAs(&node, cell_mutations, num_of_CNAs);
+        place_CNAs(&node, cell_mutations, num_of_CNAs, Mutation::PASSENGER);
     }
 
     /**
@@ -489,11 +491,11 @@ class MutationEngine
      * @param cell_mutations are the cell mutations
      * @param SBS_name is the name of the SBS used to find the mutations
      * @param num_of_mutations is the number of SNV to apply
-     * @param type is type of the mutations
+     * @param nature is the nature of the mutations
      */
     void place_SNVs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations, 
                     const std::string& SBS_name, const size_t& num_of_mutations,
-                    const SNV::Type& type)
+                    const Mutation::Nature& nature)
     {
         // get the inverse cumulative SBS
         const auto& inv_cumulative_SBS = inv_cumulative_SBSs.at(SBS_name);
@@ -516,7 +518,7 @@ class MutationEngine
                 SNV snv = select_SNV(it->second);
 
                 snv.cause = SBS_name;
-                snv.type = type;
+                snv.nature = nature;
 
                 if (place_SNV(snv, cell_mutations)) {
                     // if the SNV has been successfully applied,
@@ -561,7 +563,7 @@ class MutationEngine
             const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
 
             place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs, 
-                       SNV::Type::PASSENGER);
+                       Mutation::PASSENGER);
         }
     }
 
@@ -640,17 +642,18 @@ class MutationEngine
     bool find_allele_for(CNA& cna, ChromosomeMutations& chr_mutations,
                          const bool& no_driver_mutations)
     {
+        const auto cna_region = cna.get_region();
         switch(cna.type) {
             case CNA::Type::AMPLIFICATION:
                 if (cna.source == RANDOM_ALLELE) {
                     return select_allele_containing(cna.source, chr_mutations, 
-                                                    cna.region, no_driver_mutations);
+                                                    cna_region, no_driver_mutations);
                 }
                 return true;
             case CNA::Type::DELETION:
                 if (cna.dest == RANDOM_ALLELE) {
                     return select_allele_containing(cna.dest, chr_mutations,
-                                                    cna.region, no_driver_mutations);
+                                                    cna_region, no_driver_mutations);
                 }
                 return true;
             default:
@@ -662,9 +665,7 @@ class MutationEngine
      * @brief Try to place a CNA
      *
      * @param[in,out] cna is the CNA to place
-     * @param[in,out] chr_mutations are the chromosome mutations
-     * @param[in] no_driver_mutations is a Boolean flag to establish whether 
-     *          alleles containing driver mutations in the region are discharged
+     * @param[in] cell_mutations are the cell mutations
      * @return `true` if and only if the CNA placement has succeed. This method 
      *          returns `false` when the CNA cannot be placed because no allele 
      *          are available for it.
@@ -676,67 +677,26 @@ class MutationEngine
      *          `cna`, respectively, are updated to the identifier of the found 
      *          allele.
      */
-    bool place_CNA(CNA& cna, ChromosomeMutations& chr_mutations,
-                   const bool& no_driver_mutations)
+    bool place_CNA(CNA& cna, GenomeMutations& cell_mutations)
     {
-        if (!find_allele_for(cna, chr_mutations, no_driver_mutations)) {
+        auto& chr_mutations = cell_mutations.get_chromosome(cna.chr_id);
+        if (!find_allele_for(cna, chr_mutations, (cna.nature != Mutation::DRIVER))) {
             return false;
         }
 
+        const auto cna_region = cna.get_region();
         switch(cna.type) {
             case CNA::Type::AMPLIFICATION:
-                return chr_mutations.amplify_region(cna.region, cna.source, cna.dest);
+                return chr_mutations.amplify_region(cna_region, cna.source,
+                                                    cna.dest, cna.nature);
             case CNA::Type::DELETION:
-                return chr_mutations.remove_region(cna.region, cna.dest);
+                return chr_mutations.remove_region(cna_region, cna.dest,
+                                                   cna.nature);
             default:
                 throw std::runtime_error("Unsupported CNA type");
         }
     }
 
-    /**
-     * @brief Try to place a driver CNA
-     *
-     * @param[in,out] cna is the CNA to place
-     * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the CNA placement has succeed. This
-     *          method returns `false` when the CNA cannot be placed
-     *          because no allele are available for it.
-     *          When `no_driver_mutations` is set to `true`, the search
-     *          must avoid alleles containing driver mutations in `region`.
-     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
-     *          then, when `true` is returned the source or the destination of 
-     *          `cna`, respectively, are updated to the identifier of the found 
-     *          allele.
-     */
-    bool place_driver_CNA(CNA& cna, GenomeMutations& cell_mutations)
-    {
-        auto& chr_mutations = cell_mutations.get_chromosome(cna.region.get_chromosome_id());
-
-        return place_CNA(cna, chr_mutations, false);
-    }
-
-    /**
-     * @brief Try to place a passenger CNA
-     *
-     * @param[in,out] cna is the CNA to place
-     * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the CNA placement has succeed. This
-     *          method returns `false` when the CNA cannot be placed
-     *          because either no allele are available for it or the source
-     *          allele contains some driver mutations.
-     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
-     *          then, when `true` is returned the source or the destination of 
-     *          `cna`, respectively, are updated to the identifier of the found 
-     *          allele.
-     */
-    bool place_passenger_CNA(CNA& cna, GenomeMutations& cell_mutations)
-    {
-        auto& chr_mutations = cell_mutations.get_chromosome(cna.region.get_chromosome_id());
-
-        return place_CNA(cna, chr_mutations, true);
-    }
 
     /**
      * @brief Place the driver mutations
@@ -755,7 +715,7 @@ class MutationEngine
 
             for (auto snv : mutant_mp.SNVs) {
                 snv.cause = mutant_mp.name;
-                snv.type = SNV::Type::DRIVER;
+                snv.nature = Mutation::DRIVER;
 
                 if (place_SNV(snv, cell_mutations)) {
                     node.add_new_mutation(snv);
@@ -763,7 +723,8 @@ class MutationEngine
             }
 
             for (auto cna : mutant_mp.CNAs) {
-                if (place_driver_CNA(cna, cell_mutations)) {
+                cna.nature = Mutation::DRIVER;
+                if (place_CNA(cna, cell_mutations)) {
                     node.add_new_mutation(cna);
                 }
             }
@@ -936,7 +897,7 @@ class MutationEngine
 
         std::vector<CNA> filtered;
         for (const auto& cna : CNAs) {
-            if (chr_id_set.count(cna.region.get_chromosome_id())>0) {
+            if (chr_id_set.count(cna.chr_id)>0) {
                 filtered.push_back(cna);
             }
         }
@@ -1142,7 +1103,7 @@ public:
 
             // place preneoplastic mutations
             place_SNVs(&root, mutations, "SBS1", num_of_preneoplatic_mutations,
-                       SNV::Type::PRENEOPLASTIC);
+                       Mutation::PRENEOPLASTIC);
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
@@ -1192,7 +1153,7 @@ public:
 
             // place preneoplastic mutations
             place_SNVs(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
-                       SNV::Type::PRENEOPLASTIC);
+                       Mutation::PRENEOPLASTIC);
             
             sample_mutations.mutations.push_back(mutations);
         }

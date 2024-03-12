@@ -35,6 +35,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_mutation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutational_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/palette.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/phyloXML.cpp
@@ -86,6 +87,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_mutation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp

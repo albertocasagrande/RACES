@@ -2,7 +2,7 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.9
+ * @version 0.10
  * @date 2024-03-12
  *
  * @copyright Copyright (c) 2023-2024
@@ -32,6 +32,7 @@
 #define __RACES_CNA__
 
 #include "allele.hpp"
+#include "mutation.hpp"
 #include "genomic_region.hpp"
 
 namespace Races
@@ -43,7 +44,7 @@ namespace Mutations
 /**
  * @brief Copy Number Alteration type
  */
-struct CNA
+struct CNA : public Mutation
 {
     /**
      * @brief The CNA type
@@ -53,10 +54,13 @@ struct CNA
         DELETION
     };
 
-    GenomicRegion region; //!< CNA region
-    AlleleId source;      //!< source allele id
-    AlleleId dest;        //!< destination allele id
-    Type type;            //!< amplification/deletion flag
+    using Length = GenomicRegion::Length;
+
+    Length length;      //!< The CNA length
+    //GenomicRegion region; //!< CNA region
+    AlleleId source;    //!< source allele id
+    AlleleId dest;      //!< destination allele id
+    Type type;          //!< amplification/deletion flag
 
     /**
      * @brief The empty constructor
@@ -66,39 +70,155 @@ struct CNA
     /**
      * @brief A constructor
      *
-     * @param region is the region in which CNA occurred
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
+     * @param type is the CNA type
+     * @param nature is the nature of the CNA
+     */
+    CNA(const GenomicPosition& initial_position, const Length& length,
+        const Type& type, const Mutation::Nature& nature=Mutation::UNDEFINED);
+
+    /**
+     * @brief A constructor
+     *
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
+     * @param source is the allele from which the region is copied/removed
+     * @param type is the CNA type
+     * @param nature is the nature of the CNA
+     */
+    CNA(const GenomicPosition& initial_position, const Length& length,
+        const Type& type, const AlleleId& source,
+        const Mutation::Nature& nature=Mutation::UNDEFINED);
+
+    /**
+     * @brief A constructor
+     *
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
      * @param source is the allele from which the region is copied/removed
      * @param destination is the allele in which the region is copied/removed
      * @param type is the CNA type
+     * @param nature is the nature of the CNA
      */
-    CNA(const GenomicRegion& region, const Type& type, 
-        const AlleleId& source=RANDOM_ALLELE,
-        const AlleleId& destination=RANDOM_ALLELE);
+    CNA(const GenomicPosition& initial_position, const Length& length,
+        const Type& type, const AlleleId& source,
+        const AlleleId& destination,
+        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
      * @brief Build a new amplification
      *
-     * @param region is the region in which CNA occurred
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
      * @param source is the allele from which the region is copied
      * @param destination is the allele in which the region is copied
+     * @param nature is the nature of the CNA
      */
-    static inline CNA new_amplification(const GenomicRegion& region,
-                                        const AlleleId& source=RANDOM_ALLELE,
-                                        const AlleleId& destination=RANDOM_ALLELE)
+    static inline CNA new_amplification(const GenomicPosition& initial_position,
+                                        const Length& length,
+                                        const AlleleId& source,
+                                        const AlleleId& destination,
+                                        const Mutation::Nature& nature=Mutation::UNDEFINED)
     {
-        return CNA(region, Type::AMPLIFICATION, source, destination);
+        return CNA(initial_position, length, Type::AMPLIFICATION,
+                   source, destination, nature);
     }
 
     /**
      * @brief Build a new amplification
      *
-     * @param region is the region in which CNA occurred
-     * @param allele is the allele from which the region is removed
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
+     * @param source is the allele from which the region is copied
+     * @param destination is the allele in which the region is copied
+     * @param nature is the nature of the CNA
      */
-    static inline CNA new_deletion(const GenomicRegion& region,
-                                   const AlleleId& allele=RANDOM_ALLELE)
+    static inline CNA new_amplification(const GenomicPosition& initial_position,
+                                        const Length& length,
+                                        const AlleleId& source,
+                                        const Mutation::Nature& nature=Mutation::UNDEFINED)
     {
-        return CNA(region, Type::DELETION, allele, allele);
+        return CNA::new_amplification(initial_position, length,
+                                      source, RANDOM_ALLELE, nature);
+    }
+
+    /**
+     * @brief Build a new amplification
+     *
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
+     * @param source is the allele from which the region is copied
+     * @param destination is the allele in which the region is copied
+     * @param nature is the nature of the CNA
+     */
+    static inline CNA new_amplification(const GenomicPosition& initial_position,
+                                        const Length& length,
+                                        const Mutation::Nature& nature=Mutation::UNDEFINED)
+    {
+        return CNA::new_amplification(initial_position, length,
+                                      RANDOM_ALLELE, RANDOM_ALLELE, nature);
+    }
+
+    /**
+     * @brief Build a new amplification
+     *
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
+     * @param allele is the allele from which the region is removed
+     * @param nature is the nature of the CNA
+     */
+    static inline CNA new_deletion(const GenomicPosition& initial_position,
+                                   const Length& length,
+                                   const AlleleId& allele,
+                                   const Mutation::Nature& nature=Mutation::UNDEFINED)
+    {
+        return CNA(initial_position, length, Type::DELETION, allele, allele, nature);
+    }
+
+    /**
+     * @brief Build a new amplification
+     *
+     * @param initial_position is the CNA initial position
+     * @param length is the CNA length
+     * @param allele is the allele from which the region is removed
+     * @param nature is the nature of the CNA
+     */
+    static inline CNA new_deletion(const GenomicPosition& initial_position,
+                                   const Length& length,
+                                   const Mutation::Nature& nature=Mutation::UNDEFINED)
+    {
+        return CNA::new_deletion(initial_position, length, RANDOM_ALLELE, nature);
+    }
+
+    /**
+     * @brief Get the CNA region
+     * 
+     * @return the CNA region 
+     */
+    inline GenomicRegion get_region() const
+    {
+        return GenomicRegion(*this, length);
+    }
+
+    /**
+     * @brief Get the CNA inital position
+     * 
+     * @return a constant reference to the CNA initial position
+     */
+    const ChrPosition& get_initial_position() const
+    {
+        return position;
+    }
+
+    /**
+     * @brief Get the CNA final position
+     * 
+     * @return a constant reference to the CNA initial position
+     */
+    inline ChrPosition get_final_position() const
+    {
+        return position+length-1;
     }
 
     /**
@@ -110,8 +230,9 @@ struct CNA
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & static_cast<int>(type)
-                & region
+        archive & static_cast<const Mutation&>(*this)
+                & type
+                & length
                 & dest;
 
         switch (type) {
@@ -136,14 +257,12 @@ struct CNA
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static CNA load(ARCHIVE& archive)
     {
-        int type;
         CNA cna;
 
-        archive & type
-                & cna.region
+        archive & static_cast<Mutation&>(cna)
+                & cna.type
+                & cna.length
                 & cna.dest;
-
-        cna.type = static_cast<CNA::Type>(type);
 
         switch (cna.type) {
             case Type::AMPLIFICATION:
@@ -153,8 +272,11 @@ struct CNA
                 cna.source = cna.dest;
                 break;
             default:
+            {
+                auto type = static_cast<int>(cna.type);
                 throw std::runtime_error("CNA::save: Unsupported CNA::type "+
                                          std::to_string(type));
+            }
         }
 
         return cna;
