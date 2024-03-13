@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.30
- * @date 2024-03-12
+ * @version 0.31
+ * @date 2024-03-13
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -997,6 +997,41 @@ private:
     }
 
     /**
+     * @brief Extract the SNVs of two SNV maps laying on a simulated read
+     * 
+     * @param A the first position-SNV map
+     * @param B the second position-SNV map 
+     * @param genomic_position the first genomic position of the read
+     * @param read_size the size of the read
+     * @return a position-SNV map containing all the SNVs in `A` and `B`
+     *      that lay on the simulated read
+     */
+    static std::map<GenomicPosition, SNV>
+    merge_SNVs_in(const std::map<GenomicPosition, SNV>& A, const std::map<GenomicPosition, SNV>& B,
+                  const GenomicPosition& genomic_position, const size_t& read_size)
+    {
+        using namespace Races::Mutations;
+
+        const ChrPosition last_position = genomic_position.position+read_size-1;
+
+        std::map<GenomicPosition, SNV> merged;
+
+        // for all the SNVs in A on the simulated read
+        for (auto snv_it = A.lower_bound(genomic_position);
+                snv_it != A.end() && snv_it->second.position<=last_position; ++snv_it) {
+            merged.insert(*snv_it);
+        }
+
+        // for all the SNVs in B on the simulated read
+        for (auto snv_it = B.lower_bound(genomic_position);
+                snv_it != B.end() && snv_it->second.position<=last_position; ++snv_it) {
+            merged.insert(*snv_it);
+        }
+
+        return merged;
+    }
+
+    /**
      * @brief Compute the CIGAR string of a genomic region potentially affected by SNVs
      * 
      * The CIGAR string a code that represents the alignment of a sequence over a reference
@@ -1009,6 +1044,7 @@ private:
      *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
      * 
      * @param SNVs is a map from genomic positions to the corresponding SNVs
+     * @param germline_SNVs is a map from genomic positions to the corresponding germline SNVs
      * @param genomic_position is the initial position of the simulated read
      * @param read_size is the size of the simulated read
      * @return the CIGAR code corresponding to a simulated read having size `read_size` 
@@ -1017,9 +1053,12 @@ private:
      *      the SNVs in `SNVs` were placed
      */
     static std::string get_CIGAR(const std::map<GenomicPosition, SNV>& SNVs,
+                                 const std::map<GenomicPosition, SNV>& germline_SNVs,
                                  const GenomicPosition& genomic_position, const size_t& read_size)
     {
         using namespace Races::Mutations;
+
+        auto merged = merge_SNVs_in(SNVs, germline_SNVs, genomic_position, read_size);
 
         const ChrPosition last_position = genomic_position.position+read_size-1;
 
@@ -1029,8 +1068,7 @@ private:
         size_t first_match = 0;
 
         // for all the SNVs placed on the simulated read
-        for (auto snv_it = SNVs.lower_bound(genomic_position);
-                snv_it != SNVs.end() && snv_it->second.position<=last_position; ++snv_it) {
+        for (auto snv_it = merged.begin(); snv_it != merged.end(); ++snv_it) {
 
             // get the SNV position in the simulated read
             const size_t SNV_pos = snv_it->second.position-genomic_position.position;
@@ -1246,7 +1284,8 @@ private:
                        << '\t' << chr_data.name                 // RNAME
                        << '\t' << read_first_position           // POS
                        << '\t' << mapq                          // MAPQ
-                       << '\t' << get_CIGAR(SNVs, genomic_position, read_size); // CIGAR
+                       << '\t' << get_CIGAR(SNVs, germline_SNVs, 
+                                            genomic_position, read_size); // CIGAR
             if (read_type == ReadType::PAIRED_READ) {
                 SAM_stream << '\t' << oss_name.str() << "/" << (paired_idx+1)   // RNEXT
                            << '\t' << template_read_data[paired_idx].second     // PNEXT
@@ -1754,11 +1793,13 @@ public:
             return SampleSetStatistics(output_directory);
         }
 
-        std::shared_ptr<CellGenomeMutations> normal_mutations;
+        // if purity<1, then duplicate the structure of the germline genome
+        // (no mutations as they will be automatically added by `generate_reads`)
+        std::shared_ptr<CellGenomeMutations> normal_structure;
         
         if (purity<1) {
-            const auto& germline = mutations_list.front().germline_mutations;
-            normal_mutations = std::make_shared<CellGenomeMutations>(germline);
+            const auto& germline_mutations = mutations_list.front().germline_mutations;
+            normal_structure = std::make_shared<CellGenomeMutations>(germline_mutations.duplicate_structure());
         }
 
         for (auto& mutation_list : mutations_list) {
@@ -1767,10 +1808,10 @@ public:
                 size_t normal_number = static_cast<size_t>(tumor_number*(1-purity)/purity);
 
                 for (size_t i=0; i<normal_number; ++i) {
-                    mutation_list.mutations.push_back(normal_mutations);
+                    mutation_list.mutations.push_back(normal_structure);
                 }
             } else {
-                mutation_list.mutations = {normal_mutations};
+                mutation_list.mutations = {normal_structure};
             }
         }
 
