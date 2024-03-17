@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.24
- * @date 2024-03-12
+ * @version 0.25
+ * @date 2024-03-17
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -366,6 +366,28 @@ auto find_chromosome(const std::map<ChromosomeId, ChromosomeMutations>& chromoso
     }
 
     return chr_it;   
+}
+
+const ChromosomeMutations& GenomeMutations::get_chromosome(const ChromosomeId& chromosome_id) const
+{
+    auto found = chromosomes.find(chromosome_id);
+
+    if (found == chromosomes.end()) {
+        throw std::out_of_range("Unknown chromosome "
+                                + GenomicPosition::chrtos(chromosome_id) + ".");
+    }
+    return found->second;
+}
+
+ChromosomeMutations& GenomeMutations::get_chromosome(const ChromosomeId& chromosome_id)
+{
+    auto found = chromosomes.find(chromosome_id);
+
+    if (found == chromosomes.end()) {
+        throw std::out_of_range("Unknown chromosome "
+                                + GenomicPosition::chrtos(chromosome_id) + ".");
+    }
+    return found->second;
 }
 
 std::list<AlleleId> GenomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const

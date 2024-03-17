@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.28
- * @date 2024-03-12
+ * @version 0.29
+ * @date 2024-03-17
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -468,10 +468,7 @@ public:
      * @param chromosome_id is the identifier of the aimed chromosome mutations
      * @return the mutations of a genome chromosome
      */
-    inline const ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id) const
-    {
-        return chromosomes.at(chromosome_id);
-    }
+    const ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id) const;
 
     /**
      * @brief Get the mutations of a genome chromosome
@@ -479,10 +476,7 @@ public:
      * @param chromosome_id is the identifier of the aimed chromosome mutations
      * @return the mutations of a genome chromosome
      */
-    inline ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id)
-    {
-        return chromosomes.at(chromosome_id);
-    }
+    ChromosomeMutations& get_chromosome(const ChromosomeId& chromosome_id);
 
     /**
      * @brief Get the identifiers of the alleles containing a genomic position
