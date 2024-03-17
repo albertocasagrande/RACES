@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.7
- * @date 2024-03-09
+ * @version 0.8
+ * @date 2024-03-17
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -331,6 +331,21 @@ protected:
         }
 
         /**
+         * @brief Compute the node height
+         * 
+         * @return the node height
+         */
+        size_t height() const
+        {
+            size_t curr_height{0};
+            for (const auto& child: children()) {
+                curr_height = std::max(curr_height, child.height()+1);
+            }
+
+            return curr_height;
+        }
+
+        /**
          * @brief Get the cell id of the node
          *
          * @return a constant reference to the cell id of the node
@@ -565,6 +580,13 @@ public:
     {
         return cells.size();
     }
+
+    /**
+     * @brief Get the forest height
+     * 
+     * @return the forest height
+     */
+    inline size_t height() const;
 
     /**
      * @brief Get the tissue samples that produced the forest

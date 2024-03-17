@@ -2,8 +2,8 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 0.5
- * @date 2024-03-09
+ * @version 0.6
+ * @date 2024-03-17
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -262,6 +262,18 @@ DescendantsForest::get_coalescent_cells(const std::list<CellId>& cell_ids) const
     }
 
     return coalescent_nodes;
+}
+
+size_t
+DescendantsForest::height() const
+{
+    size_t curr_height{0};
+
+    for (const auto& root: get_roots()) {
+        curr_height = std::max(curr_height, root.height());
+    }
+
+    return curr_height;
 }
 
 std::vector<CellId>
