@@ -2,10 +2,10 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.10
- * @date 2023-12-11
+ * @version 0.11
+ * @date 2024-03-18
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -142,6 +142,26 @@ bool EventCountTest::operator()(const Simulation& simulation)
 uint8_t EventCountTest::percentage(const Simulation& simulation) const
 {
     return static_cast<uint8_t>((100*get_event_number(simulation)/threshold));
+}
+
+FormulaTest::FormulaTest(const Logics::Formula& formula):
+    formula(formula), formula_distance(0)
+{}
+
+bool FormulaTest::operator()(const Simulation& simulation)
+{
+    if (formula_distance==0) {
+        formula_distance = formula.sat_distance(simulation.tissue());
+    }
+
+    return formula.evaluate(simulation.tissue()); 
+}
+
+uint8_t FormulaTest::percentage(const Simulation& simulation) const
+{
+    auto dist = formula.sat_distance(simulation.tissue());
+
+    return static_cast<uint8_t>((100*dist/formula_distance));
 }
 
 }   // Evolutions

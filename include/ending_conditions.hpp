@@ -2,10 +2,10 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.8
- * @date 2023-12-11
+ * @version 0.9
+ * @date 2024-03-18
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -224,6 +224,38 @@ public:
      * @param simulation is the considered simulation
      * @return `false` if and only if the number of cells of the 
      *          considered species is below the test threshold
+     */
+    bool operator()(const Simulation& simulation) override;
+
+    /**
+     * @brief Return the percentage of the completed simulation
+     * 
+     * @param simulation is the considered simulation
+     * @return the percentage of the completed simulation
+     */
+    uint8_t percentage(const Simulation& simulation) const override;
+};
+
+class FormulaTest : public Simulation::BasicTest
+{
+    Logics::Formula formula;
+    size_t formula_distance;
+
+public:
+
+    /**
+     * @brief The constructor
+     * 
+     * @param formula is the formula to be satisfied
+     */
+    FormulaTest(const Logics::Formula& formula);
+
+    /**
+     * @brief Test whether the formula has been satisfied
+     * 
+     * @param simulation is the considered simulation
+     * @return `false` if and only if the simulation does not
+     *      satisfies the formula of the test
      */
     bool operator()(const Simulation& simulation) override;
 

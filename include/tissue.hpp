@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.38
- * @date 2024-03-12
+ * @version 0.39
+ * @date 2024-03-18
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -42,6 +42,7 @@
 #include "time.hpp"
 #include "species.hpp"
 #include "cell.hpp"
+#include "logics.hpp"
 
 namespace Races 
 {
@@ -812,6 +813,41 @@ public:
      * @return the tissue size for the 3 dimensions
      */
     std::vector<AxisSize> size() const;
+
+    /**
+     * @brief Get the logic variable of a species cardinality
+     * 
+     * @param name is the name of a species
+     * @return the logic variable associated to the cardinality of the species
+     *      whose name is `name`
+     */
+    inline Logics::Variable get_cardinality_variable(const std::string& name) const
+    {
+        return Logics::Variable(get_species(name).get_id(), name);
+    }
+
+    /**
+     * @brief Get the logic variable of a species cardinality
+     * 
+     * @param species_id is the identifier of a species
+     * @return the logic variable associated to the cardinality of the species
+     *      whose identifier is `species_id`
+     */
+    inline Logics::Variable get_cardinality_variable(const SpeciesId& species_id) const
+    {
+        return Logics::Variable(species_id, get_species(species_id).get_name());
+    }
+
+    /**
+     * @brief Evaluate a variable
+     * 
+     * @param variable is the variable to be valutated
+     * @return the value of the variable
+     */
+    inline size_t evaluate(const Logics::Variable& variable) const
+    {
+        return get_species(variable.get_species_id()).num_of_cells();
+    }
 
     /**
      * @brief Save a tissue in an archive

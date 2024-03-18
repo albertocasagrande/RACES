@@ -32,6 +32,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/germline.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/logics.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_mutation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutant_properties.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/mutation_engine.cpp
@@ -83,6 +84,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/germline.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/logics.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_id.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_mutation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_properties.hpp
