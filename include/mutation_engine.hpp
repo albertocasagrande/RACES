@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.53
- * @date 2024-03-12
+ * @version 0.54
+ * @date 2024-03-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -904,6 +904,30 @@ class MutationEngine
 
         return filtered;
     }
+
+    /**
+     * @brief Check germline-reference sequence consistency
+     *
+     * This method checks whether germline contains the reference sequence chromosomes
+     * and throws a `std::out_of_range` exception this is not the case.
+     *
+     * @param context_index is a context index
+     * @param germline_mutations are the germline mutations
+     */
+    static void check_genomes_consistency(const ContextIndex<GENOME_WIDE_POSITION>& context_index,
+                                          const GenomeMutations& germline_mutations)
+    {
+        const auto context_chr_ids = context_index.get_chromosome_ids();
+        const auto& germline_chromosomes = germline_mutations.get_chromosomes();
+
+        for (const auto chr_id : context_chr_ids) {
+            if (germline_chromosomes.find(chr_id) == germline_chromosomes.end()) {
+                throw std::out_of_range("The germline does not contain Chr. "
+                                        + GenomicPosition::chrtos(chr_id)
+                                        + " which is present in the reference.");
+            }
+        }
+    }
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
 
@@ -952,6 +976,8 @@ public:
         germline_mutations(germline_mutations), driver_storage(driver_storage),
         infinite_sites_model(true)
     {
+        MutationEngine::check_genomes_consistency(context_index, germline_mutations);
+
         for (const auto& [name, mutational_signature]: mutational_signatures) {
             inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
         }
