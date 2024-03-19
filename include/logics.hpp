@@ -2,8 +2,8 @@
  * @file logics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a logic
- * @version 0.1
- * @date 2024-03-18
+ * @version 0.2
+ * @date 2024-03-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -56,8 +56,19 @@ namespace Logics
 /**
  * @brief The variable that represent the cardinality of a species
  */
-struct Variable
+class Variable
 {
+    SpeciesId species_id;   //!< The identifier of the variable species
+    std::string name;       //!< The name of the variable species
+
+    /**
+     * @brief A constructor
+     * 
+     * @param species_id is the identifier of the variable species
+     * @param name is the name of the variable species
+     */
+    Variable(const SpeciesId& species_id, const std::string& name);
+public:
     /**
      * @brief The empty constructor
      */
@@ -100,18 +111,6 @@ struct Variable
         return name;
     }
 
-private:
-    SpeciesId species_id;   //!< The identifier of the variable species
-    std::string name;       //!< The name of the variable species
-
-    /**
-     * @brief A constructor
-     * 
-     * @param species_id is the identifier of the variable species
-     * @param name is the name of the variable species
-     */
-    Variable(const SpeciesId& species_id, const std::string& name);
-
     friend class Races::Mutants::Evolutions::Tissue;
 };
 
@@ -124,14 +123,15 @@ private:
  */
 inline std::ostream& operator<<(std::ostream& os, const Variable& variable)
 {
-    return (os << variable.get_name());
+    return os << "|" << variable.get_name() << "|";
 }
 
 /**
  * @brief A class to represent expressions
  */
-struct Expression
+class Expression
 {
+public:
     /**
      * @brief The types of expressions
      */
@@ -143,12 +143,6 @@ struct Expression
         SUB,        // subtraction of expressions
         MULT        // multiplication of expressions
     };
-
-    Type type;          //!< the type of expressions
-    Variable variable;  //!< the variable when the expression is a variable
-    size_t value;       //!< the value when the expression is a value
-    std::shared_ptr<Expression> lhs;    //!< the left hand-side expression
-    std::shared_ptr<Expression> rhs;    //!< the right hand-side expression
 
     /**
      * @brief A constructor for expressions consisting in a variable
@@ -192,6 +186,16 @@ struct Expression
         }
     }
 
+    /**
+     * @brief Get the expression type
+     * 
+     * @return the expression type
+     */
+    inline const Type& get_type() const
+    {
+        return type;
+    }
+
     friend Expression operator+(const Expression& lhs, const Expression& rhs);
     friend Expression operator-(const Expression& lhs, const Expression& rhs);
     friend Expression operator*(const Expression& lhs, const Expression& rhs);
@@ -199,7 +203,15 @@ struct Expression
     friend Expression operator+(Expression&& lhs, Expression&& rhs);
     friend Expression operator-(Expression&& lhs, Expression&& rhs);
     friend Expression operator*(Expression&& lhs, Expression&& rhs);
+    
+    friend std::ostream& operator<<(std::ostream& os, const Expression& expression);
 private:
+    Type type;          //!< the type of expressions
+    Variable variable;  //!< the variable when the expression is a variable
+    size_t value;       //!< the value when the expression is a value
+    std::shared_ptr<Expression> lhs;    //!< the left hand-side expression
+    std::shared_ptr<Expression> rhs;    //!< the right hand-side expression
+
     /**
      * @brief Build an expression involving two sub-expressions
      * 
@@ -303,8 +315,9 @@ std::ostream& operator<<(std::ostream& os, const Expression& expression);
 /**
  * @brief A class to represent expression relations
  */
-struct Relation
+class Relation
 {
+public:
     /**
      * @brief The types of relations
      */
@@ -315,10 +328,6 @@ struct Relation
         EQ, // ==
         NE  // !=
     };
-
-    Type type;          //!< The relation type
-    Expression lhs;     //!< The relation left hand-side operator
-    Expression rhs;     //!< The relation right hand-side operator
 
     /**
      * @brief Evaluate the relation in a context
@@ -379,6 +388,16 @@ struct Relation
         }
     }
 
+    /**
+     * @brief Get the relation type
+     * 
+     * @return the relation type
+     */
+    inline const Type& get_type() const
+    {
+        return type;
+    }
+
     friend Relation operator>(const Expression& lhs, const Expression& rhs);
     friend Relation operator>=(const Expression& lhs, const Expression& rhs);
     friend Relation operator==(const Expression& lhs, const Expression& rhs);
@@ -392,7 +411,12 @@ struct Relation
     friend Relation operator!=(Expression&& lhs, Expression&& rhs);
     friend Relation operator<=(Expression&& lhs, Expression&& rhs);
     friend Relation operator<(Expression&& lhs, Expression&& rhs);
+
+    friend std::ostream& operator<<(std::ostream& os, const Relation& relation);
 private:
+    Type type;          //!< The relation type
+    Expression lhs;     //!< The relation left hand-side operator
+    Expression rhs;     //!< The relation right hand-side operator
 
     /**
      * @brief A constructor
@@ -659,6 +683,16 @@ struct Formula
         }
     }
 
+    /**
+     * @brief Get the formula type
+     * 
+     * @return the formula type
+     */
+    inline const Type& get_type() const
+    {
+        return type;
+    }
+
     friend Formula operator!(const Formula& op);
     friend Formula operator&&(const Formula& lhs, const Formula& rhs);
     friend Formula operator||(const Formula& lhs, const Formula& rhs);
@@ -666,6 +700,7 @@ struct Formula
     friend Formula operator&&(Formula&& lhs, Formula&& rhs);
     friend Formula operator||(Formula&& lhs, Formula&& rhs);
 
+    friend std::ostream& operator<<(std::ostream& os, const Formula& formula);
 private:
 
     /**

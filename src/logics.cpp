@@ -2,8 +2,8 @@
  * @file logics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a logic
- * @version 0.1
- * @date 2024-03-18
+ * @version 0.2
+ * @date 2024-03-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -63,6 +63,16 @@ Expression::Expression(const Type& type, Expression&& lhs, Expression&& rhs):
     rhs(std::make_shared<Expression>(std::move(rhs)))
 {}
 
+void print_with_parenthesis(std::ostream& os, const Expression& expression)
+{
+    if (expression.get_type() == Expression::Type::SUM
+        || expression.get_type() == Expression::Type::SUB) {
+        os << "(" << expression << ")";
+    } else {
+        os << expression;
+    }
+}
+
 std::ostream& operator<<(std::ostream& os, const Expression& expression)
 {
     switch(expression.type) {
@@ -76,10 +86,17 @@ std::ostream& operator<<(std::ostream& os, const Expression& expression)
             os << *expression.lhs << "+" << *expression.rhs;
             break;
         case Expression::Type::SUB:
-            os << *expression.lhs << "-" << *expression.rhs;
+            os << *expression.lhs << "-";
+            print_with_parenthesis(os, *expression.rhs);
             break;
         case Expression::Type::MULT:
-            os << *expression.lhs << "*" << *expression.rhs;
+            {
+                std::string sep;
+
+                print_with_parenthesis(os, *expression.lhs);
+                os << "*";
+                print_with_parenthesis(os, *expression.rhs);
+            }
             break;
         default:
             throw std::runtime_error("Unknown expression type code " 
@@ -193,6 +210,15 @@ Formula::Formula(Relation&& relation):
     lhs(nullptr), rhs(nullptr)
 {}
 
+void print_with_parenthesis(std::ostream& os, const Formula& formula, const Formula::Type& type)
+{
+    if (formula.get_type() == type) {
+        os << "(" << formula << ")";
+    } else {
+        os << formula;
+    }
+}
+
 std::ostream& operator<<(std::ostream& os, const Formula& formula)
 {
     switch(formula.type) {
@@ -200,13 +226,21 @@ std::ostream& operator<<(std::ostream& os, const Formula& formula)
             os << *(formula.rel);
             break;
         case Formula::Type::NEG:
-            os << "!(" << *(formula.lhs) << ")";
+            if (formula.get_type() == Formula::Type::NEG) {
+                os << "!" << *(formula.lhs);
+            } else {
+                os << "!(" << *(formula.lhs) << ")";
+            }
             break;
         case Formula::Type::AND:
-            os << "(" << *(formula.lhs) <<  "&&" << *(formula.rhs) << ")";
+            print_with_parenthesis(os,  *(formula.lhs), Formula::Type::OR);
+            os << "&&";
+            print_with_parenthesis(os,  *(formula.rhs), Formula::Type::OR);
             break;
         case Formula::Type::OR:
-            os << "(" << *(formula.lhs) <<  "||" << *(formula.rhs) << ")";
+            print_with_parenthesis(os,  *(formula.lhs), Formula::Type::AND);
+            os << "||";
+            print_with_parenthesis(os,  *(formula.rhs), Formula::Type::AND);
             break;
         default:
             throw std::runtime_error("Unknown formula type code " 
