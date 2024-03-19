@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation ending conditions
- * @version 0.9
- * @date 2024-03-18
+ * @version 0.10
+ * @date 2024-03-19
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -78,7 +78,7 @@ struct TimeTest : public Simulation::BasicTest
      * @param simulation is the considered simulation
      * @return the percentage of the completed simulation
      */
-    inline uint8_t percentage(const Simulation& simulation) const override
+    inline uint8_t percentage(const Simulation& simulation) override
     {
         return static_cast<uint8_t>((100*simulation.get_time()/threshold));
     }
@@ -120,7 +120,7 @@ struct SpeciesCountTest : public Simulation::BasicTest
      * @param simulation is the considered simulation
      * @return the percentage of the completed simulation
      */
-    uint8_t percentage(const Simulation& simulation) const override;
+    uint8_t percentage(const Simulation& simulation) override;
 };
 
 /**
@@ -159,7 +159,7 @@ struct CloneCountTest : public Simulation::BasicTest
      * @param simulation is the considered simulation
      * @return the percentage of the completed simulation
      */
-    uint8_t percentage(const Simulation& simulation) const override;
+    uint8_t percentage(const Simulation& simulation) override;
 };
 
 /**
@@ -233,7 +233,7 @@ public:
      * @param simulation is the considered simulation
      * @return the percentage of the completed simulation
      */
-    uint8_t percentage(const Simulation& simulation) const override;
+    uint8_t percentage(const Simulation& simulation) override;
 };
 
 class FormulaTest : public Simulation::BasicTest
@@ -265,7 +265,7 @@ public:
      * @param simulation is the considered simulation
      * @return the percentage of the completed simulation
      */
-    uint8_t percentage(const Simulation& simulation) const override;
+    uint8_t percentage(const Simulation& simulation) override;
 };
 
 }   // Evolutions

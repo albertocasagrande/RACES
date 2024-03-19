@@ -1,8 +1,8 @@
 /**
  * @file logics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines a logic
- * @version 0.2
+ * @brief Defines a logic about the simulation
+ * @version 0.3
  * @date 2024-03-19
  *
  * @copyright Copyright (c) 2023-2024
@@ -35,7 +35,7 @@
 #include <memory>
 #include <ostream>
 
-#include "mutant_id.hpp"
+#include "cell_event.hpp"
 
 struct Context;
 
@@ -48,32 +48,28 @@ namespace Mutants
 namespace Evolutions
 {
 class Tissue;
+class Simulation;
 }
 
 namespace Logics
 {
 
 /**
- * @brief The variable that represent the cardinality of a species
+ * @brief The variable that represent a simulation quantity
  */
 class Variable
 {
-    SpeciesId species_id;   //!< The identifier of the variable species
-    std::string name;       //!< The name of the variable species
-
-    /**
-     * @brief A constructor
-     * 
-     * @param species_id is the identifier of the variable species
-     * @param name is the name of the variable species
-     */
-    Variable(const SpeciesId& species_id, const std::string& name);
 public:
+    enum class Type {
+        CARDINALITY,    //!< The variable represents a species cardinality
+        EVENT,          //!< The variable represents a species event
+        TIME            //!< The variable represents the simulation time
+    };
+
     /**
      * @brief The empty constructor
      */
-    Variable()
-    {}
+    Variable();
 
     /**
      * @brief Evaluate a variable in a context
@@ -86,7 +82,7 @@ public:
      *   species in the context
      */
     template<typename CONTEXT>
-    size_t evaluate(const CONTEXT& context) const
+    inline double evaluate(const CONTEXT& context) const
     {
         return context.evaluate(*this);
     }
@@ -108,10 +104,45 @@ public:
      */
     inline const std::string& get_name() const
     {
-        return name;
+        return species_name;
+    }
+
+    /**
+     * @brief Get the variable type
+     *
+     * @return the variable type
+     */
+    inline const Type& get_type() const
+    {
+        return type;
     }
 
     friend class Races::Mutants::Evolutions::Tissue;
+    friend class Races::Mutants::Evolutions::Simulation;
+    friend std::ostream& operator<<(std::ostream& os, const Variable& variable);
+private:
+
+    Type type;                  //!< The variable type
+    CellEventType event_type;   //!< The event type
+    SpeciesId species_id;       //!< The identifier of the variable species
+    std::string species_name;           //!< The name of the variable species
+
+    /**
+     * @brief Build a variable representing a species cardinality
+     *
+     * @param species_id is the identifier of the species
+     * @param species_name is the name of the species
+     */
+    Variable(const SpeciesId& species_id, const std::string& species_name);
+
+    /**
+     * @brief Build a variable representing a species event number
+     *
+     * @param species_id is the identifier of the species
+     * @param species_name is the name of the species
+     */
+    Variable(const CellEventType& event_type, const SpeciesId& species_id,
+             const std::string& species_name);
 };
 
 /**
@@ -121,10 +152,7 @@ public:
  * @param variable is the species variable to write
  * @return the updated output stream
  */
-inline std::ostream& operator<<(std::ostream& os, const Variable& variable)
-{
-    return os << "|" << variable.get_name() << "|";
-}
+std::ostream& operator<<(std::ostream& os, const Variable& variable);
 
 /**
  * @brief A class to represent expressions
@@ -156,7 +184,7 @@ public:
      * 
      * @param value is the expression value
      */
-    Expression(const size_t& value);
+    Expression(const double& value);
 
     /**
      * @brief Evaluate the expression in a context
@@ -167,7 +195,7 @@ public:
      * @return the value of the expression in `context` 
      */
     template<typename CONTEXT>
-    size_t evaluate(const CONTEXT& context) const
+    double evaluate(const CONTEXT& context) const
     {
         switch(type) {
             case Type::VALUE:
@@ -208,7 +236,7 @@ public:
 private:
     Type type;          //!< the type of expressions
     Variable variable;  //!< the variable when the expression is a variable
-    size_t value;       //!< the value when the expression is a value
+    double value;       //!< the value when the expression is a value
     std::shared_ptr<Expression> lhs;    //!< the left hand-side expression
     std::shared_ptr<Expression> rhs;    //!< the right hand-side expression
 
@@ -368,16 +396,16 @@ public:
      *   being satisfied in the context
      */
     template<typename CONTEXT>
-    size_t sat_distance(const CONTEXT& context) const
+    double sat_distance(const CONTEXT& context) const
     {
         auto l_dist = lhs.evaluate(context);
         auto r_dist = rhs.evaluate(context);
 
         switch(type) {
             case Type::GT:
-                return (l_dist > r_dist? 0:r_dist-l_dist+1);
+                return (l_dist > r_dist? 0:r_dist-l_dist);
             case Type::GE:
-                return (l_dist >= r_dist? 0:r_dist-l_dist);
+                return (l_dist >= r_dist? 0:r_dist-l_dist+1);
             case Type::EQ:
                 return (l_dist > r_dist? l_dist-r_dist:r_dist-l_dist);
             case Type::NE:
@@ -666,7 +694,7 @@ struct Formula
      *   being satisfied in the context
      */
     template<typename CONTEXT>
-    size_t sat_distance(const CONTEXT& context) const
+    double sat_distance(const CONTEXT& context) const
     {
         switch(type) {
             case Type::RELATION:

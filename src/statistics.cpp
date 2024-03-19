@@ -2,10 +2,10 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.18
- * @date 2023-12-11
+ * @version 0.19
+ * @date 2024-03-19
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -218,6 +218,28 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
             break;
         default:
             throw std::runtime_error("Unsupported event type");
+    }
+}
+
+size_t TissueStatistics::count_fired_events(const SpeciesId& species_id,
+                                            const CellEventType& event_type) const
+{
+    if (!contains_data_for(species_id)) {
+        return 0;
+    }
+
+    const auto& s_stats = at(species_id);
+
+    switch(event_type) {
+        case CellEventType::DEATH:
+            return s_stats.killed_cells;
+        case CellEventType::DUPLICATION:
+            return s_stats.num_duplications;
+        case CellEventType::EPIGENETIC_SWITCH:
+            return s_stats.num_of_epigenetic_events();
+        default:
+            throw std::domain_error("EventCountTest does not support event "+
+                                    cell_event_names[event_type]);
     }
 }
 

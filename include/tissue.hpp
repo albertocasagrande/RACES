@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.39
- * @date 2024-03-18
+ * @version 0.40
+ * @date 2024-03-19
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -817,13 +817,27 @@ public:
     /**
      * @brief Get the logic variable of a species cardinality
      * 
-     * @param name is the name of a species
+     * @param species_name is the name of a species
      * @return the logic variable associated to the cardinality of the species
-     *      whose name is `name`
+     *      whose name is `species_name`
      */
-    inline Logics::Variable get_cardinality_variable(const std::string& name) const
+    inline Logics::Variable get_cardinality_variable(const std::string& species_name) const
     {
-        return Logics::Variable(get_species(name).get_id(), name);
+        return Logics::Variable(get_species(species_name).get_id(), species_name);
+    }
+
+    /**
+     * @brief Get the logic variable representing the number of a species event
+     *
+     * @param species_name is the name of a species
+     * @param event_type is the variable event
+     * @return the logic variable associated to the number event of type `event_type`
+     *      occurring in the species whose name is `species_name`
+     */
+    inline Logics::Variable get_event_variable(const std::string& species_name,
+                                               const CellEventType& event_type) const
+    {
+        return Logics::Variable(event_type, get_species(species_name).get_id(), species_name);
     }
 
     /**
@@ -839,14 +853,17 @@ public:
     }
 
     /**
-     * @brief Evaluate a variable
+     * @brief Get the logic variable representing the number of a species event
      * 
-     * @param variable is the variable to be valutated
-     * @return the value of the variable
+     * @param species_id is the identifier of a species
+     * @param event_type is the variable event
+     * @return the logic variable associated to the number event of type `event_type`
+     *      occurring in the species whose name is `species_name`
      */
-    inline size_t evaluate(const Logics::Variable& variable) const
+    inline Logics::Variable get_event_variable(const SpeciesId& species_id,
+                                               const CellEventType& event_type) const
     {
-        return get_species(variable.get_species_id()).num_of_cells();
+        return Logics::Variable(event_type, species_id, get_species(species_id).get_name());
     }
 
     /**

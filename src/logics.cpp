@@ -1,8 +1,8 @@
 /**
  * @file logics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implement a logic
- * @version 0.2
+ * @brief Implement a logic about the simulation
+ * @version 0.3
  * @date 2024-03-19
  *
  * @copyright Copyright (c) 2023-2024
@@ -41,15 +41,55 @@ namespace Mutants
 namespace Logics
 {
 
-Variable::Variable(const SpeciesId& species_id, const std::string& name):
-    species_id(species_id), name(name)
+Variable::Variable():
+    type(Variable::Type::TIME)
 {}
+
+Variable::Variable(const SpeciesId& species_id, const std::string& species_name):
+    type(Variable::Type::CARDINALITY), species_id(species_id),
+    species_name(species_name)
+{}
+
+Variable::Variable(const CellEventType& event_type, const SpeciesId& species_id,
+                   const std::string& species_name):
+    type(Variable::Type::EVENT), event_type(event_type), species_id(species_id),
+    species_name(species_name)
+{
+    switch(event_type) {
+        case CellEventType::DEATH:
+        case CellEventType::DUPLICATION:
+        case CellEventType::EPIGENETIC_SWITCH:
+            break;
+        default:
+            throw std::domain_error("Unsupported event type");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const Variable& variable)
+{
+    switch(variable.get_type()) {
+        case Variable::Type::CARDINALITY:
+            os << "|" << variable.get_name() << "|";
+            break;
+        case Variable::Type::EVENT:
+            os << "|" << variable.get_name() << "."
+               << cell_event_names.at(variable.event_type) << "|";
+            break;
+        case Variable::Type::TIME:
+            os << "Time";
+            break;
+        default:
+            throw std::domain_error("Unsupported event type");
+    }
+
+    return os;
+}
 
 Expression::Expression(const Variable& variable):
     type(Type::VARIABLE), variable(variable), lhs(nullptr), rhs(nullptr)
 {}
 
-Expression::Expression(const size_t& value):
+Expression::Expression(const double& value):
     type(Type::VALUE), value(value), lhs(nullptr), rhs(nullptr)
 {}
 
@@ -227,24 +267,24 @@ std::ostream& operator<<(std::ostream& os, const Formula& formula)
             break;
         case Formula::Type::NEG:
             if (formula.get_type() == Formula::Type::NEG) {
-                os << "!" << *(formula.lhs);
+                os << "not" << *(formula.lhs);
             } else {
-                os << "!(" << *(formula.lhs) << ")";
+                os << "not(" << *(formula.lhs) << ")";
             }
             break;
         case Formula::Type::AND:
             print_with_parenthesis(os,  *(formula.lhs), Formula::Type::OR);
-            os << "&&";
+            os << " and ";
             print_with_parenthesis(os,  *(formula.rhs), Formula::Type::OR);
             break;
         case Formula::Type::OR:
             print_with_parenthesis(os,  *(formula.lhs), Formula::Type::AND);
-            os << "||";
+            os << " or ";
             print_with_parenthesis(os,  *(formula.rhs), Formula::Type::AND);
             break;
         default:
             throw std::runtime_error("Unknown formula type code " 
-                                        + std::to_string(static_cast<unsigned int>(formula.type)));
+                                     + std::to_string(static_cast<unsigned int>(formula.type)));
     }
 
     return os;

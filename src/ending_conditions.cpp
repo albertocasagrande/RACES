@@ -2,8 +2,8 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.11
- * @date 2024-03-18
+ * @version 0.12
+ * @date 2024-03-19
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -54,7 +54,7 @@ bool SpeciesCountTest::operator()(const Simulation& simulation)
     return threshold <= species.num_of_cells();
 }
 
-uint8_t SpeciesCountTest::percentage(const Simulation& simulation) const
+uint8_t SpeciesCountTest::percentage(const Simulation& simulation)
 {
     const auto& species = simulation.tissue().get_species(species_id);
 
@@ -72,7 +72,7 @@ bool CloneCountTest::operator()(const Simulation& simulation)
     return threshold <= mutant_species.num_of_cells();
 }
 
-uint8_t CloneCountTest::percentage(const Simulation& simulation) const
+uint8_t CloneCountTest::percentage(const Simulation& simulation)
 {
     const auto mutant_species = simulation.tissue().get_mutant_species(mutant_id);
 
@@ -139,7 +139,7 @@ bool EventCountTest::operator()(const Simulation& simulation)
     return threshold <= get_event_number(simulation);
 }
 
-uint8_t EventCountTest::percentage(const Simulation& simulation) const
+uint8_t EventCountTest::percentage(const Simulation& simulation)
 {
     return static_cast<uint8_t>((100*get_event_number(simulation)/threshold));
 }
@@ -151,17 +151,21 @@ FormulaTest::FormulaTest(const Logics::Formula& formula):
 bool FormulaTest::operator()(const Simulation& simulation)
 {
     if (formula_distance==0) {
-        formula_distance = formula.sat_distance(simulation.tissue());
+        formula_distance = formula.sat_distance(simulation);
     }
 
-    return formula.evaluate(simulation.tissue()); 
+    return formula.evaluate(simulation);
 }
 
-uint8_t FormulaTest::percentage(const Simulation& simulation) const
+uint8_t FormulaTest::percentage(const Simulation& simulation)
 {
-    auto dist = formula.sat_distance(simulation.tissue());
+    auto dist = formula.sat_distance(simulation);
 
-    return static_cast<uint8_t>((100*dist/formula_distance));
+    if (dist>formula_distance) {
+        formula_distance = dist;
+    }
+
+    return static_cast<uint8_t>((100*(formula_distance-dist)/formula_distance));
 }
 
 }   // Evolutions

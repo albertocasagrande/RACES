@@ -2,10 +2,10 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.20
- * @date 2023-12-11
+ * @version 0.21
+ * @date 2024-03-19
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -471,6 +471,18 @@ public:
 
         history_delta = delta;
     }
+
+    /**
+     * @brief Count fired event
+     *
+     * @param species_id is the identifier of the species in which the
+     *   to-be-counted events occurred
+     * @param event_type is the type of the event to-be-counted
+     * @return the number of `event_type` events that occurred in the
+     *   species whose identifier is `species_id`
+     */
+    size_t count_fired_events(const SpeciesId& species_id,
+                              const CellEventType& event_type) const;
 
     /**
      * @brief Save tissue statistics in an archive

@@ -2,10 +2,10 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.53
- * @date 2024-03-12
+ * @version 0.54
+ * @date 2024-03-19
  *
- * @copyright Copyright (c) 2023-24
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -32,6 +32,7 @@
 
 #include <set>
 #include <list>
+#include <string>
 
 namespace Races 
 {
@@ -1098,6 +1099,27 @@ Simulation::sample_tissue(const std::string& sample_name, const RectangleSet& re
     name2sample[sample_name]=(samples.end()--);
 
     return sample;
+}
+
+double Simulation::evaluate(const Logics::Variable& variable) const
+{
+    const auto& species_id = variable.get_species_id();
+    switch(variable.get_type()) {
+        case Logics::Variable::Type::CARDINALITY:
+            return tissue().get_species(species_id).num_of_cells();
+        case Logics::Variable::Type::EVENT:
+            {
+                const auto& t_stats = get_statistics();
+
+                return t_stats.count_fired_events(species_id,
+                                                  variable.event_type);
+            }
+        case Logics::Variable::Type::TIME:
+            return get_time();
+        default:
+            throw std::domain_error("Unsupported variable type "
+                                    + std::to_string(static_cast<size_t>(variable.get_type())));
+    }
 }
 
 Simulation::~Simulation()

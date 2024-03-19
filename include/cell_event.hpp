@@ -2,10 +2,10 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.16
- * @date 2023-12-11
+ * @version 0.17
+ * @date 2024-03-19
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -79,6 +79,14 @@ struct CellEvent
      * @brief The empty constructor
      */
     CellEvent();
+
+    /**
+     * @brief Get the event identifier by name
+     *
+     * @param name is the event name
+     * @return the identifier of the event having `name` as the name
+     */
+    static CellEventType get_event_id(const std::string& name);
 };
 
 }   // Evolutions

@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.46
- * @date 2024-03-12
+ * @version 0.47
+ * @date 2024-03-19
  *
  * @copyright Copyright (c) 2023-24
  *
@@ -332,7 +332,7 @@ public:
          * @param simulation is the considered simulation
          * @return the percentage of the completed simulation
          */
-        virtual uint8_t percentage(const Simulation& simulation) const = 0;
+        virtual uint8_t percentage(const Simulation& simulation) = 0;
 
         virtual ~BasicTest()
         {}
@@ -1039,6 +1039,76 @@ public:
      *         `mutant_id` as identifier
      */
     const std::string& find_mutant_name(const MutantId& mutant_id) const;
+
+    /**
+     * @brief Get the logic variable of a species cardinality
+     *
+     * @param species_name is the name of a species
+     * @return the logic variable associated to the cardinality of the species
+     *      whose name is `species_name`
+     */
+    inline Logics::Variable get_cardinality_variable(const std::string& species_name) const
+    {
+        return tissue().get_cardinality_variable(species_name);
+    }
+
+    /**
+     * @brief Get the logic variable representing the number of a species event
+     *
+     * @param species_name is the name of a species
+     * @param event_type is the variable event
+     * @return the logic variable associated to the number event of type `event_type`
+     *      occurring in the species whose name is `species_name`
+     */
+    inline Logics::Variable get_event_variable(const std::string& species_name,
+                                               const CellEventType& event_type) const
+    {
+        return tissue().get_event_variable(species_name, event_type);
+    }
+
+    /**
+     * @brief Get the logic variable of a species cardinality
+     *
+     * @param species_id is the identifier of a species
+     * @return the logic variable associated to the cardinality of the species
+     *      whose identifier is `species_id`
+     */
+    inline Logics::Variable get_cardinality_variable(const SpeciesId& species_id) const
+    {
+        return tissue().get_cardinality_variable(species_id);
+    }
+
+    /**
+     * @brief Get the logic variable representing the number of a species event
+     *
+     * @param species_id is the identifier of a species
+     * @param event_type is the variable event
+     * @return the logic variable associated to the number event of type `event_type`
+     *      occurring in the species whose name is `species_name`
+     */
+    inline Logics::Variable get_event_variable(const SpeciesId& species_id,
+                                               const CellEventType& event_type) const
+    {
+        return tissue().get_event_variable(species_id, event_type);
+    }
+
+    /**
+     * @brief Get the logic variable representing the evolution time
+     *
+     * @return the logic variable representing the evolution time
+     */
+    inline Logics::Variable get_time_variable() const
+    {
+        return Logics::Variable();
+    }
+
+    /**
+     * @brief Evaluate a variable
+     *
+     * @param variable is the variable to be valutated
+     * @return the value of the variable
+     */
+    double evaluate(const Logics::Variable& variable) const;
 
     /**
      * @brief Save a simulation in an archive

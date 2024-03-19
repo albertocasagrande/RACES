@@ -2,10 +2,10 @@
  * @file cell_event.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell events
- * @version 0.10
- * @date 2023-12-11
+ * @version 0.11
+ * @date 2024-03-19
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -40,10 +40,10 @@ namespace Mutants
 {
 
 std::map<CellEventType, std::string> cell_event_names = {
-    {CellEventType::DEATH, "death"},
-    {CellEventType::DUPLICATION, "duplication"},
-    {CellEventType::EPIGENETIC_SWITCH, "epigenetic switch"},
-    {CellEventType::MUTATION, "mutation"}
+    {CellEventType::DEATH, "deaths"},
+    {CellEventType::DUPLICATION, "duplications"},
+    {CellEventType::EPIGENETIC_SWITCH, "switches"},
+    {CellEventType::MUTATION, "mutations"}
 };
 
 namespace Evolutions
@@ -52,6 +52,17 @@ namespace Evolutions
 CellEvent::CellEvent():
     type(), position(), initial_species(), final_species(), delay()
 {}
+
+CellEventType CellEvent::get_event_id(const std::string& event_name)
+{
+  for (const auto& [e_id, e_name]: Races::Mutants::cell_event_names) {
+    if (e_name == event_name) {
+      return e_id;
+    }
+  }
+
+  throw std::domain_error("Unknown event name \"" + event_name + "\".");
+}
 
 }
 
