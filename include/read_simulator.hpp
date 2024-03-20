@@ -1521,7 +1521,8 @@ private:
                 << "\tAN:chromosome" << chr_str << ",chr" << chr_str 
                 << ",chromosome_" << chr_str << ",chr_" << chr_str << std::endl;
         for (const auto& sample_mutations : mutations_list) {
-            SAM_stream << "@RG\tID:" << sample_mutations.name << std::endl;
+            SAM_stream << "@RG\tID:" << sample_mutations.name
+                       << "\tSM:" << sample_mutations.name << std::endl;
         }
 
         return SAM_stream;
