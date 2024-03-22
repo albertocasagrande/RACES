@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.31
- * @date 2024-03-13
+ * @version 0.32
+ * @date 2024-03-22
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -1043,8 +1043,8 @@ private:
      * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification 
      *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
      * 
-     * @param SNVs is a map from genomic positions to the corresponding SNVs
-     * @param germline_SNVs is a map from genomic positions to the corresponding germline SNVs
+     * @param read_SNVs is a map from genomic positions to the corresponding SNVs of the SNV
+     *          laying on the read
      * @param genomic_position is the initial position of the simulated read
      * @param read_size is the size of the simulated read
      * @return the CIGAR code corresponding to a simulated read having size `read_size` 
@@ -1052,13 +1052,10 @@ private:
      *      from `genomic_position` with the exception of the genomic position in which 
      *      the SNVs in `SNVs` were placed
      */
-    static std::string get_CIGAR(const std::map<GenomicPosition, SNV>& SNVs,
-                                 const std::map<GenomicPosition, SNV>& germline_SNVs,
+    static std::string get_CIGAR(const std::map<GenomicPosition, SNV>& read_SNVs,
                                  const GenomicPosition& genomic_position, const size_t& read_size)
     {
         using namespace Races::Mutations;
-
-        auto merged = merge_SNVs_in(SNVs, germline_SNVs, genomic_position, read_size);
 
         const ChrPosition last_position = genomic_position.position+read_size-1;
 
@@ -1068,13 +1065,13 @@ private:
         size_t first_match = 0;
 
         // for all the SNVs placed on the simulated read
-        for (auto snv_it = merged.begin(); snv_it != merged.end(); ++snv_it) {
+        for (auto snv_it = read_SNVs.begin(); snv_it != read_SNVs.end(); ++snv_it) {
 
             // get the SNV position in the simulated read
             const size_t SNV_pos = snv_it->second.position-genomic_position.position;
 
             // if we have matched some nucleotides
-            if (SNV_pos+1>first_match) {
+            if (SNV_pos>first_match) {
                 // report the number of matched nucleotides
                 oss << (SNV_pos-first_match) << "M";
             }
@@ -1088,7 +1085,7 @@ private:
         }
 
         // if the last position was a match
-        if (genomic_position.position+first_match <= last_position+1) {
+        if (genomic_position.position+first_match < last_position+1) {
             // report the number of matched nucleotides
             oss << (last_position-genomic_position.position+1-first_match) << "M";
         }
@@ -1279,12 +1276,15 @@ private:
 
             const auto mapq = 33;
 
+            const auto read_SNVs = merge_SNVs_in(SNVs, germline_SNVs, genomic_position, 
+                                                 read_size);
+
             SAM_stream << read_name                             // QNAME
                        << '\t' << template_read_data[i].first   // FLAG
                        << '\t' << chr_data.name                 // RNAME
                        << '\t' << read_first_position           // POS
                        << '\t' << mapq                          // MAPQ
-                       << '\t' << get_CIGAR(SNVs, germline_SNVs, 
+                       << '\t' << get_CIGAR(read_SNVs, 
                                             genomic_position, read_size); // CIGAR
             if (read_type == ReadType::PAIRED_READ) {
                 SAM_stream << '\t' << oss_name.str() << "/" << (paired_idx+1)   // RNEXT
@@ -1297,9 +1297,13 @@ private:
             }
             SAM_stream << '\t' << read  // SEQ
                        << '\t' << '*';  // QUAL
+
+            // TAGS
             if (sample_name.size()!=0) {
-                SAM_stream << '\t' << "RG:Z:" << sample_name;  // TAGS
+                SAM_stream << "\tRG:Z:" << sample_name;  // The read group
             }
+            SAM_stream << "\tNM:i:" << read_SNVs.size();  // The Hamming distance
+
             SAM_stream << std::endl;
         }
     }
