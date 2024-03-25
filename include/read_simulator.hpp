@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.32
- * @date 2024-03-22
+ * @version 0.33
+ * @date 2024-03-25
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -1170,10 +1170,16 @@ private:
 
         if (read_type == ReadType::PAIRED_READ) {
             int flag = 0x1|0x2;
-            template_read_data.push_back({flag|(rev_comp?0x10:0x0)|0x40,
+            int first_flag = flag | 0x20 | 0x40;
+            int second_flag = flag | 0x10 | 0x80;
+
+            if (rev_comp) {
+                std::swap(first_flag, second_flag);
+            }
+            template_read_data.push_back({first_flag,
                                           template_first_position});
 
-            template_read_data.push_back({flag|(rev_comp?0x0:0x20)|0x80, 
+            template_read_data.push_back({second_flag,
                                           template_first_position+template_size-read_size});
 
             return template_read_data;
@@ -1224,6 +1230,24 @@ private:
     }
 
     /**
+     * @brief Get the name of a template
+     *
+     *
+     * @param template_id is the identifier of the template
+     * @return the name of the template whose identifier is
+     *      `template_id`.
+     */
+    static std::string get_template_name(const size_t& template_id)
+    {
+        std::ostringstream oss_name;
+
+        oss_name << "r" <<  std::setfill('0') << std::setw(11)
+                 << template_id;
+
+        return oss_name.str();
+    }
+
+    /**
      * @brief Write the SAM alignment line corresponding to a simulated read
      * 
      * This method writes in a stream the SAM alignment line corresponding to a simulated read
@@ -1249,9 +1273,8 @@ private:
     {
         auto template_read_data = get_template_read_data(template_first_position, template_size);
 
-        std::ostringstream oss_name;
-        oss_name << "r" <<  std::setfill('0') << std::setw(11) 
-                 << (num_of_reads/template_read_data.size());
+        const size_t template_id = num_of_reads/template_read_data.size();
+        const std::string template_name = get_template_name(template_id);
         for (size_t i=0; i<template_read_data.size(); ++i) {
             const auto& read_first_position = template_read_data[i].second;
 
@@ -1266,20 +1289,13 @@ private:
                 read = "*";
             }
 
-            size_t paired_idx = 1-i;
-
-            std::string read_name = oss_name.str();
-            
-            if (read_type == ReadType::PAIRED_READ) {
-                read_name += "/" + std::to_string(i+1);
-            }
 
             const auto mapq = 33;
 
             const auto read_SNVs = merge_SNVs_in(SNVs, germline_SNVs, genomic_position, 
                                                  read_size);
 
-            SAM_stream << read_name                             // QNAME
+            SAM_stream << template_name                         // QNAME
                        << '\t' << template_read_data[i].first   // FLAG
                        << '\t' << chr_data.name                 // RNAME
                        << '\t' << read_first_position           // POS
@@ -1287,9 +1303,13 @@ private:
                        << '\t' << get_CIGAR(read_SNVs, 
                                             genomic_position, read_size); // CIGAR
             if (read_type == ReadType::PAIRED_READ) {
-                SAM_stream << '\t' << oss_name.str() << "/" << (paired_idx+1)   // RNEXT
-                           << '\t' << template_read_data[paired_idx].second     // PNEXT
-                           << '\t' << (i==0?"":"-") << template_size;           // TLEN
+                const size_t paired_idx = 1-i;
+                const auto paired_pos = template_read_data[paired_idx].second;
+
+                SAM_stream << '\t' << '='               // RNEXT
+                           << '\t' << paired_pos        // PNEXT
+                           << '\t' << (i==0?"":"-")
+                           << template_size;            // TLEN
             } else {
                 SAM_stream << '\t' << '*'   // RNEXT
                            << '\t' << '0'   // PNEXT
