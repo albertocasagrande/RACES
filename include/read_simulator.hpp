@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.33
- * @date 2024-03-25
+ * @version 0.34
+ * @date 2024-03-26
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -1521,7 +1521,8 @@ private:
     std::ofstream
     get_SAM_stream(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
                    const std::list<SampleGenomeMutations>& mutations_list,
-                   const std::string& base_name="chr_") const
+                   const std::string& base_name="chr_",
+                   const std::string& platform="ILLUMINA") const
     {
         auto chr_str = GenomicPosition::chrtos(chr_data.chr_id);
 
@@ -1546,7 +1547,8 @@ private:
                 << ",chromosome_" << chr_str << ",chr_" << chr_str << std::endl;
         for (const auto& sample_mutations : mutations_list) {
             SAM_stream << "@RG\tID:" << sample_mutations.name
-                       << "\tSM:" << sample_mutations.name << std::endl;
+                       << "\tSM:" << sample_mutations.name 
+                       << "\tPL:" << platform << std::endl;
         }
 
         return SAM_stream;
