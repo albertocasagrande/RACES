@@ -2,10 +2,10 @@
  * @file mutant_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the mutant properties
- * @version 0.1
- * @date 2023-12-11
+ * @version 0.2
+ * @date 2024-03-26
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -98,10 +98,49 @@ SpeciesProperties::SpeciesProperties(const MutantProperties& mutant,
 
 double SpeciesProperties::get_rate(const CellEventType& event) const
 {
+    if (event == CellEventType::EPIGENETIC_SWITCH) {
+        throw std::domain_error("Use get_epigenetic_rate_to to get epigenetic rate.");
+    }
+
     if (event_rates.count(event)==0) {
         return 0;
     }
     return event_rates.at(event);
+}
+
+const double& SpeciesProperties::set_rate(const CellEventType& event, const double rate)
+{
+    if (event == CellEventType::EPIGENETIC_SWITCH) {
+        throw std::domain_error("Use set_epigenetic_rate_to to set epigenetic rate.");
+    }
+
+    return (event_rates[event] = rate);
+}
+
+double SpeciesProperties::get_epigenetic_rate_to(const SpeciesId& species_id) const
+{
+    const auto found = epigenetic_rates.find(species_id);
+
+    if (found == epigenetic_rates.end()) {
+        throw std::out_of_range("The species " + std::to_string(id) + " and "
+                                + std::to_string(species_id) + "do not belong to the "
+                                + "same mutant.");
+    }
+
+    return found->second;
+}
+
+const double& SpeciesProperties::set_epigenetic_rate_to(const SpeciesId& species_id, const double rate)
+{
+    auto found = epigenetic_rates.find(species_id);
+
+    if (found == epigenetic_rates.end()) {
+        throw std::out_of_range("The species " + std::to_string(id) + " and "
+                                + std::to_string(species_id) + "do not belong to the "
+                                + "same mutant.");
+    }
+
+    return (found->second = rate);
 }
 
 std::string SpeciesProperties::get_name() const

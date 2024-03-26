@@ -2,10 +2,10 @@
  * @file mutant_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutant properties
- * @version 0.1
- * @date 2023-12-11
+ * @version 0.2
+ * @date 2024-03-26
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -212,10 +212,25 @@ public:
      * @param rate is the new rate for the event
      * @return a constant reference to the new rate
      */
-    inline const double& set_rate(const CellEventType& event, const double rate)
-    {
-        return (event_rates[event] = rate);
-    }
+    const double& set_rate(const CellEventType& event, const double rate);
+
+    /**
+     * @brief Get the epigenetic rate towords a species
+     * 
+     * @param species_id is the identifier of the destination species
+     * @return if the rate of epigenetic switch towords the species 
+     *      whose identifier is `species_id`
+     */
+    double get_epigenetic_rate_to(const SpeciesId& species_id) const;
+
+    /**
+     * @brief Set the epigenetic rate towords a species
+     * 
+     * @param species_id is the identifier of the destination species
+     * @param rate is the new epigenetic rate rate
+     * @return a constant reference to the new rate
+     */
+    const double& set_epigenetic_rate_to(const SpeciesId& species_id, const double rate);
 
     /**
      * @brief Get event rates
