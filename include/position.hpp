@@ -2,7 +2,7 @@
  * @file position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.11
+ * @version 0.12
  * @date 2024-03-29
  * 
  * @copyright Copyright (c) 2023-2024
@@ -185,6 +185,17 @@ struct Direction {
     {
         return get_component(2);
     }
+
+    /**
+     * @brief Get the near-by directions
+     *
+     * Two directions are near-by if their dot-produce is
+     * positive.
+     *
+     * @return a list of the near-by directions of the
+     *      this direction
+     */
+    std::list<Direction> get_near_by_directions() const;
 
     /**
      * @brief Get the direction component on one axis

@@ -2,7 +2,7 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.9
+ * @version 0.10
  * @date 2024-03-29
  * 
  * @copyright Copyright (c) 2023-2024
@@ -108,6 +108,82 @@ int Direction::get_delta(const size_t& axis_index) const
     }
 
     return 1;
+}
+
+//! @private
+void collect_positive_dot_products(std::list<Direction>& directions, const uint8_t bitvector,
+                                   const std::vector<std::list<uint8_t>>& components,
+                                   const uint8_t axis_index,
+                                   const std::vector<uint8_t>& admitted_changes,
+                                   const uint8_t total_changes)
+{
+    if (axis_index<components.size()) {
+        const uint8_t mask = (0x03 << 2*axis_index);
+
+        if (admitted_changes[axis_index] && total_changes+1<components.size()) {
+            for (const auto& component : components[axis_index]) {
+                collect_positive_dot_products(directions, (bitvector & ~mask) | component,
+                                              components, axis_index+1, admitted_changes,
+                                              total_changes+1);
+            }
+        }
+        collect_positive_dot_products(directions, bitvector,
+                                      components, axis_index+1, admitted_changes,
+                                      total_changes);
+    } else {
+        if (bitvector != 0) {
+            directions.emplace_back(bitvector, components.size());
+        }
+    }
+}
+
+//! @private
+std::list<Direction> collect_positive_dot_products(const std::vector<std::list<uint8_t>>& components,
+                                                   const uint8_t& bitvector,
+                                                   const std::vector<uint8_t>& admitted_changes)
+{
+    std::list<Direction> directions;
+
+    collect_positive_dot_products(directions, bitvector, components, 0, admitted_changes, 0);
+
+    return directions;
+}
+
+std::list<Direction> Direction::get_near_by_directions() const
+{
+    std::list<Direction> directions;
+
+    const auto num_of_dims = num_of_dimensions();
+    std::vector<std::list<uint8_t>> components(num_of_dims);
+    std::vector<uint8_t> admitted_changes(num_of_dims, false);
+    for (uint8_t axis_index=0; axis_index < num_of_dims; ++axis_index) {
+        const auto shift = 2*axis_index;
+        const auto component = get_component(axis_index) >> shift;
+        auto& component_list = components[axis_index];
+
+        switch (component) {
+            case 0x00:
+                component_list.push_back(0x01 << shift);
+                component_list.push_back(0x02 << shift);
+                break;
+            case 0x01:
+            case 0x02:
+                component_list.push_back(0x00 << shift);
+
+                if (num_of_dims==3) {
+                    admitted_changes[(axis_index+1)%3] = true;
+                    admitted_changes[(axis_index+2)%3] = true;
+                } else {
+                    admitted_changes[(axis_index+1)%2] = true;
+                }
+                break;
+            default:
+                throw std::out_of_range("Unsupported direction");
+        }
+    }
+
+    return collect_positive_dot_products(components, bit_vector & ~(0x01 << 6),
+                                         admitted_changes);
 }
 
 bool operator==(const Direction& a, const Direction& b)
