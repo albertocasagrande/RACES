@@ -1,8 +1,8 @@
 /**
  * @file genomic_sequence.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines allele representation
- * @version 0.1
+ * @brief Defines a structure to handle genomic sequence
+ * @version 0.2
  * @date 2024-03-29
  *
  * @copyright Copyright (c) 2023-2024
@@ -35,9 +35,6 @@
 #include <vector>
 
 namespace Races
-{
-
-namespace Mutations
 {
 
 /**
@@ -119,8 +116,6 @@ struct GenomicSequence
      */
     static bool is_a_DNA_base(const char& symbol);
 };
-
-}   // Mutations
 
 }   // Races
 
