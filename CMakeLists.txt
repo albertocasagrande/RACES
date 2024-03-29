@@ -29,6 +29,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_sequence.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/germline.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
@@ -81,6 +82,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genome_mutations.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_position.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_sequence.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/germline.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/logger.hpp

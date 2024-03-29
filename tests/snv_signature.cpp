@@ -2,23 +2,23 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some SNV example
- * @version 0.7
- * @date 2023-12-09
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 0.8
+ * @date 2024-03-29
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_relation)
         for (++second_it; second_it!=contexts.cend(); ++second_it) {
             BOOST_CHECK_NE(*second_it, *it);
             BOOST_CHECK_NE(*it, *second_it);
-        }  
+        }
     }
 }
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
         {
             MutationalContext context(seq);
 
-            auto c_context = context.get_complement();
+            auto c_context = context.get_complemented();
 
             BOOST_CHECK_EQUAL(c_context.get_sequence(), c_seq);
         }
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
         {
             MutationalContext c_context(c_seq);
 
-            auto context = c_context.get_complement();
+            auto context = c_context.get_complemented();
 
             BOOST_CHECK_EQUAL(context.get_sequence(), seq);
         }
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_create)
                     std::string seq{seq0,seq1,seq2};
 
                     MutationalContext context(seq);
-                    
+
                     if (seq1!=base) {
                         BOOST_CHECK_NO_THROW(MutationalType(seq, base));
                         BOOST_CHECK_NO_THROW(MutationalType(context, base));
@@ -383,9 +383,9 @@ BOOST_AUTO_TEST_CASE(mutational_signature_load)
 
     std::set<std::string> example_set;
 
-    std::transform(example.begin(), example.end(),  std::inserter(example_set, example_set.end()), 
+    std::transform(example.begin(), example.end(),  std::inserter(example_set, example_set.end()),
                    [](auto pair){ return pair.first; });
-    
+
     BOOST_CHECK_EQUAL(signature_names,example_set);
 }
 
@@ -402,9 +402,9 @@ BOOST_AUTO_TEST_CASE(selective_mutational_signature_load)
     }
 
     std::set<std::string> example_set;
-    std::transform(example.begin(), example.end(),  std::inserter(example_set, example_set.end()), 
+    std::transform(example.begin(), example.end(),  std::inserter(example_set, example_set.end()),
                    [](auto pair){ return pair.first; });
-    
+
     BOOST_CHECK_EQUAL(signature_names,example_set);
 }
 
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(mutational_signature_expression)
 
     double alpha = 1.0/signatures.size();
 
-    MutationalSignatureExprResult expr_result;    
+    MutationalSignatureExprResult expr_result;
     for (const auto& [key, signature]: signatures) {
         expr_result = expr_result + alpha * signature;
     }

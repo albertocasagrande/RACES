@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.18
- * @date 2024-02-28
+ * @version 0.19
+ * @date 2024-03-29
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,6 +39,7 @@
 #include <type_traits>
 
 #include "archive.hpp"
+#include "genomic_sequence.hpp"
 #include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_header
 #include "genomic_region.hpp"   // Mutations::GenomicRegion
 #include "basic_IO.hpp"         // IO::get_stream_size
@@ -164,7 +165,7 @@ protected:
     /**
      * @brief Find the mutational contexts in parts of a FASTA sequence and save their positions in the map
      *
-     * This method finds the mutational contexts that lay the chromosome read from a FASTA stream and 
+     * This method finds the mutational contexts that lay the chromosome read from a FASTA stream and
      * outside a specified set of genomic regions.
      *
      * @param[in,out] fasta_stream is the FASTA stream pointing at the first nucleotide of the considered sequence
@@ -195,7 +196,7 @@ protected:
         char last_char{'N'};
         while (last_char != '>' && !fasta_stream.eof()) {
             fasta_stream.get(last_char);
-            if (MutationalContext::is_a_base(last_char) || last_char == 'N') {
+            if (GenomicSequence::is_a_DNA_base(last_char) || last_char == 'N') {
                 ++pos.position;
 
                 if (region_it != regions_to_avoid.end() && region_it->ends_before(pos)) {
@@ -205,7 +206,7 @@ protected:
                 if (region_it != regions_to_avoid.end() && region_it->contains(pos)) {
                     last_char = 'N';
                 }
-                
+
                 c_automata.update_state(last_char);
 
                 if (c_automata.read_a_context()) {
@@ -249,11 +250,9 @@ protected:
     {
         context2pos = std::make_shared<ContextPositionMap>();
 
-        const char bases[] = {'A', 'C', 'G', 'T'};
-
-        for (const auto& nucleotide1 : bases) {
-            for (const auto& nucleotide2 : bases) {
-                for (const auto& nucleotide3 : bases) {
+        for (const auto& nucleotide1 : GenomicSequence::DNA_bases) {
+            for (const auto& nucleotide2 : GenomicSequence::DNA_bases) {
+                for (const auto& nucleotide3 : GenomicSequence::DNA_bases) {
                     MutationalContext context(std::string{nucleotide1, nucleotide2, nucleotide3});
                     (*context2pos)[context] = std::vector<GENOME_WIDE_POSITION>();
                 }
@@ -407,8 +406,8 @@ public:
      * @param[in] genome_fasta is the path of a FASTA file
      * @param[in] regions_to_avoid is a set of regions to avoid
      * @param[in,out] progress_bar is the progress bar
-     * @return the index of the contexts that lay in the sequences corresponding 
-     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`, 
+     * @return the index of the contexts that lay in the sequences corresponding
+     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`,
      *      but that are located outside the regions in `regions_to_avoid`
      */
     static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
@@ -426,8 +425,8 @@ public:
      * @param[in] sampling_rate is the number of contexts to be found in order to record a context
      *          in the index
      * @param[in,out] progress_bar is the progress bar
-     * @return the index of the contexts that lay in the sequences corresponding 
-     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`, 
+     * @return the index of the contexts that lay in the sequences corresponding
+     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`,
      *      but that are located outside the regions in `regions_to_avoid`
      */
     static ContextIndex build_index(const std::filesystem::path& genome_fasta,

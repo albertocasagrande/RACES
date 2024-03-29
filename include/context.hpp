@@ -2,23 +2,23 @@
  * @file context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational contexts and extended context automata
- * @version 0.8
- * @date 2024-01-20
- * 
+ * @version 0.9
+ * @date 2024-03-29
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@
 
 #include "archive.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -48,15 +48,15 @@ namespace Mutations
 
 /**
  * @brief A class to represent mutational context
- * 
- * A context is a nucleic triplet where a mutation may 
+ *
+ * A context is a nucleic triplet where a mutation may
  * occur.
- * Every context univocally corresponds to a code that 
- * represents the triplet. This class guarantees the 
- * mutational context code to be in the interval 
- * natural [0,63]: 5', 3', and the central nucleotide 
+ * Every context univocally corresponds to a code that
+ * represents the triplet. This class guarantees the
+ * mutational context code to be in the interval
+ * natural [0,63]: 5', 3', and the central nucleotide
  * have 4 possible values, i.e., A, C, G, and T.
- * Moreover, all the codes for contexts having either 
+ * Moreover, all the codes for contexts having either
  * a 'C' and a 'T' as central nucleotide are guaranteed
  * to be in the interval [0,31].
  */
@@ -74,25 +74,25 @@ public:
      * @brief The empty constructor
      */
     MutationalContext();
-    
+
     /**
      * @brief A constructor
-     * 
+     *
      * @param nucleic_triplet is the string of the nucleic triplet
      */
     MutationalContext(const char* nucleic_triplet);
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param nucleic_triplet is the string of the nucleic triplet
      */
     MutationalContext(const std::string& nucleic_triplet);
 
     /**
-     * @brief Get the mutational context code 
-     * 
-     * @return a constant reference to the mutational context code 
+     * @brief Get the mutational context code
+     *
+     * @return a constant reference to the mutational context code
      */
     inline const CodeType& get_code() const
     {
@@ -101,8 +101,8 @@ public:
 
     /**
      * @brief Check whether the mutational context is defined
-     * 
-     * @return `true` if and only if the nucleic triplet was 
+     *
+     * @return `true` if and only if the nucleic triplet was
      *          specified during the object creation
      */
     inline bool is_defined() const
@@ -112,28 +112,28 @@ public:
 
     /**
      * @brief Get the nucleic sequence of the context
-     * 
+     *
      * @return the nucleic sequence of the context
      */
     std::string get_sequence() const;
 
     /**
      * @brief Get the context central nucleotide
-     * 
+     *
      * @return the context central nucleotide
      */
     char get_central_nucleotide() const;
 
     /**
      * @brief Get the complement mutational context
-     * 
-     * @return the complement mutational context 
+     *
+     * @return the complement mutational context
      */
-    MutationalContext get_complement() const;
+    MutationalContext get_complemented() const;
 
     /**
      * @brief Test whether two mutational contexts are equivalent
-     * 
+     *
      * @param context is the mutational context to compare
      * @return `true` if and only if the two mutational contexts represent
      *      the same nucleic triplet
@@ -145,7 +145,7 @@ public:
 
     /**
      * @brief Test whether two mutational contexts differ
-     * 
+     *
      * @param context is the mutational context to compare
      * @return `true` if and only if the two mutational contexts represent
      *      different nucleic triplets
@@ -157,7 +157,7 @@ public:
 
     /**
      * @brief Save a mutational context in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -169,7 +169,7 @@ public:
 
     /**
      * @brief Load a mutational context from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded mutational context
@@ -186,50 +186,25 @@ public:
 
     /**
      * @brief Get the code of the complement mutational context
-     * 
-     * @param code is the mutational context code whose complement is request 
-     * @return the code of the complement context of the 
-     *      context whose code is `code` 
+     *
+     * @param code is the mutational context code whose complement is request
+     * @return the code of the complement context of the
+     *      context whose code is `code`
      */
-    static CodeType get_complement(const CodeType& code);
-
-    /**
-     * @brief Get the complement base
-     * 
-     * @param base is the base whose complement is request 
-     * @return the complement base of `base` 
-     */
-    static char get_complement(const char& base);
-
-    /**
-     * @brief Get the complement sequence
-     * 
-     * @param sequence is the sequence whose complement is request 
-     * @return the complement sequence of `sequence` 
-     */
-    static std::string get_complement(const std::string& sequence);
-
-    /**
-     * @brief Check whether a symbol represents a nucleic base
-     * 
-     * @param symbol is the symbol to be tested 
-     * @return `true` if and only if symbol represents a base, i.e., 
-     *       it is one among 'A', 'C', 'G', 'T', 'a', 'c', 'g', or 't'.
-     */
-    static bool is_a_base(const char& symbol);
+    static CodeType get_complemented(const CodeType& code);
 };
 
 
 /**
  * @brief An automaton for parsing extended context
- * 
- * An extended context is a triplet in the alphabet 
+ *
+ * An extended context is a triplet in the alphabet
  * 'A', 'C', 'G', 'T', and 'N'.
- * An object of this class is an automaton whose state 
- * correspond to an extended context. The automaton state 
+ * An object of this class is an automaton whose state
+ * correspond to an extended context. The automaton state
  * always matches the extended context of the last read
  * nucleotides assuming that "NNN" is the initial
- * configuration. 
+ * configuration.
  */
 struct ExtendedContextAutomaton
 {
@@ -237,17 +212,17 @@ struct ExtendedContextAutomaton
      * @brief The type of code for bases
      */
     using BaseCodeType = uint8_t;
-    
+
     /**
      * @brief The type of the edges from a node
-     * 
-     * This type represents edges leaving a node: the key in the 
-     * map is the code of the newly read base; the value is the 
+     *
+     * This type represents edges leaving a node: the key in the
+     * map is the code of the newly read base; the value is the
      * new context code.
      */
     using FromNodeEdgeType = std::map<BaseCodeType, MutationalContext::CodeType>;
 
-    std::array<bool, 125> is_a_context;             //!< a Boolean vector to flag proper context 
+    std::array<bool, 125> is_a_context;             //!< a Boolean vector to flag proper context
     std::array<MutationalContext, 125> contexts;    //!< the state corresponding contexts
     std::array<FromNodeEdgeType, 125> edges;        //!< the automata edges
 
@@ -255,17 +230,17 @@ struct ExtendedContextAutomaton
 
     /**
      * @brief Get a code for a character
-     * 
+     *
      * @param character is a possible base
-     * @return a number in the interval [0,5]. The 
-     *      value 5 is returned for all the characters 
+     * @return a number in the interval [0,5]. The
+     *      value 5 is returned for all the characters
      *      different from  'A', 'C', 'G', 'T', and 'N'.
      */
     static BaseCodeType base2code(const char& character);
 
     /**
      * @brief Get the state corresponding to an extended context
-     * 
+     *
      * @param first is the first character of the extended context
      * @param second is the second character of the extended context
      * @param third is the third character of the extended context
@@ -283,7 +258,7 @@ public:
 
     /**
      * @brief Get the current automaton state
-     * 
+     *
      * @return return the current automaton state
      */
     inline const MutationalContext::CodeType& get_state() const
@@ -293,8 +268,8 @@ public:
 
     /**
      * @brief Check whether the automaton state corresponds to a proper context
-     * 
-     * @return `true` if and only if the last three nucleotides read by the 
+     *
+     * @return `true` if and only if the last three nucleotides read by the
      *      automaton are among 'A', 'C', 'G', 'T'
      */
     inline const bool& read_a_context() const
@@ -304,7 +279,7 @@ public:
 
     /**
      * @brief Get the context corresponding to the current state
-     * 
+     *
      * @return the context corresponding to the current state
      */
     inline const MutationalContext& get_context() const
@@ -314,9 +289,9 @@ public:
 
     /**
      * @brief Read a character and update the automaton state
-     * 
+     *
      * @param character is the read character
-     * @return `true` if and only if the read character is a valid 
+     * @return `true` if and only if the read character is a valid
      *      nucleotide character, i.e., it is among 'A', 'C', 'G',
      *      'T', and 'N'.
      */
@@ -324,16 +299,16 @@ public:
 
     /**
      * @brief Reset the automaton state
-     * 
+     *
      * @return a reference to the updated automaton
      */
     ExtendedContextAutomaton& reset();
 
     /**
      * @brief Check whether the character is a nucleotide
-     * 
+     *
      * @param character is a character
-     * @return `true` if and only if the read character is a valid 
+     * @return `true` if and only if the read character is a valid
      *      nucleotide character, i.e., it is among 'A', 'C', 'G',
      *      'T', and 'N'.
      */
@@ -362,7 +337,7 @@ namespace std
 
 /**
  * @brief Stream the mutational context in a stream
- * 
+ *
  * @param out is the output stream
  * @param context is the mutational context to stream
  * @return a reference to the output stream

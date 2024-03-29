@@ -291,10 +291,10 @@ class MutationEngine
         using namespace Races::Mutations;
 
         MutationalContext context = m_type.get_context();
-        MutationalContext complement_context = context.get_complement();
+        MutationalContext compl_context = context.get_complemented();
 
         size_t total_pos = context_index[context].size();
-        total_pos += context_index[complement_context].size();
+        total_pos += context_index[compl_context].size();
 
         size_t index;
         {
@@ -305,9 +305,9 @@ class MutationEngine
         char alt_base = m_type.get_replace_base();
         if (index >= context_index[context].size()) {
             index -= context_index[context].size();
-            context = complement_context;
+            context = compl_context;
 
-            alt_base = MutationalContext::get_complement(alt_base);
+            alt_base = GenomicSequence::get_complemented(alt_base);
         }
 
         GENOME_WIDE_POSITION pos;
@@ -349,7 +349,7 @@ class MutationEngine
      * @param num_of_mutations is the number of CNA to apply
      * @param nature is the nature of the mutations
      */
-    void place_CNAs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations, 
+    void place_CNAs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
                     const size_t& num_of_mutations, const Mutation::Nature& nature)
     {
         // while some of the requested CNAs have not been set
@@ -379,13 +379,13 @@ class MutationEngine
                     to_be_placed = false;
                 } else {
                     if (--available == 0) {
-                        throw std::runtime_error("None of the " 
-                                                + std::to_string(passenger_CNAs.size()) 
+                        throw std::runtime_error("None of the "
+                                                + std::to_string(passenger_CNAs.size())
                                                 + " admitted CNAs can be applied.");
                     }
 
                     if (index<available) {
-                        // here passenger_CNAs is shuffled and it will not be 
+                        // here passenger_CNAs is shuffled and it will not be
                         // resorted as at the beginning of the computation, but
                         // this is still acceptable because the CNAs are
                         // randomly selected
@@ -415,10 +415,10 @@ class MutationEngine
 
     /**
      * @brief Get the available alleles for placing a SNV
-     * 
+     *
      * @param cell_mutations are the non-germinal mutations of a cell
      * @param genomic_position is the position in which we want to place the SNV
-     * @return std::list<AlleleId> 
+     * @return std::list<AlleleId>
      */
     std::list<AlleleId> get_available_alleles_for_SNV(const GenomeMutations& cell_mutations,
                                                       const GenomicPosition& genomic_position) const
@@ -493,7 +493,7 @@ class MutationEngine
      * @param num_of_mutations is the number of SNV to apply
      * @param nature is the nature of the mutations
      */
-    void place_SNVs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations, 
+    void place_SNVs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
                     const std::string& SBS_name, const size_t& num_of_mutations,
                     const Mutation::Nature& nature)
     {
@@ -510,7 +510,7 @@ class MutationEngine
 
             if (it != inv_cumulative_SBS.end() &&
                     context_index[it->second.get_context()].size()>0) {
-                
+
                 context_misses = 0;
 
                 // select a SNV among those having the picked mutational type
@@ -534,7 +534,7 @@ class MutationEngine
 
                 if (++context_misses >= max_context_misses) {
                     throw std::runtime_error("Missed available context for \""
-                                             + SBS_name + "\" for " 
+                                             + SBS_name + "\" for "
                                              + std::to_string(max_context_misses)
                                              + " in row. Try to reduce the "
                                              + "context sampling.");
@@ -562,20 +562,20 @@ class MutationEngine
             // evaluate how many of the SNVs due to the current SBS
             const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
 
-            place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs, 
+            place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs,
                        Mutation::PASSENGER);
         }
     }
 
     /**
-     * @brief Seach for a random allele in a chromosome containing a region 
-     * 
+     * @brief Seach for a random allele in a chromosome containing a region
+     *
      * @param[out] allele_id is the identifier of the found allele
      * @param[in] chr_mutations is the chromosome in which the allele is searched
      * @param[in] region is the region that must be contained by the found allele
-     * @param[in] no_driver_mutations is a Boolean flag to establish whether 
+     * @param[in] no_driver_mutations is a Boolean flag to establish whether
      *          alleles containing driver mutations in the region are discharged
-     * @return `true` if and only if one of the alleles of `chr_mutations` 
+     * @return `true` if and only if one of the alleles of `chr_mutations`
      *          contains the region `region`. In this case, the parameter
      *          `allele_id` is set to the identifier of such an allele.
      *          When `no_driver_mutations` is set to `true`, the search
@@ -597,7 +597,7 @@ class MutationEngine
         for (const auto& [a_id, allele]: chr_alleles) {
             if (idx >= first_idx_to_test) {
                 if (allele.contains(region)
-                    && !(no_driver_mutations 
+                    && !(no_driver_mutations
                          && allele.has_driver_mutations_in(region))) {
                     allele_id = a_id;
                     return true;
@@ -611,7 +611,7 @@ class MutationEngine
                 return false;
             }
             if (allele.contains(region)
-                    && !(no_driver_mutations 
+                    && !(no_driver_mutations
                          && allele.has_driver_mutations_in(region))) {
                 allele_id = a_id;
                 return true;
@@ -624,19 +624,19 @@ class MutationEngine
 
     /**
      * @brief Seach for an allele in which the CNA can be applied
-     * 
+     *
      * @param[in,out] cna is the CNA which should be applied
      * @param[in] chr_mutations is the chromosome in which the allele is searched
-     * @param[in] no_driver_mutations is a Boolean flag to establish whether 
+     * @param[in] no_driver_mutations is a Boolean flag to establish whether
      *          alleles containing driver mutations in the region are discharged
-     * @return `true` if and only if one of the alleles of `chr_mutations` 
+     * @return `true` if and only if one of the alleles of `chr_mutations`
      *          admits the application of `cna`.
      *          When `no_driver_mutations` is set to `true`, the search
      *          must avoid alleles containing driver mutations in `region`.
-     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
-     *          then, when `true` is returned the source or the destination of 
-     *          `cna`, respectively, are updated to the identifier of the found 
+     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or
+     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`,
+     *          then, when `true` is returned the source or the destination of
+     *          `cna`, respectively, are updated to the identifier of the found
      *          allele.
      */
     bool find_allele_for(CNA& cna, ChromosomeMutations& chr_mutations,
@@ -646,7 +646,7 @@ class MutationEngine
         switch(cna.type) {
             case CNA::Type::AMPLIFICATION:
                 if (cna.source == RANDOM_ALLELE) {
-                    return select_allele_containing(cna.source, chr_mutations, 
+                    return select_allele_containing(cna.source, chr_mutations,
                                                     cna_region, no_driver_mutations);
                 }
                 return true;
@@ -666,15 +666,15 @@ class MutationEngine
      *
      * @param[in,out] cna is the CNA to place
      * @param[in] cell_mutations are the cell mutations
-     * @return `true` if and only if the CNA placement has succeed. This method 
-     *          returns `false` when the CNA cannot be placed because no allele 
+     * @return `true` if and only if the CNA placement has succeed. This method
+     *          returns `false` when the CNA cannot be placed because no allele
      *          are available for it.
      *          When `no_driver_mutations` is set to `true`, the search
      *          must avoid alleles containing driver mutations in `region`.
-     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or 
-     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`, 
-     *          then, when `true` is returned the source or the destination of 
-     *          `cna`, respectively, are updated to the identifier of the found 
+     *          If `cna` is an amplification and the source is `RANDOM_ALLELE` or
+     *          the `cna` is a deletion and the destination is `RANDOM_ALLELE`,
+     *          then, when `true` is returned the source or the destination of
+     *          `cna`, respectively, are updated to the identifier of the found
      *          allele.
      */
     bool place_CNA(CNA& cna, GenomeMutations& cell_mutations)
@@ -815,15 +815,15 @@ class MutationEngine
 
     /**
      * @brief Get the species rate map
-     * 
+     *
      * This method returns a map from species identifier to the corresponding
      * passenger rates.
-     * 
-     * @param descendants_forest is a descendent forest 
+     *
+     * @param descendants_forest is a descendent forest
      * @return a map associating a species in `descendants_forest` to its
      *          passenger rates
      */
-    std::map<Mutants::SpeciesId, PassengerRates> 
+    std::map<Mutants::SpeciesId, PassengerRates>
     get_species_rate_map(const Mutants::DescendantsForest& descendants_forest) const
     {
         using namespace Races::Mutants;
@@ -849,15 +849,15 @@ class MutationEngine
 
     /**
      * @brief Get the driver mutation map
-     * 
+     *
      * This method returns a map from the mutant identifier to the correspoding
      * driver mutations.
-     * 
-     * @param descendants_forest is a descendent forest 
-     * @return a map associating the mutants in `descendants_forest` to the 
+     *
+     * @param descendants_forest is a descendent forest
+     * @return a map associating the mutants in `descendants_forest` to the
      *              correspoding driver mutations.
      */
-    std::map<Mutants::MutantId, DriverMutations> 
+    std::map<Mutants::MutantId, DriverMutations>
     get_driver_mutation_map(const Mutants::DescendantsForest& descendants_forest) const
     {
         using namespace Races::Mutants;
@@ -880,15 +880,15 @@ class MutationEngine
 
     /**
      * @brief Filter a list of CNAs according the chromosomes in the context index
-     * 
-     * This method returns the vector of CNAs that are contained in the parameter 
+     *
+     * This method returns the vector of CNAs that are contained in the parameter
      * vector and lay in one of the chromosomes mentioned in the context index.
-     * 
+     *
      * @param CNAs is a list of CNAs
-     * @return the vector of CNAs that are contained in `CNAs` and lay in one of 
+     * @return the vector of CNAs that are contained in `CNAs` and lay in one of
      *          the chromosomes mentioned in the context index.
      */
-    std::vector<CNA> 
+    std::vector<CNA>
     filter_CNA_by_chromosome_ids(const std::vector<CNA>& CNAs) const
     {
         auto chr_ids = context_index.get_chromosome_ids();
@@ -972,7 +972,7 @@ public:
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={}):
-        generator(), context_index(context_index), mutational_properties(mutational_properties), 
+        generator(), context_index(context_index), mutational_properties(mutational_properties),
         germline_mutations(germline_mutations), driver_storage(driver_storage),
         infinite_sites_model(true)
     {
@@ -1161,7 +1161,7 @@ public:
 
     /**
      * @brief Get the a sample of wild-type cells
-     * 
+     *
      * @param num_of_cells is the number of cells in the wild-type sample
      * @param num_of_somatic_mutations is the number of somatic mutations
      * @return a sample of `num_of_cells` wild-type cells
@@ -1180,7 +1180,7 @@ public:
             // place preneoplastic mutations
             place_SNVs(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
                        Mutation::PRENEOPLASTIC);
-            
+
             sample_mutations.mutations.push_back(mutations);
         }
 
@@ -1189,7 +1189,7 @@ public:
 
     /**
      * @brief Check whether a default exposure has been set
-     * 
+     *
      * @return `true` if and only if a default exposure has been set
      */
     inline bool has_default_exposure() const

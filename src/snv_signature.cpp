@@ -2,23 +2,23 @@
  * @file snv_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Variation Mutation mutational signature
- * @version 0.15
- * @date 2024-02-08
- * 
+ * @version 0.16
+ * @date 2024-03-29
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -103,7 +103,7 @@ MutationalType::MutationalType(const MutationalContext& context, const char& rep
         throw std::domain_error(oss.str());
     }
 
-    if (!MutationalContext::is_a_base(replace_base)) {
+    if (!GenomicSequence::is_a_DNA_base(replace_base)) {
         std::ostringstream oss;
 
         oss << "Expected a replace base. Got '" << replace_base << "'";
@@ -112,8 +112,8 @@ MutationalType::MutationalType(const MutationalContext& context, const char& rep
     }
 
     if (central_nucleotide != 'C' && central_nucleotide != 'T') {
-        this->context = context.get_complement(); 
-        this->replace_base = MutationalContext::get_complement(replace_base);
+        this->context = context.get_complemented();
+        this->replace_base = GenomicSequence::get_complemented(replace_base);
     } else {
         this->context = context;
         this->replace_base = toupper(replace_base);
@@ -133,7 +133,7 @@ MutationalType::MutationalType(const std::string& context, const char& replace_b
         throw std::domain_error(oss.str());
     }
 
-    if (!MutationalContext::is_a_base(replace_base)) {
+    if (!GenomicSequence::is_a_DNA_base(replace_base)) {
         std::ostringstream oss;
 
         oss << "Expected a replace base. Got '" << replace_base << "'";
@@ -142,8 +142,8 @@ MutationalType::MutationalType(const std::string& context, const char& replace_b
     }
 
     if (context[1] != 'C' &&  context[1] != 'T' && context[1] != 'c' &&  context[1] != 't') {
-        this->context = this->context.get_complement(); 
-        this->replace_base = MutationalContext::get_complement(replace_base);
+        this->context = this->context.get_complemented();
+        this->replace_base = GenomicSequence::get_complemented(replace_base);
     }
 }
 
@@ -239,7 +239,7 @@ double MutationalSignature::operator()(const MutationalType& type) const
     auto it = dist_map.find(type);
     if (it != dist_map.end()) {
         return it->second;
-    } 
+    }
 
     return 0;
 }
@@ -250,7 +250,7 @@ std::vector<std::string> read_row(std::istream& in, const char& delimiter)
     getline(in, line);
 
     std::istringstream iss(line);
-    
+
     std::vector<std::string> row;
     std::string cell;
 
@@ -286,7 +286,7 @@ std::map<std::string, std::map<MutationalType, double>> not_validated_read_from_
 
         ++row_number;
         row = read_row(in,delimiter);
-    } 
+    }
 
     return result;
 }
@@ -345,7 +345,7 @@ bool less<Races::Mutations::MutationalType>::operator()(const Races::Mutations::
     const auto& lhs_code = lhs.get_context().get_code();
     const auto& rhs_code = rhs.get_context().get_code();
 
-    return ((lhs_code < rhs_code) || 
+    return ((lhs_code < rhs_code) ||
             ((lhs_code == rhs_code) && (lhs.get_replace_base()<rhs.get_replace_base())));
 }
 
@@ -353,8 +353,8 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalTy
 {
     std::string type_sequence = type.get_context().get_sequence();
 
-    out << type_sequence[0] << "[" 
-        << type_sequence[1] << ">" << type.get_replace_base() 
+    out << type_sequence[0] << "["
+        << type_sequence[1] << ">" << type.get_replace_base()
         << "]" << type_sequence[2];
 
     return out;

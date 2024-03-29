@@ -2,9 +2,9 @@
  * @file snv.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements Single Nucleotide Variation and related functions
- * @version 0.16
- * @date 2024-03-12
- * 
+ * @version 0.17
+ * @date 2024-03-29
+ *
  * @copyright Copyright (c) 2023-2024
  *
  * MIT License
@@ -34,6 +34,7 @@
 #include "snv.hpp"
 
 #include "context.hpp"
+#include "genomic_sequence.hpp"
 
 namespace Races
 {
@@ -82,7 +83,7 @@ SNV::SNV(const ChromosomeId& chr_id, const ChrPosition& chr_position,
 SNV::SNV(const ChromosomeId& chr_id, const ChrPosition& chr_position,
          const char ref_base, const char alt_base,
          const std::string& cause, const Mutation::Nature& nature):
-    Mutation(chr_id, chr_position, nature, cause), 
+    Mutation(chr_id, chr_position, nature, cause),
     ref_base(ref_base), alt_base(alt_base)
 {}
 
@@ -97,7 +98,7 @@ SNV::SNV(const GenomicPosition& position, const char ref_base,
          const Mutation::Nature& nature):
     Mutation(position, nature, cause), ref_base(ref_base), alt_base(alt_base)
 {
-    if (!MutationalContext::is_a_base(alt_base)) {
+    if (!GenomicSequence::is_a_DNA_base(alt_base)) {
         std::ostringstream oss;
 
         oss << "expected a base; got " << alt_base << std::endl;

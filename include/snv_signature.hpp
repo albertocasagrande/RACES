@@ -2,23 +2,23 @@
  * @file snv_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines Single Variation Mutation mutational signature
- * @version 0.13
- * @date 2023-12-09
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 0.14
+ * @date 2024-03-29
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,8 +39,9 @@
 #include <sstream>
 
 #include "context.hpp"
+#include "genomic_sequence.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -48,13 +49,13 @@ namespace Mutations
 
 /**
  * @brief A class to represent mutational type
- * 
- * A mutational type is a mutational context and the 
+ *
+ * A mutational type is a mutational context and the
  * replacing nucleic base for the central nucleotide.
- * For consistency with the literature, the mutational 
- * context will always be either a 'C' or a 'T'. We 
- * call it normal context. If the provided context 
- * is not a normal context, the complement context 
+ * For consistency with the literature, the mutational
+ * context will always be either a 'C' or a 'T'. We
+ * call it normal context. If the provided context
+ * is not a normal context, the complement context
  * and replacing nucleic base are used.
  */
 class MutationalType
@@ -69,7 +70,7 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param context is the mutational type context
      * @param replace_base is the base replacing the context central nucleotide
      */
@@ -77,7 +78,7 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param context is the mutational type context
      * @param replace_base is the base replacing the context central nucleotide
      */
@@ -85,20 +86,20 @@ public:
 
     /**
      * @brief A constructor
-     * 
-     * A mutational type is conventionally represented by a string in the 
-     * form `X[Y>W]K` where `X` and `K` and the bases on 5' and 3', respectively,  
+     *
+     * A mutational type is conventionally represented by a string in the
+     * form `X[Y>W]K` where `X` and `K` and the bases on 5' and 3', respectively,
      * and `Y` and `W` are the central nucleotide before and after the mutation.
-     * This constructor takes as parameter a string in this format and build 
+     * This constructor takes as parameter a string in this format and build
      * the corresponding `MutationalType` object.
-     * 
+     *
      * @param type is the textual representation of a mutational type
      */
     explicit MutationalType(const std::string& type);
 
     /**
      * @brief Get the mutational context
-     * 
+     *
      * @return the mutational context
      */
     inline const MutationalContext& get_context() const
@@ -108,7 +109,7 @@ public:
 
     /**
      * @brief Get the replace base
-     * 
+     *
      * @return the replace base
      */
     inline const char& get_replace_base() const
@@ -118,17 +119,17 @@ public:
 
     /**
      * @brief Get complement base of the replace base
-     * 
+     *
      * @return the replace base
      */
     inline char get_complement_replace_base() const
     {
-        return MutationalContext::get_complement(replace_base);
+        return GenomicSequence::get_complemented(replace_base);
     }
 
     /**
      * @brief Test whether two mutational types are equivalent
-     * 
+     *
      * @param type is the mutational type to compare
      * @return `true` if and only if the two mutational types refer
      *      to equivalent contexts and the same replace base
@@ -140,7 +141,7 @@ public:
 
     /**
      * @brief Test whether two mutational types differ
-     * 
+     *
      * @param type is the mutational type to compare
      * @return `true` if and only if the two mutational types refer
      *      to different contexts or different replace bases
@@ -162,7 +163,7 @@ struct std::less<Races::Mutations::MutationalType>
                     const Races::Mutations::MutationalType &rhs) const;
 };
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -173,17 +174,17 @@ class MutationalSignature;
 
 /**
  * @brief A class to represent the result of a mutational signature expression
- * 
- * This class is meant to represent temporary object that are evaluated during 
+ *
+ * This class is meant to represent temporary object that are evaluated during
  * the computation of expressions of the kind:
- *  
+ *
  * \f$\alpha_1 * \beta_1 + alpha_2 * beta_2 + \ldots\f$
- * 
- * where the \f$\alpha_i\f$'s are real values in the interval \f$[0,1]\f$ and 
- * the \f$\beta_i\f$'s are `MutationalSignature` objects. 
- * 
+ *
+ * where the \f$\alpha_i\f$'s are real values in the interval \f$[0,1]\f$ and
+ * the \f$\beta_i\f$'s are `MutationalSignature` objects.
+ *
  * Even if the final result of above expression is a mutational signature, the
- * partial results may be different from a probability distribution and that 
+ * partial results may be different from a probability distribution and that
  * is why this class is needed.
  */
 class MutationalSignatureExprResult
@@ -192,10 +193,10 @@ class MutationalSignatureExprResult
 
     /**
      * @brief The constructor
-     * 
-     * This constructor is private and it is meant to be exclusively called by 
+     *
+     * This constructor is private and it is meant to be exclusively called by
      * `MutationalSignature`'s methods.
-     * 
+     *
      * @param value_map is a mutational type-value map
      */
     MutationalSignatureExprResult(const std::map<MutationalType, double>& value_map);
@@ -207,18 +208,18 @@ public:
 
     /**
      * @brief Cast to `MutationalSignature`
-     * 
-     * This method tries to cast a mutational signature expression to a 
-     * mutational signature. When the expression does not represent a 
+     *
+     * This method tries to cast a mutational signature expression to a
+     * mutational signature. When the expression does not represent a
      * probability distribution a `std::domain_error` is thrown.
-     * 
+     *
      * @return the corresponding `MutationalSignature` object
      */
     operator MutationalSignature();
 
     /**
      * @brief Inplace multiply by an arithmetic value
-     * 
+     *
      * @tparam T is the type of the multiplicand
      * @param value is the multiplicand
      * @return a reference to the updated object
@@ -229,7 +230,7 @@ public:
         if (value>1 || value<0) {
             std::ostringstream oss;
 
-            oss << "the multiplying value must be in the real interval [0,1]. " 
+            oss << "the multiplying value must be in the real interval [0,1]. "
                 << std::to_string(value) << " passed.";
 
             throw std::domain_error(oss.str());
@@ -244,7 +245,7 @@ public:
 
     /**
      * @brief Inplace add a mutational signature expression value
-     * 
+     *
      * @param expression_value is a mutational signature expression value
      * @return a reference to the updated object
      */
@@ -252,7 +253,7 @@ public:
 
     /**
      * @brief Inplace add a signature
-     * 
+     *
      * @param signature is a mutational signature
      * @return a reference to the updated object
      */
@@ -263,8 +264,8 @@ public:
 
 /**
  * @brief A class to represent a mutational signature
- * 
- * A mutational signature is a probability distribution on 
+ *
+ * A mutational signature is a probability distribution on
  * the set of mutational types.
  */
 class MutationalSignature
@@ -280,15 +281,15 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param distribution is a mutation type-value map representing a distribution
      */
     explicit MutationalSignature(const std::map<MutationalType, double>& distribution);
 
     /**
      * @brief Get the initial constant iterator
-     * 
-     * @return the initial constant iterator 
+     *
+     * @return the initial constant iterator
      */
     inline const_iterator begin() const
     {
@@ -297,8 +298,8 @@ public:
 
     /**
      * @brief Get the final constant iterator
-     * 
-     * @return the final constant iterator 
+     *
+     * @return the final constant iterator
      */
     inline const_iterator end() const
     {
@@ -307,7 +308,7 @@ public:
 
     /**
      * @brief Get the probability associated to a mutational type
-     * 
+     *
      * @param type is the mutational type whose probability is aimed
      * @return the probability of `type`
      */
@@ -315,7 +316,7 @@ public:
 
     /**
      * @brief Multiply by an arithmetic value
-     * 
+     *
      * @tparam T is the type of the multiplicand
      * @param value is the multiplicand
      * @return the resulting mutational signature expression value
@@ -328,7 +329,7 @@ public:
 
     /**
      * @brief Add a signature
-     * 
+     *
      * @param signature is a mutational signature
      * @return the resulting mutational signature expression value
      */
@@ -339,16 +340,16 @@ public:
 
     /**
      * @brief Read mutational signature from a input stream
-     * 
+     *
      * @param in is the input stream
-     * @return a map that associates the name of the signatures in the file 
+     * @return a map that associates the name of the signatures in the file
      *         and the corresponding signature.
      */
     static std::map<std::string, MutationalSignature> read_from_stream(std::istream& in);
 
     /**
      * @brief Read mutational signature from a input stream
-     * 
+     *
      * @param in is the input stream
      * @param signature_names is the set of the requested signature
      * @return a map that associates the name of the signatures in the file that
@@ -358,13 +359,13 @@ public:
 };
 
 /**
- * @brief Multiply an arithmetic value and a mutational signature 
- * 
+ * @brief Multiply an arithmetic value and a mutational signature
+ *
  * @tparam T is the type of the arithmetic value
  * @param value is the arithmetic value
- * @param signature 
+ * @param signature
  * @return a `MutationalSignatureExprResult` object representing the
- *         the multiplication result 
+ *         the multiplication result
  */
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
 inline MutationalSignatureExprResult operator*(const T& value, const MutationalSignature& signature)
@@ -377,11 +378,11 @@ inline MutationalSignatureExprResult operator*(const T& value, const MutationalS
 }   // Races
 
 
-namespace std 
+namespace std
 {
 /**
  * @brief Stream the mutational type in a stream
- * 
+ *
  * @param out is the output stream
  * @param type is the mutational type to stream
  * @return a reference to the output stream
@@ -390,7 +391,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalTy
 
 /**
  * @brief Stream the mutational type from a stream
- * 
+ *
  * @param in is the input stream
  * @param type is the object where the streamed mutational type will be placed
  * @return a reference to the input stream
