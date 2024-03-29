@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.33
- * @date 2024-03-12
+ * @version 0.34
+ * @date 2024-03-29
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -387,6 +387,39 @@ size_t Tissue::count_mutated_cells_from(PositionInTissue position,
     while (is_valid(position)&&cell_pointer(position)!=nullptr) {
         position += delta;
         ++counter;
+    }
+
+    return counter;
+}
+
+size_t Tissue::count_neighbors_in(const PositionInTissue position, const SpeciesId& species_id) const
+{
+    int16_t min_x = std::max(0, position.x-1);
+    int16_t max_x = std::min(static_cast<int>(space.size()),
+                             position.x+1);
+    int16_t min_y = std::max(0, position.y-1);
+    int16_t max_y = std::min(static_cast<int>(space[0].size()),
+                             position.y+1);
+    int16_t min_z = 0;
+    int16_t max_z = 0;
+
+    size_t counter{0};
+
+    if (dimensions>2) {
+        min_z = std::max(0, position.z-1);
+        max_y = std::min(static_cast<int>(space[0][0].size()),
+                         position.z+1);
+    }
+
+    for (int16_t x = min_x; x < max_x; ++x) {
+        for (int16_t y = min_y; y < max_y; ++y) {
+            for (int16_t z = min_z; z < max_z; ++z) {
+                const auto& cell_ptr = space[x][y][z];
+                if (cell_ptr != nullptr && cell_ptr->get_species_id() == species_id) {
+                    ++counter;
+                }
+            }
+        }
     }
 
     return counter;

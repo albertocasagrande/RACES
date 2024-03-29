@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.40
- * @date 2024-03-19
+ * @version 0.41
+ * @date 2024-03-29
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -109,6 +109,16 @@ class Tissue {
     {
         return this->space[position.x][position.y][position.z];
     }
+
+    /**
+     * @brief Count the number of cells in a neighborwood in a species
+     *
+     * @param position is the central position of the neighborwood
+     * @param species_id is the identifier of the searched species
+     * @return the number of cells in a neighborwood of `position` having
+     *      `species_id` as the identifier of their species
+     */
+    size_t count_neighbors_in(const PositionInTissue position, const SpeciesId& species_id) const;
 
     /**
      * @brief Register the species cells in the tissue space
@@ -436,11 +446,16 @@ public:
 
         /**
          * @brief Check whether a cell is on the cancer edge
-         * 
-         * @return `true` if and only if one of the eight 
-         *      neighbor cell does not have a mutation
+         *
+         * @param species_border a Boolean flag
+         * @return `true` if and only if either one of the
+         *      eight neighbor cells is a wild-type cell and
+         *      `species_border` is `false` or one of the
+         *      eight neighbor cells and the pointed cell
+         *      belong to different species and
+         *      `species_border` is `true`.
          */
-        bool is_on_border() const
+        bool is_on_border(const bool species_border=false) const
         {
             if (is_wild_type()) {
                 return false;
@@ -448,6 +463,7 @@ public:
 
             auto sizes = tissue.size();
 
+            const SpeciesId species_id = tissue.cell_pointer(position)->get_species_id();
             PositionInTissue pos;
             pos.x = (position.x>0?position.x-1:0);
             for (; (pos.x < position.x+2 &&  pos.x < sizes[0]); ++pos.x) {
@@ -456,7 +472,11 @@ public:
                     pos.z = (position.z>0?position.z-1:0);
                     for (; ((sizes.size()==3 && pos.z < position.z+2 &&  pos.z < sizes[2])
                             || (sizes.size()==2 && pos.z==0)); ++pos.z) {
-                        if (tissue.cell_pointer(pos)==nullptr) {
+                        const auto* cell_ptr = tissue.cell_pointer(pos);
+                        if (cell_ptr==nullptr) {
+                            return true;
+                        }
+                        if (species_border && cell_ptr->get_species_id()!=species_id) {
                             return true;
                         }
                     }
