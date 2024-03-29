@@ -2,10 +2,10 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.8
- * @date 2023-12-11
+ * @version 0.9
+ * @date 2024-03-29
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -40,9 +40,21 @@ namespace Mutants
 namespace Evolutions 
 {
 
+Direction::Direction():
+    Direction::Direction(Direction::X_DOWN)
+{}
+
 Direction::Direction(const uint8_t value):
+    Direction::Direction(value, 0)
+{}
+
+Direction::Direction(const uint8_t value, const uint8_t& dimension):
     bit_vector(value)
 {
+    if (!bit_vector) {
+        throw std::domain_error("Unsupported direction");
+    }
+
     for (size_t i=0; i<3; ++i) {
         const uint8_t axis = (value >> 2*i)&0x03;
 
@@ -50,24 +62,222 @@ Direction::Direction(const uint8_t value):
             throw std::domain_error("Unsupported direction");
         }
     }
+
+    switch (dimension) {
+        case 2:
+            if (value>>4) {
+                throw std::domain_error(("Direction specification contains "
+                                         "z-axis component, but the "
+                                         "specified dimension is ")
+                                        + std::to_string(dimension));
+            }
+            break;
+        case 0:
+            if (value>>4) {
+                bit_vector = bit_vector | (0x01 << 6);
+            }
+            break;
+        case 3:
+            bit_vector = bit_vector | (0x01 << 6);
+            break;
+        default:
+            throw std::domain_error("Supported dimension are 2 and 3. "
+                                    "Specified "
+                                    + std::to_string(dimension) + ".");
+    }
 }
 
+uint8_t Direction::num_of_dimensions() const
+{
+    if ((bit_vector>>6)&0x03) {
+        return 3;
+    }
+    return 2;
+}
 
 int Direction::get_delta(const size_t& axis_index) const
 {
-    const uint8_t axis = (bit_vector>>2*axis_index)&0x03;
+    const uint8_t axis = get_component(axis_index)>>(2*axis_index);
 
     if (axis == 0x00) {
         return 0;
     }
 
     if (axis == 0x01) {
-        return 1;
+        return -1;
     }
 
-    return -1;
+    return 1;
 }
 
+bool operator==(const Direction& a, const Direction& b)
+{
+    const uint8_t dim = a.num_of_dimensions();
+
+    if (dim != b.num_of_dimensions()) {
+        return false;
+    }
+
+    for (uint8_t i=0; i<dim; ++i) {
+        if (a.get_component(i) != b.get_component(i)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+DirectionGenerator::DirectionGenerator():
+    initial_dir{Direction::X_DOWN}
+{}
+
+DirectionGenerator::DirectionGenerator(const uint8_t& direction_value, const uint8_t& direction):
+    initial_dir{direction_value, direction}
+{}
+
+DirectionGenerator::DirectionGenerator(const Direction& initial_direction):
+    initial_dir{initial_direction}
+{}
+
+DirectionGenerator::DirectionGenerator(Direction&& initial_direction):
+    initial_dir{std::move(initial_direction)}
+{}
+
+DirectionGenerator::const_iterator::const_iterator(const Direction& initial_direction,
+                                                   const uint32_t& counter):
+    direction{initial_direction}, counter(counter)
+{}
+
+Direction DirectionGenerator::next(const Direction& direction)
+{
+    const uint8_t dim = direction.num_of_dimensions();
+
+    uint8_t reminder{1};
+    uint8_t bitvector{0};
+
+    for (uint8_t i=0; i<dim; ++i) {
+        uint8_t value = direction.get_component(i)>>(2*i);
+
+        value += reminder;
+
+        if (value == 0x03) {
+            value = 0x00;
+
+            reminder = 1;
+        } else {
+            reminder = 0;
+        }
+
+        bitvector = bitvector | (value << 2*i);
+    }
+
+    if (reminder>0) {
+        bitvector = 0x01;
+    }
+
+    return Direction(bitvector, dim);
+}
+
+Direction DirectionGenerator::prev(const Direction& direction)
+{
+    const uint8_t dim = direction.num_of_dimensions();
+
+    uint8_t reminder{1};
+    uint8_t bitvector{0};
+
+    for (uint8_t i=0; i<dim; ++i) {
+        uint8_t value = direction.get_component(i)>>(2*i);
+
+        if (reminder>0) {
+            if (value == 0x00) {
+                value = 0x02;
+
+                reminder = 1;
+            } else {
+                value -= reminder;
+
+                reminder = 0;
+            }
+        }
+
+        bitvector = bitvector | (value << 2*i);
+    }
+
+    if (bitvector==0) {
+        bitvector = 0x02 | (0x02 << 2);
+        if (dim==3) {
+            bitvector = bitvector | (0x02 << 4);
+        }
+    }
+    return Direction(bitvector, dim);
+}
+
+DirectionGenerator::const_iterator& DirectionGenerator::const_iterator::operator++()
+{
+    const uint8_t dim = direction.num_of_dimensions();
+
+    if (!((dim==2 && counter==8) || (dim==3 && counter==26))) {
+        ++counter;
+
+        direction = next(direction);
+    }
+
+    return *this;
+}
+
+DirectionGenerator::const_iterator DirectionGenerator::const_iterator::operator++(int)
+{
+    const_iterator prev_it(*this);
+
+    this->operator++();
+
+    return prev_it;
+}
+
+DirectionGenerator::const_iterator& DirectionGenerator::const_iterator::operator--()
+{
+    if (counter!=0) {
+        --counter;
+
+        direction = prev(direction);
+    }
+
+    return *this;
+}
+
+DirectionGenerator::const_iterator DirectionGenerator::const_iterator::operator--(int)
+{
+    const_iterator prev_it(*this);
+
+    this->operator--();
+
+    return prev_it;
+}
+
+DirectionGenerator::const_iterator DirectionGenerator::end() const
+{
+    switch (initial_dir.num_of_dimensions()) {
+        case 2:
+            return const_iterator(initial_dir, 8);
+        case 3:
+            return const_iterator(initial_dir, 26);
+        default:
+            throw std::runtime_error("Unsupported dimension "
+                                     + std::to_string(initial_dir.num_of_dimensions()));
+    }
+}
+
+bool operator==(const DirectionGenerator::const_iterator& a,
+                const DirectionGenerator::const_iterator& b)
+{
+    const auto num_of_dimensions = a.direction.num_of_dimensions();
+    if (num_of_dimensions != b.direction.num_of_dimensions()
+            | a.counter!=b.counter) {
+        return false;
+    }
+
+    return a.direction==b.direction;
+}
 
 PositionDelta::PositionDelta(const int x, const int y, const int z):
     x(x), y(y), z(z)

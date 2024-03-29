@@ -2,10 +2,10 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.28
- * @date 2023-12-11
+ * @version 0.29
+ * @date 2024-03-29
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -83,7 +83,7 @@ class Species: public SpeciesProperties {
         using value_type        =   CellInTissue;
         using pointer           =   const CellInTissue*;
         using reference         =   const CellInTissue&;
-        using iterator_category =   std::random_access_iterator_tag;
+        using iterator_category =   std::bidirectional_iterator_tag;
 
         const_iterator();
 

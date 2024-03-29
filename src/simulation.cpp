@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.54
- * @date 2024-03-19
+ * @version 0.55
+ * @date 2024-03-29
  *
  * @copyright Copyright (c) 2023-2024
  * 
@@ -959,21 +959,10 @@ void Simulation::init_valid_directions()
     }
 
     valid_directions.clear();
-
-    for (const auto &x_move : {Direction::X_UP, Direction::X_DOWN, Direction::X_NULL}) {
-        for (const auto &y_move : {Direction::Y_UP, Direction::Y_DOWN, Direction::Y_NULL}) {
-            if (tissue().size().size()==3) {
-                for (const auto &z_move : {Direction::Z_UP, Direction::Z_DOWN, Direction::Z_NULL}) {
-                    valid_directions.push_back(x_move|y_move|z_move);
-                }
-            } else {
-                valid_directions.push_back(x_move|y_move);
-            }
-        }
+    DirectionGenerator directions(Direction::X_UP, tissue().num_of_dimensions());
+    for (const auto dir : directions) {
+        valid_directions.push_back(dir);
     }
-
-    // remove null move
-    valid_directions.pop_back();
 }
 
 void Simulation::reset()

@@ -2,10 +2,10 @@
  * @file position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.10
- * @date 2023-12-11
+ * @version 0.11
+ * @date 2024-03-29
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  * 
  * MIT License
  * 
@@ -84,11 +84,6 @@ class Tissue;
  * @brief A class to represent 2D/3D directions
  */
 struct Direction {
-    uint8_t bit_vector; 
-
-    int get_delta(const size_t& axis_index) const;
-
-public:
     /**
      * @brief Canonical directions
      */
@@ -105,37 +100,310 @@ public:
     };
 
     /**
+     * @brief The empty constructor
+     */
+    Direction();
+
+    /**
      * @brief A constructor
      * 
      * @param value is a direction obtained by composing `Value`'s
      */
     Direction(const uint8_t value);
 
-    int get_delta_x() const;
+    /**
+     * @brief A constructor
+     *
+     * @param value is a direction obtained by composing `Value`'s
+     * @param dimension is the space dimension
+     */
+    Direction(const uint8_t value, const uint8_t& dimension);
 
-    int get_delta_y() const;
+    /**
+     * @brief Get the direction space dimension
+     *
+     * @return the direction space dimension
+     */
+    uint8_t num_of_dimensions() const;
 
-    int get_delta_z() const;
+    /**
+     * @brief Get the x-axis delta
+     *
+     * @return the x-axis delta
+     */
+    inline int get_delta_x() const
+    {
+        return get_delta(0);
+    }
+
+    /**
+     * @brief Get the y-axis delta
+     *
+     * @return the y-axis delta
+     */
+    inline int get_delta_y() const
+    {
+        return get_delta(1);
+    }
+
+    /**
+     * @brief Get the z-axis delta
+     *
+     * @return the z-axis delta
+     */
+    inline int get_delta_z() const
+    {
+        return get_delta(2);
+    }
+
+    /**
+     * @brief Get the x-axis component of the direction
+     *
+     * @return the x-axis component of the direction
+     */
+    inline Value get_component_x() const
+    {
+        return get_component(0);
+    }
+
+    /**
+     * @brief Get the y-axis component of the direction
+     *
+     * @return the y-axis component of the direction
+     */
+    inline Value get_component_y() const
+    {
+        return get_component(1);
+    }
+
+    /**
+     * @brief Get the z-axis component of the direction
+     *
+     * @return the z-axis component of the direction
+     */
+    inline Value get_component_z() const
+    {
+        return get_component(2);
+    }
+
+    /**
+     * @brief Get the direction component on one axis
+     *
+     * @param axis_index is the index of an axis
+     * @return the direction component on one axis
+     */
+    inline Value get_component(const size_t& axis_index) const
+    {
+        return static_cast<Value>(bit_vector&(0x03<<(2*axis_index)));
+    }
 
     friend std::ostream& std::operator<<(std::ostream& os, const Direction& direction);
+private:
+    uint8_t bit_vector;     //!< the bit vector representation of the direction
+
+    /**
+     * @brief Get the direction delta on one axis
+     *
+     * @param axis_index is the index of an axis
+     * @return the direction delta on one axis
+     */
+    int get_delta(const size_t& axis_index) const;
 };
 
-inline
-int Direction::get_delta_x() const
+/**
+ * @brief Test whether two directions are the same
+ *
+ * @param a is a direction
+ * @param b is a direction
+ * @return `true` if and only if `a` and `b` are the same
+ */
+bool operator==(const Direction& a, const Direction& b);
+
+/**
+ * @brief Test whether two directions differ
+ *
+ * @param a is a direction
+ * @param b is a direction
+ * @return `true` if and only if `a` and `b` differ
+ */
+inline bool operator!=(const Direction& a, const Direction& b)
 {
-    return get_delta(0);
+    return !(a==b);
 }
 
-inline
-int Direction::get_delta_y() const
+/**
+ * @brief Generate all the directions
+ *
+ * This class defines a direction order and supports iterations
+ * over it.
+ */
+class DirectionGenerator
 {
-    return get_delta(1);
-}
+    Direction initial_dir;  //!< the initial direction of the generator
+public:
 
-inline
-int Direction::get_delta_z() const
+    /**
+     * @brief The constant iterator over all the directions
+     */
+    class const_iterator
+    {
+        Direction direction;    //!< the current direction
+
+        uint32_t counter;      //!< the nu
+
+        /**
+         * @brief Construct a new const iterator
+         *
+         * @param direction is the direction
+         * @param counter is the number of already visited directions
+         */
+        const_iterator(const Direction& direction, const uint32_t& counter);
+    public:
+        using difference_type   =   std::ptrdiff_t;
+        using value_type        =   Direction;
+        using pointer           =   const Direction*;
+        using reference         =   const Direction&;
+        using iterator_category =   std::bidirectional_iterator_tag;
+
+        /**
+         * @brief Get the pointed direction
+         *
+         * @return the pointed direction
+         */
+        inline reference operator*() const
+        {
+            return direction;
+        }
+
+        /**
+         * @brief Get the pointer to the direction
+         *
+         * @return the pointer to the direction
+         */
+        inline pointer operator->() const
+        {
+            return &direction;
+        }
+
+        /**
+         * @brief Prefix increment
+         *
+         * @return an updated reference to the updated
+         *      constant iterator
+         */
+        const_iterator& operator++();
+
+        /**
+         * @brief Postfix increment
+         *
+         * @return a copy of the original iterator
+         */
+        const_iterator operator++(int);
+
+        /**
+         * @brief Prefix decrement
+         *
+         * @return an updated reference to the updated
+         *      constant iterator
+         */
+        const_iterator& operator--();
+
+        /**
+         * @brief Postfix decrement
+         *
+         * @return a copy of the original iterator
+         */
+        const_iterator operator--(int);
+
+        friend bool operator==(const const_iterator& a, const const_iterator& b);
+
+        friend class DirectionGenerator;
+    };
+
+    /**
+     * @brief Build a direction generator
+     */
+    DirectionGenerator();
+
+    /**
+     * @brief Build a direction generator
+     *
+     * @param direction_value is a disjunction of `Direction::Value`s
+     * @param dimension is the direction space dimension
+     */
+    DirectionGenerator(const uint8_t& direction_value, const uint8_t& dimension);
+
+    /**
+     * @brief Build a direction generator
+     *
+     * @param initial_direction is the initial direction of the generator
+     */
+    DirectionGenerator(const Direction& initial_direction);
+
+    /**
+     * @brief Build a direction generator
+     *
+     * @param initial_direction is the initial direction of the generator
+     */
+    DirectionGenerator(Direction&& initial_direction);
+
+    /**
+     * @brief Get the successive direction in the direction order
+     *
+     * @param direction is a direction
+     * @return the direction that comes just after `direction` in
+     *      the direction order
+     */
+    static Direction next(const Direction& direction);
+
+    /**
+     * @brief Get the previous direction in the direction order
+     *
+     * @param direction is a direction
+     * @return the direction that comes just before `direction` in
+     *      the direction order
+     */
+    static Direction prev(const Direction& direction);
+
+    /**
+     * @brief Get the initial iterator of the generator
+     *
+     * @return the initial iterator of the generator
+     */
+    inline const_iterator begin() const
+    {
+        return const_iterator(initial_dir, 0);
+    }
+
+    /**
+     * @brief Get the final iterator of the generator
+     *
+     * @return the final iterator of the generator
+     */
+    const_iterator end() const;
+};
+
+/**
+ * @brief Test whether two iterators of a direction generator are equal
+ *
+ * @param a is a direction generator constant iterator
+ * @param b is a direction generator constant iterator
+ * @return `true` if and only if `a` and `b` are the same
+ */
+bool operator==(const DirectionGenerator::const_iterator& a,
+                const DirectionGenerator::const_iterator& b);
+
+/**
+ * @brief Test whether two iterators of a direction generator differ
+ *
+ * @param a is a direction generator constant iterator
+ * @param b is a direction generator constant iterator
+ * @return `true` if and only if `a` and `b` differ
+ */
+inline bool operator!=(const DirectionGenerator::const_iterator& a,
+                       const DirectionGenerator::const_iterator& b)
 {
-    return get_delta(2);
+    return !(a==b);
 }
 
 /**
