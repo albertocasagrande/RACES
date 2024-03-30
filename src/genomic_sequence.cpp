@@ -2,8 +2,8 @@
  * @file genomic_sequence.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a structure to handle genomic sequence
- * @version 0.2
- * @date 2024-03-29
+ * @version 0.3
+ * @date 2024-03-30
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -54,6 +54,28 @@ bool GenomicSequence::is_a_DNA_base(const char& base)
     }
 }
 
+size_t GenomicSequence::get_base_index(const char& orig)
+{
+    switch(orig) {
+        case 'A':
+        case 'a':
+            return 0;
+        case 'C':
+        case 'c':
+            return 1;
+        case 'G':
+        case 'g':
+            return 2;
+        case 'T':
+        case 't':
+            return 3;
+        default:
+            throw std::domain_error("Unknown base \""
+                                    + std::string(orig,1)
+                                    + "\".");
+    }
+}
+
 char GenomicSequence::get_complemented(const char& base)
 {
     switch(base) {
@@ -69,6 +91,9 @@ char GenomicSequence::get_complemented(const char& base)
         case 'T':
         case 't':
             return 'A';
+        case 'N':
+        case 'n':
+            return 'N';
         default:
         {
             std::ostringstream oss;

@@ -2,8 +2,8 @@
  * @file genomic_sequence.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a structure to handle genomic sequence
- * @version 0.2
- * @date 2024-03-29
+ * @version 0.3
+ * @date 2024-03-30
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -46,6 +46,15 @@ struct GenomicSequence
      * @brief The vector of DNA bases
      */
     static std::vector<char> DNA_bases;
+
+    /**
+     * @brief Get the base index
+     *
+     * @param base is a nucleotide
+     * @return is the index of `base` in
+     *      `GenomicSequence::DNA_bases`
+     */
+    static size_t get_base_index(const char& base);
 
     /**
      * @brief Get the complemented base
