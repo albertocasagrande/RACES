@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.20
- * @date 2024-03-12
+ * @version 0.21
+ * @date 2024-03-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -121,6 +121,7 @@ class MutationsSimulator : public BasicExecutable
     bool paired_read;
     size_t read_size;
     size_t insert_size;
+    double sequencer_error_rate;
     std::string SNVs_csv_filename;
     std::string CNAs_csv_filename;
     std::string germline_csv_filename;
@@ -319,28 +320,28 @@ class MutationsSimulator : public BasicExecutable
         try {
             chr_id = GenomicPosition::stochr(row.get_field(0).substr(3));
         } catch (std::invalid_argument const&) {
-            throw std::domain_error("Unknown chromosome specification " + row.get_field(0) 
-                                    + " in row number " + std::to_string(row_num) 
+            throw std::domain_error("Unknown chromosome specification " + row.get_field(0)
+                                    + " in row number " + std::to_string(row_num)
                                     + ".");
         }
 
-        uint32_t begin_pos;         
+        uint32_t begin_pos;
         try {
             begin_pos = stoul(row.get_field(1));
         } catch (std::invalid_argument const&) {
-            throw std::domain_error("Unknown begin specification " + row.get_field(1) 
-                                    + " in row number " + std::to_string(row_num) 
+            throw std::domain_error("Unknown begin specification " + row.get_field(1)
+                                    + " in row number " + std::to_string(row_num)
                                     + ".");
         }
 
         GenomicPosition pos(chr_id, begin_pos);
 
-        uint32_t end_pos;                
+        uint32_t end_pos;
         try {
             end_pos = stoul(row.get_field(2));
         } catch (std::invalid_argument const&) {
-            throw std::domain_error("Unknown end specification " + row.get_field(2) 
-                                    + " in row number " + std::to_string(row_num) 
+            throw std::domain_error("Unknown end specification " + row.get_field(2)
+                                    + " in row number " + std::to_string(row_num)
                                     + ".");
         }
 
@@ -348,7 +349,7 @@ class MutationsSimulator : public BasicExecutable
             throw std::domain_error("The CNA begin lays after the end in row number "
                                     + std::to_string(row_num));
         }
-        
+
         return {pos, end_pos+1-begin_pos};
     }
 
@@ -463,7 +464,9 @@ class MutationsSimulator : public BasicExecutable
         if (coverage>0) {
             read_simulator.enable_SAM_writing(write_SAM);
 
-            const auto statistics = read_simulator(mutations_list, coverage, purity);
+            Races::Sequencers::BasicIlluminaSequencer sequencer(sequencer_error_rate);
+
+            const auto statistics = read_simulator(sequencer, mutations_list, coverage, purity);
 
             saving_statistics_data_and_images(statistics);
         }
@@ -633,8 +636,8 @@ public:
                     CNAs.emplace_back(region.get_begin(), region.size(), CNA::Type::AMPLIFICATION);
                 }
             } catch (std::invalid_argument const&) {
-                throw std::domain_error("Unknown major specification " + major 
-                                        + " in row number " + std::to_string(row_num) 
+                throw std::domain_error("Unknown major specification " + major
+                                        + " in row number " + std::to_string(row_num)
                                         + ".");
             }
 
@@ -644,8 +647,8 @@ public:
                     CNAs.emplace_back(region.get_begin(), region.size(), CNA::Type::DELETION);
                 }
             } catch (std::invalid_argument const&) {
-                throw std::domain_error("Unknown minor specification " + major 
-                                        + " in row number " + std::to_string(row_num) 
+                throw std::domain_error("Unknown minor specification " + major
+                                        + " in row number " + std::to_string(row_num)
                                         + ".");
             }
 
@@ -661,7 +664,8 @@ public:
                                   {"mutants", "Mutants evolution related options"},
                                   {"generic", "Generic options"}}),
         paired_read(false),
-        insert_size(0), SNVs_csv_filename(""), CNAs_csv_filename(""), epigenetic_FACS(false)
+        insert_size(0), sequencer_error_rate(0), SNVs_csv_filename(""),
+        CNAs_csv_filename(""), epigenetic_FACS(false)
     {
         namespace po = boost::program_options;
 
@@ -690,6 +694,8 @@ public:
              "simulated read size")
             ("insert-size,i", po::value<size_t>(&insert_size),
              "simulated insert size (enable paired-read)")
+            ("sequencer-error-rate,s", po::value<double>(&sequencer_error_rate),
+             "sequencer error rate per base")
             ("write-SAM,w", "write the simulated read SAM files")
         ;
 
@@ -750,6 +756,12 @@ public:
         }
 
         quiet = vm.count("quiet")>0;
+
+        if (sequencer_error_rate<0 || sequencer_error_rate>1) {
+            throw std::out_of_range(std::string("The sequencer error rate must be "
+                                                "in the interval [0,1]. ")
+                                    + "Given " + std::to_string(sequencer_error_rate) + ".");
+        }
 
         {
             using namespace Races::Mutations::SequencingSimulations;

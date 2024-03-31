@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.35
- * @date 2024-03-29
+ * @version 0.36
+ * @date 2024-03-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -48,6 +48,8 @@
 #include "variables.hpp"
 
 #include "utils.hpp"
+
+#include "sequencer.hpp"
 
 #if WITH_MATPLOT
 #include <matplot/matplot.h>
@@ -891,6 +893,8 @@ private:
 
     size_t num_of_reads;    //!< Number of already placed reads
 
+    size_t hamming_distance_threshold;    //!< Hamming distance threshold for reads
+
     /**
      * @brief A structure to maintain read simulation data
      */
@@ -1032,6 +1036,48 @@ private:
     }
 
     /**
+     * @brief Count the number of mismatched in a mismatch vector
+     *
+     * @param mismatch_vector a mismatch vector
+     * @return the number of mismatches represented in the mismatch vector
+     */
+    static size_t get_hamming_distance(const std::vector<bool>& mismatch_vector)
+    {
+        size_t total_mismatches{0};
+        for (const auto& mismatch: mismatch_vector) {
+            if (mismatch) {
+                ++total_mismatches;
+            }
+        }
+
+        return total_mismatches;
+    }
+
+    /**
+     * @brief Apply mutation to sequencing error vector
+     *
+     * @param[in,out] mismatch_vector is a Boolean vector representing mismatch with respect
+     *      to the reference
+     * @param[in] read_SNVs is a map from genomic positions to the corresponding SNVs of the
+     *      SNV laying on the read
+     * @param[in] genomic_position is the initial position of the simulated read
+     * @return a Boolean vector representing the mismatch with respect to the
+     *      reference genome of a read. Every `true` in the mismatch vector corresponds to a
+     *      mismatch of the read with respect to the reference genome
+     */
+    static void apply_mutations_to(std::vector<bool>& mismatch_vector,
+                                   const std::map<GenomicPosition, SNV>& read_SNVs,
+                                   const GenomicPosition& genomic_position)
+    {
+        // for all the SNVs placed on the simulated read
+        for (auto snv_it = read_SNVs.begin(); snv_it != read_SNVs.end(); ++snv_it) {
+
+            const size_t read_pos = snv_it->first.position-genomic_position.position;
+            mismatch_vector[read_pos] = true;
+        }
+    }
+
+    /**
      * @brief Compute the CIGAR string of a genomic region potentially affected by SNVs
      *
      * The CIGAR string a code that represents the alignment of a sequence over a reference
@@ -1043,51 +1089,36 @@ private:
      * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification
      *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
      *
-     * @param read_SNVs is a map from genomic positions to the corresponding SNVs of the SNV
-     *          laying on the read
-     * @param genomic_position is the initial position of the simulated read
-     * @param read_size is the size of the simulated read
-     * @return the CIGAR code corresponding to a simulated read having size `read_size`
-     *      whose sequence correspond to that of the sequence in the reference genome
-     *      from `genomic_position` with the exception of the genomic position in which
-     *      the SNVs in `SNVs` were placed
+     * @param[in] mismatch_vector is a mismatch vector
+     * @return the CIGAR code corresponding to the mismatch vector
      */
-    static std::string get_CIGAR(const std::map<GenomicPosition, SNV>& read_SNVs,
-                                 const GenomicPosition& genomic_position, const size_t& read_size)
+    static std::string get_CIGAR(const std::vector<bool>& mismatch_vector)
     {
-        using namespace Races::Mutations;
-
-        const ChrPosition last_position = genomic_position.position+read_size-1;
-
         std::ostringstream oss;
 
-        // the first position in the last matching sequence
-        size_t first_match = 0;
-
-        // for all the SNVs placed on the simulated read
-        for (auto snv_it = read_SNVs.begin(); snv_it != read_SNVs.end(); ++snv_it) {
-
-            // get the SNV position in the simulated read
-            const size_t SNV_pos = snv_it->second.position-genomic_position.position;
-
-            // if we have matched some nucleotides
-            if (SNV_pos>first_match) {
-                // report the number of matched nucleotides
-                oss << (SNV_pos-first_match) << "M";
+        size_t mismatches=0;
+        size_t matches=0;
+        for (const auto& mismatch : mismatch_vector) {
+            if (mismatch) {
+                if (matches>0) {
+                    oss << matches << "M";
+                    matches = 0;
+                }
+                ++mismatches;
+            } else {
+                if (mismatches>0) {
+                    oss << mismatches << "X";
+                    mismatches = 0;
+                }
+                ++matches;
             }
-
-            // report the SNV mismatch
-            oss << "1X";
-
-            // the next matching sequence will start from the next
-            // position in the read
-            first_match = SNV_pos+1;
         }
 
-        // if the last position was a match
-        if (genomic_position.position+first_match < last_position+1) {
-            // report the number of matched nucleotides
-            oss << (last_position-genomic_position.position+1-first_match) << "M";
+        if (mismatches>0) {
+            oss << mismatches << "X";
+        }
+        if (matches>0) {
+            oss << matches << "M";
         }
 
         return oss.str();
@@ -1196,7 +1227,6 @@ private:
     /**
      * @brief Collect template statistics
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] germline_SNVs is a map from genomic positions to the corresponding germline SNVs
      * @param[in] SNVs is a map from genomic positions to the corresponding SNVs
@@ -1204,15 +1234,12 @@ private:
      * @param[in] template_size is the size of the template
      * @param[in,out] chr_statistics are the chromosome statistics about a tissue sample
      */
-    template<typename DATA_TYPE,
-         std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void collect_template_statistics(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+    void collect_template_statistics(const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
                                      const std::map<GenomicPosition, SNV>& germline_SNVs,
                                      const std::map<GenomicPosition, SNV>& SNVs,
-                                     const ChrPosition& template_first_position,
-                                     const size_t& template_size, ChrSampleStatistics& chr_statistics)
+                                     const std::vector<std::pair<int, ChrPosition>>& template_read_data,
+                                     ChrSampleStatistics& chr_statistics)
     {
-        const auto template_read_data = get_template_read_data(template_first_position, template_size);
         for (const auto& [flags, read_first_position] : template_read_data) {
 
             chr_statistics.increase_coverage(read_first_position, read_size);
@@ -1253,26 +1280,26 @@ private:
      * This method writes in a stream the SAM alignment line corresponding to a simulated read
      * whose initial position on a reference genome chromosome, and SNVs are provided.
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
-     * @param SAM_stream is the SAM file output stream
-     * @param chr_data is the data about the chromosome from which the simulated read come from
-     * @param germline_SNVs is a map from genomic positions to the corresponding germline SNVs
-     * @param SNVs is a map from genomic positions to the corresponding SNVs
-     * @param read_first_position is the first position of the simulated read
-     * @param template_size is the size of the template
-     * @param sample_name is the tissue sample name
+     * @tparam SEQUENCER is the sequencer model type
+     * @param[in,out] sequencer is the sequencer
+     * @param[in] SAM_stream is the SAM file output stream
+     * @param[in] chr_data is the data about the chromosome from which the simulated read come from
+     * @param[in] germline_SNVs is a map from genomic positions to the corresponding germline SNVs
+     * @param[in] SNVs is a map from genomic positions to the corresponding SNVs
+     * @param[in] read_first_position is the first position of the simulated read
+     * @param[in] template_size is the size of the template
+     * @param[in] sample_name is the tissue sample name
      */
-    template<typename DATA_TYPE,
-         std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void write_SAM_template_alignments(std::ostream& SAM_stream,
-                                       const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    void write_SAM_template_alignments(SEQUENCER& sequencer, std::ostream& SAM_stream,
+                                       const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
                                        const std::map<GenomicPosition, SNV>& germline_SNVs,
                                        const std::map<GenomicPosition, SNV>& SNVs,
-                                       const ChrPosition& template_first_position,
-                                       const size_t& template_size, const std::string& sample_name="")
+                                       const std::vector<std::pair<int, ChrPosition>>& template_read_data,
+                                       const size_t& template_size,
+                                       const std::string& sample_name="")
     {
-        auto template_read_data = get_template_read_data(template_first_position, template_size);
-
         const size_t template_id = num_of_reads/template_read_data.size();
         const std::string template_name = get_template_name(template_id);
         for (size_t i=0; i<template_read_data.size(); ++i) {
@@ -1280,62 +1307,60 @@ private:
 
             const GenomicPosition genomic_position{chr_data.chr_id, read_first_position};
 
-            std::string read;
-            if constexpr(std::is_base_of_v<Races::IO::FASTA::Sequence, DATA_TYPE>) {
-                read = chr_data.nucleotides.substr(read_first_position-1, read_size);
-                apply_SNVs(read, SNVs, genomic_position);
-                apply_SNVs(read, germline_SNVs, genomic_position);
+            std::vector<bool> mismatch_vector(read_size, false);
+            std::string read = chr_data.nucleotides.substr(read_first_position-1, read_size);
+            apply_SNVs(read, SNVs, genomic_position);
+            apply_SNVs(read, germline_SNVs, genomic_position);
 
-                // if the read is meant to be reverse complemented
-                if (template_read_data[i].first & 0x10) {
-                    GenomicSequence::reverse_complement(read);
-                }
-            } else {
-                read = "*";
+            std::string qual = sequencer.simulate_seq(read, genomic_position, i);
+
+            for (size_t i=0; i<read_size; ++i) {
+                mismatch_vector[i] = (read[i] != chr_data.nucleotides[read_first_position-1+i]);
             }
 
             const auto mapq = 33;
 
-            const auto read_SNVs = merge_SNVs_in(SNVs, germline_SNVs, genomic_position,
-                                                 read_size);
+            const auto hamming_distance = get_hamming_distance(mismatch_vector);
 
-            SAM_stream << template_name                         // QNAME
-                       << '\t' << template_read_data[i].first   // FLAG
-                       << '\t' << chr_data.name                 // RNAME
-                       << '\t' << read_first_position           // POS
-                       << '\t' << mapq                          // MAPQ
-                       << '\t' << get_CIGAR(read_SNVs,
-                                            genomic_position, read_size); // CIGAR
-            if (read_type == ReadType::PAIRED_READ) {
-                const size_t paired_idx = 1-i;
-                const auto paired_pos = template_read_data[paired_idx].second;
+            if (hamming_distance < hamming_distance_threshold) {
+                SAM_stream << template_name                         // QNAME
+                           << '\t' << template_read_data[i].first   // FLAG
+                           << '\t' << chr_data.name                 // RNAME
+                           << '\t' << read_first_position           // POS
+                           << '\t' << mapq                          // MAPQ
+                           << '\t' << get_CIGAR(mismatch_vector);   // CIGAR
+                if (read_type == ReadType::PAIRED_READ) {
+                    const size_t paired_idx = 1-i;
+                    const auto paired_pos = template_read_data[paired_idx].second;
 
-                SAM_stream << '\t' << '='               // RNEXT
-                           << '\t' << paired_pos        // PNEXT
-                           << '\t' << (i==0?"":"-")
-                           << template_size;            // TLEN
-            } else {
-                SAM_stream << '\t' << '*'   // RNEXT
-                           << '\t' << '0'   // PNEXT
-                           << '\t' << '0';  // TLEN
+                    SAM_stream << '\t' << '='               // RNEXT
+                               << '\t' << paired_pos        // PNEXT
+                               << '\t' << (i==0?"":"-")
+                               << template_size;            // TLEN
+                } else {
+                    SAM_stream << '\t' << '*'   // RNEXT
+                               << '\t' << '0'   // PNEXT
+                               << '\t' << '0';  // TLEN
+                }
+                SAM_stream << '\t' << read  // SEQ
+                           << '\t' << qual;  // QUAL
+
+                // TAGS
+                if (sample_name.size()!=0) {
+                    SAM_stream << "\tRG:Z:" << sample_name;  // The read group
+                }
+                SAM_stream << "\tNM:i:" << hamming_distance; // The Hamming distance
+
+                SAM_stream << std::endl;
             }
-            SAM_stream << '\t' << read  // SEQ
-                       << '\t' << '*';  // QUAL
-
-            // TAGS
-            if (sample_name.size()!=0) {
-                SAM_stream << "\tRG:Z:" << sample_name;  // The read group
-            }
-            SAM_stream << "\tNM:i:" << read_SNVs.size();  // The Hamming distance
-
-            SAM_stream << std::endl;
         }
     }
 
     /**
      * @brief Generate the reads in an allelic fragment
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
+     * @tparam SEQUENCER is the sequencer model type
+     * @param[in,out] sequencer is the sequencer
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] fragment is the allele fragment for which reads must be generated
      * @param[in,out] sample_simulation_data are the read simulation data relative to the considered `sample`
@@ -1346,9 +1371,10 @@ private:
      * @param[in,out] progress_bar is the progress bar
      * @param[in,out] SAM_stream is the SAM file output stream
      */
-    template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_fragment_reads(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    void generate_fragment_reads(SEQUENCER& sequencer,
+                                 const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
                                  const AlleleFragment& germline_fragment,
                                  const AlleleFragment& fragment,
                                  ReadSimulationData& sample_simulation_data, const std::string& sample_name,
@@ -1382,13 +1408,14 @@ private:
             while (simulated_templates < num_of_frag_templates) {
                 auto begin_pos = dist(random_generator);
 
+                const auto template_read_data = get_template_read_data(begin_pos, template_size);
+
                 if (SAM_stream != nullptr) {
-                    write_SAM_template_alignments(*SAM_stream, chr_data, germline_SNVs, SNVs, begin_pos,
-                                                  template_size, sample_name);
+                    write_SAM_template_alignments(sequencer, *SAM_stream, chr_data, germline_SNVs, SNVs,
+                                                  template_read_data, template_size, sample_name);
                 }
 
-                collect_template_statistics(chr_data, germline_SNVs, SNVs, begin_pos,
-                                            template_size, chr_statistics);
+                collect_template_statistics(chr_data, germline_SNVs, SNVs, template_read_data, chr_statistics);
 
                 num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
                 ++simulated_templates;
@@ -1410,7 +1437,8 @@ private:
      * generates simulated reads over it up to a specified coverage of the mutated genomes,
      * and write the corresponding SAM alignments in a stream.
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
+     * @tparam SEQUENCER is the sequencer model type
+     * @param[in,out] sequencer is the sequencer
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] sample_genome_mutations is a sample genome mutations
      * @param[in,out] sample_simulation_data is the read simulation data of the sample
@@ -1419,14 +1447,16 @@ private:
      * @param[in,out] progress_bar is the progress bar
      * @param[in,out] SAM_stream is the SAM file output stream
      */
-    template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    ChrSampleStatistics generate_chromosome_reads(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
-                                                  const SampleGenomeMutations& sample_genome_mutations,
-                                                  ReadSimulationData& sample_simulation_data,
-                                                  const size_t& total_steps, size_t& steps,
-                                                  Races::UI::ProgressBar& progress_bar,
-                                                  std::ostream* SAM_stream=nullptr)
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    ChrSampleStatistics
+    generate_chromosome_reads(SEQUENCER& sequencer,
+                              const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
+                              const SampleGenomeMutations& sample_genome_mutations,
+                              ReadSimulationData& sample_simulation_data,
+                              const size_t& total_steps, size_t& steps,
+                              Races::UI::ProgressBar& progress_bar,
+                              std::ostream* SAM_stream=nullptr)
     {
         ChrSampleStatistics chr_stats{chr_data.chr_id,
 				                      static_cast<GenomicRegion::Length>(chr_data.length)};
@@ -1449,7 +1479,7 @@ private:
 
                     // since `cell_mutations` derives from `germline_mutations`, `germline_allele`
                     // fully contains `allele`
-                    generate_fragment_reads(chr_data, germline_it->second, fragment,
+                    generate_fragment_reads(sequencer, chr_data, germline_it->second, fragment,
                                             sample_simulation_data, sample_genome_mutations.name,
                                             chr_stats, total_steps, steps, progress_bar, SAM_stream);
                 }
@@ -1468,7 +1498,8 @@ private:
      * generates simulated reads over it up to a specified coverage of the mutated genomes,
      * and write the corresponding SAM alignments in a stream.
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
+     * @tparam SEQUENCER is the sequencer model type
+     * @param[in,out] sequencer is the sequencer
      * @param[out] statistics are the statistics about the generated reads
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] mutations_list is a list of sample mutations
@@ -1478,10 +1509,11 @@ private:
      * @param[in,out] progress_bar is the progress bar
      * @param[in,out] SAM_stream is the SAM file output stream
      */
-    template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    void generate_chromosome_reads(SampleSetStatistics& statistics,
-                                   const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    void generate_chromosome_reads(SEQUENCER& sequencer,
+                                   SampleSetStatistics& statistics,
+                                   const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
                                    const std::list<SampleGenomeMutations>& mutations_list,
                                    std::list<ReadSimulationData>& simulation_data,
                                    const size_t& total_steps, size_t& steps,
@@ -1495,7 +1527,7 @@ private:
 
         std::list<ChrSampleStatistics> chr_stats_list;
         for (const auto& mutations : mutations_list) {
-            chr_stats_list.push_back(generate_chromosome_reads(chr_data, mutations,
+            chr_stats_list.push_back(generate_chromosome_reads(sequencer, chr_data, mutations,
                                                                *simulation_data_it, total_steps,
                                                                steps, progress_bar, SAM_stream));
             ++simulation_data_it;
@@ -1514,16 +1546,13 @@ private:
     /**
      * @brief Get the SAM stream
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
      * @param chr_data in the information available about the chromosome to be considered
      * @param mutations_list is a list of sample mutations
      * @param base_name is the prefix of the filename
      * @return the SAM stream
      */
-    template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
-            std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
     std::ofstream
-    get_SAM_stream(const Races::IO::FASTA::ChromosomeData<DATA_TYPE>& chr_data,
+    get_SAM_stream(const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
                    const std::list<SampleGenomeMutations>& mutations_list,
                    const std::string& base_name="chr_",
                    const std::string& platform="ILLUMINA") const
@@ -1624,16 +1653,18 @@ private:
      * specified coverage of the mutated genomes. The base-coverage and SNV occurrences are collected
      * and, upon request, the SAM alignments corresponding to the produced reads are saved.
      *
-     * @tparam DATA_TYPE is the type of information available about the considered chromosome
+     * @tparam SEQUENCER is the sequencer model type
+     * @param[in,out] sequencer is the sequencer
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
      * @param base_name is the prefix of the filename
      * @param progress_bar is the progress bar
      * @return the statistics about the generated reads
      */
-    template<typename DATA_TYPE=Races::IO::FASTA::Sequence,
-             std::enable_if_t<std::is_base_of_v<Races::IO::FASTA::SequenceInfo, DATA_TYPE>, bool> = true>
-    SampleSetStatistics generate_reads(const std::list<SampleGenomeMutations>& mutations_list,
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    SampleSetStatistics generate_reads(SEQUENCER& sequencer,
+                                       const std::list<SampleGenomeMutations>& mutations_list,
                                        const double& coverage, const std::string& base_name,
                                        UI::ProgressBar& progress_bar)
     {
@@ -1652,20 +1683,24 @@ private:
 
         using namespace Races::IO::FASTA;
 
-        ChromosomeData<DATA_TYPE> chr_data;
+        ChromosomeData<Sequence> chr_data;
         progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
-        while (ChromosomeData<DATA_TYPE>::read(ref_stream, chr_data, progress_bar)) {
+        while (ChromosomeData<Sequence>::read(ref_stream, chr_data, progress_bar)) {
             if (chromosome_ids.count(chr_data.chr_id)>0) {
                 progress_bar.set_progress((100*(++steps))/total_steps);
 
                 if (write_SAM) {
-                    std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list, base_name);
+                    std::ofstream SAM_stream = get_SAM_stream(chr_data, mutations_list,
+                                                              base_name,
+                                                              sequencer.get_platform_name());
 
-                    generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data,
-                                              total_steps, steps, progress_bar, &SAM_stream);
+                    generate_chromosome_reads(sequencer, statistics, chr_data, mutations_list,
+                                              read_simulation_data, total_steps, steps,
+                                              progress_bar, &SAM_stream);
                 } else {
-                    generate_chromosome_reads(statistics, chr_data, mutations_list, read_simulation_data,
-                                              total_steps, steps, progress_bar);
+                    generate_chromosome_reads(sequencer, statistics, chr_data, mutations_list,
+                                              read_simulation_data, total_steps,
+                                              steps, progress_bar);
                 }
 
                 statistics.repr_chr_ids.insert(chr_data.chr_id);
@@ -1695,7 +1730,8 @@ private:
                   const Mode mode, const bool save_coverage, const int& seed):
         read_type(read_type), read_size(read_size), insert_size(insert_size), write_SAM(false),
         save_coverage(save_coverage), random_generator(seed), output_directory(output_directory),
-        ref_genome_filename(ref_genome_filename), num_of_reads(0)
+        ref_genome_filename(ref_genome_filename), num_of_reads(0),
+        hamming_distance_threshold(30)
     {
         namespace fs = std::filesystem;
 
@@ -1743,7 +1779,7 @@ public:
     ReadSimulator():
         read_type(ReadType::SINGLE_READ), read_size(0), insert_size(0), write_SAM(false),
         save_coverage(false), random_generator(), output_directory(""), ref_genome_filename(""),
-        num_of_reads(0)
+        num_of_reads(0), hamming_distance_threshold(30)
     {}
 
     /**
@@ -1790,20 +1826,26 @@ public:
      * if requested, writes the corresponding SAM alignments. The number of simulated reads
      * depends on the specified coverage.
      *
+     * @tparam SEQUENCER is the sequencer model type
+     * @param sequencer is the sequencer
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
      * @param purity is ratio between the number of sampled tumoral cells, which are
      *              represented in the mutation list, and that of the overall sampled
-     *              cells which contains normal cells too
-     * @param base_name is the prefix of the filename
-     * @param save_SAM is a Boolean flag to save the simulated read in a file
+     *              cells which contains normal cells too (default: 1.0)
+     * @param base_name is the prefix of the filename (default: "chr_")
      * @param progress_bar_stream is the output stream for the progress bar
+     *              (default: std::cout)
      * @param quiet is a Boolean flag to avoid progress bar and user messages
+     *              (default: false)
      * @return the sample set statistics about the generated reads
      */
-    SampleSetStatistics operator()(std::list<Races::Mutations::SampleGenomeMutations> mutations_list,
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    SampleSetStatistics operator()(SEQUENCER& sequencer,
+                                   std::list<Races::Mutations::SampleGenomeMutations> mutations_list,
                                    const double& coverage, const double purity=1.0,
-                                   const std::string& base_name="chr_", const bool with_sequences=true,
+                                   const std::string& base_name="chr_",
                                    std::ostream& progress_bar_stream=std::cout,
                                    const bool quiet=false)
     {
@@ -1818,6 +1860,11 @@ public:
             throw std::domain_error("The purity value must be in [0,1]: got "
                                     + std::to_string(purity) + ".");
 
+        }
+
+        if (read_type == ReadType::PAIRED_READ && !sequencer.supports_paired_reads()) {
+            throw std::domain_error(sequencer.get_model_name()
+                                    + " does not support paired reads.");
         }
 
         if (mutations_list.size()==0) {
@@ -1848,13 +1895,8 @@ public:
 
         UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
-        if (with_sequences) {
-            return generate_reads<Races::IO::FASTA::Sequence>(mutations_list, coverage,
-                                                              base_name, progress_bar);
-        }
-
-        return generate_reads<Races::IO::FASTA::SequenceInfo>(mutations_list, coverage,
-                                                              base_name, progress_bar);
+        return generate_reads<SEQUENCER>(sequencer, mutations_list, coverage,
+                                         base_name, progress_bar);
     }
 
     /**
@@ -1864,24 +1906,34 @@ public:
      * if requested, writes the corresponding SAM alignments. The number of simulated reads
      * depends on the specified coverage.
      *
+     * @tparam SEQUENCER is the sequencer model type
+     * @param sequencer is the sequencer
      * @param mutations is a sample genome mutations
      * @param coverage is the aimed coverage
      * @param purity is ratio between the number of sampled tumoral cells, which are
      *              represented in the mutation list, and that of the overall sampled
-     *              cells which contains normal cells too
-     * @param save_SAM is a Boolean flag to save the simulated read in a file
+     *              cells which contains normal cells too (default: 1.0)
+     * @param base_name is the prefix of the filename (default: "chr_")
+     * @param progress_bar_stream is the output stream for the progress bar
+     *              (default: std::cout)
      * @param quiet is a Boolean flag to avoid progress bar and user messages
+     *              (default: false)
      * @return the statistics about the generated reads
      */
-    SampleStatistics operator()(const Races::Mutations::SampleGenomeMutations& mutations,
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    SampleStatistics operator()(SEQUENCER& sequencer,
+                                const Races::Mutations::SampleGenomeMutations& mutations,
                                 const double& coverage, const double purity=1.0,
-                                const bool with_sequences=true, const bool quiet=false)
+                                const std::string& base_name="chr_",
+                                std::ostream& progress_bar_stream=std::cout,
+                                const bool quiet=false)
     {
         using namespace Races::Mutations;
         std::list<SampleGenomeMutations> mutations_list{mutations};
 
-        auto statistics = operator()(mutations_list, coverage, purity,
-                                     with_sequences, quiet);
+        auto statistics = operator()(sequencer, mutations_list, coverage, purity,
+                                     base_name, progress_bar_stream, quiet);
 
         return statistics[mutations.name];
     }
