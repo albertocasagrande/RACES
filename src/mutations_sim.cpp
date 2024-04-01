@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.21
- * @date 2024-03-31
+ * @version 0.22
+ * @date 2024-04-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -464,7 +464,7 @@ class MutationsSimulator : public BasicExecutable
         if (coverage>0) {
             read_simulator.enable_SAM_writing(write_SAM);
 
-            Races::Sequencers::BasicIlluminaSequencer sequencer(sequencer_error_rate);
+            Races::Sequencers::Illumina::BasicSequencer sequencer(sequencer_error_rate);
 
             const auto statistics = read_simulator(sequencer, mutations_list, coverage, purity);
 

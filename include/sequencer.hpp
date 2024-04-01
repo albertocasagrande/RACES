@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 0.1
- * @date 2024-03-31
+ * @version 0.2
+ * @date 2024-04-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -128,6 +128,117 @@ public:
     {}
 };
 
+/**
+ * @brief A namespace for Illumina sequencer
+ */
+namespace Illumina
+{
+
+/**
+ * @brief A basic error-less Illumina sequencer
+ */
+class ErrorLessSequencer : public BasicSequencer
+{
+public:
+    /**
+     * @brief Construct a new error-less Illumina sequencer object
+     */
+    inline ErrorLessSequencer()
+    {}
+
+    /**
+     * @brief Get the model name
+     *
+     * @return the model name
+     */
+    inline std::string get_model_name() const override
+    {
+        return "Error-less Illumina Sequencer";
+    }
+
+    /**
+     * @brief Get the platform name
+     *
+     * This method returns the sequencer platform as specified by [1].
+     *
+     * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification
+     *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
+     *
+     * @return the platform name
+     */
+    inline std::string get_platform_name() const override
+    {
+        return "ILLUMINA";
+    }
+
+    /**
+     * @brief Simulate the sequencing of a base
+     *
+     *
+     * This method simulates the sequencing of a base. It applies an error to the
+     * base according to the sequencer model and it also produces the corresponding
+     * quality scores.
+     *
+     * @param[in,out] base is the base whose sequencing must be simulated
+     * @param[in] base_position is the position of the base in the read
+     * @param[in] read_position is the position of the first read base in the reference
+     *      genome
+     * @param[in] read_index is the read index, i.e., 0 for single read and the first
+     *      read in paired reads, and 1 for the second read in paired reads
+     * @return the quality score of the base in Sanger FASTQ format
+     */
+    inline char simulate_seq(char& base, const size_t base_position,
+                             const Mutations::GenomicPosition& read_position,
+                             const unsigned int read_index) override
+    {
+        (void)base;
+        (void)base_position;
+        (void)read_position;
+        (void)read_index;
+
+        return 33;
+    }
+
+    /**
+     * @brief Simulate the sequencing of a read
+     *
+     * This method simulates the sequencing of a read. It applies some errors to the
+     * read according to the sequencer model and it also produces the corresponding
+     * quality scores.
+     *
+     * @param[in,out] read is the read whose sequencing must be simulated
+     * @param[in] position is the position of the first read base in the reference
+     *      genome
+     * @param[in] read_index is the read index, i.e., 0 for single read and the first
+     *      read in paired reads, and 1 for the second read in paired reads
+     * @return the quality scores of the read in Sanger FASTQ format
+     */
+    inline std::string simulate_seq(std::string& read,
+                                    const Mutations::GenomicPosition& position,
+                                    const unsigned int read_index) override
+    {
+        (void)position;
+        (void)read_index;
+
+        return std::string(read.size(), 33);
+    }
+
+    /**
+     * @brief Test whether paired reads are supported by the sequencer
+     *
+     * @return `true` if and only if the sequencer supports paired reads
+     */
+    inline bool supports_paired_reads() const override
+    {
+        return true;
+    }
+
+    /**
+     * @brief The destroyer
+     */
+    inline ~ErrorLessSequencer()
+    {}
+};
 
 /**
  * @brief A basic implementation of Illumina sequencer model
@@ -140,7 +251,7 @@ public:
  * The quality score of a base is determined by using the sample value.
  */
 template<typename RANDOM_GENERATOR=std::mt19937_64>
-class BasicIlluminaSequencer : public BasicSequencer
+class BasicSequencer : public ErrorLessSequencer
 {
     double error_rate;
 
@@ -171,7 +282,7 @@ public:
      * @param error_rate is the error probability in each base
      * @param seed is the random number generator seed
      */
-    BasicIlluminaSequencer(const double& error_rate, const int& seed=0):
+    explicit BasicSequencer(const double& error_rate, const int& seed=0):
         error_rate(error_rate), number_generator(seed),
         error_dist(0,1)
     {}
@@ -184,21 +295,6 @@ public:
     inline std::string get_model_name() const override
     {
         return "Basic Illumina Sequencer";
-    }
-
-    /**
-     * @brief Get the platform name
-     *
-     * This method returns the sequencer platform as specified by [1].
-     *
-     * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification
-     *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
-     *
-     * @return the platform name
-     */
-    inline std::string get_platform_name() const override
-    {
-        return "ILLUMINA";
     }
 
     /**
@@ -284,16 +380,6 @@ public:
     }
 
     /**
-     * @brief Test whether paired reads are supported by the sequencer
-     *
-     * @return `true` if and only if the sequencer supports paired reads
-     */
-    bool supports_paired_reads() const override
-    {
-        return true;
-    }
-
-    /**
      * @brief Get the error probability per base
      *
      * @return a constant reference to the error probability per base
@@ -306,9 +392,11 @@ public:
     /**
      * @brief The destroyer
      */
-    ~BasicIlluminaSequencer()
+    ~BasicSequencer()
     {}
 };
+
+}   // Illumina
 
 }   // Sequencers
 
