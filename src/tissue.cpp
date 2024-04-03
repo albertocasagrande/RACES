@@ -2,23 +2,23 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.34
- * @date 2024-03-29
- * 
+ * @version 0.35
+ * @date 2024-04-03
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -196,7 +196,7 @@ Tissue::Tissue(const std::string& name, const std::vector<MutantProperties>& mut
     register_species_cells();
 }
 
-Tissue::Tissue(const std::string& name, const std::vector<MutantProperties>& mutants, 
+Tissue::Tissue(const std::string& name, const std::vector<MutantProperties>& mutants,
                const AxisSize x_size, const AxisSize y_size):
     Tissue(name, {x_size, y_size})
 {
@@ -294,13 +294,13 @@ Species& Tissue::get_species(const std::string& species_name)
     return species[pos_it->second];
 }
 
-Tissue& Tissue::place_cell(const CellId& id, const SpeciesId& species_id,
-                           const PositionInTissue position)
+const CellInTissue& Tissue::place_cell(const CellId& id, const SpeciesId& species_id,
+                                       const PositionInTissue position)
 {
     if (!is_valid(position)) {
         throw std::runtime_error("The position is not in the tissue");
     }
- 
+
     auto*& cell_ptr = space[position.x][position.y][position.z];
 
     if (cell_ptr!=nullptr) {
@@ -311,7 +311,7 @@ Tissue& Tissue::place_cell(const CellId& id, const SpeciesId& species_id,
 
     cell_ptr = species.add(CellInTissue(id, species_id, position));
 
-    return *this;
+    return *cell_ptr;
 }
 
 void Tissue::register_species_cells()
@@ -343,17 +343,17 @@ Tissue& Tissue::add_mutant_species(const MutantProperties& mutant)
     for (const auto& species: mutant.get_species()) {
         if (id_pos.count(species.get_id())>0) {
             throw std::runtime_error("Species id "
-                                     + std::to_string(static_cast<int>(species.get_id())) 
+                                     + std::to_string(static_cast<int>(species.get_id()))
                                      + " already in the tissue");
         }
         if (name_pos.count(species.get_name())>0) {
             throw std::runtime_error("Species \""
-                                     + species.get_name() 
+                                     + species.get_name()
                                      + "\" already in the tissue");
         }
     }
 
-    // insert the mutants in the tissue 
+    // insert the mutants in the tissue
     auto& pos = mutant_pos[mutant.get_id()];
     for (const auto& in_species: mutant.get_species()) {
         // place the new species at the end of the species vector
@@ -378,7 +378,7 @@ const Tissue::CellInTissueConstantProxy Tissue::operator()(const PositionInTissu
     return CellInTissueConstantProxy(*this, position);
 }
 
-size_t Tissue::count_mutated_cells_from(PositionInTissue position, 
+size_t Tissue::count_mutated_cells_from(PositionInTissue position,
                                         const Direction& direction) const
 {
     size_t counter{0};

@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.47
- * @date 2024-03-19
+ * @version 0.48
+ * @date 2024-04-03
  *
  * @copyright Copyright (c) 2023-24
  *
@@ -554,14 +554,6 @@ public:
         // case, it throws an std::runtime_error
         (void)tissue();
 
-        if (storage_enabled) {
-            // if we are at the beginning of the computation,
-            // log the initial cells
-            if (time == 0) {
-                log_initial_cells();
-            }
-        }
-
         while ((plotter == nullptr || !plotter->closed()) && !done(*this)
             && tissue().num_of_mutated_cells()>0) {
 
@@ -745,8 +737,8 @@ public:
     /**
      * @brief Randomly select a cell on the border of the non-wild-type mass
      *
-     * This method randomly select a cell on the external border of the 
-     * non-wild-type mass among those belonging to a specified mutant. 
+     * This method randomly select a cell on the external border of the
+     * non-wild-type mass among those belonging to a specified mutant.
      *
      * @param mutant_id is the identifier of the mutant of the selected cell
      * @return whenever the set of cells having `mutant_id` as mutant
@@ -758,7 +750,7 @@ public:
     /**
      * @brief Randomly select a cell on the border of the non-wild-type mass
      *
-     * This method randomly select a cell on the external border of the 
+     * This method randomly select a cell on the external border of the
      * non-wild-type mass among those belonging to a specified mutant.
      *
      * @param mutant_name is the name of the mutant of the selected cell
@@ -771,12 +763,12 @@ public:
     /**
      * @brief Randomly select a cell on the border of the non-wild-type mass
      *
-     * This method randomly select a cell on the external border of the 
+     * This method randomly select a cell on the external border of the
      * non-wild-type mass among those belonging to a specified mutant in
      * a specified rectangle.
      *
      * @param mutant_id is the identifier of the mutant of the selected cell
-     * @param rectangle is the tissue rectangle in which the cell must be 
+     * @param rectangle is the tissue rectangle in which the cell must be
      *          selected
      * @return whenever the set of cells having `mutant_id` as mutant
      *         identifier is not empty, a randomly selected cell in it.
@@ -788,12 +780,12 @@ public:
     /**
      * @brief Randomly select a cell on the border of the non-wild-type mass
      *
-     * This method randomly select a cell on the external border of the 
+     * This method randomly select a cell on the external border of the
      * non-wild-type mass among those belonging to a specified mutant in
      * a specified rectangle.
      *
      * @param mutant_name is the name of the mutant of the selected cell
-     * @param rectangle is the tissue rectangle in which the cell must be 
+     * @param rectangle is the tissue rectangle in which the cell must be
      *          selected
      * @return whenever the set of cells having `mutant_name` as mutant
      *         identifier is not empty, a randomly selected cell in it.

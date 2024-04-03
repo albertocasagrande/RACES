@@ -2,23 +2,23 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.55
- * @date 2024-03-29
+ * @version 0.56
+ * @date 2024-04-03
  *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,7 @@
 #include <list>
 #include <string>
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutants
@@ -47,13 +47,13 @@ Simulation::AddedCell::AddedCell():
     species_id(WILD_TYPE_SPECIES)
 {}
 
-Simulation::AddedCell::AddedCell(const SpeciesId& species, const PositionInTissue& position, 
+Simulation::AddedCell::AddedCell(const SpeciesId& species, const PositionInTissue& position,
                                  const Time& time):
     PositionInTissue(position), species_id{species}, time{time}
 {}
 
 Simulation::Simulation(int random_seed):
-    logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
+    logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0),
     time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(true),
     storage_enabled(true)
 {
@@ -64,7 +64,7 @@ Simulation::Simulation(int random_seed):
 }
 
 Simulation::Simulation(const std::filesystem::path& log_directory, int random_seed):
-    logger(log_directory), last_snapshot_time(system_clock::now()), secs_between_snapshots(0), 
+    logger(log_directory), last_snapshot_time(system_clock::now()), secs_between_snapshots(0),
     time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(true),
     storage_enabled(true)
 {
@@ -81,7 +81,7 @@ Simulation::Simulation(Simulation&& orig):
 }
 
 Simulation& Simulation::operator=(Simulation&& orig)
-{               
+{
     std::swap(tissues, orig.tissues);
     std::swap(lineage_graph, orig.lineage_graph);
     std::swap(mutant_name2id, orig.mutant_name2id);
@@ -95,7 +95,7 @@ Simulation& Simulation::operator=(Simulation&& orig)
     std::swap(duplicate_internal_cells, orig.duplicate_internal_cells);
     std::swap(storage_enabled, orig.storage_enabled);
     std::swap(samples, orig.samples);
-    
+
     std::swap(valid_directions, orig.valid_directions);
     std::swap(last_snapshot_time, orig.last_snapshot_time);
     std::swap(random_gen, orig.random_gen);
@@ -121,8 +121,8 @@ Tissue& Simulation::tissue()
 }
 
 template<typename GENERATOR_TYPE>
-void select_liveness_event_in_species(CellEvent& event, Tissue& tissue, 
-                                      const std::set<SpeciesId>& death_enabled, 
+void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
+                                      const std::set<SpeciesId>& death_enabled,
                                       const Species& species,
                                       std::uniform_real_distribution<double>& uni_dist,
                                       GENERATOR_TYPE& random_gen)
@@ -174,7 +174,7 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
             const auto r_value = uni_dist(random_gen);
 
             const auto candidate_delay = -log(r_value) / (num_of_cells * event_rate);
-            
+
             if (event.delay>candidate_delay) {
                 event.delay = candidate_delay;
                 event.final_species = dst_id;
@@ -192,8 +192,8 @@ void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const 
 
 template<typename GENERATOR_TYPE>
 void select_next_event_in_species(CellEvent& event, Tissue& tissue,
-                                  const std::set<SpeciesId>& death_enabled, 
-                                  const Species& species, 
+                                  const std::set<SpeciesId>& death_enabled,
+                                  const Species& species,
                                   std::uniform_real_distribution<double>& uni_dist,
                                   GENERATOR_TYPE& random_gen)
 {
@@ -321,7 +321,7 @@ bool search_tumoral_cell(PositionInTissue& pos, const Tissue& tissue, const Posi
 }
 
 bool choose_border_cell_in(PositionInTissue& pos, const Tissue& tissue, const Direction& dir,
-                           const std::set<SpeciesId>& species_ids, 
+                           const std::set<SpeciesId>& species_ids,
                            const PositionInTissue& lower_corner, const std::vector<uint16_t>& rect_sizes,
                            std::mt19937_64& random_gen)
 {
@@ -434,12 +434,12 @@ const CellInTissue& Simulation::choose_border_cell_in(const std::string& mutant_
 
 /**
  * @brief Create a mutation event
- * 
+ *
  * @param tissue is the tissue in which the event will occurs
  * @param position is the position of the parent cell that will give birth to the mutated cell
  * @param final_id is the mutant identifier of the mutated cell
  * @param delay is the delay of the mutation with respect to the current simulation clock
- * @return the created cell event 
+ * @return the created cell event
  */
 CellEvent create_mutation_event(Tissue& tissue, const PositionInTissue& position,
                                 const MutantId& final_id, const Time& delay)
@@ -468,7 +468,7 @@ bool Simulation::handle_timed_mutation(const TimedEvent& timed_mutation, CellEve
     try {
         const auto& cell = choose_cell_in(mutation.initial_id);
 
-        auto delay = (timed_mutation.time >= time ? 
+        auto delay = (timed_mutation.time >= time ?
                         timed_mutation.time-time : 0);
         candidate_event = create_mutation_event(tissue(), cell, mutation.final_id, delay);
 
@@ -478,7 +478,7 @@ bool Simulation::handle_timed_mutation(const TimedEvent& timed_mutation, CellEve
     }
 }
 
-Simulation& Simulation::simulate_mutation(const PositionInTissue& position, 
+Simulation& Simulation::simulate_mutation(const PositionInTissue& position,
                                                    const std::string& dst_mutant_name)
 {
     auto dst_mutant_id = find_mutant_id(dst_mutant_name);
@@ -489,7 +489,7 @@ Simulation& Simulation::simulate_mutation(const PositionInTissue& position,
 Simulation& Simulation::simulate_mutation(const PositionInTissue& position,
                                                    const MutantId& dst_mutant_id)
 {
-    auto mutation_event = create_mutation_event(tissue(), position, 
+    auto mutation_event = create_mutation_event(tissue(), position,
                                                          dst_mutant_id, 0);
 
     simulate(mutation_event);
@@ -506,14 +506,14 @@ void Simulation::handle_timed_rate_update(const TimedEvent& timed_rate_update)
 {
     const auto& rate_update = timed_rate_update.get_event<RateUpdate>();
     Species& species = tissue().get_species(rate_update.species_id);
-    
+
     species.set_rate(rate_update.event_type, rate_update.new_rate);
 }
 
 void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEvent& candidate_event)
 {
     const auto& sampling = timed_sampling.get_event<Sampling>();
-    
+
     const Time previous_time = time;
 
     time = timed_sampling.time;
@@ -540,7 +540,7 @@ void Simulation::handle_timed_event_queue(CellEvent& candidate_event)
         timed_event_queue.pop();
 
         if (storage_enabled) {
-            if (timed_event_queue.top().time != timed_event.time 
+            if (timed_event_queue.top().time != timed_event.time
                 || timed_event_queue.top().type != timed_event.type) {
                 logger.snapshot(*this);
             }
@@ -588,9 +588,9 @@ CellEvent Simulation::select_next_cell_event()
 
 CellEvent Simulation::select_next_event()
 {
-    // the tissue() call checks whether a tissue has been 
-    // associated to the simulation and, if this is not the 
-    // case, it throws an std::runtime_error 
+    // the tissue() call checks whether a tissue has been
+    // associated to the simulation and, if this is not the
+    // case, it throws an std::runtime_error
     (void)tissue();
 
     CellEvent event = select_next_cell_event();
@@ -624,12 +624,12 @@ void enable_duplication_on_neighborhood_externals(Tissue& tissue, const Position
                 if (!cell_in_tissue.is_wild_type() && cell_in_tissue.is_on_border()) {
                     cell_in_tissue.enable_duplication();
                 }
-            }                     
-        }   
+            }
+        }
     }
 }
 
-typename Simulation::EventAffectedCells 
+typename Simulation::EventAffectedCells
 Simulation::simulate_death(const Position& position)
 {
     auto cell = (*(position.tissue))(position);
@@ -656,7 +656,7 @@ inline const Direction& select_push_direction(GENERATOR& random_gen,
     for (const auto& direction : directions) {
         size_t num_of_cells = tissue.count_mutated_cells_from(position, direction);
         cells_to_push.push_back(static_cast<double>(1.0)/num_of_cells);
-        total += cells_to_push.back(); 
+        total += cells_to_push.back();
     }
 
     std::uniform_real_distribution<double> distribution(0,total);
@@ -767,7 +767,7 @@ inline const T& select_random_value(GENERATOR& random_gen, const std::vector<T>&
     return values[distribution(random_gen)];
 }
 
-typename Simulation::EventAffectedCells 
+typename Simulation::EventAffectedCells
 Simulation::simulate_mutation(const Position& position, const SpeciesId& final_id)
 {
     Tissue& tissue = *(position.tissue);
@@ -798,12 +798,12 @@ void disable_duplication_on_neighborhood_internals(Tissue& tissue, const Positio
                 if (!cell_in_tissue.is_wild_type() && !cell_in_tissue.is_on_border()) {
                     cell_in_tissue.disable_duplication();
                 }
-            }                     
-        }   
+            }
+        }
     }
 }
 
-typename Simulation::EventAffectedCells 
+typename Simulation::EventAffectedCells
 Simulation::simulate_duplication(const Position& position)
 {
     Tissue& tissue = *(position.tissue);
@@ -817,13 +817,13 @@ Simulation::simulate_duplication(const Position& position)
 
     // push the cell in position towards a random direction
     //const Direction& push_dir = select_random_value(random_gen, valid_directions);
-    //const Direction& push_dir = select_min_push_direction(random_gen, tissue, position, 
+    //const Direction& push_dir = select_min_push_direction(random_gen, tissue, position,
     //                                                      valid_directions);
-    const Direction& push_dir = select_inverse_min_direction(random_gen, tissue, position, 
+    const Direction& push_dir = select_inverse_min_direction(random_gen, tissue, position,
                                                              valid_directions);
-    
+
     affected.lost_cells = tissue.push_cells(position, push_dir);
-    
+
     Tissue::CellInTissueProxy cell_in_tissue = tissue(position);
 
     cell_in_tissue = parent_cell.generate_descendent(next_cell_id, time);
@@ -848,7 +848,7 @@ Simulation::simulate_duplication(const Position& position)
     return affected;
 }
 
-typename Simulation::EventAffectedCells 
+typename Simulation::EventAffectedCells
 Simulation::simulate_duplication_and_mutation_event(const Position& position, const SpeciesId& final_id)
 {
     Tissue& tissue = *(position.tissue);
@@ -879,16 +879,16 @@ Simulation::simulate_duplication_and_mutation_event(const Position& position, co
 Simulation&
 Simulation::schedule_mutation(const MutantProperties& src, const MutantProperties& dst, const Time time)
 {
-    // the tissue() call checks whether a tissue has been 
-    // associated to the simulation and, if this is not the 
-    // case, it throws an std::runtime_error 
+    // the tissue() call checks whether a tissue has been
+    // associated to the simulation and, if this is not the
+    // case, it throws an std::runtime_error
     (void)tissue();
 
     if (src.num_of_promoters()>dst.num_of_promoters()) {
         std::ostringstream oss;
 
-        oss << "Incompatible number of methylable promoters: \"" << src.get_name() 
-            << "\" must have at least as many methylable promoters as \"" << dst.get_name() 
+        oss << "Incompatible number of methylable promoters: \"" << src.get_name()
+            << "\" must have at least as many methylable promoters as \"" << dst.get_name()
             << "\".";
         throw std::domain_error(oss.str());
     }
@@ -924,9 +924,9 @@ const std::string& Simulation::find_mutant_name(const MutantId& mutant_id) const
 Simulation&
 Simulation::schedule_mutation(const std::string& src, const std::string& dst, const Time time)
 {
-    // the tissue() call checks whether a tissue has been 
-    // associated to the simulation and, if this is not the 
-    // case, it throws an std::runtime_error 
+    // the tissue() call checks whether a tissue has been
+    // associated to the simulation and, if this is not the
+    // case, it throws an std::runtime_error
     (void)tissue();
 
     auto src_id = find_mutant_id(src);
@@ -942,14 +942,14 @@ Simulation::schedule_mutation(const std::string& src, const std::string& dst, co
 Simulation&
 Simulation::schedule_timed_event(const TimedEvent& timed_event)
 {
-    // the tissue() call checks whether a tissue has been 
-    // associated to the simulation and, if this is not the 
-    // case, it throws an std::runtime_error 
+    // the tissue() call checks whether a tissue has been
+    // associated to the simulation and, if this is not the
+    // case, it throws an std::runtime_error
     (void)tissue();
 
     timed_event_queue.push(timed_event);
 
-    return *this;  
+    return *this;
 }
 
 void Simulation::init_valid_directions()
@@ -974,11 +974,11 @@ void Simulation::reset()
     time = 0;
 
     next_cell_id = 0;
-    
+
     death_enabled.clear();
 
     logger = BinaryLogger(logger.get_directory());
-    
+
     //death_activation_level = 1;
 }
 
@@ -997,7 +997,11 @@ Simulation& Simulation::add_mutant(const MutantProperties& mutant)
 
 Simulation& Simulation::place_cell(const SpeciesId& species_id, const PositionInTissue& position)
 {
-    tissue().place_cell(next_cell_id, species_id, position);
+    const auto& cell = tissue().place_cell(next_cell_id, species_id, position);
+
+    if (storage_enabled) {
+        logger.record_initial_cell(cell);
+    }
 
     ++next_cell_id;
 
