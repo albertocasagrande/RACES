@@ -2,8 +2,8 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.10
- * @date 2024-03-29
+ * @version 0.11
+ * @date 2024-04-04
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -120,7 +120,8 @@ void collect_positive_dot_products(std::list<Direction>& directions, const uint8
     if (axis_index<components.size()) {
         const uint8_t mask = (0x03 << 2*axis_index);
 
-        if (admitted_changes[axis_index] && total_changes+1<components.size()) {
+        if (admitted_changes[axis_index]
+                 && static_cast<size_t>(total_changes+1)<components.size()) {
             for (const auto& component : components[axis_index]) {
                 collect_positive_dot_products(directions, (bitvector & ~mask) | component,
                                               components, axis_index+1, admitted_changes,
@@ -347,8 +348,8 @@ bool operator==(const DirectionGenerator::const_iterator& a,
                 const DirectionGenerator::const_iterator& b)
 {
     const auto num_of_dimensions = a.direction.num_of_dimensions();
-    if (num_of_dimensions != b.direction.num_of_dimensions()
-            | a.counter!=b.counter) {
+    if ((num_of_dimensions != b.direction.num_of_dimensions())
+            || (a.counter!=b.counter)) {
         return false;
     }
 

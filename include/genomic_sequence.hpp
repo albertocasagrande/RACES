@@ -2,8 +2,8 @@
  * @file genomic_sequence.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a structure to handle genomic sequence
- * @version 0.3
- * @date 2024-03-30
+ * @version 0.4
+ * @date 2024-04-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -33,6 +33,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace Races
 {
