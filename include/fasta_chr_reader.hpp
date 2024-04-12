@@ -3,7 +3,7 @@
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to read chromosomes from FASTA streams
  * @version 0.3
- * @date 2024-03-11
+ * @date 2024-04-12
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -70,6 +70,43 @@ struct FilterNonChromosomeSequence : public SequenceFilter
 };
 
 /**
+ * @brief Filter sequences that are not chromosome metioned in a set
+ */
+struct ChromosomeSetFilter : public SequenceFilter
+{
+    Mutations::ChromosomeId last_chr_id;   //!< the identifier of the last processed chromosome header
+
+    std::set<Mutations::ChromosomeId> valid_chromosome_ids; //!< the accepted chromosome ids
+
+    /**
+     * @brief Build a new chromosome set filter
+     * 
+     * @param valid_chromosome_ids is the set of the identifiers of the chromosomes that will
+     *      be accepted by the filter
+     */
+    inline ChromosomeSetFilter(const std::set<Mutations::ChromosomeId>& valid_chromosome_ids):
+        valid_chromosome_ids{valid_chromosome_ids}
+    {}
+
+    /**
+     * @brief Check whether an header corresponds to a chromosome
+     * 
+     * @param header is the header of a FASTA sequence
+     * @return `true` if and only if the header does not correspond 
+     *          to a chromosome or the chromosome does not belong
+     *          to the valid chromosome identifier set
+     */
+    inline bool operator()(const std::string& header)
+    {
+        if (!is_chromosome_header(header, last_chr_id)) {
+            return true;
+        }
+
+        return valid_chromosome_ids.count(last_chr_id)==0;
+    } 
+};
+
+/**
  * @brief Chromosome data
  * 
  * This template represents chromosome data. The objects of this class store 
@@ -116,10 +153,38 @@ struct ChromosomeData : public DATA_TYPE
      * @brief Read the next chromosome data from the FASTA stream
      * 
      * @tparam DATA_TYPE if the type of the data to be read from the stream
-     * @param FASTA_stream[in,out] is the FASTA stream
-     * @param chr_data[out] is the object that will be filled with the chromosome data if
+     * @param[in,out] FASTA_stream is the FASTA stream
+     * @param[in] chromosome_ids is the set of the identifiers of the aimed chromosomes
+     * @param[out] chr_data is the object that will be filled with the chromosome data
+     *          if some chromosome is read from `FASTA_stream`
+     * @param[in,out] progress_bar is a progress bar
+     * @return `true` if and only if a chromosome sequence is read from `FASTA_stream`
+     */
+    static bool read(std::istream& FASTA_stream,
+                     const std::set<Mutations::ChromosomeId>& chromosome_ids,
+                     ChromosomeData<DATA_TYPE>& chr_data, UI::ProgressBar& progress_bar)
+    {
+        using namespace Races::IO::FASTA;
+
+        ChromosomeSetFilter filter(chromosome_ids);
+
+        if (DATA_TYPE::read(FASTA_stream, chr_data, filter, progress_bar)) {
+            chr_data.chr_id = filter.last_chr_id;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Read the next chromosome data from the FASTA stream
+     * 
+     * @tparam DATA_TYPE if the type of the data to be read from the stream
+     * @param[in,out] FASTA_stream is the FASTA stream
+     * @param[out] chr_data is the object that will be filled with the chromosome data if
      *          some chromosome is read from `FASTA_stream`
-     * @param progress_bar_stream is the output stream for the progress bar
+     * @param[in,out] progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a chromosome sequence is read from `FASTA_stream`
      */
     inline static bool read(std::istream& FASTA_stream, ChromosomeData<DATA_TYPE>& chr_data,
@@ -128,6 +193,27 @@ struct ChromosomeData : public DATA_TYPE
         UI::ProgressBar progress_bar(progress_bar_stream, true);
 
         return read(FASTA_stream, chr_data, progress_bar);
+    }
+
+    /**
+     * @brief Read the next chromosome data from the FASTA stream
+     * 
+     * @tparam DATA_TYPE if the type of the data to be read from the stream
+     * @param[in,out] FASTA_stream is the FASTA stream
+     * @param[in] chromosome_ids is the set of the identifiers of the aimed chromosomes
+     * @param[out] chr_data is the object that will be filled with the chromosome data if
+     *          some chromosome is read from `FASTA_stream`
+     * @param[in,out] progress_bar_stream is the output stream for the progress bar
+     * @return `true` if and only if a chromosome sequence is read from `FASTA_stream`
+     */
+    inline static bool read(std::istream& FASTA_stream,
+                            const std::set<Mutations::ChromosomeId>& chromosome_ids,
+                            ChromosomeData<DATA_TYPE>& chr_data,
+                            std::ostream& progress_bar_stream=std::cout)
+    {
+        UI::ProgressBar progress_bar(progress_bar_stream, true);
+
+        return read(FASTA_stream, chromosome_ids, chr_data, progress_bar);
     }
 };
 

@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.22
- * @date 2024-04-01
+ * @version 0.23
+ * @date 2024-04-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -63,8 +63,8 @@ boost::lexical_cast<std::string, Races::Mutations::SequencingSimulations::ReadSi
             return "create";
         case ReadSimulator<>::Mode::OVERWRITE:
             return "overwrite";
-        case ReadSimulator<>::Mode::APPEND:
-            return "append";
+        case ReadSimulator<>::Mode::UPDATE:
+            return "update";
         default:
             throw std::runtime_error("Unknown mode");
     }
@@ -89,8 +89,8 @@ boost::lexical_cast<Races::Mutations::SequencingSimulations::ReadSimulator<>::Mo
         return ReadSimulator<>::Mode::OVERWRITE;
     }
 
-    if (upper_token == "APPEND") {
-        return ReadSimulator<>::Mode::APPEND;
+    if (upper_token == "UPDATE") {
+        return ReadSimulator<>::Mode::UPDATE;
     }
 
     std::ostringstream oss;
