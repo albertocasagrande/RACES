@@ -2,8 +2,8 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 0.6
- * @date 2024-03-17
+ * @version 0.7
+ * @date 2024-04-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -146,9 +146,9 @@ bool is_crucial(const DescendantsForest::const_node& node, const std::list<std::
         return true;
     }
 
-    // if the node and its parent have different species id,
+    // if the node and its parent have different mutant id,
     // then it is crucial 
-    return node.get_species_id() != node.parent().get_species_id();  
+    return node.get_mutant_id() != node.parent().get_mutant_id();  
 }
 
 std::list<CellId>
