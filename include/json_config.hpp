@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.19
- * @date 2024-03-12
+ * @version 0.20
+ * @date 2024-04-19
  *
  * @copyright Copyright (c) 2023
  *
@@ -90,7 +90,8 @@ class ConfigReader
      * @param SNV_json is the JSON of the SNV to be inserted into the list
      */
     static void
-    add_SNV(const std::string& mutant_name, std::list<Races::Mutations::SNV>& SNVs,
+    add_SNV(const std::string& mutant_name,
+            std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
             const nlohmann::json& SNV_json);
 
     /**
@@ -112,7 +113,7 @@ class ConfigReader
      */
     static void
     schedule_mutation(const std::string& mutant_name,
-                      std::list<Races::Mutations::SNV>& SNVs,
+                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
                       std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutation_json);
 
@@ -224,7 +225,7 @@ public:
      */
     static void
     collect_mutations(const std::string& mutant_name,
-                      std::list<Races::Mutations::SNV>& SNVs,
+                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
                       std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutations_json);
 

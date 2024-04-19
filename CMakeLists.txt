@@ -91,6 +91,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_mutation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutant_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_engine.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation_spec.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/mutational_properties.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/palette.hpp

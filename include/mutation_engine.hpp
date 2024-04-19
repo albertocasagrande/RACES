@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.54
- * @date 2024-03-18
+ * @version 0.55
+ * @date 2024-04-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -472,16 +472,34 @@ class MutationEngine
     {
         auto candidate_alleles = get_available_alleles_for_SNV(cell_mutations, snv);
 
-        if (candidate_alleles.size()>0) {
-            AlleleId allele_id = select_random_value(candidate_alleles);
-
-            // try to apply the selected SNV
-            if (cell_mutations.insert(snv, allele_id)) {
-                return true;
-            }
+        if (candidate_alleles.size()==0) {
+            return false;
         }
 
-        return false;
+        AlleleId allele_id = select_random_value(candidate_alleles);
+
+        // try to apply the selected SNV
+        return cell_mutations.insert(snv, allele_id);
+    }
+
+    /**
+     * @brief Try to place a SNV with an allele specification
+     *
+     * @param snv is the SNV to place
+     * @param cell_mutations are the cell mutations
+     * @return `true` if and only if the SNV placement has succeed. This
+     *          method returns `false` when the SNV cannot be placed
+     *          because its context is not free or no allele are available
+     *          for it.
+     */
+    bool place_SNV(const MutationSpec<SNV>& snv,
+                   GenomeMutations& cell_mutations)
+    {
+        if (snv.allele_id == RANDOM_ALLELE) {
+            return place_SNV(static_cast<const SNV&>(snv), cell_mutations);
+        }
+
+        return cell_mutations.insert(snv, snv.allele_id);
     }
 
     /**
@@ -1001,7 +1019,7 @@ public:
     inline
     MutationEngine& add_mutant(const std::string& name,
                                const std::map<std::string, PassengerRates>& epistate_passenger_rates,
-                               const std::list<SNV>& driver_SNVs={},
+                               const std::list<MutationSpec<SNV>>& driver_SNVs={},
                                const std::list<CNA>& driver_CNAs={})
     {
         mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SNVs,
