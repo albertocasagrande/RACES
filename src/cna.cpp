@@ -2,8 +2,8 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.10
- * @date 2024-03-12
+ * @version 0.11
+ * @date 2024-04-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -134,17 +134,17 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna)
             out << "\"A\"," << static_cast<const GenomicPosition&>(cna)
                 << ", len: " << cna.length; 
             if (cna.source != RANDOM_ALLELE) {
-                out << ", src: "<< Allele::format_id(cna.source);
+                out << ", src allele: "<< Allele::format_id(cna.source);
             }
             if (cna.dest != RANDOM_ALLELE) {
-                out << ", dst: "<< Allele::format_id(cna.dest);
+                out << ", allele: "<< Allele::format_id(cna.dest);
             }
             break;
         case CNA::Type::DELETION:
             out << "\"D\"," << static_cast<const GenomicPosition&>(cna)
                 << ", len: " << cna.length;
             if (cna.dest != RANDOM_ALLELE) {
-                out << ", dst: "<< Allele::format_id(cna.dest);
+                out << ", allele: "<< Allele::format_id(cna.dest);
             }
             break;
         default:
