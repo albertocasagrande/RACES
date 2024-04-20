@@ -67,7 +67,7 @@ DriverStorage DriverStorage::load(const std::filesystem::path& filename)
 
     for (const auto& row : csv_reader) {
         if (row.get_field(type_col)=="SNV") {
-            auto chr_str = row.get_field(chr_col).substr(3);
+            auto chr_str = row.get_field(chr_col);
 
             auto chr_id = GenomicPosition::stochr(chr_str);
             auto pos = static_cast<ChrPosition>(stoul(row.get_field(pos_col)));
