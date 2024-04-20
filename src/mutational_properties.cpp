@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.17
- * @date 2024-04-19
+ * @version 0.18
+ * @date 2024-04-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -28,6 +28,8 @@
  * SOFTWARE.
  */
 
+#include <sstream>
+
 #include "mutational_properties.hpp"
 
 namespace Races
@@ -47,10 +49,34 @@ PassengerRates::PassengerRates(const double& SNV_rate, const double& CNA_rate):
 DriverMutations::DriverMutations()
 {}
 
+//! @private
+template<typename MUTATION>
+std::set<MUTATION> build_mutation_set(const std::string& mutant_name,
+                                      const std::list<MUTATION>& mutations)
+{
+    std::set<MUTATION> mutation_set;
+
+    for (const auto& mutation : mutations) {
+        if (mutation_set.count(mutation)>0) {
+            std::ostringstream oss;
+
+            oss << mutation << " added twice among "
+                << mutant_name << "'s driver mutations.";
+
+            throw std::domain_error(oss.str());
+        }
+
+        mutation_set.insert(mutation);
+    }
+
+    return mutation_set;
+}
+
 DriverMutations::DriverMutations(const std::string& mutant_name,
                                  const std::list<MutationSpec<SNV>>& SNVs,
                                  const std::list<CNA>& CNAs):
-    name(mutant_name), SNVs(SNVs.begin(), SNVs.end()), CNAs(CNAs.begin(), CNAs.end())
+    name(mutant_name), SNVs(build_mutation_set(mutant_name, SNVs)),
+    CNAs(build_mutation_set(mutant_name, CNAs))
 {}
 
 MutationalProperties::MutationalProperties()

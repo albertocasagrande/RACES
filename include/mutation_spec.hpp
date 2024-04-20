@@ -2,8 +2,8 @@
  * @file mutation_spec.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a wrapper class to specify mutation allele
- * @version 0.1
- * @date 2024-04-19
+ * @version 0.2
+ * @date 2024-04-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -125,7 +125,15 @@ struct less<Races::Mutations::MutationSpec<MUTATION_TYPE>>
     {
         less<MUTATION_TYPE> cmp;
 
-        return cmp(lhs, rhs);
+        if (cmp(lhs, rhs)) {
+            return true;
+        }
+
+        if (cmp(rhs, lhs)) {
+            return false;
+        }
+
+        return lhs.allele_id < rhs.allele_id;
     }
 };
 
@@ -139,7 +147,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutations::MutationSpec<
     } else {
         os << specification.allele_id;
     }
-    
+
     os << ")";
 
     return os;
