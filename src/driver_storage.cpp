@@ -2,8 +2,8 @@
  * @file driver_storage.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements class to load and store driver mutations
- * @version 0.2
- * @date 2024-03-12
+ * @version 0.3
+ * @date 2024-04-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -74,10 +74,12 @@ DriverStorage DriverStorage::load(const std::filesystem::path& filename)
 
             mutations.SNVs.insert({row.get_field(code_col),
                                     {chr_id, pos, row.get_field(ref_col)[0],
-                                     row.get_field(alt_col)[0], 
+                                     row.get_field(alt_col)[0],
                                      Mutations::Mutation::DRIVER}});
         }
     }
+
+    mutations.source_path = filename;
 
     return mutations;
 }

@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.55
- * @date 2024-04-19
+ * @version 0.56
+ * @date 2024-04-20
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1234,6 +1234,16 @@ public:
     get_timed_exposures() const
     {
         return timed_exposures;
+    }
+
+    /**
+     * @brief Get the driver storage
+     *
+     * @return a constant reference to the driver storage
+     */
+    inline const DriverStorage& get_driver_storage() const
+    {
+        return driver_storage;
     }
 
     /**
