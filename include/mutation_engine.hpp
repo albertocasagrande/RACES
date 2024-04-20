@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.56
+ * @version 0.57
  * @date 2024-04-20
  *
  * @copyright Copyright (c) 2023-2024
@@ -418,10 +418,13 @@ class MutationEngine
      *
      * @param cell_mutations are the non-germinal mutations of a cell
      * @param genomic_position is the position in which we want to place the SNV
-     * @return std::list<AlleleId>
+     * @param infinite_sites_model is a Boolean flag to enable/disable the infinite
+     *      sites model
+     * @return a list of the identifiers of the available alleles
      */
     std::list<AlleleId> get_available_alleles_for_SNV(const GenomeMutations& cell_mutations,
-                                                      const GenomicPosition& genomic_position) const
+                                                      const GenomicPosition& genomic_position,
+                                                      const bool& infinite_sites_model) const
     {
         std::list<AlleleId> available_alleles;
 
@@ -459,18 +462,22 @@ class MutationEngine
     }
 
     /**
-     * @brief Try to place a SNV
+     * @brief Place a passenger SNV
      *
      * @param snv is the SNV to place
      * @param cell_mutations are the cell mutations
+     * @param infinite_sites_model is a Boolean flag to enable/disable the infinite
+     *      sites model
      * @return `true` if and only if the SNV placement has succeed. This
      *          method returns `false` when the SNV cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SNV(const SNV& snv, GenomeMutations& cell_mutations)
+    bool place_SNV(const SNV& snv, GenomeMutations& cell_mutations,
+                   const bool& infinite_sites_model)
     {
-        auto candidate_alleles = get_available_alleles_for_SNV(cell_mutations, snv);
+        auto candidate_alleles = get_available_alleles_for_SNV(cell_mutations, snv,
+                                                               infinite_sites_model);
 
         if (candidate_alleles.size()==0) {
             return false;
@@ -483,7 +490,22 @@ class MutationEngine
     }
 
     /**
-     * @brief Try to place a SNV with an allele specification
+     * @brief Place a passenger SNV
+     *
+     * @param snv is the SNV to place
+     * @param cell_mutations are the cell mutations
+     * @return `true` if and only if the SNV placement has succeed. This
+     *          method returns `false` when the SNV cannot be placed
+     *          because its context is not free or no allele are available
+     *          for it.
+     */
+    inline bool place_SNV(const SNV& snv, GenomeMutations& cell_mutations)
+    {
+        return place_SNV(snv, cell_mutations, infinite_sites_model);
+    }
+
+    /**
+     * @brief Place a driver SNV with an allele specification
      *
      * @param snv is the SNV to place
      * @param cell_mutations are the cell mutations
@@ -496,7 +518,8 @@ class MutationEngine
                    GenomeMutations& cell_mutations)
     {
         if (snv.allele_id == RANDOM_ALLELE) {
-            return place_SNV(static_cast<const SNV&>(snv), cell_mutations);
+            return place_SNV(static_cast<const SNV&>(snv), cell_mutations,
+                             false);
         }
 
         return cell_mutations.insert(snv, snv.allele_id);
@@ -715,7 +738,6 @@ class MutationEngine
         }
     }
 
-
     /**
      * @brief Place the driver mutations
      *
@@ -737,6 +759,13 @@ class MutationEngine
 
                 if (place_SNV(snv, cell_mutations)) {
                     node.add_new_mutation(snv);
+                } else {
+                    std::ostringstream oss;
+
+                    oss << mutant_mp.name << "'s driver mutation "
+                        << snv << " cannot be placed.";
+
+                    throw std::runtime_error(oss.str());
                 }
             }
 
@@ -744,6 +773,13 @@ class MutationEngine
                 cna.nature = Mutation::DRIVER;
                 if (place_CNA(cna, cell_mutations)) {
                     node.add_new_mutation(cna);
+                } else {
+                    std::ostringstream oss;
+
+                    oss << mutant_mp.name << "'s driver mutation "
+                        << cna << " cannot be placed.";
+
+                    throw std::runtime_error(oss.str());
                 }
             }
         }
