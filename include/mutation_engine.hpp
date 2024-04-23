@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.57
- * @date 2024-04-20
+ * @version 0.58
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -60,24 +60,24 @@ namespace Mutations
 class MutationStatistics
 {
     /**
-     * @brief SNV statistics
+     * @brief SID statistics
      */
-    struct SNVStatistics
+    struct SIDStatistics
     {
         size_t mutated_alleles;            //!< Number of mutated alleles
-        size_t num_of_cells;               //!< Total number of cells containing the SNV
+        size_t num_of_cells;               //!< Total number of cells containing the SID
 
         /**
          * @brief The empty constructor
          */
-        SNVStatistics();
+        SIDStatistics();
     };
 
     struct SampleMutationStatistics
     {
         size_t num_of_cells;          //!< Number of recorded cells
 
-        std::map<SNV, SNVStatistics> SNVs;      //!< SNVs
+        std::map<SID, SIDStatistics> SIDs;      //!< SIDs
         std::list<CNA> CNAs;   //!< CNAs
 
         /**
@@ -96,7 +96,7 @@ public:
     MutationStatistics();
 
     /**
-     * @brief Record the SNVs of a cell genome
+     * @brief Record the SIDs of a cell genome
      *
      * @param sample_name is the name of the sample from which the cell has
      *          been extracted
@@ -108,7 +108,7 @@ public:
                                const CellGenomeMutations& cell_mutations);
 
     /**
-     * @brief Record the SNVs in a list of sample genomic mutations
+     * @brief Record the SIDs in a list of sample genomic mutations
      *
      * @param[in] mutations_list is a list of sample mutations
      * @param[in,out] progress_bar is a progress bar pointer
@@ -119,7 +119,7 @@ public:
            UI::ProgressBar* progress_bar=nullptr);
 
     /**
-     * @brief Record the SNVs in a list of sample genomic mutations
+     * @brief Record the SIDs in a list of sample genomic mutations
      *
      * @param[in] mutations_list is a list of sample mutations
      * @param[in,out] progress_bar is a progress bar pointer
@@ -133,13 +133,13 @@ public:
     }
 
     /**
-     * @brief Write in a stream a table summarizing SNV statistics
+     * @brief Write in a stream a table summarizing SID statistics
      *
      * @param os is the output stream
      * @param separator is the column separator
      * @return a reference to the updated stream
      */
-    std::ostream& write_SNVs_table(std::ostream& os, const char separator='\t');
+    std::ostream& write_SIDs_table(std::ostream& os, const char separator='\t');
 
     /**
      * @brief Write in a stream a table summarizing CNA statistics
@@ -155,7 +155,7 @@ public:
  * @brief The SBS exposure type
  *
  * A SBS is a single base mutation substituion signature that provides for any context
- * (i.e., a triplet of bases) the probability for a SNV to occur on that context.
+ * (i.e., a triplet of bases) the probability for a SID to occur on that context.
  * The SBSs depends on the environmental context and, because of that, more
  * than one SBSs may be active at the same time with different probabilities.
  * An exposure is a discrete probability distribution among SBS signatures.
@@ -275,18 +275,18 @@ class MutationEngine
     }
 
     /**
-     * @brief Select a random passenger SNV
+     * @brief Select a random passenger SID
      *
-     * This method selects a random passenger SNV among whose having a
+     * This method selects a random passenger SID among whose having a
      * specified mutational type and available in a context index.
-     * The selected SNV is extracted from the context index and inserted
+     * The selected SID is extracted from the context index and inserted
      * into a stack to revert the selection.
      *
-     * @param[in] m_type is the mutational type of the SNV to be selected
-     * @return a passenger SNV whose type is `m_type` and which was
+     * @param[in] m_type is the mutational type of the SID to be selected
+     * @return a passenger SID whose type is `m_type` and which was
      *          available in `context_index`
      */
-    SNV select_SNV(const MutationalType& m_type)
+    SID select_SID(const MutationalType& m_type)
     {
         using namespace Races::Mutations;
 
@@ -321,7 +321,8 @@ class MutationEngine
         }
         auto genomic_pos = context_index.get_genomic_position(pos);
 
-        return {genomic_pos, context.get_central_nucleotide(), alt_base};
+        return {genomic_pos.chr_id, genomic_pos.position,
+                context.get_central_nucleotide(), alt_base, Mutation::UNDEFINED};
     }
 
     /**
@@ -414,15 +415,15 @@ class MutationEngine
     }
 
     /**
-     * @brief Get the available alleles for placing a SNV
+     * @brief Get the available alleles for placing a SID
      *
      * @param cell_mutations are the non-germinal mutations of a cell
-     * @param genomic_position is the position in which we want to place the SNV
+     * @param genomic_position is the position in which we want to place the SID
      * @param infinite_sites_model is a Boolean flag to enable/disable the infinite
      *      sites model
      * @return a list of the identifiers of the available alleles
      */
-    std::list<AlleleId> get_available_alleles_for_SNV(const GenomeMutations& cell_mutations,
+    std::list<AlleleId> get_available_alleles_for_SID(const GenomeMutations& cell_mutations,
                                                       const GenomicPosition& genomic_position,
                                                       const bool& infinite_sites_model) const
     {
@@ -462,21 +463,21 @@ class MutationEngine
     }
 
     /**
-     * @brief Place a passenger SNV
+     * @brief Place a passenger SID
      *
-     * @param snv is the SNV to place
+     * @param snv is the SID to place
      * @param cell_mutations are the cell mutations
      * @param infinite_sites_model is a Boolean flag to enable/disable the infinite
      *      sites model
-     * @return `true` if and only if the SNV placement has succeed. This
-     *          method returns `false` when the SNV cannot be placed
+     * @return `true` if and only if the SID placement has succeed. This
+     *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SNV(const SNV& snv, GenomeMutations& cell_mutations,
+    bool place_SID(const SID& snv, GenomeMutations& cell_mutations,
                    const bool& infinite_sites_model)
     {
-        auto candidate_alleles = get_available_alleles_for_SNV(cell_mutations, snv,
+        auto candidate_alleles = get_available_alleles_for_SID(cell_mutations, snv,
                                                                infinite_sites_model);
 
         if (candidate_alleles.size()==0) {
@@ -485,40 +486,40 @@ class MutationEngine
 
         AlleleId allele_id = select_random_value(candidate_alleles);
 
-        // try to apply the selected SNV
+        // try to apply the selected SID
         return cell_mutations.insert(snv, allele_id);
     }
 
     /**
-     * @brief Place a passenger SNV
+     * @brief Place a passenger SID
      *
-     * @param snv is the SNV to place
+     * @param snv is the SID to place
      * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the SNV placement has succeed. This
-     *          method returns `false` when the SNV cannot be placed
+     * @return `true` if and only if the SID placement has succeed. This
+     *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    inline bool place_SNV(const SNV& snv, GenomeMutations& cell_mutations)
+    inline bool place_SID(const SID& snv, GenomeMutations& cell_mutations)
     {
-        return place_SNV(snv, cell_mutations, infinite_sites_model);
+        return place_SID(snv, cell_mutations, infinite_sites_model);
     }
 
     /**
-     * @brief Place a driver SNV with an allele specification
+     * @brief Place a driver SID with an allele specification
      *
-     * @param snv is the SNV to place
+     * @param snv is the SID to place
      * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the SNV placement has succeed. This
-     *          method returns `false` when the SNV cannot be placed
+     * @return `true` if and only if the SID placement has succeed. This
+     *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SNV(const MutationSpec<SNV>& snv,
+    bool place_SID(const MutationSpec<SID>& snv,
                    GenomeMutations& cell_mutations)
     {
         if (snv.allele_id == RANDOM_ALLELE) {
-            return place_SNV(static_cast<const SNV&>(snv), cell_mutations,
+            return place_SID(static_cast<const SID&>(snv), cell_mutations,
                              false);
         }
 
@@ -526,15 +527,15 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the SNVs in a cell genome in the phylogenetic forest
+     * @brief Place the SIDs in a cell genome in the phylogenetic forest
      *
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
      * @param SBS_name is the name of the SBS used to find the mutations
-     * @param num_of_mutations is the number of SNV to apply
+     * @param num_of_mutations is the number of SID to apply
      * @param nature is the nature of the mutations
      */
-    void place_SNVs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
+    void place_SIDs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
                     const std::string& SBS_name, const size_t& num_of_mutations,
                     const Mutation::Nature& nature)
     {
@@ -543,9 +544,9 @@ class MutationEngine
 
         std::uniform_real_distribution<> u_dist(0,1);
 
-        // while some of the requested SNVs have not been set
-        size_t new_SNVs{0}, context_misses{0};
-        while (new_SNVs < num_of_mutations) {
+        // while some of the requested SIDs have not been set
+        size_t new_SIDs{0}, context_misses{0};
+        while (new_SIDs < num_of_mutations) {
             // randomly pick a mutational type according to the current SBS
             auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
 
@@ -554,17 +555,17 @@ class MutationEngine
 
                 context_misses = 0;
 
-                // select a SNV among those having the picked mutational type
+                // select a SID among those having the picked mutational type
                 // and that available in the context index
-                SNV snv = select_SNV(it->second);
+                SID snv = select_SID(it->second);
 
                 snv.cause = SBS_name;
                 snv.nature = nature;
 
-                if (place_SNV(snv, cell_mutations)) {
-                    // if the SNV has been successfully applied,
-                    // then increase the number of new SNVs
-                    ++new_SNVs;
+                if (place_SID(snv, cell_mutations)) {
+                    // if the SID has been successfully applied,
+                    // then increase the number of new SIDs
+                    ++new_SIDs;
 
                     if (node != nullptr) {
                         node->add_new_mutation(snv);
@@ -585,25 +586,25 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the SNVs in a cell genome in the phylogenetic forest
+     * @brief Place the SIDs in a cell genome in the phylogenetic forest
      *
      * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
-     * @param SNV_rate is the rate of passegers SNVs
+     * @param SID_rate is the rate of passegers SIDs
      */
-    void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
-                    const double& SNV_rate)
+    void place_SIDs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
+                    const double& SID_rate)
     {
-        const auto num_of_SNVs = number_of_mutations(cell_mutations.allelic_size(), SNV_rate);
+        const auto num_of_SIDs = number_of_mutations(cell_mutations.allelic_size(), SID_rate);
 
         // for each active SBS probability in the active exposure
         for (const auto& [SBS_name, probability]: get_active_exposure(node)) {
 
-            // evaluate how many of the SNVs due to the current SBS
-            const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
+            // evaluate how many of the SIDs due to the current SBS
+            const size_t SBS_num_of_SIDs = probability*num_of_SIDs;
 
-            place_SNVs(&node, cell_mutations, SBS_name, SBS_num_of_SNVs,
+            place_SIDs(&node, cell_mutations, SBS_name, SBS_num_of_SIDs,
                        Mutation::PASSENGER);
         }
     }
@@ -753,11 +754,11 @@ class MutationEngine
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
             const auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
 
-            for (auto snv : mutant_mp.SNVs) {
+            for (auto snv : mutant_mp.SIDs) {
                 snv.cause = mutant_mp.name;
                 snv.nature = Mutation::DRIVER;
 
-                if (place_SNV(snv, cell_mutations)) {
+                if (place_SID(snv, cell_mutations)) {
                     node.add_new_mutation(snv);
                 } else {
                     std::ostringstream oss;
@@ -821,7 +822,7 @@ class MutationEngine
 
             throw std::runtime_error("Unknown species \""+ species_name +"\"");
         }
-        place_SNVs(node, cell_mutations, rates_it->second.snv);
+        place_SIDs(node, cell_mutations, rates_it->second.snv);
         place_CNAs(node, cell_mutations, rates_it->second.cna);
 
         ++visited_nodes;
@@ -1048,17 +1049,17 @@ public:
      * @param name is the name of the mutant
      * @param epistate_passenger_rates is a map from epigenomic status to
      *          passenger rate
-     * @param driver_SNVs is a list of driver SNVs
+     * @param driver_SIDs is a list of driver SIDs
      * @param driver_CNAs is a list of driver CNAs
      * @return a reference to the updated object
      */
     inline
     MutationEngine& add_mutant(const std::string& name,
                                const std::map<std::string, PassengerRates>& epistate_passenger_rates,
-                               const std::list<MutationSpec<SNV>>& driver_SNVs={},
+                               const std::list<MutationSpec<SID>>& driver_SIDs={},
                                const std::list<CNA>& driver_CNAs={})
     {
-        mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SNVs,
+        mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SIDs,
                                          driver_CNAs);
 
         return *this;
@@ -1182,7 +1183,7 @@ public:
             GenomeMutations mutations = wild_type_structure;
 
             // place preneoplastic mutations
-            place_SNVs(&root, mutations, "SBS1", num_of_preneoplatic_mutations,
+            place_SIDs(&root, mutations, "SBS1", num_of_preneoplatic_mutations,
                        Mutation::PRENEOPLASTIC);
 
             place_mutations(root, mutations, species_rates, driver_mutations,
@@ -1232,7 +1233,7 @@ public:
             auto mutations = std::make_shared<CellGenomeMutations>(germline_structure);
 
             // place preneoplastic mutations
-            place_SNVs(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
+            place_SIDs(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
                        Mutation::PRENEOPLASTIC);
 
             sample_mutations.mutations.push_back(mutations);

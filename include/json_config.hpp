@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.20
- * @date 2024-04-19
+ * @version 0.21
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023
  *
@@ -83,16 +83,17 @@ class ConfigReader
                         const nlohmann::json& CNA_json);
 
     /**
-     * @brief Add a SNV to a list
+     * @brief Add a SID mutation to a list
      *
      * @param mutant_name is the mutant name
-     * @param SNVs is the list of SNV in which the read SNV should be inserted
-     * @param SNV_json is the JSON of the SNV to be inserted into the list
+     * @param SIDs is the list of SID in which the read SID should be inserted
+     * @param SID_json is the JSON of the SID to be inserted into the list
+     * @todo Update to support Indel
      */
     static void
-    add_SNV(const std::string& mutant_name,
-            std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
-            const nlohmann::json& SNV_json);
+    add_SID(const std::string& mutant_name,
+            std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
+            const nlohmann::json& SID_json);
 
     /**
      * @brief Get the passenger rates
@@ -104,16 +105,16 @@ class ConfigReader
     get_passenger_rates(const nlohmann::json& passenger_rates_json);
 
     /**
-     * @brief Add the mutations to SNV and CNA lists
+     * @brief Add the mutations to SID and CNA lists
      *
      * @param mutant_name is the mutant name
-     * @param SNVs is the list of SNVs in which the new SNVs must be inserted
+     * @param SIDs is the list of SIDs in which the new SIDs must be inserted
      * @param CNAs is the list of CNAs in which the new CNAs must be inserted
      * @param mutation_json is the JSON of the mutation
      */
     static void
     schedule_mutation(const std::string& mutant_name,
-                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
+                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
                       std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutation_json);
 
@@ -219,13 +220,13 @@ public:
      * @brief Collect the mutations
      *
      * @param[in] mutant_name is the mutant name
-     * @param[in,out] SNVs is the list of mutant SNVs
+     * @param[in,out] SIDs is the list of mutant SIDs
      * @param[in,out] CNAs is the list of mutant CNAs
      * @param[in] mutations_json is the JSON of mutations
      */
     static void
     collect_mutations(const std::string& mutant_name,
-                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
+                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
                       std::list<Races::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutations_json);
 
@@ -321,7 +322,7 @@ public:
      * @brief Get the number of neoplastic mutations
      *
      * @param simulation_json is the JSON simulation configuration
-     * @return the number of neoplastic mutations 
+     * @return the number of neoplastic mutations
      */
     static size_t
     get_number_of_neoplastic_mutations(const nlohmann::json& simulation_json)

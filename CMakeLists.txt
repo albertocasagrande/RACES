@@ -50,9 +50,9 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sid.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
@@ -107,9 +107,9 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sequencer.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sid.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp

@@ -2,8 +2,8 @@
  * @file driver_storage.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines class to load and store driver mutations
- * @version 0.2
- * @date 2024-04-20
+ * @version 0.3
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,7 +36,7 @@
 #include <string>
 #include <filesystem>
 
-#include "snv.hpp"
+#include "sid.hpp"
 
 namespace Races
 {
@@ -46,7 +46,7 @@ namespace Mutations
 
 class DriverStorage
 {
-    std::map<std::string, SNV> SNVs;    //!< The code-SNV map
+    std::map<std::string, SID> mutations;    //!< The code-SID map
 
     std::filesystem::path source_path;  //!< The driver filename
 public:
@@ -56,22 +56,22 @@ public:
     DriverStorage();
 
     /**
-     * @brief Get the driver SNVs
+     * @brief Get the driver SID mutations
      *
      * @return a constant reference to a map associating a driver mutation
-     *      code to the correspoding driver SNV
+     *      code to the correspoding driver SID mutation
      */
-    inline const std::map<std::string, SNV>& get_SNVs() const
+    inline const std::map<std::string, SID>& get_mutations() const
     {
-        return SNVs;
+        return mutations;
     }
 
     /**
      * @brief Get the SNV positions
      *
-     * @return A list containing the genomic position of the SNVs
+     * @return A list containing the genomic position of the SID mutations
      */
-    std::list<GenomicPosition> get_SNV_positions() const;
+    std::list<GenomicPosition> get_mutation_positions() const;
 
     /**
      * @brief Get the source path of the drivers
@@ -84,10 +84,12 @@ public:
     }
 
     /**
-     * @brief Load the driver SNVs
+     * @brief Load the driver SID mutations
      *
      * @param filename is the driver mutation filename
-     * @return a map associating a driver code to the corresponding driver SNV
+     * @return a map associating a driver code to the corresponding
+     *      driver mutation
+     * @todo Update to support indel
      */
     static DriverStorage load(const std::filesystem::path& filename);
 };

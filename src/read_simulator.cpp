@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.26
- * @date 2024-03-12
+ * @version 0.27
+ * @date 2024-04-23
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -183,23 +183,23 @@ ChrCoverage& ChrCoverage::operator+=(ChrCoverage&& chr_coverage)
     return *this;
 }
 
-SNVData::SNVData():
+SIDData::SIDData():
     num_of_occurrences(0)
 {}
 
-SNVData::SNVData(const SNV& snv, const BaseCoverage num_of_occurrences):
+SIDData::SIDData(const SID& mutation, const BaseCoverage num_of_occurrences):
     num_of_occurrences(num_of_occurrences)
 {
-    causes.insert(snv.cause);
-    nature_set.insert(snv.nature);
+    causes.insert(mutation.cause);
+    nature_set.insert(mutation.nature);
 }
 
-void SNVData::account_for(const SNV& snv)
+void SIDData::account_for(const SID& mutation)
 {
     ++num_of_occurrences;
 
-    causes.insert(snv.cause);
-    nature_set.insert(snv.nature);
+    causes.insert(mutation.cause);
+    nature_set.insert(mutation.nature);
 }
 
 template<typename T>
@@ -212,12 +212,12 @@ void update_set(std::set<T>& S, const std::set<T>& P)
     }
 }
 
-void SNVData::update(const SNVData& snv_data)
+void SIDData::update(const SIDData& mutation_data)
 {
-    num_of_occurrences += snv_data.num_of_occurrences;
+    num_of_occurrences += mutation_data.num_of_occurrences;
 
-    update_set(causes, snv_data.causes);
-    update_set(nature_set, snv_data.nature_set);
+    update_set(causes, mutation_data.causes);
+    update_set(nature_set, mutation_data.nature_set);
 }
 
 ChrSampleStatistics::ChrSampleStatistics():
@@ -230,75 +230,75 @@ ChrSampleStatistics::ChrSampleStatistics(const ChromosomeId& chromosome_id,
 {}
 
 
-void check_in(const SNV& snv, const ChromosomeId& chr_id)
+void check_in(const SID& mutation, const ChromosomeId& chr_id)
 {
-    if (snv.chr_id != chr_id) {
+    if (mutation.chr_id != chr_id) {
         using namespace Races::Mutants;
 
         std::ostringstream oss;
 
-        oss << snv << " does not lay in the chromosome " 
+        oss << mutation << " does not lay in the chromosome " 
             << GenomicPosition::chrtos(chr_id) << ".";
 
         throw std::domain_error(oss.str());
     }
 }
 
-void ChrSampleStatistics::account_for(const SNV& snv)
+void ChrSampleStatistics::account_for(const SID& mutation)
 {
-    check_in(snv, get_chr_id());
+    check_in(mutation, get_chr_id());
 
-    auto SNV_data_it = SNV_data.find(snv);
+    auto SID_data_it = SID_data.find(mutation);
 
-    if (SNV_data_it == SNV_data.end()) {
-        SNV_data.insert({snv, {snv, 1}});
+    if (SID_data_it == SID_data.end()) {
+        SID_data.insert({mutation, {mutation, 1}});
     } else {
-        SNV_data_it->second.account_for(snv);
+        SID_data_it->second.account_for(mutation);
     }
 }
 
-SNVData ChrSampleStatistics::get_SNV_data(const SNV& snv) const
+SIDData ChrSampleStatistics::get_data(const SID& mutation) const
 {
-    check_in(snv, get_chr_id());
+    check_in(mutation, get_chr_id());
 
-    auto SNV_data_it = SNV_data.find(snv);
+    auto SID_data_it = SID_data.find(mutation);
 
-    if (SNV_data_it == SNV_data.end()) {
-        return {snv, 0};
+    if (SID_data_it == SID_data.end()) {
+        return {mutation, 0};
     }
     
-    return SNV_data_it->second;
+    return SID_data_it->second;
 }
 
-std::map<SNV, SNVData>::iterator
-find_not_before(const SNV& snv, const std::map<SNV, SNVData>& data,
-                std::map<SNV, SNVData>::iterator it)
+std::map<SID, SIDData>::iterator
+find_not_before(const SID& mutation, const std::map<SID, SIDData>& data,
+                std::map<SID, SIDData>::iterator it)
 {
-    std::less<SNV> before;
-    while (it != data.end() && before(it->first, snv)) {
+    std::less<SID> before;
+    while (it != data.end() && before(it->first, mutation)) {
         ++it;
     }
 
     return it;
 }
 
-void update_data(std::map<SNV, SNVData>& a, const std::map<SNV, SNVData>& b)
+void update_data(std::map<SID, SIDData>& a, const std::map<SID, SIDData>& b)
 {
     auto a_it = a.begin();
     auto b_it = b.begin();
 
-    std::less<SNV> before;
+    std::less<SID> before;
     while (b_it != b.end()) {
 
         // find occurrence of b_it->first in a
         a_it = find_not_before(b_it->first, a, a_it);
 
         if (a_it != a.end()) {
-            // found an SNV not laying before b_it->first
+            // found an SID not laying before b_it->first
 
             if (!before(b_it->first, a_it->first)) {
-                // if the found SNV does not lay after b_it->first,
-                // then it is in the same SNV
+                // if the found SID does not lay after b_it->first,
+                // then it is in the same SID
 
                 a_it->second.update(b_it->second);
             }
@@ -315,7 +315,7 @@ ChrSampleStatistics& ChrSampleStatistics::operator+=(const ChrSampleStatistics& 
 {
     static_cast<ChrCoverage&>(*this) += chr_stats;
 
-    update_data(SNV_data, chr_stats.SNV_data);
+    update_data(SID_data, chr_stats.SID_data);
 
     return *this;
 }
@@ -324,28 +324,28 @@ ChrSampleStatistics& ChrSampleStatistics::operator+=(ChrSampleStatistics&& chr_s
 {
     static_cast<ChrCoverage*>(this)->operator+=(std::move(chr_stats));
 
-    update_data(SNV_data, chr_stats.SNV_data);
+    update_data(SID_data, chr_stats.SID_data);
 
     return *this;
 }
 
-void ChrSampleStatistics::canonize_SNV_data(std::list<ChrSampleStatistics>& chr_stats_list)
+void ChrSampleStatistics::canonize_data(std::list<ChrSampleStatistics>& chr_stats_list)
 {
-    std::set<SNV> SNVs;
+    std::set<SID> SIDs;
 
     for (const auto& chr_stats : chr_stats_list) {
-        for (const auto& [snv, data] : chr_stats.get_SNV_data()) {
-            SNVs.insert(snv);
+        for (const auto& [mutation, data] : chr_stats.get_data()) {
+            SIDs.insert(mutation);
         }
     }
 
     for (auto& chr_stats : chr_stats_list) {
-        auto& SNV_data = chr_stats.SNV_data;
-        for (const auto& snv : SNVs) {
-            auto found = SNV_data.find(snv);
+        auto& SID_data = chr_stats.SID_data;
+        for (const auto& mutation : SIDs) {
+            auto found = SID_data.find(mutation);
 
-            if (found == SNV_data.end()) {
-                SNV_data.insert({snv, {snv, 0}});
+            if (found == SID_data.end()) {
+                SID_data.insert({mutation, {mutation, 0}});
             }
         }
     }
@@ -391,9 +391,9 @@ void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
                                  + GenomicPosition::chrtos(chr_id) + ".");
     }
 
-    for (const auto&[snv, data] : chr_stats.get_SNV_data()) {
-        SNV_data.insert({snv, data});
-        locus_coverage[snv] = chr_stats.get_coverage(snv);
+    for (const auto&[mutation, data] : chr_stats.get_data()) {
+        SID_data.insert({mutation, data});
+        locus_coverage[mutation] = chr_stats.get_coverage(mutation);
     }
 
     chr_ids.insert(chr_id);
@@ -426,24 +426,24 @@ ChrCoverage SampleStatistics::get_chr_coverage(const ChromosomeId& chr_id) const
     return ChrCoverage::load(in_archive);
 }
 
-SNVData SampleStatistics::get_SNV_data(const SNV& snv) const
+SIDData SampleStatistics::get_data(const SID& mutation) const
 {
-    auto found = SNV_data.find(snv);
-    if (found == SNV_data.end()) {
-        return {snv, 0};
+    auto found = SID_data.find(mutation);
+    if (found == SID_data.end()) {
+        return {mutation, 0};
     }
 
     return found->second;
 }
 
-const BaseCoverage& SampleStatistics::get_SNV_coverage(const GenomicPosition& pos) const
+const BaseCoverage& SampleStatistics::get_coverage(const GenomicPosition& pos) const
 {
     auto found = locus_coverage.find(pos);
     if (found == locus_coverage.end()) {
         std::ostringstream oss;
 
         oss << "\"" << sample_name 
-            << "\" does not contain any SNV in position " 
+            << "\" does not contain any SID in position " 
             << pos << ".";
         throw std::runtime_error(oss.str());
     }
@@ -451,13 +451,13 @@ const BaseCoverage& SampleStatistics::get_SNV_coverage(const GenomicPosition& po
     return found->second;
 }
 
-void print_SNV_data(std::ofstream& os, const size_t& coverage, 
-                    const SNVData& snv_data, const char separator='\t')
+void print_SID_data(std::ofstream& os, const size_t& coverage, 
+                    const SIDData& mutation_data, const char separator='\t')
 {
-    if (snv_data.num_of_occurrences != 0) {
-        os << separator << snv_data.num_of_occurrences
+    if (mutation_data.num_of_occurrences != 0) {
+        os << separator << mutation_data.num_of_occurrences
            << separator << coverage 
-           << separator << (static_cast<double>(snv_data.num_of_occurrences)/coverage);
+           << separator << (static_cast<double>(mutation_data.num_of_occurrences)/coverage);
     } else {
         os << separator << "0" << separator << coverage << separator << "0";
     }
@@ -503,25 +503,26 @@ SampleSetStatistics::SampleSetStatistics(const std::filesystem::path& data_direc
 }
 
 std::map<std::string, std::map<GenomicPosition, BaseCoverage>>
-get_sample_coverages_for_SNVs(const std::map<std::string, SampleStatistics>& stats_map,
-                              const std::map<SNV, BaseCoverage>& SNV_occurrences)
+get_sample_coverages_for_SIDs(const std::map<std::string, SampleStatistics>& stats_map,
+                              const std::map<SID, BaseCoverage>& SID_occurrences)
 {
-    using SNVCoverage = std::map<GenomicPosition, BaseCoverage>;
-    std::map<std::string, SNVCoverage> sample_locus_coverage;
+    using SIDCoverage = std::map<GenomicPosition, BaseCoverage>;
+    std::map<std::string, SIDCoverage> sample_locus_coverage;
 
     for (auto& [sample_name, sample_stats]: stats_map) {
         ChrCoverage chr_coverage;
         auto it = sample_locus_coverage.insert({sample_name, 
-                                                sample_stats.get_SNV_coverage()}).first;
+                                                sample_stats.get_coverage()}).first;
 
-        for (auto& [snv, occurrences] : SNV_occurrences) {
+        for (auto& [mutation, occurrences] : SID_occurrences) {
             auto& sample_coverage = it->second;
-            if (sample_coverage.count(snv)==0) {
-                if (snv.chr_id!=chr_coverage.get_chr_id()
+            if (sample_coverage.count(mutation)==0) {
+                if (mutation.chr_id!=chr_coverage.get_chr_id()
                         || !chr_coverage.is_initialized()) {
-                    chr_coverage = sample_stats.get_chr_coverage(snv.chr_id);
+                    chr_coverage = sample_stats.get_chr_coverage(mutation.chr_id);
                 }
-                sample_coverage.insert({GenomicPosition(snv),chr_coverage.get_coverage(snv)});
+                sample_coverage.insert({GenomicPosition(mutation),
+                                        chr_coverage.get_coverage(mutation)});
             }
         }
     }
@@ -557,10 +558,10 @@ bool SampleSetStatistics::is_canonical() const
     }
 
     auto it = stats_map.begin();
-    const auto& first_SNV_data = it->second.get_SNV_data();
+    const auto& first_SID_data = it->second.get_data();
 
     for (++it; it != stats_map.end(); ++it) {
-        if (have_different_keys(first_SNV_data, it->second.get_SNV_data())) {
+        if (have_different_keys(first_SID_data, it->second.get_data())) {
             return false;
         }
     }
@@ -637,29 +638,29 @@ void SampleSetStatistics::save_VAF_CSVs(const std::string& base_name,
     progress_bar.set_progress(100, "VAFs saved");
 }
 
-std::map<SNV, SNVData>
-get_total_SNV_data(const std::map<std::string, SampleStatistics>& stats_map)
+std::map<SID, SIDData>
+get_total_SID_data(const std::map<std::string, SampleStatistics>& stats_map)
 {
-    std::map<SNV, SNVData> total_SNV_data;
+    std::map<SID, SIDData> total_SID_data;
 
     for (const auto& [sample_name, sample_stats]: stats_map) {
-        update_data(total_SNV_data, sample_stats.get_SNV_data());
+        update_data(total_SID_data, sample_stats.get_data());
     }
 
-    return total_SNV_data;
+    return total_SID_data;
 }
 
 std::map<GenomicPosition, BaseCoverage>
-get_total_SNV_coverage(const std::map<std::string, SampleStatistics>& stats_map,
-                       const std::map<SNV, SNVData>& total_SNV_data)
+get_total_SID_coverage(const std::map<std::string, SampleStatistics>& stats_map,
+                       const std::map<SID, SIDData>& total_SID_data)
 {
     std::map<GenomicPosition, BaseCoverage> total_locus_coverage;
 
-    for (const auto& [snv, total_snv_data]: total_SNV_data) {
-        auto it = total_locus_coverage.insert({snv,0}).first;
+    for (const auto& [mutation, total_mutation_data]: total_SID_data) {
+        auto it = total_locus_coverage.insert({mutation,0}).first;
         auto& coverage = it->second;
         for (const auto& [sample_name, sample_stats]: stats_map) {
-            coverage += sample_stats.get_SNV_coverage(snv);
+            coverage += sample_stats.get_coverage(mutation);
         }
     }
 
@@ -668,33 +669,33 @@ get_total_SNV_coverage(const std::map<std::string, SampleStatistics>& stats_map,
 
 void SampleSetStatistics::canonize()
 {
-    auto total_SNV_data = get_total_SNV_data(stats_map);
+    auto total_SID_data = get_total_SID_data(stats_map);
 
     for (auto& [sample_name, sample_stats]: stats_map) {
         ChrCoverage chr_coverage;
 
-        for (auto& [snv, total_data] : total_SNV_data) {
-            auto& SNV_data = sample_stats.SNV_data;
+        for (auto& [mutation, total_data] : total_SID_data) {
+            auto& SID_data = sample_stats.SID_data;
 
-            // if the SNV is not mentioned in the sample statistics
-            if (SNV_data.count(snv)==0) {
-                // add the SNV among those mentioned by the sample
+            // if the SID is not mentioned in the sample statistics
+            if (SID_data.count(mutation)==0) {
+                // add the SID among those mentioned by the sample
                 // statistics
-                SNV_data.insert({snv, {snv, 0}});
+                SID_data.insert({mutation, {mutation, 0}});
 
-                // if the coverage of the chromosome containing the SNV
+                // if the coverage of the chromosome containing the SID
                 // has not been loaded yet
-                if (snv.chr_id!=chr_coverage.get_chr_id()
+                if (mutation.chr_id!=chr_coverage.get_chr_id()
                         || !chr_coverage.is_initialized()) {
                     
                     // load it
-                    chr_coverage = sample_stats.get_chr_coverage(snv.chr_id);
+                    chr_coverage = sample_stats.get_chr_coverage(mutation.chr_id);
                 }
 
-                // add the coverage for the added SNV
+                // add the coverage for the added SID
                 auto& locus_coverage = sample_stats.locus_coverage;
-                locus_coverage.insert({GenomicPosition(snv),
-                                       chr_coverage.get_coverage(snv)});
+                locus_coverage.insert({GenomicPosition(mutation),
+                                       chr_coverage.get_coverage(mutation)});
             }
         }
     }
@@ -718,7 +719,7 @@ std::set<std::string> get_descriptions(const std::set<Mutation::Nature>& types)
     std::set<std::string> string_types;
 
     for (const auto& type: types) {
-        string_types.insert(SNV::get_nature_description(type));
+        string_types.insert(SID::get_nature_description(type));
     }
 
     return string_types;
@@ -741,34 +742,34 @@ void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
         return;
     }
 
-    auto total_SNV_data = get_total_SNV_data(stats_map);
+    auto total_SID_data = get_total_SID_data(stats_map);
 
-    for (const auto& [snv, total_snv_data]: total_SNV_data) {
-        os << GenomicPosition::chrtos(chr_id) << separator << snv.position 
-           << separator << snv.position 
-           << separator << snv.ref_base  << separator << snv.alt_base 
-           << separator << "SNV" << separator;
+    for (const auto& [mutation, total_mutation_data]: total_SID_data) {
+        os << GenomicPosition::chrtos(chr_id) << separator << mutation.position 
+           << separator << mutation.position 
+           << separator << mutation.ref  << separator << mutation.alt
+           << separator << "SID" << separator;
         
-        print_join(os, total_snv_data.causes, ';');
+        print_join(os, total_mutation_data.causes, ';');
 
         os << separator;
 
-        auto descriptions = get_descriptions(total_snv_data.nature_set); 
+        auto descriptions = get_descriptions(total_mutation_data.nature_set); 
 
         print_join(os, descriptions, ';');
 
-        size_t total_snv_coverage{0};
+        size_t total_mutation_coverage{0};
         for (const auto& [sample_name, sample_stats]: stats_map) {
-            const auto& snv_coverage = sample_stats.get_SNV_coverage(snv);
-            auto snv_data = sample_stats.get_SNV_data(snv);
+            const auto& mutation_coverage = sample_stats.get_coverage(mutation);
+            auto mutation_data = sample_stats.get_data(mutation);
 
-            print_SNV_data(os, snv_coverage, snv_data, separator);
+            print_SID_data(os, mutation_coverage, mutation_data, separator);
 
-            total_snv_coverage += snv_coverage;
+            total_mutation_coverage += mutation_coverage;
         }
 
         if (stats_map.size()>1) {
-            print_SNV_data(os, total_snv_coverage, total_snv_data, separator);
+            print_SID_data(os, total_mutation_coverage, total_mutation_data, separator);
         }
 
         os << std::endl;
@@ -904,16 +905,16 @@ void SampleSetStatistics::save_coverage_image(const std::filesystem::path& filen
     f->save(data_dir/filename);
 }
 
-std::vector<double> get_VAF_data(const std::map<SNV, SNVData>& SNV_data,
+std::vector<double> get_VAF_data(const std::map<SID, SIDData>& SID_data,
                                  const std::map<GenomicPosition, BaseCoverage>& locus_coverage,
                                  const ChromosomeId& chr_id,
                                  const double& threshold=0.0)
 {
     std::vector<double> VAF;
 
-    for (const auto& [snv, data]: SNV_data) {
-        if (snv.chr_id == chr_id && data.num_of_occurrences > 0) {
-            auto value = static_cast<double>(data.num_of_occurrences)/locus_coverage.at(snv);
+    for (const auto& [mutation, data]: SID_data) {
+        if (mutation.chr_id == chr_id && data.num_of_occurrences > 0) {
+            auto value = static_cast<double>(data.num_of_occurrences)/locus_coverage.at(mutation);
 
             if (value > threshold) {
                 VAF.push_back(value);
@@ -929,11 +930,11 @@ std::vector<double>
 get_VAF_data(const SampleStatistics& sample_statistics, const ChromosomeId& chr_id,
              const double& threshold=0.0)
 {
-    return get_VAF_data(sample_statistics.get_SNV_data(), sample_statistics.get_SNV_coverage(),
+    return get_VAF_data(sample_statistics.get_data(), sample_statistics.get_coverage(),
                         chr_id, threshold);
 }
 
-void SampleSetStatistics::save_SNV_histograms(const std::string& base_name,
+void SampleSetStatistics::save_SID_histograms(const std::string& base_name,
                                               std::ostream& progress_bar_stream,
                                               const bool& quiet) const
 {
@@ -946,18 +947,18 @@ void SampleSetStatistics::save_SNV_histograms(const std::string& base_name,
         progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
                                   "Saving chr. " + chr_str + " histogram");
 
-        save_SNV_histogram( base_name + chr_str + "_hist.jpg", chr_id);
+        save_SID_histogram( base_name + chr_str + "_hist.jpg", chr_id);
 
         ++chr_processes;
     }
     progress_bar.set_progress(100, "Histogram images saved");
 }
 
-void SampleSetStatistics::save_SNV_histogram(const std::filesystem::path& filename,
+void SampleSetStatistics::save_SID_histogram(const std::filesystem::path& filename,
                                              const ChromosomeId& chromosome_id) const
 {
     if (!is_canonical()) {
-        throw std::runtime_error("Only canonical statistics can save SNV histogram. Canonize it.");
+        throw std::runtime_error("Only canonical statistics can save SID histogram. Canonize it.");
     }
 
     using namespace matplot;
@@ -978,12 +979,12 @@ void SampleSetStatistics::save_SNV_histogram(const std::filesystem::path& filena
         }
 
         xlabel("VAF");
-        ylabel("Num. of SNVs");
+        ylabel("Num. of SIDs");
     } else {
-        auto total_SNV_data = get_total_SNV_data(stats_map);
+        auto total_SID_data = get_total_SID_data(stats_map);
 
-        auto total_locus_coverage = get_total_SNV_coverage(stats_map,
-                                                           total_SNV_data);
+        auto total_locus_coverage = get_total_SID_coverage(stats_map,
+                                                           total_SID_data);
 
         tiledlayout(++num_of_plots, 1);
         for (const auto& [sample_name, sample_stats]: stats_map) {
@@ -998,12 +999,12 @@ void SampleSetStatistics::save_SNV_histogram(const std::filesystem::path& filena
             const auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
             title("Sample \""+latex_name+"\"");
 
-            ylabel("Num. of SNVs");
+            ylabel("Num. of SIDs");
         }
 
         nexttile();
 
-        std::vector<double> VAF = get_VAF_data(total_SNV_data, total_locus_coverage,
+        std::vector<double> VAF = get_VAF_data(total_SID_data, total_locus_coverage,
                                                chromosome_id, 0.15);
 
         if (VAF.size()>0) {
@@ -1012,10 +1013,10 @@ void SampleSetStatistics::save_SNV_histogram(const std::filesystem::path& filena
         title("Overall");
 
         xlabel("VAF");
-        ylabel("Num. of SNVs");
+        ylabel("Num. of SIDs");
     }
 
-    sgtitle("Chromosome " + GenomicPosition::chrtos(chromosome_id)+"'s SNV VAF");
+    sgtitle("Chromosome " + GenomicPosition::chrtos(chromosome_id)+"'s SID VAF");
 
     f->save(data_dir/filename);
 }

@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.38
- * @date 2024-04-12
+ * @version 0.39
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -38,9 +38,10 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <cctype>
 #include <random>
 
-#include "snv.hpp"
+#include "sid.hpp"
 #include "genome_mutations.hpp"
 
 #include "fasta_chr_reader.hpp"
@@ -157,7 +158,7 @@ public:
      *
      * This method updates the coverage of the current object by
      * adding the coverage of the parameter. Moreover, it adds to
-     * the current object SNV occurrences the occurrences of the
+     * the current object mutation occurrences the occurrences of the
      * parameter.
      *
      * @param chr_coverage is the sequencing chromosome coverage to join
@@ -170,7 +171,7 @@ public:
      *
      * This method updates the coverage of the current object by
      * adding the coverage of the parameter. Moreover, it adds to
-     * the current object SNV occurrences the occurrences of the
+     * the current object mutation occurrences the occurrences of the
      * parameter.
      *
      * @param chr_coverage is the sequencing chromosome coverage to join
@@ -211,54 +212,54 @@ public:
 };
 
 /**
- * @brief Sequencing data of any SNV
+ * @brief Sequencing data of any SID mutation
  */
-struct SNVData
+struct SIDData
 {
     BaseCoverage num_of_occurrences;        //!< The number of occurrences
-    std::set<std::string> causes;           //!< The causes of the SNV
-    std::set<Mutation::Nature> nature_set;  //!< The nature of the SNV
+    std::set<std::string> causes;           //!< The causes of the SID
+    std::set<Mutation::Nature> nature_set;  //!< The nature of the SID
 
     /**
      * @brief The empty contructor
      */
-    SNVData();
+    SIDData();
 
     /**
-     * @brief Construct a new SNVData object
+     * @brief Construct a new SIDData object
      *
-     * @param snv is the snv whose data refer to
-     * @param num_of_occurrences is the number of occurrences of `snv`
+     * @param mutation is the mutation whose data refer to
+     * @param num_of_occurrences is the number of occurrences of `mutation`
      */
-    SNVData(const SNV& snv, const BaseCoverage num_of_occurrences);
+    SIDData(const SID& mutation, const BaseCoverage num_of_occurrences);
 
     /**
-     * @brief Update the SNV data
+     * @brief Update the SID data
      *
      * This method increases the number of occurrences of the
-     * SNV and adds the cause and type of a SNV to the
-     * causes and types stored in the SNV data.
+     * SID and adds the cause and type of a SID to the
+     * causes and types stored in the SID data.
      *
-     * @param snv is the SNV whose cause and type should be
+     * @param mutation is the SID whose cause and type should be
      *          added to the causes and types stored in the
      *          data
      */
-    void account_for(const SNV& snv);
+    void account_for(const SID& mutation);
 
     /**
      * @brief Update the current object
      *
-     * This method adds all the data contained in an SNVData
+     * This method adds all the data contained in an SIDData
      * object to the current object. It sums the number of
      * occurrences of the parameter to those of the current
      * object. Moreover, it also adds the causes and the
      * types of the parameter to the current object causes
      * and types.
      *
-     * @param data is the SNVData object whose data is added
+     * @param data is the SIDData object whose data is added
      *          to the current object
      */
-    void update(const SNVData& data);
+    void update(const SIDData& data);
 };
 
 /**
@@ -266,7 +267,7 @@ struct SNVData
  */
 class ChrSampleStatistics : public ChrCoverage
 {
-    std::map<SNV, SNVData> SNV_data;    //!< The SNV data about the simulated reads
+    std::map<SID, SIDData> SID_data;    //!< The SID data about the simulated reads
 public:
 
     /**
@@ -285,36 +286,36 @@ public:
     ChrSampleStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
 
     /**
-     * @brief Update the data associated to an SNV
+     * @brief Update the data associated to an SID
      *
-     * @param snv is the SNV whose data must be updated
+     * @param mutation is the SID whose data must be updated
      */
-    void account_for(const SNV& snv);
+    void account_for(const SID& mutation);
 
     /**
-     * @brief Get the collected SNV data
+     * @brief Get the collected SID data
      *
-     * @return a constant reference to the collected SNV data
+     * @return a constant reference to the collected SID data
      */
-    inline const std::map<SNV, SNVData>& get_SNV_data() const
+    inline const std::map<SID, SIDData>& get_data() const
     {
-        return SNV_data;
+        return SID_data;
     }
 
     /**
-     * @brief Get the collected data of an SNV
+     * @brief Get the collected data of an SID
      *
-     * @param snv is an SNV
-     * @return the data of `snv`
+     * @param mutation is an SID
+     * @return the data of `mutation`
      */
-    SNVData get_SNV_data(const SNV& snv) const;
+    SIDData get_data(const SID& mutation) const;
 
     /**
      * @brief Join other chromosome statistics to the current one
      *
      * This method updates the coverage of the current object by
      * adding the coverage of the parameter. Moreover, it adds to
-     * the current object SNV occurrences the occurrences of the
+     * the current object SID occurrences the occurrences of the
      * parameter.
      *
      * @param chr_stats is the sequencing chromosome statistics to join
@@ -327,7 +328,7 @@ public:
      *
      * This method updates the coverage of the current object by
      * adding the coverage of the parameter. Moreover, it adds to
-     * the current object SNV occurrences the occurrences of the
+     * the current object SID occurrences the occurrences of the
      * parameter.
      *
      * @param chr_stats is the sequencing chromosome statistics to join
@@ -336,16 +337,17 @@ public:
     ChrSampleStatistics& operator+=(const ChrSampleStatistics& chr_stats);
 
     /**
-     * @brief Canonize the SNV data domains of a chromosome sample statistics list
+     * @brief Canonize the SID data domains of a chromosome sample statistics list
      *
-     * This method takes a list of chromosome sample statistics and  alter them
-     * so that the domain of map returned by the method `get_SNV_data()` is the
+     * This method takes a list of chromosome sample statistics and  alter them so
+     * that the domain of map returned by the method `get_data()` is the
      * union of the domains of the maps returned by the same method on each of
      * them.
      *
      * @param[in, out] chr_stats_list is a list of chromosome sample statistics
+     * @todo Update to support indel
      */
-    static void canonize_SNV_data(std::list<ChrSampleStatistics>& chr_stats_list);
+    static void canonize_data(std::list<ChrSampleStatistics>& chr_stats_list);
 };
 
 /**
@@ -363,8 +365,8 @@ class SampleStatistics
 
     std::set<ChromosomeId> chr_ids;     //!< The identifiers of the chromosomes included in the statistics
 
-    std::map<SNV, SNVData> SNV_data;    //!< The SNV data in the sample
-    std::map<GenomicPosition, BaseCoverage> locus_coverage;   //!< The coverage of any position hosting an SNV
+    std::map<SID, SIDData> SID_data;    //!< The SID data in the sample
+    std::map<GenomicPosition, BaseCoverage> locus_coverage;   //!< The coverage of any position hosting an SID
 
     bool save_coverage; //!< A flag to enable/disable storage of coverage data
 
@@ -436,41 +438,41 @@ public:
     }
 
     /**
-     * @brief Get the SNV data
+     * @brief Get the SID data
      *
-     * @return a constant reference to the SNV data
+     * @return a constant reference to the SID data
      */
-    inline const std::map<SNV, SNVData>& get_SNV_data() const
+    inline const std::map<SID, SIDData>& get_data() const
     {
-        return SNV_data;
+        return SID_data;
     }
 
     /**
-     * @brief Get the collected data of an SNV
+     * @brief Get the collected data of an SID
      *
-     * @param snv is an SNV
-     * @return the data of `snv`
+     * @param mutation is an SID
+     * @return the data of `mutation`
      */
-    SNVData get_SNV_data(const SNV& snv) const;
+    SIDData get_data(const SID& mutation) const;
 
     /**
-     * @brief Get the coverage of the positions in which SNVs occurr
+     * @brief Get the coverage of the positions in which SIDs occurr
      *
-     * @return a constant reference to the coverage of the positions in which SNVs
+     * @return a constant reference to the coverage of the positions in which SIDs
      *      occurr
      */
-    inline const std::map<GenomicPosition, BaseCoverage>& get_SNV_coverage() const
+    inline const std::map<GenomicPosition, BaseCoverage>& get_coverage() const
     {
         return locus_coverage;
     }
 
     /**
-     * @brief Get the coverage of a position in which an SNV occurs
+     * @brief Get the coverage of a position in which an SID occurs
      *
      * @return a constant reference to the coverage of `pos` assuming that
-     *      `pos` is a possition in which an SNV occurs
+     *      `pos` is a possition in which an SID occurs
      */
-    const BaseCoverage& get_SNV_coverage(const GenomicPosition& pos) const;
+    const BaseCoverage& get_coverage(const GenomicPosition& pos) const;
 
     /**
      * @brief Get the data directory path
@@ -496,7 +498,7 @@ public:
                 & sample_name
                 & save_coverage
                 & chr_ids
-                & SNV_data
+                & SID_data
                 & locus_coverage;
     }
 
@@ -520,7 +522,7 @@ public:
         SampleStatistics sample_stats(data_dir, sample_name, save_coverage);
 
         archive & sample_stats.chr_ids
-                & sample_stats.SNV_data
+                & sample_stats.SID_data
                 & sample_stats.locus_coverage;
 
         return sample_stats;
@@ -662,7 +664,7 @@ public:
      * @brief Check whether the statistics is canonical
      *
      * A statistics is canonical when all its samples stores the occurrences of
-     * the very same SNVs.
+     * the very same SIDs.
      *
      * @return `true` if and only if current statistics is canonical
      */
@@ -672,16 +674,16 @@ public:
      * @brief Canonize the statistics
      *
      * A statistics is canonical when all its samples stores the occurrences of
-     * the very same SNVs.
+     * the very same SIDs.
      * This method alters the sample statistics of this object and canonizes it.
      */
     void canonize();
 
     /**
-     * @brief Save CSV files reporting the SNV VAFs
+     * @brief Save CSV files reporting the SID VAFs
      *
      * This method saves one CSV for each chromosome in the reference
-     * sequence. Each CSV reports the SNV VAFs in the corresponding
+     * sequence. Each CSV reports the SID VAFs in the corresponding
      * chromosome.
      *
      * @param base_name is the prefix of the name of the CSV files.
@@ -695,10 +697,10 @@ public:
 
 
     /**
-     * @brief Save CSV files reporting the SNV VAFs
+     * @brief Save CSV files reporting the SID VAFs
      *
      * This method saves one CSV for each chromosome in the reference
-     * sequence. Each CSV reports the SNV VAFs in the corresponding
+     * sequence. Each CSV reports the SID VAFs in the corresponding
      * chromosome. The file names will have the format
      * "chr_<chromosome_name>.csv".
      *
@@ -714,11 +716,12 @@ public:
     }
 
     /**
-     * @brief Save a CSV file reporting the SNV VAFs in a chromosome
+     * @brief Save a CSV file reporting the SID VAFs in a chromosome
      *
      * @param filename is the image filename
      * @param chromosome_id is the identifier of the chromosome whose
      *          coverage must be represented
+     * @todo Update to support SID mutations
      */
     void save_VAF_CSV(const std::filesystem::path& filename,
                       const ChromosomeId& chromosome_id) const;
@@ -768,10 +771,10 @@ public:
                              const ChromosomeId& chromosome_id) const;
 
     /**
-     * @brief Save images representing the histogram of SNVs
+     * @brief Save images representing the histogram of SIDs
      *
      * This method saves one image for each chromosome in the reference
-     * sequence. Each image depicts the SNV histogram of the corresponding
+     * sequence. Each image depicts the SID histogram of the corresponding
      * chromosome.
      *
      * @param base_name is the prefix of the name of the CSV files.
@@ -779,36 +782,36 @@ public:
      * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    void save_SNV_histograms(const std::string& base_name,
+    void save_SID_histograms(const std::string& base_name,
                              std::ostream& progress_bar_stream=std::cout,
                              const bool& quiet = false) const;
 
 
     /**
-     * @brief Save images representing the histogram of SNVs
+     * @brief Save images representing the histogram of SIDs
      *
      * This method saves one image for each chromosome in the reference
-     * sequence. Each image depicts the SNV histogram of the corresponding
+     * sequence. Each image depicts the SID histogram of the corresponding
      * chromosome. The file names will have the format
      * "chr_<chromosome_name>_hist.jpg".
      *
      * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable a progress bar
      */
-    inline void save_SNV_histograms(std::ostream& progress_bar_stream=std::cout,
+    inline void save_SID_histograms(std::ostream& progress_bar_stream=std::cout,
                                     const bool& quiet = false) const
     {
-        save_SNV_histograms("chr_", progress_bar_stream, quiet);
+        save_SID_histograms("chr_", progress_bar_stream, quiet);
     }
 
     /**
-     * @brief Save a image representing the histogram of a chromosome SNVs
+     * @brief Save a image representing the histogram of a chromosome SIDs
      *
      * @param filename is the image filename
      * @param chromosome_id is the identifier of the chromosome whose
-     *          SNVs must be represented
+     *          SIDs must be represented
      */
-    void save_SNV_histogram(const std::filesystem::path& filename,
+    void save_SID_histogram(const std::filesystem::path& filename,
                             const ChromosomeId& chromosome_id) const;
 #endif // WITH_MATPLOT
 
@@ -1002,35 +1005,35 @@ private:
     }
 
     /**
-     * @brief Extract the SNVs of two SNV maps laying on a simulated read
+     * @brief Extract the mutations of two SID maps laying on a simulated read
      *
-     * @param A the first position-SNV map
-     * @param B the second position-SNV map
+     * @param A the first position-SID map
+     * @param B the second position-SID map
      * @param genomic_position the first genomic position of the read
      * @param read_size the size of the read
-     * @return a position-SNV map containing all the SNVs in `A` and `B`
+     * @return a position-SID map containing all the SIDs in `A` and `B`
      *      that lay on the simulated read
      */
-    static std::map<GenomicPosition, SNV>
-    merge_SNVs_in(const std::map<GenomicPosition, SNV>& A, const std::map<GenomicPosition, SNV>& B,
+    static std::map<GenomicPosition, SID>
+    merge_SIDs_in(const std::map<GenomicPosition, SID>& A, const std::map<GenomicPosition, SID>& B,
                   const GenomicPosition& genomic_position, const size_t& read_size)
     {
         using namespace Races::Mutations;
 
         const ChrPosition last_position = genomic_position.position+read_size-1;
 
-        std::map<GenomicPosition, SNV> merged;
+        std::map<GenomicPosition, SID> merged;
 
-        // for all the SNVs in A on the simulated read
-        for (auto snv_it = A.lower_bound(genomic_position);
-                snv_it != A.end() && snv_it->second.position<=last_position; ++snv_it) {
-            merged.insert(*snv_it);
+        // for all the SIDs in A on the simulated read
+        for (auto mutation_it = A.lower_bound(genomic_position);
+                mutation_it != A.end() && mutation_it->second.position<=last_position; ++mutation_it) {
+            merged.insert(*mutation_it);
         }
 
-        // for all the SNVs in B on the simulated read
-        for (auto snv_it = B.lower_bound(genomic_position);
-                snv_it != B.end() && snv_it->second.position<=last_position; ++snv_it) {
-            merged.insert(*snv_it);
+        // for all the SIDs in B on the simulated read
+        for (auto mutation_it = B.lower_bound(genomic_position);
+                mutation_it != B.end() && mutation_it->second.position<=last_position; ++mutation_it) {
+            merged.insert(*mutation_it);
         }
 
         return merged;
@@ -1059,33 +1062,33 @@ private:
      *
      * @param[in,out] mismatch_vector is a Boolean vector representing mismatch with respect
      *      to the reference
-     * @param[in] read_SNVs is a map from genomic positions to the corresponding SNVs of the
-     *      SNV laying on the read
+     * @param[in] read_SIDs is a map from genomic positions to the corresponding SIDs of the
+     *      SID laying on the read
      * @param[in] genomic_position is the initial position of the simulated read
      * @return a Boolean vector representing the mismatch with respect to the
      *      reference genome of a read. Every `true` in the mismatch vector corresponds to a
      *      mismatch of the read with respect to the reference genome
      */
     static void apply_mutations_to(std::vector<bool>& mismatch_vector,
-                                   const std::map<GenomicPosition, SNV>& read_SNVs,
+                                   const std::map<GenomicPosition, SID>& read_SIDs,
                                    const GenomicPosition& genomic_position)
     {
-        // for all the SNVs placed on the simulated read
-        for (auto snv_it = read_SNVs.begin(); snv_it != read_SNVs.end(); ++snv_it) {
+        // for all the SIDs placed on the simulated read
+        for (auto mutation_it = read_SIDs.begin(); mutation_it != read_SIDs.end(); ++mutation_it) {
 
-            const size_t read_pos = snv_it->first.position-genomic_position.position;
+            const size_t read_pos = mutation_it->first.position-genomic_position.position;
             mismatch_vector[read_pos] = true;
         }
     }
 
     /**
-     * @brief Compute the CIGAR string of a genomic region potentially affected by SNVs
+     * @brief Compute the CIGAR string of a genomic region potentially affected by SIDs
      *
      * The CIGAR string a code that represents the alignment of a sequence over a reference
-     * in SAM files (see [1]). This method considers a set of SNVs, a genomic position,
+     * in SAM files (see [1]). This method considers a set of SIDs, a genomic position,
      * and a size, and it produces the CIGAR code corresponding to a simulated read whose
      * sequence correspond to that of the reference genome from the specified position with
-     * the exception of positions in which the given SNVs were applied.
+     * the exception of positions in which the given SIDs were applied.
      *
      * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification
      *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
@@ -1126,47 +1129,49 @@ private:
     }
 
     /**
-     * @brief Apply a set of SNVs to a fragment of the reference genome
+     * @brief Apply a set of SIDs to a fragment of the reference genome
      *
      * @param nucleic_sequence is a fragment of the reference genome
-     * @param SNVs is a map from genomic positions to the corresponding SNVs
+     * @param SIDs is a map from genomic positions to the corresponding SIDs
      * @param genomic_position is the initial position of `nucleic_sequence` in
      *          the reference genome
      * @return a reference to the modified version of `nucleic_sequence` where
-     *          the SNVs that were placed in the reference genome region
+     *          the SIDs that were placed in the reference genome region
      *          corresponding to `nucleic_sequence` are applied
+     * @todo Update to support indel
      */
-    static std::string& apply_SNVs(std::string& nucleic_sequence,
-                                   const std::map<GenomicPosition, SNV>& SNVs,
+    static std::string& apply_SIDs(std::string& nucleic_sequence,
+                                   const std::map<GenomicPosition, SID>& SIDs,
                                    const GenomicPosition& genomic_position)
     {
         using namespace Races::Mutations;
 
         const ChrPosition last_position = genomic_position.position+nucleic_sequence.size()-1;
 
-        for (auto snv_it = SNVs.lower_bound(genomic_position);
-                snv_it != SNVs.end() && snv_it->second.position<=last_position; ++snv_it) {
-            const size_t SNV_pos = snv_it->second.position-genomic_position.position;
+        for (auto mutation_it = SIDs.lower_bound(genomic_position);
+                mutation_it != SIDs.end() && mutation_it->second.position<=last_position; ++mutation_it) {
+            const size_t SID_pos = mutation_it->second.position-genomic_position.position;
 
-            {   // check the match between the SNV reference base and the corresponding base
+            {   // check the match between the SID reference base and the corresponding base
                 // in `nucleic_sequence`
 
-                const char snv_ref = snv_it->second.ref_base;
+                const auto mutation_ref = mutation_it->second.ref;
 
-                if (snv_ref != '?') {
+                if (mutation_ref != "?") {
 
-                    // if the SNV reference base differs from the corresponding
+                    // if the SID reference base differs from the corresponding
                     // `nucleic_sequence` base
-                    const char ref_base = toupper(nucleic_sequence[SNV_pos]);
+                    std::string ref = nucleic_sequence.substr(SID_pos, mutation_ref.size());
+                    transform(ref.begin(), ref.end(), ref.begin(), ::toupper);
 
-                    if (snv_ref!=ref_base) {
+                    if (mutation_ref!=ref) {
                         std::ostringstream oss;
 
                         oss << "Reference base mismatch in chr. "
                             << GenomicPosition::chrtos(genomic_position.chr_id)
-                            << " in position " << snv_it->second.position << ": expected '"
-                            << snv_ref << "' and got '"
-                            << ref_base << "'."<< std::endl
+                            << " in position " << mutation_it->second.position << ": expected '"
+                            << mutation_ref << "' and got '"
+                            << ref << "'."<< std::endl
                             << "Are you using a FASTA file different from that used for "
                             << "building the context index?"
                             << std::endl;
@@ -1175,8 +1180,8 @@ private:
                 }
             }
 
-            // change the `nucleic_sequence` nucleotide according to the considered SNV
-            nucleic_sequence[SNV_pos] = snv_it->second.alt_base;
+            // change the `nucleic_sequence` nucleotide according to the considered SID
+            nucleic_sequence[SID_pos] = mutation_it->second.alt[0];
         }
 
         return nucleic_sequence;
@@ -1229,15 +1234,16 @@ private:
      * @brief Collect template statistics
      *
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
-     * @param[in] germline_SNVs is a map from genomic positions to the corresponding germline SNVs
-     * @param[in] SNVs is a map from genomic positions to the corresponding SNVs
+     * @param[in] germline_SIDs is a map from genomic positions to the corresponding germline SIDs
+     * @param[in] SIDs is a map from genomic positions to the corresponding SIDs
      * @param[in] read_first_position is the first position of the simulated read
      * @param[in] template_size is the size of the template
      * @param[in,out] chr_statistics are the chromosome statistics about a tissue sample
+     * @todo Update to support SID mutations
      */
     void collect_read_statistics(const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
-                                 const std::map<GenomicPosition, SNV>& germline_SNVs,
-                                 const std::map<GenomicPosition, SNV>& SNVs,
+                                 const std::map<GenomicPosition, SID>& germline_SIDs,
+                                 const std::map<GenomicPosition, SID>& SIDs,
                                  const std::string& read, const ChrPosition& read_position,
                                  ChrSampleStatistics& chr_statistics)
     {
@@ -1245,18 +1251,18 @@ private:
         chr_statistics.increase_coverage(read_position, read.size());
 
         const GenomicPosition genomic_position{chr_data.chr_id, read_position};
-        for (const auto snvs : {&SNVs, &germline_SNVs}) {
-            for (auto snv_it = snvs->lower_bound(genomic_position);
-                    snv_it != snvs->end() && snv_it->second.position<read_end; ++snv_it) {
-                const size_t base_pos = snv_it->first.position - read_position;
-                if (snv_it->second.ref_base != read[base_pos]) {
-                    if (snv_it->second.alt_base != read[base_pos]) {
-                        SNV snv = snv_it->second;
+        for (const auto mutations : {&SIDs, &germline_SIDs}) {
+            for (auto mutation_it = mutations->lower_bound(genomic_position);
+                    mutation_it != mutations->end() && mutation_it->second.position<read_end; ++mutation_it) {
+                const size_t base_pos = mutation_it->first.position - read_position;
+                if (mutation_it->second.ref[0] != read[base_pos]) {
+                    if (mutation_it->second.alt[0] != read[base_pos]) {
+                        SID mutation = mutation_it->second;
 
-                        snv.alt_base = read[base_pos];
-                        chr_statistics.account_for(snv);
+                        mutation.alt[0] = read[base_pos];
+                        chr_statistics.account_for(mutation);
                     } else {
-                        chr_statistics.account_for(snv_it->second);
+                        chr_statistics.account_for(mutation_it->second);
                     }
                 }
             }
@@ -1284,23 +1290,23 @@ private:
     /**
      * @brief Write the SAM alignment line corresponding to a simulated read
      *
-     * This method extracts the template from the chromosome sequence, obtains the 
+     * This method extracts the template from the chromosome sequence, obtains the
      * template reads, applies germinal and somatic mutations to it, simulates
-     * sequencing errors, collects sequencing statistics, and, whenever it is 
+     * sequencing errors, collects sequencing statistics, and, whenever it is
      * required, writes the read alignments in the SAM stream.
      *
      * @tparam SEQUENCER is the sequencer model type
      * @param[in,out] sequencer is the sequencer
      * @param[in] chr_data is the data about the chromosome from which the simulated
      *   template come from
-     * @param[in] germline_SNVs is a map from genomic positions to the corresponding
-     *   germline SNVs
-     * @param[in] SNVs is a map from genomic positions to the corresponding SNVs
+     * @param[in] germline_SIDs is a map from genomic positions to the corresponding
+     *   germline SIDs
+     * @param[in] SIDs is a map from genomic positions to the corresponding SIDs
      * @param[in] template_begin_pos is the first position of the simulated template
      * @param[in] template_size is the size of the template
      * @param[in,out] chr_statistics are the chromosome statistics about a tissue sample
      * @param[out] SAM_stream is a pointer to a SAM stream. If `SAM_stream` is
-     *   different from `nullptr` and the hamming distance between the produced read 
+     *   different from `nullptr` and the hamming distance between the produced read
      *   and the reference fragment is below the threshold, the read alignments is
      *   written in the SAM stream
      * @param[in] sample_name is the tissue sample name
@@ -1309,8 +1315,8 @@ private:
              std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     void process_template(SEQUENCER& sequencer,
                           const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
-                          const std::map<GenomicPosition, SNV>& germline_SNVs,
-                          const std::map<GenomicPosition, SNV>& SNVs,
+                          const std::map<GenomicPosition, SID>& germline_SIDs,
+                          const std::map<GenomicPosition, SID>& SIDs,
                           const ChrPosition& template_begin_pos,
                           const size_t& template_size, ChrSampleStatistics& chr_statistics,
                           std::ostream* SAM_stream,
@@ -1327,13 +1333,13 @@ private:
 
             std::vector<bool> mismatch_vector(read_size, false);
             std::string read = chr_data.nucleotides.substr(read_first_position-1, read_size);
-            apply_SNVs(read, SNVs, genomic_position);
-            apply_SNVs(read, germline_SNVs, genomic_position);
+            apply_SIDs(read, SIDs, genomic_position);
+            apply_SIDs(read, germline_SIDs, genomic_position);
 
             std::string qual = sequencer.simulate_seq(read, genomic_position, i);
 
             for (size_t i=0; i<read_size; ++i) {
-                mismatch_vector[i] = (read[i] != 'N' 
+                mismatch_vector[i] = (read[i] != 'N'
                                         && read[i] != chr_data.nucleotides[read_first_position-1+i]);
             }
 
@@ -1342,7 +1348,7 @@ private:
             const auto hamming_distance = get_hamming_distance(mismatch_vector);
 
             if (hamming_distance < hamming_distance_threshold) {
-                collect_read_statistics(chr_data, germline_SNVs, SNVs,
+                collect_read_statistics(chr_data, germline_SIDs, SIDs,
                                         read, read_first_position, chr_statistics);
 
                 if (SAM_stream != nullptr) {
@@ -1420,8 +1426,8 @@ private:
 
             const double current_progress = 100*static_cast<double>(steps)/total_steps;
 
-            const auto& germline_SNVs = germline_fragment.get_SNVs();
-            const auto& SNVs = fragment.get_SNVs();
+            const auto& germline_SIDs = germline_fragment.get_mutations();
+            const auto& SIDs = fragment.get_mutations();
 
             auto first_possible_begin = fragment.get_initial_position();
             auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())-template_size+1;
@@ -1433,7 +1439,7 @@ private:
 
                 const auto template_read_data = get_template_read_data(begin_pos, template_size);
 
-                process_template(sequencer, chr_data, germline_SNVs, SNVs, begin_pos,
+                process_template(sequencer, chr_data, germline_SIDs, SIDs, begin_pos,
                                  template_size, chr_statistics, SAM_stream, sample_name);
 
                 num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
@@ -1552,7 +1558,7 @@ private:
             ++simulation_data_it;
         }
 
-        ChrSampleStatistics::canonize_SNV_data(chr_stats_list);
+        ChrSampleStatistics::canonize_data(chr_stats_list);
 
         auto chr_stats_it = chr_stats_list.cbegin();
         for (const auto& mutations : mutations_list) {
@@ -1587,7 +1593,7 @@ private:
                 throw std::runtime_error("\"" + to_string(SAM_file_path)
                                          + "\" is not a regular file");
             }
-            SAM_filename = base_name + chr_str + "_" 
+            SAM_filename = base_name + chr_str + "_"
                             + std::to_string(i++) + ".sam";
             SAM_file_path = output_directory/SAM_filename;
         }
@@ -1671,7 +1677,7 @@ private:
      * @brief Generate simulated reads
      *
      * This method takes a list of sample mutations and it generates simulated reads up to a
-     * specified coverage of the mutated genomes. The base-coverage and SNV occurrences are
+     * specified coverage of the mutated genomes. The base-coverage and SID occurrences are
      * collected and, upon request, the SAM alignments corresponding to the produced reads
      * are saved.
      *
@@ -1701,7 +1707,7 @@ private:
 
         const auto chr_ids = get_genome_chromosome_ids(mutations_list);
         std::set<ChromosomeId> relevant_ids;
-        std::set_intersection(chr_ids.begin(), chr_ids.end(), 
+        std::set_intersection(chr_ids.begin(), chr_ids.end(),
                               chromosome_ids.begin(), chromosome_ids.end(),
                               std::inserter(relevant_ids, relevant_ids.begin()));
 
@@ -1928,7 +1934,7 @@ public:
 
         UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
-        return generate_reads<SEQUENCER>(sequencer, mutations_list, chromosome_ids, 
+        return generate_reads<SEQUENCER>(sequencer, mutations_list, chromosome_ids,
                                          coverage, base_name, progress_bar);
     }
 

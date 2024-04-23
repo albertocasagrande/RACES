@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.29
- * @date 2024-03-17
+ * @version 0.30
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -175,7 +175,7 @@ public:
 
     /**
      * @brief Get the alleles with context free for a genomic position
-     * 
+     *
      * @param genomic_position is a genomic position
      * @return a list of the identifiers of the allele in which the context of `genomic_position`
      *      is free
@@ -222,11 +222,11 @@ public:
     bool contains(const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Check whether any SNV occurs in a possible mutational context
+     * @brief Check whether any SID mutation occurs in a possible mutational context
      *
      * @param genomic_position is the central position of the mutational context
-     * @return `true` if and only if no SNVs occurred in the context centered
-     *          in `genomic_position`
+     * @return `true` if and only if no SID mutation occurred in the context
+     *          centered in `genomic_position`
      * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
     bool has_context_free(const GenomicPosition& genomic_position) const;
@@ -241,14 +241,14 @@ public:
      *
      * @param genomic_region is the genomic region whose copy number must be increased
      * @param allele_id is the identifier of the allele that must be amplified
-     * @param new_allele_id is the identifier of the new allele if amplification 
+     * @param new_allele_id is the identifier of the new allele if amplification
      *      succeeded
      * @param nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
+    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                         AlleleId& new_allele_id,
                         const Mutation::Nature& nature=Mutation::UNDEFINED);
 
@@ -271,55 +271,60 @@ public:
                        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
-     * @brief Insert a SNV in a context free position
+     * @brief Insert a SID mutation in a context free position
      *
-     * This method tries to insert a SNV. If the chromosome contains another SNV
-     * occurring in the mutational context of the specified SNV, then the insertion
-     * fails.
+     * This method tries to insert a SID mutation. If the chromosome contains another
+     * SID mutation occurring in the mutational context of the specified SID, then
+     * the insertion fails.
      *
-     * @param snv is the SNV to be inserted in the chromosome
-     * @param allele_id is the identifier of the allele in which the SNV must be placed
-     * @return `true` if and only if the chromosome do not
-     *      contain any other SNVs in `snv`'s mutational context
-     * @throw std::domain_error `SNV` does not lays in the chromosome
+     * @param mutation is the SID mutation to be inserted in the chromosome
+     * @param allele_id is the identifier of the allele in which the SID mutation
+     *      must be placed
+     * @return `true` if and only if the chromosome do not contain any other
+     *      SID mutations in `mutation`'s mutational context
+     * @throw std::domain_error `mutation` does not lays in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
-     *      `allele_id` or `SNV` does not lay in the allele
+     *      `allele_id` or `mutation` does not lay in the allele
+     * @todo Update to support indel
      */
-    bool insert(const SNV& snv, const AlleleId& allele_id);
+    bool insert(const SID& mutation, const AlleleId& allele_id);
 
     /**
      * @brief Duplicate genomic structure
-     * 
-     * This method duplicates the genomic structure of the current objects. 
+     *
+     * This method duplicates the genomic structure of the current objects.
      * It returns a `ChromosomeMutations` object that has the same alleles of
-     * the current objects, but misses the original SNVs and indels.  
-     * 
-     * @return a `ChromosomeMutations` object that has the same alleles of 
-     *      the current objects, but misses the original SNVs and indels
+     * the current objects, but misses the original SID mutations.
+     *
+     * @return a `ChromosomeMutations` object that has the same alleles of
+     *      the current objects, but misses the original SID mutations
      */
     ChromosomeMutations duplicate_structure() const;
 
     /**
-     * @brief Remove a SNV
+     * @brief Remove a SID mutation
      *
-     * This method tries to remove a SNV from the chromosome.
+     * This method tries to remove a SID mutation from the chromosome.
      *
-     * @param genomic_position is the position of the SNV to be removed
-     * @return `true` if and only if a SNV occurred at `genomic_position`
+     * @param genomic_position is the position of the SID mutation to be
+     *      removed
+     * @return `true` if and only if a SID occurred at `genomic_position`
      * @throw std::domain_error `genomic_position` does not lays in the
      *      chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `genomic_position` does not lay in the allele
      */
-    bool remove_SNV(const GenomicPosition& genomic_position);
+    bool remove_mutation(const GenomicPosition& genomic_position);
 
     /**
-     * @brief Check whether a SNV is included among the chromosome mutations
-     * 
-     * @param snv is the SNV whose inclusion among the chromosome mutations is tested
-     * @return `true` if and only if `snv` is contained among the chromosome mutations
+     * @brief Check whether a SID mutation is included among the chromosome mutations
+     *
+     * @param mutation is the SID mutation whose inclusion among the chromosome
+     *      mutations is tested
+     * @return `true` if and only if `mutation` is contained among the chromosome
+     *      mutations
      */
-    bool includes(const SNV& snv) const;
+    bool includes(const SID& mutation) const;
 
     /**
      * @brief Save chromosome mutations in an archive
@@ -496,7 +501,7 @@ public:
 
     /**
      * @brief Get the alleles with context free for a genomic position
-     * 
+     *
      * @param genomic_position is a genomic position
      * @return a list of the identifiers of the allele in which the context of `genomic_position`
      *      is free
@@ -525,14 +530,14 @@ public:
      *
      * @param genomic_region is the genomic region whose copy number must be increased
      * @param allele_id is the identifier of the allele that must be amplified
-     * @param new_allele_id is the identifier of the new allele if amplification 
+     * @param new_allele_id is the identifier of the new allele if amplification
      *      succeeded
      * @param nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
      */
-    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
+    bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                         AlleleId& new_allele_id,
                         const Mutation::Nature& nature=Mutation::UNDEFINED);
 
@@ -554,56 +559,63 @@ public:
                        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
-     * @brief Insert a SNV in a context free position
+     * @brief Insert a SID mutation in a context free position
      *
-     * This method tries to insert a SNV. If the chromosome contains another SNV
-     * occurring in the mutational context of the specified SNV, then the insertion
-     * fails.
+     * This method tries to insert a SID mutation. If the chromosome contains another
+     * SID mutation occurring in the mutational context of the specified SID, then
+     * the insertion fails.
      *
-     * @param snv is the SNV to be inserted in the chromosome
-     * @param allele_id is the identifier of the allele in which the SNV must be applied
-     * @return `true` if and only if the chromosome do not contain any other SNVs in
-     *      `snv`'s mutational context
+     * @param mutation is the SID mutation to be inserted in the chromosome
+     * @param allele_id is the identifier of the allele in which the SID mutation
+     *      must be placed
+     * @return `true` if and only if the chromosome do not contain any other
+     *      SID mutations in `mutation`'s mutational context
+     * @throw std::domain_error `mutation` does not lays in the chromosome
+     * @throw std::out_of_range the chromosome has not the allele
+     *      `allele_id` or `mutation` does not lay in the allele
+     * @todo Update to support indel
      */
-    bool insert(const SNV& snv, const AlleleId& allele_id);
+    bool insert(const SID& mutation, const AlleleId& allele_id);
 
     /**
-     * @brief Remove a SNV
+     * @brief Remove a SID mutation
      *
-     * This method tries to remove a SNV from the chromosome.
+     * This method tries to remove a SID mutation from the chromosome.
      *
-     * @param genomic_position is the position of the SNV to be removed
-     * @return `true` if and only if a SNV occurred at `genomic_position`
+     * @param genomic_position is the position of the SID to be removed
+     * @return `true` if and only if a SID occurred at `genomic_position`
      */
-    bool remove_SNV(const GenomicPosition& genomic_position);
+    bool remove_mutation(const GenomicPosition& genomic_position);
 
     /**
-     * @brief Check whether any SNV occurs in a possible mutational context
+     * @brief Check whether any SID occurs in a possible mutational context
      *
      * @param genomic_position is the central position of the mutational context
-     * @return `true` if and only if no SNVs occurred in the context centered
-     *          in `genomic_position`
+     * @return `true` if and only if no SID mutation occurred in the context
+     *          centered in `genomic_position`
      * @throw std::domain_error `genomic_position` does not lays in the fragment
      */
     bool has_context_free(const GenomicPosition& genomic_position) const;
 
     /**
-     * @brief Check whether a SNV is included among the genome mutations
-     * 
-     * @param snv is the SNV whose inclusion among the genome mutations is tested
-     * @return `true` if and only if `snv` is contained among the genome mutations
+     * @brief Check whether a SID mutation is included among the genome mutations
+     *
+     * @param mutation is the SID mutation whose inclusion among the genome
+     *      mutations is tested
+     * @return `true` if and only if `mutation` is contained among the genome
+     *      mutations
      */
-    bool includes(const SNV& snv) const;
+    bool includes(const SID& mutation) const;
 
     /**
      * @brief Duplicate genomic structure
-     * 
-     * This method duplicates the genomic structure of the current objects. 
-     * It returns a `GenomeMutations` object that has the same chromsomes and 
-     * alleles of the current objects, but misses the original SNVs and indels.  
-     * 
-     * @return a `GenomeMutations` object that has the same chromsomes and 
-     *      alleles of the current objects, but misses the original SNVs and 
+     *
+     * This method duplicates the genomic structure of the current objects.
+     * It returns a `GenomeMutations` object that has the same chromsomes and
+     * alleles of the current objects, but misses the original SNVs and indels.
+     *
+     * @return a `GenomeMutations` object that has the same chromsomes and
+     *      alleles of the current objects, but misses the original SNVs and
      *      indels
      */
     GenomeMutations duplicate_structure() const;

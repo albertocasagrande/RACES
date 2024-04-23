@@ -2,23 +2,23 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the context index
- * @version 0.9
- * @date 2024-03-11
- * 
+ * @version 0.10
+ * @date 2024-04-23
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,10 @@
  * SOFTWARE.
  */
 
-#include <iostream> 
+#include <iostream>
 #include <string>
 #include <filesystem>
+#include <algorithm>
 
 #include <boost/program_options.hpp>
 
@@ -41,7 +42,7 @@
 #include "progress_bar.hpp"
 
 class IndexBuilder
-{   
+{
     const std::string program_name;
     boost::program_options::options_description visible_options;
     boost::program_options::positional_options_description positional_options;
@@ -65,8 +66,9 @@ class IndexBuilder
         if (driver_mutations_filename!="") {
             auto driver_storage = DriverStorage::load(driver_mutations_filename);
 
-            for (const auto& [name, snv] : driver_storage.get_SNVs()) {
-                regions_to_avoid.emplace(snv, 1);
+            for (const auto& [name, mutation] : driver_storage.get_mutations()) {
+                regions_to_avoid.emplace(mutation, std::max(static_cast<size_t>(1),
+                                                            mutation.ref.size()));
             }
         }
 
@@ -84,7 +86,7 @@ class IndexBuilder
 
                 context_index = Index::build_index(genome_fasta_filename, regions_to_avoid, sampling_rate, &progress_bar);
             }
-            
+
             chr_regions = context_index.get_chromosome_regions();
 
             if (chr_regions.size() > 0) {
@@ -113,8 +115,8 @@ class IndexBuilder
             } else {
                 std::cout << " Processed:" << std::endl;
                 for (const auto& chr_region: chr_regions) {
-                    std::cout << "  - Chromosome " 
-                                << GenomicPosition::chrtos(chr_region.get_chromosome_id()) 
+                    std::cout << "  - Chromosome "
+                                << GenomicPosition::chrtos(chr_region.get_chromosome_id())
                                 << " (size: " << chr_region.size() << " bps)" << std::endl;
                 }
             }
@@ -128,14 +130,14 @@ public:
     std::ostream& print_help(std::ostream& os) const
     {
         os << "Syntax: " << program_name;
-        
+
         for (unsigned int i=0;i<positional_options.max_total_count(); ++i) {
-            os << " <" << positional_options.name_for_position(i) << ">"; 
+            os << " <" << positional_options.name_for_position(i) << ">";
         }
 
         os << std::endl << visible_options << std::endl;
 
-        return os;   
+        return os;
     }
 
     IndexBuilder(const int argc, const char* argv[]):
@@ -144,11 +146,11 @@ public:
         namespace po = boost::program_options;
 
         visible_options.add_options()
-            ("driver-mutations,d", po::value<std::string>(&driver_mutations_filename), 
+            ("driver-mutations,d", po::value<std::string>(&driver_mutations_filename),
              "the driver mutations file")
-            ("output-filename,o", po::value<std::string>(&output_filename), 
+            ("output-filename,o", po::value<std::string>(&output_filename),
              "output filename")
-            ("sampling-rate,s", po::value<size_t>(&sampling_rate)->default_value(1), 
+            ("sampling-rate,s", po::value<size_t>(&sampling_rate)->default_value(1),
              "context sampling rate (to sample contexts and reduce index memory and space requirements)")
             ("force-overwrite,f", "force overwriting output file")
             ("bytes-per-pos,b", po::value<unsigned int>(&bits_per_abs_position)->default_value(4),
@@ -160,7 +162,7 @@ public:
 
         po::options_description hidden("Hidden options");
         hidden.add_options()
-            ("genome file", po::value<std::string>(&genome_fasta_filename), 
+            ("genome file", po::value<std::string>(&genome_fasta_filename),
             "the path to the genome in FASTA file format")
         ;
 
@@ -204,7 +206,7 @@ public:
         }
 
         if (std::ifstream(output_filename).good() && !vm.count("force-overwrite")) {
-            std::cerr << "The output file \"" << output_filename << "\" already exists. " 
+            std::cerr << "The output file \"" << output_filename << "\" already exists. "
                     << "Use \"--force-overwrite\" to overwrite it." << std::endl<< std::endl;
             print_help(std::cerr);
             exit(1);

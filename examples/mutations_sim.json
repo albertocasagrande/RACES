@@ -21,14 +21,14 @@
                     "type": "SNV",
                     "chromosome": "1",
                     "position": 11266,
-                    "alt base": "A"
+                    "alt": "A"
                 },
                 {
                     "type": "SNV",
                     "chromosome": "1",
                     "position": 10693,
-                    "ref base": "A",
-                    "alt base": "G"
+                    "ref": "A",
+                    "alt": "G"
                 },
                 {
                     "type": "CNA",

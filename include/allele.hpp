@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.15
- * @date 2024-03-05
+ * @version 0.16
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 #include <map>
 #include <limits>
 
-#include "snv.hpp"
+#include "sid.hpp"
 #include "genomic_region.hpp"
 
 namespace Races
@@ -57,7 +57,7 @@ typedef size_t AlleleId;
  */
 class AlleleFragment : public GenomicRegion
 {
-    std::map<GenomicPosition, SNV> snvs;  //!< the fragment SNVs
+    std::map<GenomicPosition, SID> mutations;  //!< the fragment SIDs
 
     /**
      * @brief Split an allele fragment
@@ -67,8 +67,9 @@ class AlleleFragment : public GenomicRegion
      * position, and updates the length of the original one so
      * that the two fragments are contiguous, i.e., one of the two
      * follows the other one.
-     * The SNVs of the original allele fragment are distributed on
-     * the two allele fragments according to their genomic position.
+     * The SID mutations of the original allele fragment are
+     * distributed on the two allele fragments according to their
+     * genomic position.
      *
      * @param split_point is the position of the new allele fragment
      * @return the allele fragment originated by the split
@@ -86,8 +87,9 @@ class AlleleFragment : public GenomicRegion
      * position, and updates the length of the original one so
      * that the two fragments are contiguous, i.e., one of the two
      * follows the other one.
-     * The SNVs of the original allele fragment are distributed on
-     * the two allele fragments according to their genomic position.
+     * The SID mutations of the original allele fragment are
+     * distributed on the two allele fragments according to their
+     * genomic position.
      *
      * @param split_point is the position of the new allele fragment
      * @return the allele fragment originated by the split
@@ -129,13 +131,13 @@ public:
     explicit AlleleFragment(const GenomicRegion& genomic_region);
 
     /**
-     * @brief Get the allele fragment SNVs
+     * @brief Get the allele fragment SID mutations
      *
-     * @return a constant reference to the allele fragment SNVs
+     * @return a constant reference to the allele fragment SID mutations
      */
-    inline const std::map<GenomicPosition, SNV>& get_SNVs() const
+    inline const std::map<GenomicPosition, SID>& get_mutations() const
     {
-        return snvs;
+        return mutations;
     }
 
     /**
@@ -143,53 +145,54 @@ public:
      *
      * @param genomic_position is a genomic position
      * @return `true` if and only if the allele fragment does not
-     *      contains SNVs in the one-base neighborhood of
+     *      contains SID mutations in the one-base neighborhood of
      *      `genomic_position`
      */
     bool has_context_free(const GenomicPosition& genomic_position) const;
 
     /**
-     * @brief Insert a new SNV
+     * @brief Insert a new SID mutation
      *
-     * This method tries to insert a new SNV. It succeeds
-     * if no other SNVs are contained in the context.
+     * This method tries to insert a new SID mutation. It succeeds
+     * if no other SID mutations are contained in the context.
      *
-     * @param snv is the SNV to insert
-     * @return `true` if and only if the SNV insertion
+     * @param mutation is the SID mutation to be inserted
+     * @return `true` if and only if the mutation insertion
      *          has succeeded
+     * @todo Update to support indel
      */
-    bool insert(const SNV& snv);
+    bool insert(const SID& mutation);
 
     /**
-     * @brief Remove a SNV
+     * @brief Remove a SID mutation
      *
-     * This method tries to remove a SNV from a genomic position.
-     * It succeeds if the allele fragment contains a SNV in the
-     * specified position.
+     * This method tries to remove a SID mutation from a genomic
+     * position. It succeeds if the allele fragment contains a SID
+     * mutation in the specified position.
      *
      * @param genomic_position is the genomic position containing the
-     *          SNV to be removed
+     *          SID mutation to be removed
      * @return `true` if and only if the removal has succeeded
      */
-    bool remove_SNV(const GenomicPosition& genomic_position);
+    bool remove_mutation(const GenomicPosition& genomic_position);
 
     /**
-     * @brief Check whether a SNV is included among the fragment allele mutations
-     * 
-     * @param snv is the SNV whose inclusion among the fragment allele mutations is 
-     *          tested
+     * @brief Check whether a SID is included among the fragment allele mutations
+     *
+     * @param mutation is the SID mutation whose inclusion among the
+     *          fragment allele mutations is tested
      * @return `true` if and only if `snv` is contained among the fragment allele
      *          mutations
      */
-    bool includes(const SNV& snv) const;
+    bool includes(const SID& mutation) const;
 
     /**
      * @brief Copy part of an allele fragment
      *
      * @param genomic_region is the genomic region to copy
-     * @return an allelic fragment corresponding to `genomic_region`
-     *      that contains all the original allele fragment SNVs
-     *      laying in `genomic_region`
+     * @return an allelic fragment corresponding to `genomic_region` that
+     *      contains all the original allele fragment SID mutations laying
+     *      in `genomic_region`
      */
     AlleleFragment copy(const GenomicRegion& genomic_region) const;
 
@@ -212,7 +215,7 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & static_cast<const GenomicRegion&>(*this)
-                & snvs;
+                & mutations;
     }
 
     /**
@@ -228,7 +231,7 @@ public:
         AlleleFragment a_fragment;
 
         archive & static_cast<GenomicRegion&>(a_fragment)
-                & a_fragment.snvs;
+                & a_fragment.mutations;
 
         return a_fragment;
     }
@@ -257,7 +260,7 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param identifier is the identifier of the allele
      * @param history is the history of the allele
      */
@@ -273,7 +276,7 @@ public:
      * @param end is the final position of the allele
      * @param history is the history of the allele
      */
-    explicit Allele(const AlleleId& identifier, const ChromosomeId& chromosome_id, 
+    explicit Allele(const AlleleId& identifier, const ChromosomeId& chromosome_id,
                     const ChrPosition& begin, const ChrPosition& end,
                     const std::list<AlleleId>& history={});
 
@@ -289,7 +292,7 @@ public:
 
     /**
      * @brief Get the allele identifier
-     * 
+     *
      * @return the allele identifier
      */
     inline const AlleleId& get_id() const
@@ -299,7 +302,7 @@ public:
 
     /**
      * @brief Get the allele history
-     * 
+     *
      * @return a constant reference to the allele history
      */
     inline const std::list<AlleleId>& get_history() const
@@ -322,7 +325,7 @@ public:
      *
      * @param genomic_position is a genomic position
      * @return `true` if and only if one of the allele fragments
-     *          strictly contains `genomic_position`, i.e., 
+     *          strictly contains `genomic_position`, i.e.,
      *          `genomic_position` belongs to the allele and it is
      *          not in one of its borders
      */
@@ -347,47 +350,50 @@ public:
     bool contains(const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Check whether a SNV is included among the allele mutations
-     * 
-     * @param snv is the SNV whose inclusion among the allele mutations is tested
+     * @brief Check whether a SID is included among the allele mutations
+     *
+     * @param snv is the SID whose inclusion among the allele mutations is tested
      * @return `true` if and only if `snv` is contained among the allele mutations
      */
-    bool includes(const SNV& snv) const;
+    bool includes(const SID& mutation) const;
 
     /**
      * @brief Check whether the fragment context is free
      *
      * @param genomic_position is a genomic position
      * @return `true` if and only if the allele fragment does not
-     *      contains SNVs in the one-base neighborhood of
+     *      contains SID mutations in the one-base neighborhood of
      *      `genomic_position`
+     * @todo Update to support indel
      */
     bool has_context_free(const GenomicPosition& genomic_position) const;
 
     /**
-     * @brief Insert a new SNV
+     * @brief Insert a new SID mutation
      *
-     * This method tries to insert a new SNV. It succeeds
-     * if no other SNVs are contained in the context.
+     * This method tries to insert a new SID mutation. It succeeds
+     * if no other SIDs are contained in the context.
      *
-     * @param snv is the SNV to insert
-     * @return `true` if and only if the SNV insertion
+     * @param snv is the SID to insert
+     * @return `true` if and only if the SID insertion
      *          has succeeded
+     * @todo Update to support indel
      */
-    bool insert(const SNV& snv);
+    bool insert(const SID& mutation);
 
     /**
-     * @brief Remove a SNV
+     * @brief Remove a SID mutation
      *
-     * This method tries to remove a SNV from a genomic position.
-     * It succeeds if the allele fragment contains a SNV in the
+     * This method tries to remove a SID mutation from a genomic position.
+     * It succeeds if the allele fragment contains a SID mutation in the
      * specified position.
      *
      * @param genomic_position is the genomic position containing the
-     *          SNV to be removed
+     *          SID mutation to be removed
      * @return `true` if and only if the removal has succeeded
+     * @todo Update to support indel
      */
-    bool remove_SNV(const GenomicPosition& genomic_position);
+    bool remove_mutation(const GenomicPosition& genomic_position);
 
     /**
      * @brief Copy part of an allele
@@ -395,10 +401,10 @@ public:
      * @param new_allele_id is the identifier of the resulting allele
      * @param genomic_region is the genomic region to copy
      * @return an allelic fragment corresponding to `genomic_region`
-     *      that contains all the original allele SNVs
+     *      that contains all the original allele SID mutations
      *      laying in `genomic_region`
      */
-    Allele copy(const AlleleId& new_allele_id, 
+    Allele copy(const AlleleId& new_allele_id,
                 const GenomicRegion& genomic_region) const;
 
     /**
@@ -425,11 +431,11 @@ public:
     bool remove(const GenomicRegion& genomic_region);
 
     /**
-     * @brief Get the allele SNVs
+     * @brief Get the allele SID mutations
      *
-     * @return the allele SNVs
+     * @return the allele SID mutations
      */
-    std::map<GenomicPosition, SNV> get_SNVs() const;
+    std::map<GenomicPosition, SID> get_mutations() const;
 
     /**
      * @brief Get the size of the allele
@@ -440,21 +446,21 @@ public:
 
     /**
      * @brief Get the string representation of an allele identifier
-     * 
-     * @param allele_id is the allele identifier to be formatted 
+     *
+     * @param allele_id is the allele identifier to be formatted
      * @return the string representation of `allele_id`
      */
     static std::string format_id(const Races::Mutations::AlleleId& allele_id);
 
     /**
      * @brief Duplicate genomic structure
-     * 
-     * This method duplicates the genomic structure of the current objects. 
-     * It returns an `Allele` object that has the same fragments of the current 
-     * objects, but misses the original SNVs and indels.  
-     * 
-     * @return an `Allele` object that has the same fragments of the current 
-     *      objects, but misses the original SNVs and indels
+     *
+     * This method duplicates the genomic structure of the current objects.
+     * It returns an `Allele` object that has the same fragments of the current
+     * objects, but misses the original SID mutations and indels.
+     *
+     * @return an `Allele` object that has the same fragments of the current
+     *      objects, but misses the original SID mutations
      */
     Allele duplicate_structure() const;
 

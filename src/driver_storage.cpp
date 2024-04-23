@@ -2,8 +2,8 @@
  * @file driver_storage.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements class to load and store driver mutations
- * @version 0.3
- * @date 2024-04-20
+ * @version 0.4
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -41,11 +41,11 @@ namespace Mutations
 DriverStorage::DriverStorage()
 {}
 
-std::list<GenomicPosition> DriverStorage::get_SNV_positions() const
+std::list<GenomicPosition> DriverStorage::get_mutation_positions() const
 {
     std::list<GenomicPosition> genomic_positions;
 
-    for (const auto& [code, snv] : SNVs) {
+    for (const auto& [code, snv] : mutations) {
         genomic_positions.push_back(snv);
     }
 
@@ -72,10 +72,10 @@ DriverStorage DriverStorage::load(const std::filesystem::path& filename)
             auto chr_id = GenomicPosition::stochr(chr_str);
             auto pos = static_cast<ChrPosition>(stoul(row.get_field(pos_col)));
 
-            mutations.SNVs.insert({row.get_field(code_col),
-                                    {chr_id, pos, row.get_field(ref_col)[0],
-                                     row.get_field(alt_col)[0],
-                                     Mutations::Mutation::DRIVER}});
+            mutations.mutations.insert({row.get_field(code_col),
+                                        {chr_id, pos, row.get_field(ref_col),
+                                         row.get_field(alt_col),
+                                         Mutations::Mutation::DRIVER}});
         }
     }
 

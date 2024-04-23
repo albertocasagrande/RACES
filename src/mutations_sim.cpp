@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.23
- * @date 2024-04-12
+ * @version 0.24
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -227,7 +227,7 @@ class MutationsSimulator : public BasicExecutable
             if (SNVs_csv_filename != "") {
                 std::ofstream os(SNVs_csv_filename);
 
-                statistics.write_SNVs_table(os);
+                statistics.write_SIDs_table(os);
             }
 
             if (CNAs_csv_filename != "") {
@@ -318,7 +318,7 @@ class MutationsSimulator : public BasicExecutable
         ChromosomeId chr_id;
 
         try {
-            chr_id = GenomicPosition::stochr(row.get_field(0).substr(3));
+            chr_id = GenomicPosition::stochr(row.get_field(0));
         } catch (std::invalid_argument const&) {
             throw std::domain_error("Unknown chromosome specification " + row.get_field(0)
                                     + " in row number " + std::to_string(row_num)
@@ -359,7 +359,7 @@ class MutationsSimulator : public BasicExecutable
         statistics.save_VAF_CSVs(base_name, std::cout, quiet);
 #if WITH_MATPLOT
         statistics.save_coverage_images(base_name, std::cout, quiet);
-        statistics.save_SNV_histograms(base_name, std::cout, quiet);
+        statistics.save_SID_histograms(base_name, std::cout, quiet);
 #endif // WITH_MATPLOT
     }
 
@@ -624,7 +624,7 @@ public:
 
         std::vector<CNA> CNAs;
 
-        Races::IO::CSVReader csv_reader(CNAs_csv);
+        Races::IO::CSVReader csv_reader(CNAs_csv, true, '\t');
 
         size_t row_num{2};
         for (const auto& row : csv_reader) {

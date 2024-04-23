@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.28
- * @date 2024-04-19
+ * @version 0.29
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -124,7 +124,7 @@ ConfigReader::add_CNA(std::list<Races::Mutations::CNA>& CNAs,
                                                   allele, 0, Mutation::DRIVER));
             break;
         case CNA::Type::DELETION:
-            CNAs.push_back(CNA::new_deletion(genomic_position, length, allele, 
+            CNAs.push_back(CNA::new_deletion(genomic_position, length, allele,
                                              Mutation::DRIVER));
             break;
         default:
@@ -133,28 +133,28 @@ ConfigReader::add_CNA(std::list<Races::Mutations::CNA>& CNAs,
 }
 
 void
-ConfigReader::add_SNV(const std::string& mutant_name,
-                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
-                      const nlohmann::json& SNV_json)
+ConfigReader::add_SID(const std::string& mutant_name,
+                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
+                      const nlohmann::json& SID_json)
 {
     using namespace Races::Mutations;
 
-    std::string ref_base = "?";
-    
-    if (SNV_json.count("ref base")>0) {
-        ref_base = get_from<std::string>("ref base", SNV_json, "All the SNVs");
+    std::string ref = "?";
+
+    if (SID_json.count("ref")>0) {
+        ref = get_from<std::string>("ref", SID_json, "All the mutations");
     }
-    auto chr_str = get_from<std::string>("chromosome", SNV_json, "All the SNVs");
-    auto alt_base = get_from<std::string>("alt base", SNV_json, "All the SNVs");
-    auto position = get_from<ChrPosition>("position", SNV_json, "All the SNVs");
+    auto chr_str = get_from<std::string>("chromosome", SID_json, "All the mutations");
+    auto alt = get_from<std::string>("alt", SID_json, "All the mutations");
+    auto position = get_from<ChrPosition>("position", SID_json, "All the mutations");
     AlleleId allele_id = RANDOM_ALLELE;
-    if (SNV_json.count("allele")>0) {
-        allele_id = get_from<AlleleId>("allele", SNV_json, "All the SNVs");
+    if (SID_json.count("allele")>0) {
+        allele_id = get_from<AlleleId>("allele", SID_json, "All the mutations");
     }
 
     GenomicPosition genomic_position(GenomicPosition::stochr(chr_str), position);
 
-    SNVs.emplace_back(allele_id, genomic_position, ref_base[0], alt_base[0], mutant_name);
+    SIDs.emplace_back(allele_id, genomic_position, ref, alt, mutant_name);
 }
 
 std::map<std::string, Races::Mutations::PassengerRates>
@@ -176,7 +176,7 @@ ConfigReader::get_passenger_rates(const nlohmann::json& passenger_rates_json)
 
 void
 ConfigReader::schedule_mutation(const std::string& mutant_name,
-                                std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
+                                std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
                                 std::list<Races::Mutations::CNA>& CNAs,
                                 const nlohmann::json& mutation_json)
 {
@@ -186,8 +186,8 @@ ConfigReader::schedule_mutation(const std::string& mutant_name,
 
     auto type = get_from<std::string>("type", mutation_json,
                                         "All the elements in \"mutations\"");
-    if (type=="SNV") {
-        add_SNV(mutant_name, SNVs, mutation_json);
+    if (type=="SNV" || type=="Indel") {
+        add_SID(mutant_name, SIDs, mutation_json);
 
         return;
     }
@@ -232,13 +232,13 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
     auto passenger_rates = get_passenger_rates(mutational_properties_json["passenger rates"]);
 
     using namespace Races::Mutations;
-    std::list<MutationSpec<SNV>> SNVs;
+    std::list<MutationSpec<SID>> SIDs;
     std::list<CNA> CNAs;
     if (mutational_properties_json.contains("driver mutations")) {
-        collect_mutations(mutant_name, SNVs, CNAs, mutational_properties_json["driver mutations"]);
+        collect_mutations(mutant_name, SIDs, CNAs, mutational_properties_json["driver mutations"]);
     }
 
-    mutational_properties.add_mutant(mutant_name, passenger_rates, SNVs, CNAs);
+    mutational_properties.add_mutant(mutant_name, passenger_rates, SIDs, CNAs);
 }
 
 Races::Mutations::Exposure
@@ -304,7 +304,7 @@ ConfigReader::get_sample_region(const nlohmann::json& sample_region_json,
 
 void
 ConfigReader::collect_mutations(const std::string& mutant_name,
-                                std::list<Races::Mutations::MutationSpec<Races::Mutations::SNV>>& SNVs,
+                                std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
                                 std::list<Races::Mutations::CNA>& CNAs,
                                 const nlohmann::json& mutations_json)
 {
@@ -314,7 +314,7 @@ ConfigReader::collect_mutations(const std::string& mutant_name,
     }
 
     for (const auto& mutation_json : mutations_json) {
-        schedule_mutation(mutant_name, SNVs, CNAs, mutation_json);
+        schedule_mutation(mutant_name, SIDs, CNAs, mutation_json);
     }
 }
 

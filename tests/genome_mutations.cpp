@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::GenomeMutations class
- * @version 0.9
- * @date 2024-02-28
+ * @version 0.10
+ * @date 2024-04-23
  * 
  * @copyright Copyright (c) 2023-2024
  * 
@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 {
     using namespace Races::Mutations;
 
-    SNV snv0(1, 32, 'A', 'G');  // chromosome 1, position 32
+    SID snv0(1, 32, 'A', 'G');  // chromosome 1, position 32
     
-    SNV snv1(snv0.chr_id, snv0.position-1, 'T', 'G'), // at snv0 5'
+    SID snv1(snv0.chr_id, snv0.position-1, 'T', 'G'), // at snv0 5'
         snv2(snv0.chr_id, snv0.position+1, 'G', 'C'), // at snv0 3'
         snv3(snv0.chr_id+1, snv0.position, 'T', 'G'); // snv0 and snv3 differ in chromosome
 
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
 
         // snv in a wrong position
-        SNV snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
+        SID snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
 
         BOOST_CHECK_THROW(test_genome_mutations.insert(snv_err, 0), std::domain_error);
     }
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 0);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
     }
 
     // insert snv3 in allele 1: ok (same position, different chromosome)
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 0);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 1);
     }
 }
 
@@ -153,22 +153,22 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
 {
     using namespace Races::Mutations;
 
-    SNV snv0(1, 32, 'A', 'G');
+    SID snv0(1, 32, 'A', 'G');
     
-    SNV snv1(snv0.chr_id, snv0.position-1, 'T', 'G');
+    SID snv1(snv0.chr_id, snv0.position-1, 'T', 'G');
 
     auto test_genome_mutations = genome_mutations;
 
     // remove snv0: false (no SNV in the position)
-    BOOST_CHECK(!test_genome_mutations.remove_SNV(snv0));
+    BOOST_CHECK(!test_genome_mutations.remove_mutation(snv0));
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
 
         // snv in a wrong position
-        SNV snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
+        SID snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
 
-        BOOST_CHECK_THROW(test_genome_mutations.remove_SNV(snv_err), std::domain_error);
+        BOOST_CHECK_THROW(test_genome_mutations.remove_mutation(snv_err), std::domain_error);
     }
 
     test_genome_mutations.insert(snv0, 0);
@@ -179,15 +179,15 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 1);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
     }
 
     // remove snv1: false (no SNV in the position)
-    BOOST_CHECK(!test_genome_mutations.remove_SNV(snv1));
+    BOOST_CHECK(!test_genome_mutations.remove_mutation(snv1));
 
     // remove snv0: true (SNV removed)
-    BOOST_CHECK(test_genome_mutations.remove_SNV(snv0));
+    BOOST_CHECK(test_genome_mutations.remove_mutation(snv0));
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 0);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
     }
 }
 
@@ -204,9 +204,9 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
 {
     using namespace Races::Mutations;
 
-    SNV snv0(1, 32, 'A', 'G');
+    SID snv0(1, 32, 'A', 'G');
     
-    SNV snv1(snv0.chr_id, 64, 'A', 'T'),
+    SID snv1(snv0.chr_id, 64, 'A', 'T'),
         snv2(snv0.chr_id, 110, 'T', 'G');
 
     GenomicRegion gr_32_64(snv0, 33), // from 32 to 64
@@ -229,10 +229,10 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 3);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 1);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
-        BOOST_CHECK_EQUAL(chr_allele.at(2).get_SNVs().size(), 1);
-        BOOST_CHECK(chr_allele.at(0).get_SNVs()==chr_allele.at(2).get_SNVs());
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(2).get_mutations().size(), 1);
+        BOOST_CHECK(chr_allele.at(0).get_mutations()==chr_allele.at(2).get_mutations());
     }
 
     {
@@ -268,12 +268,12 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 5);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 3);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
-        BOOST_CHECK_EQUAL(chr_allele.at(2).get_SNVs().size(), 1);
-        BOOST_CHECK_EQUAL(chr_allele.at(3).get_SNVs().size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(4).get_SNVs().size(), 1);
-        BOOST_CHECK(chr_allele.at(2).get_SNVs()!=chr_allele.at(4).get_SNVs());
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 3);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(2).get_mutations().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(3).get_mutations().size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(4).get_mutations().size(), 1);
+        BOOST_CHECK(chr_allele.at(2).get_mutations()!=chr_allele.at(4).get_mutations());
     }
 }
 
@@ -281,9 +281,9 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
 {
     using namespace Races::Mutations;
 
-    SNV snv0(1, 32, 'A', 'G');
+    SID snv0(1, 32, 'A', 'G');
     
-    SNV snv1(snv0.chr_id, 64, 'A', 'T'),
+    SID snv1(snv0.chr_id, 64, 'A', 'T'),
         snv2(snv0.chr_id, 110, 'T', 'G');
 
     GenomicRegion gr_32_64(snv0, 33), // from 32 to 64
@@ -331,12 +331,12 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
         auto chr_allele = chr.get_alleles();
 
         BOOST_CHECK_EQUAL(chr_allele.size(), 5);
-        BOOST_CHECK_EQUAL(chr_allele.at(0).get_SNVs().size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(1).get_SNVs().size(), 0);
-        BOOST_CHECK_EQUAL(chr_allele.at(2).get_SNVs().size(), 1);
-        BOOST_CHECK_EQUAL(chr_allele.at(3).get_SNVs().size(), 2);
-        BOOST_CHECK_EQUAL(chr_allele.at(4).get_SNVs().size(), 1);
-        BOOST_CHECK(chr_allele.at(2).get_SNVs()!=chr_allele.at(4).get_SNVs());
+        BOOST_CHECK_EQUAL(chr_allele.at(0).get_mutations().size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
+        BOOST_CHECK_EQUAL(chr_allele.at(2).get_mutations().size(), 1);
+        BOOST_CHECK_EQUAL(chr_allele.at(3).get_mutations().size(), 2);
+        BOOST_CHECK_EQUAL(chr_allele.at(4).get_mutations().size(), 1);
+        BOOST_CHECK(chr_allele.at(2).get_mutations()!=chr_allele.at(4).get_mutations());
     }
 
     {

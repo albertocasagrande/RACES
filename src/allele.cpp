@@ -2,23 +2,23 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.10
- * @date 2024-03-12
- * 
+ * @version 0.11
+ * @date 2024-04-23
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -60,23 +60,23 @@ bool AlleleFragment::has_context_free(const GenomicPosition& genomic_position) c
         g_pos.position -= 1;
     }
 
-    auto it = snvs.lower_bound(g_pos);
+    auto it = mutations.lower_bound(g_pos);
 
-    if (it != snvs.end() && it->first.position < g_pos.position+3) {
+    if (it != mutations.end() && it->first.position < g_pos.position+3) {
         return false;
     }
 
     return true;
 }
 
-bool AlleleFragment::insert(const SNV& snv)
+bool AlleleFragment::insert(const SID& mutation)
 {
-    if (!contains(snv)) {
+    if (!contains(mutation)) {
         throw std::out_of_range("The allele fragment does not contain the SNV");
     }
 
-    if (has_context_free(snv)) {
-        snvs[snv] = snv;
+    if (has_context_free(mutation)) {
+        mutations[mutation] = mutation;
 
         return true;
     }
@@ -84,36 +84,37 @@ bool AlleleFragment::insert(const SNV& snv)
     return false;
 }
 
-bool AlleleFragment::remove_SNV(const GenomicPosition& genomic_position)
+bool AlleleFragment::remove_mutation(const GenomicPosition& genomic_position)
 {
     if (!contains(genomic_position)) {
         throw std::out_of_range("The allele fragment does not contain the SNV");
     }
 
-    auto it = snvs.find(genomic_position);
+    auto it = mutations.find(genomic_position);
 
-    if (it == snvs.end()) {
+    if (it == mutations.end()) {
         return false;
     }
 
-    snvs.extract(it);
+    mutations.extract(it);
 
     return true;
 }
 
-bool AlleleFragment::includes(const SNV& snv) const
+bool AlleleFragment::includes(const SID& mutation) const
 {
-    if (!contains(snv)) {
+    if (!contains(mutation)) {
         return false;
     }
 
-    auto it = snvs.find(snv);
+    auto it = mutations.find(mutation);
 
-    if (it == snvs.end()) {
+    if (it == mutations.end()) {
         return false;
     }
 
-    return (it->second.alt_base == snv.alt_base);
+    return (it->second.alt == mutation.alt)
+            && (it->second.ref == mutation.ref);
 }
 
 AlleleFragment AlleleFragment::split(const GenomicPosition& split_point)
@@ -127,10 +128,10 @@ AlleleFragment AlleleFragment::split(const GenomicPosition& split_point)
     }
 
     AlleleFragment new_fragment(GenomicRegion::split(split_point));
-    
-    auto it = snvs.lower_bound(split_point);
-    while (it != snvs.end()) {
-        new_fragment.snvs.insert(snvs.extract(it++));
+
+    auto it = mutations.lower_bound(split_point);
+    while (it != mutations.end()) {
+        new_fragment.mutations.insert(mutations.extract(it++));
     }
 
     return new_fragment;
@@ -141,19 +142,19 @@ AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
     AlleleFragment new_fragment(genomic_region);
 
     auto final_position = genomic_region.get_final_position();
-    for (auto it = snvs.lower_bound(genomic_region.get_begin());
-            it != snvs.end() && it->first.position <= final_position; ++it) {
-        new_fragment.snvs.insert(*it);
+    for (auto it = mutations.lower_bound(genomic_region.get_begin());
+            it != mutations.end() && it->first.position <= final_position; ++it) {
+        new_fragment.mutations.insert(*it);
     }
 
-    return new_fragment; 
+    return new_fragment;
 }
 
 bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 {
     auto final_position = genomic_region.get_final_position();
-    for (auto it = snvs.lower_bound(genomic_region.get_begin());
-            it != snvs.end() && it->first.position <= final_position; ++it) {
+    for (auto it = mutations.lower_bound(genomic_region.get_begin());
+            it != mutations.end() && it->first.position <= final_position; ++it) {
         if (it->second.nature == Mutation::DRIVER) {
             return true;
         }
@@ -187,7 +188,7 @@ Allele::Allele(const AlleleId& identifier, const GenomicRegion& genomic_region,
 }
 
 template<typename KEY, typename VALUE>
-typename std::map<KEY, VALUE>::const_iterator 
+typename std::map<KEY, VALUE>::const_iterator
 find_not_after(const std::map<KEY, VALUE>& value_map, const KEY& key)
 {
     auto it = value_map.upper_bound(key);
@@ -200,7 +201,7 @@ find_not_after(const std::map<KEY, VALUE>& value_map, const KEY& key)
 }
 
 template<typename KEY, typename VALUE>
-typename std::map<KEY, VALUE>::iterator 
+typename std::map<KEY, VALUE>::iterator
 find_not_after(std::map<KEY, VALUE>& value_map, const KEY& key)
 {
     auto it = value_map.upper_bound(key);
@@ -233,11 +234,11 @@ bool Allele::contains(const GenomicRegion& genomic_region) const
     return (it != fragments.end() && it->second.contains(genomic_region));
 }
 
-bool Allele::includes(const SNV& snv) const
+bool Allele::includes(const SID& mutation) const
 {
-    auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(snv));
+    auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(mutation));
 
-    return (it != fragments.end() && it->second.includes(snv));
+    return (it != fragments.end() && it->second.includes(mutation));
 }
 
 bool Allele::has_context_free(const GenomicPosition& genomic_position) const
@@ -250,27 +251,27 @@ bool Allele::has_context_free(const GenomicPosition& genomic_position) const
     return it->second.has_context_free(genomic_position);
 }
 
-bool Allele::insert(const SNV& snv)
+bool Allele::insert(const SID& mutation)
 {
-    if (!has_context_free(snv)) {
+    if (!has_context_free(mutation)) {
         return false;
     }
 
-    auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(snv));
-    
-    if (it != fragments.end() && it->second.contains(snv)) {
-        return it->second.insert(snv);
+    auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(mutation));
+
+    if (it != fragments.end() && it->second.contains(mutation)) {
+        return it->second.insert(mutation);
     }
 
     return false;
 }
 
-bool Allele::remove_SNV(const GenomicPosition& genomic_position)
+bool Allele::remove_mutation(const GenomicPosition& genomic_position)
 {
     auto it = find_not_after(fragments, genomic_position);
 
     if (it != fragments.end() && it->second.contains(genomic_position)) {
-        return it->second.remove_SNV(genomic_position);
+        return it->second.remove_mutation(genomic_position);
     }
 
     return false;
@@ -343,17 +344,17 @@ bool Allele::remove(const GenomicRegion& genomic_region)
     return true;
 }
 
-std::map<GenomicPosition, SNV> Allele::get_SNVs() const
+std::map<GenomicPosition, SID> Allele::get_mutations() const
 {
-    std::map<GenomicPosition, SNV> snvs;
+    std::map<GenomicPosition, SID> mutations;
 
     for (const auto& [pos, fragment]: fragments) {
-        for (const auto& [snv_pos, snv]: fragment.get_SNVs()) {
-            snvs.insert({snv_pos, snv});
+        for (const auto& [mutation_pos, mutation]: fragment.get_mutations()) {
+            mutations.insert({mutation_pos, mutation});
         }
     }
 
-    return snvs;
+    return mutations;
 }
 
 
@@ -400,18 +401,18 @@ namespace std
 
 std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragment& allele_fragment)
 {
-    os << "["<< allele_fragment.get_initial_position() << "-" 
+    os << "["<< allele_fragment.get_initial_position() << "-"
        << allele_fragment.get_final_position() << "]{";
 
     std::string sep;
-    for (const auto& [pos, snv]: allele_fragment.get_SNVs()) {
-        os << sep << snv;
+    for (const auto& [pos, mutation]: allele_fragment.get_mutations()) {
+        os << sep << mutation;
         sep = ",";
     }
 
     os << "}";
 
-    return os; 
+    return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const Races::Mutations::Allele& allele)

@@ -2,8 +2,8 @@
  * @file germline.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines the functions to generate and load germline mutations
- * @version 0.2
- * @date 2024-03-11
+ * @version 0.3
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -50,7 +50,7 @@ namespace Mutations
 
 /**
  * @brief A class that generate germline mutations
- * 
+ *
  */
 class GermlineMutations
 {
@@ -61,34 +61,34 @@ class GermlineMutations
     std::uniform_int_distribution<uint8_t> base_dist; //!< the base distribution probability
 
     std::mt19937_64 rand_gen;   //!< the random generator
-    
+
     const size_t genome_size;   //!< the genome size
     const size_t expected_mutations;    //!< the expected number of geminal mutations to place
 
     size_t not_processed_size;  //!< the length of the regions in which mutations has not been placed
     size_t mutations_not_placed;  //!< the number of mutations not placed yet
 
-    GermlineMutations(const size_t& genome_size, const double& mutations_per_ref_kbase, 
+    GermlineMutations(const size_t& genome_size, const double& mutations_per_ref_kbase,
                       const int& seed=0);
 
     /**
      * @brief Get the percentage of progresses
-     * 
+     *
      * @return the percentage of progresses
      */
     inline unsigned int get_process_percentage() const
     {
         return 100-(100*(not_processed_size+mutations_not_placed))/(genome_size+expected_mutations);
-    } 
+    }
 
     /**
-     * @brief Build a candidate germline SNV 
-     * 
+     * @brief Build a candidate germline SNV
+     *
      * @param chromosome is the chromosome
      * @param position is the candidate germline SNV position
-     * @return a candidate germline SNV on `sequence` centered on `position` 
+     * @return a candidate germline SNV on `sequence` centered on `position`
      */
-    SNV get_candidate_germline_SNV(const Chromosome& chromosome, const ChrPosition& position);
+    SID get_candidate_germline_SNV(const Chromosome& chromosome, const ChrPosition& position);
 
     /**
      * @brief Get the number of mutations in a chromosome
@@ -102,8 +102,8 @@ class GermlineMutations
 public:
     /**
      * @brief Generate germline mutations
-     * 
-     * @tparam GENOME_WIDE_POSITION is the 
+     *
+     * @tparam GENOME_WIDE_POSITION is the
      * @param reference_fasta_filename is the name of the reference genome fasta file
      * @param chromosome_regions is the vector of chromosome regions
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
@@ -113,33 +113,33 @@ public:
      * @param seed is the seed of the random generator
      * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is Boolean flag to disable/enable a progress bar
-     * @return the germline mutations 
+     * @return the germline mutations
      */
     static GenomeMutations
     generate(const std::filesystem::path& reference_fasta_filename,
              const std::list<GenomicRegion>& chromosome_regions,
              const DriverStorage& driver_storage,
              const std::map<ChromosomeId, size_t>& alleles_per_chromosome,
-             const double& mutations_per_ref_kbase, 
+             const double& mutations_per_ref_kbase,
              const int& seed=0, std::ostream& progress_bar_stream=std::cout,
              const bool quiet=true);
 
     /**
      * @brief Load germline mutations
-     * 
-     * This method loads germline mutations from a _germline data file_. 
-     * These files are "\t"-separated CSV files having two columns: "chr" and 
-     * "file". Each row of these files corresponds to a chromosome and reports, 
-     * in order, the chromosome name and the relative path of a VCF file in 
-     * IGSR format (see https://www.internationalgenome.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-40) 
+     *
+     * This method loads germline mutations from a _germline data file_.
+     * These files are "\t"-separated CSV files having two columns: "chr" and
+     * "file". Each row of these files corresponds to a chromosome and reports,
+     * in order, the chromosome name and the relative path of a VCF file in
+     * IGSR format (see https://www.internationalgenome.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-40)
      * that describes the mutations in the chrosomome.
-     * 
+     *
      * @param germline_data_file is a germline data file
      * @param alleles_per_chromosome is the number of alleles in wild-type cells
      * @param subject is the subject whose germline mutations must be loaded
      * @param progress_bar_stream is the output stream for the progress bar
      * @param quiet is a Boolean flag to enable/disable progress messages
-     * @return The genome mutations of `subject` if they are contained in the 
+     * @return The genome mutations of `subject` if they are contained in the
      *       VCF files
      */
     static GenomeMutations load(const std::filesystem::path& germline_data_file,

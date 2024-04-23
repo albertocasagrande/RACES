@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.11
- * @date 2024-03-12
+ * @version 0.12
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -63,7 +63,7 @@ GermlineMutations::GermlineMutations(const size_t& genome_size, const double& mu
     }
 }
 
-SNV GermlineMutations::get_candidate_germline_SNV(const Chromosome& chromosome,
+SID GermlineMutations::get_candidate_germline_SNV(const Chromosome& chromosome,
                                                   const ChrPosition& position)
 {
     const std::string& sequence = chromosome.nucleotides;
@@ -71,7 +71,7 @@ SNV GermlineMutations::get_candidate_germline_SNV(const Chromosome& chromosome,
     const uint8_t orig_base_pos = bases_pos.at(sequence[position]);
     const char alt_base = bases[(orig_base_pos+base_dist(rand_gen))%4];
 
-    return SNV(chromosome.chr_id, position, sequence[position],
+    return SID(chromosome.chr_id, position, sequence[position],
                alt_base, Mutation::GERMINAL);
 }
 
@@ -122,10 +122,10 @@ bool is_context_free_from(const GenomicPosition& genomic_position,
 
 inline
 std::set<GenomicPosition>
-get_SNV_position_set(const DriverStorage& driver_storage)
+get_mutation_position_set(const DriverStorage& driver_storage)
 {
-    auto SNV_pos_list = driver_storage.get_SNV_positions();
-    return {SNV_pos_list.begin(), SNV_pos_list.end()};
+    auto SID_pos_list = driver_storage.get_mutation_positions();
+    return {SID_pos_list.begin(), SID_pos_list.end()};
 }
 
 GenomeMutations
@@ -144,7 +144,7 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
     std::ifstream fasta_stream(reference_fasta_filename);
 
     if (!fasta_stream.good()) {
-        throw std::domain_error("The file \"" + to_string(reference_fasta_filename) 
+        throw std::domain_error("The file \"" + to_string(reference_fasta_filename)
                                 + "\" cannot be read");
     }
 
@@ -155,7 +155,7 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
 
     using namespace Races::IO::FASTA;
 
-    auto driver_positions = get_SNV_position_set(driver_storage);
+    auto driver_positions = get_mutation_position_set(driver_storage);
 
     ChromosomeData<Sequence> chr_seq;
     while (ChromosomeData<Sequence>::read(fasta_stream, chr_seq, progress_bar)) {
@@ -270,7 +270,7 @@ get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::pa
     if (germline_chr_map.size() == 0) {
         return {};
     }
-    
+
     std::ifstream VCF_stream(germline_chr_map.begin()->second);
 
     if (!VCF_stream.good()) {
@@ -289,7 +289,7 @@ get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::pa
         if (std::regex_match(line, matches, chr_regex)) {
             auto chr_id = GenomicPosition::stochr(matches[2].str());
 
-            if (germline_chr_map.count(chr_id)>0 
+            if (germline_chr_map.count(chr_id)>0
                     && std::regex_match(line, matches, chr_length)) {
 
                 GenomicRegion::Length length = std::stoul(matches[2].str());
@@ -424,7 +424,7 @@ bool read_int(INTEGER_TYPE& value, const std::string& line, size_t& pos, size_t 
     return pos != begin;
 }
 
-SNV get_SNV_from_line(const std::string& line, 
+SID get_SID_from_line(const std::string& line,
                       const std::vector<size_t>& column_separators)
 {
     auto chr_str = line.substr(0, column_separators[0]);
@@ -463,16 +463,16 @@ void add_SNP(GenomeMutations& mutations, const std::string& line,
              const size_t& num_of_alleles,
              std::vector<AlleleId>& allele_ids)
 {
-    auto snv = get_SNV_from_line(line, column_separators);
+    auto mutation = get_SID_from_line(line, column_separators);
 
-    auto& chr_mutations = mutations.get_chromosome(snv.chr_id);
+    auto& chr_mutations = mutations.get_chromosome(mutation.chr_id);
 
     if (allele_ids[0] == 1) {
-        chr_mutations.get_allele(0).insert(snv);
+        chr_mutations.get_allele(0).insert(mutation);
     }
 
     if (num_of_alleles>1 && allele_ids.size()>1 && allele_ids[1]==1) {
-        chr_mutations.get_allele(1).insert(snv);
+        chr_mutations.get_allele(1).insert(mutation);
     }
 }
 
@@ -481,7 +481,7 @@ void add_mutation(GenomeMutations& mutations, const std::string& line,
                   const size_t& num_of_alleles, const size_t& subject_column)
 {
     size_t last_char_position;
-    
+
     if (subject_column<column_separators.size()) {
         last_char_position = column_separators[subject_column];
     } else {
@@ -496,13 +496,13 @@ void add_mutation(GenomeMutations& mutations, const std::string& line,
     }
 
     bool in_first_allele = (allele_ids[0] == 1);
-    bool in_second_allele = (num_of_alleles>1 && allele_ids.size()>1 
+    bool in_second_allele = (num_of_alleles>1 && allele_ids.size()>1
                                 && allele_ids[1]==1);
 
     if (in_first_allele || in_second_allele) {
         switch (get_mutation_type(line, column_separators[6])) {
             case MutationType::SNP:
-                add_SNP(mutations, line, column_separators, 
+                add_SNP(mutations, line, column_separators,
                         num_of_alleles, allele_ids);
                 break;
             default:
@@ -566,7 +566,7 @@ void add_VCF_mutations(GenomeMutations& mutations, const std::filesystem::path& 
                                          + std::to_string(line_num) + ".");
             }
 
-            add_mutation(mutations, line, column_separators, 
+            add_mutation(mutations, line, column_separators,
                          num_of_alleles, subject_column);
         }
 
@@ -621,7 +621,7 @@ GermlineMutations::load(const std::filesystem::path& germline_data_file,
     for (const auto& [chr_id, VCF_path]: germline_chr_map) {
         auto found = alleles_per_chromosome.find(chr_id);
         if (found != alleles_per_chromosome.end()) {
-            add_VCF_mutations(mutations, VCF_path, found->second, subject, 
+            add_VCF_mutations(mutations, VCF_path, found->second, subject,
                               total_VCF_size, processed_VCF, progress_bar);
         }
     }

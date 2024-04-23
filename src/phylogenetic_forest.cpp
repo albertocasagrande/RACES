@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 0.9
- * @date 2024-03-12
+ * @version 0.10
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -53,10 +53,10 @@ PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId
     Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id)
 {}
 
-void PhylogeneticForest::node::add_new_mutation(const SNV& snv)
+void PhylogeneticForest::node::add_new_mutation(const SID& mutation)
 {
-    get_forest().novel_mutations[cell_id].SNVs.insert(snv);
-    get_forest().SNV_first_cells[snv].insert(cell_id);
+    get_forest().novel_mutations[cell_id].SIDs.insert(mutation);
+    get_forest().SID_first_cells[mutation].insert(cell_id);
 }
 
 void PhylogeneticForest::node::add_new_mutation(const CNA& cna)
@@ -140,7 +140,7 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
         }
     }
 
-    forest.SNV_first_cells = filter_by_cells_in(SNV_first_cells, forest);
+    forest.SID_first_cells = filter_by_cells_in(SID_first_cells, forest);
     forest.CNA_first_cells = filter_by_cells_in(CNA_first_cells, forest);
 
     return forest;
@@ -211,7 +211,7 @@ void PhylogeneticForest::clear()
     DescendantsForest::clear();
     leaves_mutations.clear();
     novel_mutations.clear();
-    SNV_first_cells.clear();
+    SID_first_cells.clear();
     CNA_first_cells.clear();
 }
 

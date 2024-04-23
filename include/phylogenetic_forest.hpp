@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.11
- * @date 2024-03-12
+ * @version 0.12
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -58,7 +58,7 @@ public:
      */
     struct NovelMutations
     {
-        std::set<SNV> SNVs;                     //!< The newly introduced SNVs
+        std::set<SID> SIDs;    //!< The newly introduced SID mutations
         std::set<CNA> CNAs;    //!< The newly introduced CNAs
 
         /**
@@ -70,7 +70,7 @@ public:
         template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
         inline void save(ARCHIVE& archive) const
         {
-            archive & SNVs
+            archive & SIDs
                     & CNAs;
         }
 
@@ -86,7 +86,7 @@ public:
         {
             NovelMutations mutations;
 
-            archive & mutations.SNVs
+            archive & mutations.SIDs
                     & mutations.CNAs;
 
             return mutations;
@@ -99,7 +99,7 @@ private:
 
     std::map<Mutants::CellId, CellMutationsPtr> leaves_mutations;   //!< The mutations of each cells represented as leaves in the forest
     std::map<Mutants::CellId, NovelMutations> novel_mutations;      //!< The mutations introduces by each cell in the forest
-    std::map<SNV, CellIdSet> SNV_first_cells;                       //!< A map associating each SNV to the first cells in which it occured
+    std::map<SID, CellIdSet> SID_first_cells;                       //!< A map associating each SID to the first cells in which it occured
     std::map<CNA, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occured
 
     GenomeMutations germline_mutations; //!< The germline mutations
@@ -193,10 +193,10 @@ public:
         /**
          * @brief Add a newly introduced mutation
          *
-         * @param snv is a SNV that was introduced in the corresponding
+         * @param mutation is a SID mutation that was introduced in the corresponding
          *      cell and was not present in the cell parent
          */
-        void add_new_mutation(const SNV& snv);
+        void add_new_mutation(const SID& mutation);
 
         /**
          * @brief Add a newly introduced mutation
@@ -291,14 +291,14 @@ public:
     }
 
     /**
-     * @brief Get map associating each SNV to the first cell in which it occurs
+     * @brief Get map associating each SID to the first cell in which it occurs
      *
-     * @return a constant reference to a map associating each SNV in the phylogenetic
-     *         forest to the identifier of the first cell in which the SNV occured
+     * @return a constant reference to a map associating each SID in the phylogenetic
+     *         forest to the identifier of the first cell in which the SID occured
      */
-    inline const std::map<SNV, std::set<Mutants::CellId>>& get_SNV_first_cells() const
+    inline const std::map<SID, std::set<Mutants::CellId>>& get_mutation_first_cells() const
     {
-        return SNV_first_cells;
+        return SID_first_cells;
     }
 
     /**
@@ -314,14 +314,14 @@ public:
 
     /**
      * @brief Get the list of sample mutations
-     * 
+     *
      * @return the list of sample mutations
      */
     std::list<SampleGenomeMutations> get_sample_mutations_list() const;
 
     /**
      * @brief Get the list of sample mutations
-     * 
+     *
      * @param sample_name is the name of the sample whose mutations are aimed
      * @return the mutations of the sample whose name is `sample_name`
      */
@@ -329,7 +329,7 @@ public:
 
     /**
      * @brief Get the germline mutations
-     * 
+     *
      * @return A constant reference to germline mutations
      */
     inline const GenomeMutations& get_germline_mutations() const
@@ -353,7 +353,7 @@ public:
     {
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
                 & novel_mutations
-                & SNV_first_cells
+                & SID_first_cells
                 & CNA_first_cells
                 & germline_mutations;
 
@@ -377,7 +377,7 @@ public:
 
         archive & static_cast<Mutants::DescendantsForest&>(forest)
                 & forest.novel_mutations
-                & forest.SNV_first_cells
+                & forest.SID_first_cells
                 & forest.CNA_first_cells
                 & forest.germline_mutations;
 

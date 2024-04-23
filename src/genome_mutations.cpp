@@ -2,23 +2,23 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.25
- * @date 2024-03-17
- * 
+ * @version 0.26
+ * @date 2024-04-23
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@
 
 #include "genome_mutations.hpp"
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutations
@@ -52,8 +52,8 @@ ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const L
 }
 
 ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
-    identifier(chromosome_region.get_chromosome_id()), length(chromosome_region.size()), 
-    allelic_length(chromosome_region.size()*num_of_alleles), alleles(), next_allele_id(0)        
+    identifier(chromosome_region.get_chromosome_id()), length(chromosome_region.size()),
+    allelic_length(chromosome_region.size()*num_of_alleles), alleles(), next_allele_id(0)
 {
     for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
         alleles.insert({next_allele_id, Allele{next_allele_id, chromosome_region}});
@@ -106,7 +106,7 @@ const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
     if (it == alleles.end()) {
         std::ostringstream oss;
 
-        oss << "Chromosome " << GenomicPosition::chrtos(identifier)  
+        oss << "Chromosome " << GenomicPosition::chrtos(identifier)
             <<  " has not allele " << Allele::format_id(allele_id) << ".";
         throw std::out_of_range(oss.str());
     }
@@ -121,7 +121,7 @@ Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id)
     if (it == alleles.end()) {
         std::ostringstream oss;
 
-        oss << "Chromosome " << GenomicPosition::chrtos(identifier) 
+        oss << "Chromosome " << GenomicPosition::chrtos(identifier)
             <<  " has not allele " << Allele::format_id(allele_id) << ".";
         throw std::out_of_range(oss.str());
     }
@@ -152,7 +152,7 @@ bool ChromosomeMutations::contains(const GenomicRegion& genomic_region) const
             && genomic_region.get_final_position()<=size());
 }
 
-bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id, 
+bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                                          AlleleId& new_allele_id, const Mutation::Nature& nature)
 {
     if (!contains(genomic_region)) {
@@ -220,29 +220,29 @@ bool ChromosomeMutations::has_context_free(const GenomicPosition& genomic_positi
     return some_allele_contains_pos;
 }
 
-bool ChromosomeMutations::insert(const SNV& snv, const AlleleId& allele_id)
+bool ChromosomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
 {
-    if (!contains(snv)) {
-        throw std::domain_error("The genomic position of the SNV is not in the chromosome");
+    if (!contains(mutation)) {
+        throw std::domain_error("The genomic position of the SID is not in the chromosome");
     }
 
     Allele& allele = get_allele(allele_id);
 
-    if (!allele.has_context_free(snv)) {
+    if (!allele.has_context_free(mutation)) {
         return false;
     }
 
-    return allele.insert(snv);
+    return allele.insert(mutation);
 }
 
-bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
+bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_position)
 {
     if (!contains(genomic_position)) {
-        throw std::domain_error("The genomic position of the SNV is not in the chromosome");
+        throw std::domain_error("The genomic position of the SID is not in the chromosome");
     }
 
     for (auto& [allele_id, allele]: alleles) {
-        if (allele.remove_SNV(genomic_position)) {
+        if (allele.remove_mutation(genomic_position)) {
             return true;
         }
     }
@@ -250,14 +250,14 @@ bool ChromosomeMutations::remove_SNV(const GenomicPosition& genomic_position)
     return false;
 }
 
-bool ChromosomeMutations::includes(const SNV& snv) const
+bool ChromosomeMutations::includes(const SID& mutation) const
 {
-    if (snv.chr_id != identifier) {
+    if (mutation.chr_id != identifier) {
         return false;
     }
 
     for (auto& [allele_id, allele]: alleles) {
-        if (allele.includes(snv)) {
+        if (allele.includes(mutation)) {
             return true;
         }
     }
@@ -292,7 +292,7 @@ GenomeMutations::GenomeMutations(const std::vector<ChromosomeMutations>& chromos
             std::ostringstream oss;
 
             oss << "Chromosome " << GenomicPosition::chrtos(chromosome.id())
-                << " has been specified twice"; 
+                << " has been specified twice";
 
             throw std::domain_error(oss.str());
         }
@@ -347,11 +347,11 @@ auto find_chromosome(std::map<ChromosomeId, ChromosomeMutations>& chromosomes, c
     if (chr_it == chromosomes.end()) {
         std::ostringstream oss;
 
-        oss << "Unknown chromosome " << GenomicPosition::chrtos(chr_id); 
+        oss << "Unknown chromosome " << GenomicPosition::chrtos(chr_id);
         throw std::domain_error(oss.str());
     }
 
-    return chr_it;   
+    return chr_it;
 }
 
 auto find_chromosome(const std::map<ChromosomeId, ChromosomeMutations>& chromosomes, const ChromosomeId& chr_id)
@@ -361,11 +361,11 @@ auto find_chromosome(const std::map<ChromosomeId, ChromosomeMutations>& chromoso
     if (chr_it == chromosomes.end()) {
         std::ostringstream oss;
 
-        oss << "Unknown chromosome " << GenomicPosition::chrtos(chr_id); 
+        oss << "Unknown chromosome " << GenomicPosition::chrtos(chr_id);
         throw std::domain_error(oss.str());
     }
 
-    return chr_it;   
+    return chr_it;
 }
 
 const ChromosomeMutations& GenomeMutations::get_chromosome(const ChromosomeId& chromosome_id) const
@@ -434,18 +434,18 @@ bool GenomeMutations::remove_region(const GenomicRegion& genomic_region, const A
     return chr_it->second.remove_region(genomic_region, allele_id, nature);
 }
 
-bool GenomeMutations::insert(const SNV& snv, const AlleleId& allele_id)
+bool GenomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
 {
-    auto chr_it = find_chromosome(chromosomes, snv.chr_id);
+    auto chr_it = find_chromosome(chromosomes, mutation.chr_id);
 
-    return chr_it->second.insert(snv, allele_id);
+    return chr_it->second.insert(mutation, allele_id);
 }
 
-bool GenomeMutations::remove_SNV(const GenomicPosition& genomic_position)
+bool GenomeMutations::remove_mutation(const GenomicPosition& genomic_position)
 {
     auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
 
-    return chr_it->second.remove_SNV(genomic_position);
+    return chr_it->second.remove_mutation(genomic_position);
 }
 
 bool GenomeMutations::has_context_free(const GenomicPosition& genomic_position) const
@@ -455,15 +455,15 @@ bool GenomeMutations::has_context_free(const GenomicPosition& genomic_position) 
     return chr_it->second.has_context_free(genomic_position);
 }
 
-bool GenomeMutations::includes(const SNV& snv) const
+bool GenomeMutations::includes(const SID& mutation) const
 {
-    auto chr_it = chromosomes.find(snv.chr_id);
+    auto chr_it = chromosomes.find(mutation.chr_id);
 
     if (chr_it == chromosomes.end()) {
         return false;
     }
 
-    return chr_it->second.includes(snv);
+    return chr_it->second.includes(mutation);
 }
 
 GenomeMutations GenomeMutations::duplicate_structure() const

@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 0.16
- * @date 2024-03-12
+ * @version 0.17
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,7 +36,7 @@ namespace Races
 namespace Mutations
 {
 
-MutationStatistics::SNVStatistics::SNVStatistics():
+MutationStatistics::SIDStatistics::SIDStatistics():
     mutated_alleles(0), num_of_cells(0)
 {}
 
@@ -50,7 +50,7 @@ MutationStatistics::MutationStatistics()
 MutationStatistics& MutationStatistics::record(const std::string& sample_name,
                                                const CellGenomeMutations& cell_mutations)
 {
-    std::set<SNV> in_cell;
+    std::set<SID> in_cell;
 
     auto& sample_stat = sample_statistics[sample_name];
 
@@ -68,13 +68,13 @@ MutationStatistics& MutationStatistics::record(const std::string& sample_name,
             // for all fragments in the allele
             for (const auto& [fragment_pos, fragment]: allele.get_fragments()) {
 
-                // for all SNVs in the fragment
-                for (const auto& [snv_pos, snv]: fragment.get_SNVs()) {
+                // for all SIDs in the fragment
+                for (const auto& [mutation_pos, mutation]: fragment.get_mutations()) {
 
-                    ++(sample_stat.SNVs[snv].mutated_alleles);
-                    ++(overall_statistics.SNVs[snv].mutated_alleles);
+                    ++(sample_stat.SIDs[mutation].mutated_alleles);
+                    ++(overall_statistics.SIDs[mutation].mutated_alleles);
 
-                    in_cell.insert(snv);
+                    in_cell.insert(mutation);
                 }
             }
         }
@@ -82,9 +82,9 @@ MutationStatistics& MutationStatistics::record(const std::string& sample_name,
 
     ++(sample_stat.num_of_cells);
     ++(overall_statistics.num_of_cells);
-    for (const auto& snv : in_cell) {
-        ++(sample_stat.SNVs[snv].num_of_cells);
-        ++(overall_statistics.SNVs[snv].num_of_cells);
+    for (const auto& mutation : in_cell) {
+        ++(sample_stat.SIDs[mutation].num_of_cells);
+        ++(overall_statistics.SIDs[mutation].num_of_cells);
     }
 
     return *this;
@@ -128,7 +128,7 @@ MutationStatistics& MutationStatistics::record(const std::list<Races::Mutations:
     return *this;
 }
 
-std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char separator)
+std::ostream& MutationStatistics::write_SIDs_table(std::ostream& os, const char separator)
 {
     os << "chr" << separator << "from" << separator << "to" << separator
        << "ref" << separator << "alt" << separator
@@ -148,29 +148,31 @@ std::ostream& MutationStatistics::write_SNVs_table(std::ostream& os, const char 
 
     os << std::endl;
 
-    for (const auto& [snv, snv_statistics] : overall_statistics.SNVs) {
+    for (const auto& [mutation, mutation_statistics] : overall_statistics.SIDs) {
 
-        os << GenomicPosition::chrtos(snv.chr_id) << separator << snv.position
-           << separator << snv.position << separator
-           << snv.ref_base << separator << snv.alt_base << separator
-           << "SNV" << separator << snv.cause << separator
-           << snv.get_nature_description();
+        os << GenomicPosition::chrtos(mutation.chr_id) << separator << mutation.position
+           << separator << mutation.position << separator
+           << (mutation.ref==""?"-":mutation.ref) << separator
+           << (mutation.alt==""?"-":mutation.alt) << separator
+           << (mutation.is_SNV()?"SNV":"indel") << separator
+           << mutation.cause << separator
+           << mutation.get_nature_description();
 
         if (sample_statistics.size()>1) {
             for (const auto& [sample_name, sample_stat]: sample_statistics) {
-                auto found = sample_stat.SNVs.find(snv);
-                if (found != sample_stat.SNVs.end()) {
-                    const auto &snv_stat = found->second;
-                    os << separator << snv_stat.mutated_alleles
-                       << separator << snv_stat.num_of_cells;
+                auto found = sample_stat.SIDs.find(mutation);
+                if (found != sample_stat.SIDs.end()) {
+                    const auto &mutation_stat = found->second;
+                    os << separator << mutation_stat.mutated_alleles
+                       << separator << mutation_stat.num_of_cells;
                 } else {
                     os << separator << 0 << separator << 0;
                 }
             }
         }
 
-        os << separator << snv_statistics.mutated_alleles
-           << separator << snv_statistics.num_of_cells
+        os << separator << mutation_statistics.mutated_alleles
+           << separator << mutation_statistics.num_of_cells
            << std::endl;
     }
 

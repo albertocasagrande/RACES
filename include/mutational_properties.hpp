@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.18
- * @date 2024-04-19
+ * @version 0.19
+ * @date 2024-04-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 #include <string>
 
 #include "simulation.hpp"
-#include "snv.hpp"
+#include "sid.hpp"
 #include "cna.hpp"
 #include "mutation_spec.hpp"
 
@@ -54,9 +54,9 @@ namespace Mutations
  */
 struct DriverMutations
 {
-    std::string name;                         //!< The mutant name
-    std::set<MutationSpec<SNV>> SNVs;   //!< The mutant SNVs
-    std::set<CNA> CNAs;                       //!< The mutant CNAs
+    std::string name;                   //!< The mutant name
+    std::set<MutationSpec<SID>> SIDs;   //!< The mutant SIDs
+    std::set<CNA> CNAs;                 //!< The mutant CNAs
 
     /**
      * @brief The empty constructor
@@ -67,11 +67,11 @@ struct DriverMutations
      * @brief A constructor
      *
      * @param mutant_name is the name of the mutant
-     * @param SNVs is the vector of species specific SNVs
+     * @param SIDs is the vector of species specific SIDs
      * @param CNAs is the vector of species specific CNAs
      */
     DriverMutations(const std::string& mutant_name,
-                    const std::list<MutationSpec<SNV>>& SNVs,
+                    const std::list<MutationSpec<SID>>& SIDs,
                     const std::list<CNA>& CNAs);
 };
 
@@ -119,13 +119,13 @@ public:
      * @param name is the name of the mutant
      * @param epistate_passenger_rates is a map from epigenomic state to
      *          passenger rates
-     * @param driver_SNVs is a list of driver SNVs
+     * @param driver_SIDs is a list of driver SIDs
      * @param driver_CNAs is a list of driver CNAs
      * @return a reference to the updated object
      */
     MutationalProperties& add_mutant(const std::string& mutant_name,
                                      const std::map<std::string, PassengerRates>& epistate_passenger_rates,
-                                     const std::list<MutationSpec<SNV>>& driver_SNVs={},
+                                     const std::list<MutationSpec<SID>>& driver_SIDs={},
                                      const std::list<CNA>& driver_CNAs={});
 
     /**
