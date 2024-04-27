@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.39
- * @date 2024-04-23
+ * @version 0.40
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -43,6 +43,7 @@
 
 #include "sid.hpp"
 #include "genome_mutations.hpp"
+#include "read.hpp"
 
 #include "fasta_chr_reader.hpp"
 
@@ -293,6 +294,13 @@ public:
     void account_for(const SID& mutation);
 
     /**
+     * @brief Collect the data from a read
+     *
+     * @param read is a read
+     */
+    void account_for(const Read& read);
+
+    /**
      * @brief Get the collected SID data
      *
      * @return a constant reference to the collected SID data
@@ -345,7 +353,6 @@ public:
      * them.
      *
      * @param[in, out] chr_stats_list is a list of chromosome sample statistics
-     * @todo Update to support indel
      */
     static void canonize_data(std::list<ChrSampleStatistics>& chr_stats_list);
 };
@@ -721,7 +728,6 @@ public:
      * @param filename is the image filename
      * @param chromosome_id is the identifier of the chromosome whose
      *          coverage must be represented
-     * @todo Update to support SID mutations
      */
     void save_VAF_CSV(const std::filesystem::path& filename,
                       const ChromosomeId& chromosome_id) const;
@@ -928,266 +934,6 @@ private:
     };
 
     /**
-     * @brief Get the overall size of a list of sample mutations
-     *
-     * This method computes the sum of the sizes of the genomic
-     * mutations in a list of sample mutations.
-     *
-     * @param mutations_list is a list of sample mutations
-     * @param progress_bar is a progress bar
-     * @return the sum of the sizes of the genomic mutations in `mutations_list`
-     */
-    static size_t get_overall_size(const std::list<SampleGenomeMutations>& mutations_list,
-                                   UI::ProgressBar& progress_bar)
-    {
-        progress_bar.set_message("Evaluating sample overall genomic sizes");
-        size_t overall_size{0};
-        for (const auto& sample_mutations: mutations_list) {
-            for (const auto& mutations: sample_mutations.mutations) {
-                overall_size += mutations->size();
-                progress_bar.update_elapsed_time();
-            }
-        }
-
-        return overall_size;
-    }
-
-    /**
-     * @brief Check whether all the genomic mutations in a list represent the same genome
-     *
-     * This method checks whether all the genomic mutations in a list represent genomes having
-     * the same number of chromosomes and the chromosome sizes are consistent.
-     *
-     * @tparam GENOME_MUTATION is the type of genome mutations
-     * @param mutations is a list of genome mutations
-     * @param progress_bar is a progress bar
-     * @return `true` if and only if all the genomic mutations in `mutations` have the same
-     *          number of chromosomes and, for all pairs of elements in `mutations`, \f$m_1\f$
-     *          and \f$m_2\f$, the $i$-th chromosomes in \f$m_1\f$ and \f$m_2\f$ are equal in
-     *          size
-     * @todo move this method in SampleGenomicMutations
-     */
-    template<typename GENOME_MUTATION, std::enable_if_t<std::is_base_of_v<Races::Mutations::GenomeMutations, GENOME_MUTATION>, bool> = true>
-    static bool represents_same_genome(const std::list<GENOME_MUTATION>& mutations, UI::ProgressBar& progress_bar)
-    {
-        if (mutations.size()==0) {
-            return true;
-        }
-
-        // get the first genome mutations in the list
-        const auto& first_mutations = mutations.front();
-
-        progress_bar.set_message("Checking input");
-        // for all the genome mutations in the list
-        for (const auto& cell_mutations : mutations) {
-
-            // if the first element and the current one differ in the number of chromosome
-            if (cell_mutations.get_chromosomes().size()!=first_mutations.get_chromosomes().size()) {
-                return false;
-            }
-
-            // for all the chromosomes in the two genome mutations
-            auto cell_it = cell_mutations.get_chromosomes().begin();
-            auto first_it = first_mutations.get_chromosomes().begin();
-            for (;cell_it != cell_mutations.get_chromosomes().end(); ++cell_it, ++first_it) {
-                // if they differ because of their chromosome identifier or because of their
-                // sizes
-                if ((cell_it->first != first_it->first)
-                        ||(cell_it->second.size()!=first_it->second.size())) {
-                    return false;
-                }
-            }
-            progress_bar.update_elapsed_time();
-        }
-
-        // otherwise, return true
-        return true;
-    }
-
-    /**
-     * @brief Extract the mutations of two SID maps laying on a simulated read
-     *
-     * @param A the first position-SID map
-     * @param B the second position-SID map
-     * @param genomic_position the first genomic position of the read
-     * @param read_size the size of the read
-     * @return a position-SID map containing all the SIDs in `A` and `B`
-     *      that lay on the simulated read
-     */
-    static std::map<GenomicPosition, SID>
-    merge_SIDs_in(const std::map<GenomicPosition, SID>& A, const std::map<GenomicPosition, SID>& B,
-                  const GenomicPosition& genomic_position, const size_t& read_size)
-    {
-        using namespace Races::Mutations;
-
-        const ChrPosition last_position = genomic_position.position+read_size-1;
-
-        std::map<GenomicPosition, SID> merged;
-
-        // for all the SIDs in A on the simulated read
-        for (auto mutation_it = A.lower_bound(genomic_position);
-                mutation_it != A.end() && mutation_it->second.position<=last_position; ++mutation_it) {
-            merged.insert(*mutation_it);
-        }
-
-        // for all the SIDs in B on the simulated read
-        for (auto mutation_it = B.lower_bound(genomic_position);
-                mutation_it != B.end() && mutation_it->second.position<=last_position; ++mutation_it) {
-            merged.insert(*mutation_it);
-        }
-
-        return merged;
-    }
-
-    /**
-     * @brief Count the number of mismatched in a mismatch vector
-     *
-     * @param mismatch_vector a mismatch vector
-     * @return the number of mismatches represented in the mismatch vector
-     */
-    static size_t get_hamming_distance(const std::vector<bool>& mismatch_vector)
-    {
-        size_t total_mismatches{0};
-        for (const auto& mismatch: mismatch_vector) {
-            if (mismatch) {
-                ++total_mismatches;
-            }
-        }
-
-        return total_mismatches;
-    }
-
-    /**
-     * @brief Apply mutation to sequencing error vector
-     *
-     * @param[in,out] mismatch_vector is a Boolean vector representing mismatch with respect
-     *      to the reference
-     * @param[in] read_SIDs is a map from genomic positions to the corresponding SIDs of the
-     *      SID laying on the read
-     * @param[in] genomic_position is the initial position of the simulated read
-     * @return a Boolean vector representing the mismatch with respect to the
-     *      reference genome of a read. Every `true` in the mismatch vector corresponds to a
-     *      mismatch of the read with respect to the reference genome
-     */
-    static void apply_mutations_to(std::vector<bool>& mismatch_vector,
-                                   const std::map<GenomicPosition, SID>& read_SIDs,
-                                   const GenomicPosition& genomic_position)
-    {
-        // for all the SIDs placed on the simulated read
-        for (auto mutation_it = read_SIDs.begin(); mutation_it != read_SIDs.end(); ++mutation_it) {
-
-            const size_t read_pos = mutation_it->first.position-genomic_position.position;
-            mismatch_vector[read_pos] = true;
-        }
-    }
-
-    /**
-     * @brief Compute the CIGAR string of a genomic region potentially affected by SIDs
-     *
-     * The CIGAR string a code that represents the alignment of a sequence over a reference
-     * in SAM files (see [1]). This method considers a set of SIDs, a genomic position,
-     * and a size, and it produces the CIGAR code corresponding to a simulated read whose
-     * sequence correspond to that of the reference genome from the specified position with
-     * the exception of positions in which the given SIDs were applied.
-     *
-     * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification
-     *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
-     *
-     * @param[in] mismatch_vector is a mismatch vector
-     * @return the CIGAR code corresponding to the mismatch vector
-     */
-    static std::string get_CIGAR(const std::vector<bool>& mismatch_vector)
-    {
-        std::ostringstream oss;
-
-        size_t mismatches=0;
-        size_t matches=0;
-        for (const auto& mismatch : mismatch_vector) {
-            if (mismatch) {
-                if (matches>0) {
-                    oss << matches << "M";
-                    matches = 0;
-                }
-                ++mismatches;
-            } else {
-                if (mismatches>0) {
-                    oss << mismatches << "X";
-                    mismatches = 0;
-                }
-                ++matches;
-            }
-        }
-
-        if (mismatches>0) {
-            oss << mismatches << "X";
-        }
-        if (matches>0) {
-            oss << matches << "M";
-        }
-
-        return oss.str();
-    }
-
-    /**
-     * @brief Apply a set of SIDs to a fragment of the reference genome
-     *
-     * @param nucleic_sequence is a fragment of the reference genome
-     * @param SIDs is a map from genomic positions to the corresponding SIDs
-     * @param genomic_position is the initial position of `nucleic_sequence` in
-     *          the reference genome
-     * @return a reference to the modified version of `nucleic_sequence` where
-     *          the SIDs that were placed in the reference genome region
-     *          corresponding to `nucleic_sequence` are applied
-     * @todo Update to support indel
-     */
-    static std::string& apply_SIDs(std::string& nucleic_sequence,
-                                   const std::map<GenomicPosition, SID>& SIDs,
-                                   const GenomicPosition& genomic_position)
-    {
-        using namespace Races::Mutations;
-
-        const ChrPosition last_position = genomic_position.position+nucleic_sequence.size()-1;
-
-        for (auto mutation_it = SIDs.lower_bound(genomic_position);
-                mutation_it != SIDs.end() && mutation_it->second.position<=last_position; ++mutation_it) {
-            const size_t SID_pos = mutation_it->second.position-genomic_position.position;
-
-            {   // check the match between the SID reference base and the corresponding base
-                // in `nucleic_sequence`
-
-                const auto mutation_ref = mutation_it->second.ref;
-
-                if (mutation_ref != "?") {
-
-                    // if the SID reference base differs from the corresponding
-                    // `nucleic_sequence` base
-                    std::string ref = nucleic_sequence.substr(SID_pos, mutation_ref.size());
-                    transform(ref.begin(), ref.end(), ref.begin(), ::toupper);
-
-                    if (mutation_ref!=ref) {
-                        std::ostringstream oss;
-
-                        oss << "Reference base mismatch in chr. "
-                            << GenomicPosition::chrtos(genomic_position.chr_id)
-                            << " in position " << mutation_it->second.position << ": expected '"
-                            << mutation_ref << "' and got '"
-                            << ref << "'."<< std::endl
-                            << "Are you using a FASTA file different from that used for "
-                            << "building the context index?"
-                            << std::endl;
-                        throw std::domain_error(oss.str());
-                    }
-                }
-            }
-
-            // change the `nucleic_sequence` nucleotide according to the considered SID
-            nucleic_sequence[SID_pos] = mutation_it->second.alt[0];
-        }
-
-        return nucleic_sequence;
-    }
-
-    /**
      * @brief Get the template read data
      *
      * @param template_first_position is the template first position
@@ -1213,8 +959,7 @@ private:
             if (rev_comp) {
                 std::swap(first_flag, second_flag);
             }
-            template_read_data.push_back({first_flag,
-                                          template_first_position});
+            template_read_data.push_back({first_flag, template_first_position});
 
             template_read_data.push_back({second_flag,
                                           template_first_position+template_size-read_size});
@@ -1228,45 +973,6 @@ private:
         }
 
         return {{flag, template_first_position}};
-    }
-
-    /**
-     * @brief Collect template statistics
-     *
-     * @param[in] chr_data is the data about the chromosome from which the simulated read come from
-     * @param[in] germline_SIDs is a map from genomic positions to the corresponding germline SIDs
-     * @param[in] SIDs is a map from genomic positions to the corresponding SIDs
-     * @param[in] read_first_position is the first position of the simulated read
-     * @param[in] template_size is the size of the template
-     * @param[in,out] chr_statistics are the chromosome statistics about a tissue sample
-     * @todo Update to support SID mutations
-     */
-    void collect_read_statistics(const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
-                                 const std::map<GenomicPosition, SID>& germline_SIDs,
-                                 const std::map<GenomicPosition, SID>& SIDs,
-                                 const std::string& read, const ChrPosition& read_position,
-                                 ChrSampleStatistics& chr_statistics)
-    {
-        const auto read_end = read_position+read.size();
-        chr_statistics.increase_coverage(read_position, read.size());
-
-        const GenomicPosition genomic_position{chr_data.chr_id, read_position};
-        for (const auto mutations : {&SIDs, &germline_SIDs}) {
-            for (auto mutation_it = mutations->lower_bound(genomic_position);
-                    mutation_it != mutations->end() && mutation_it->second.position<read_end; ++mutation_it) {
-                const size_t base_pos = mutation_it->first.position - read_position;
-                if (mutation_it->second.ref[0] != read[base_pos]) {
-                    if (mutation_it->second.alt[0] != read[base_pos]) {
-                        SID mutation = mutation_it->second;
-
-                        mutation.alt[0] = read[base_pos];
-                        chr_statistics.account_for(mutation);
-                    } else {
-                        chr_statistics.account_for(mutation_it->second);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -1299,9 +1005,10 @@ private:
      * @param[in,out] sequencer is the sequencer
      * @param[in] chr_data is the data about the chromosome from which the simulated
      *   template come from
-     * @param[in] germline_SIDs is a map from genomic positions to the corresponding
+     * @param[in] germlines is a map from genomic positions to the corresponding
      *   germline SIDs
-     * @param[in] SIDs is a map from genomic positions to the corresponding SIDs
+     * @param[in] passengers is a map from genomic positions to the corresponding
+     *   passenger SIDs
      * @param[in] template_begin_pos is the first position of the simulated template
      * @param[in] template_size is the size of the template
      * @param[in,out] chr_statistics are the chromosome statistics about a tissue sample
@@ -1315,12 +1022,11 @@ private:
              std::enable_if_t<std::is_base_of_v<Races::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     void process_template(SEQUENCER& sequencer,
                           const Races::IO::FASTA::ChromosomeData<Races::IO::FASTA::Sequence>& chr_data,
-                          const std::map<GenomicPosition, SID>& germline_SIDs,
-                          const std::map<GenomicPosition, SID>& SIDs,
+                          const std::map<GenomicPosition, SID>& germlines,
+                          const std::map<GenomicPosition, SID>& passengers,
                           const ChrPosition& template_begin_pos,
                           const size_t& template_size, ChrSampleStatistics& chr_statistics,
-                          std::ostream* SAM_stream,
-                          const std::string& sample_name="")
+                          std::ostream* SAM_stream, const std::string& sample_name="")
     {
         const auto template_read_data = get_template_read_data(template_begin_pos, template_size);
 
@@ -1331,33 +1037,25 @@ private:
 
             const GenomicPosition genomic_position{chr_data.chr_id, read_first_position};
 
-            std::vector<bool> mismatch_vector(read_size, false);
-            std::string read = chr_data.nucleotides.substr(read_first_position-1, read_size);
-            apply_SIDs(read, SIDs, genomic_position);
-            apply_SIDs(read, germline_SIDs, genomic_position);
+            Read read{chr_data.nucleotides, germlines, passengers,
+                      genomic_position, read_size};
 
             std::string qual = sequencer.simulate_seq(read, genomic_position, i);
 
-            for (size_t i=0; i<read_size; ++i) {
-                mismatch_vector[i] = (read[i] != 'N'
-                                        && read[i] != chr_data.nucleotides[read_first_position-1+i]);
-            }
+            const auto hamming_distance = read.Hamming_distance();
 
             const auto mapq = 33;
 
-            const auto hamming_distance = get_hamming_distance(mismatch_vector);
-
             if (hamming_distance < hamming_distance_threshold) {
-                collect_read_statistics(chr_data, germline_SIDs, SIDs,
-                                        read, read_first_position, chr_statistics);
+                chr_statistics.account_for(read);
 
                 if (SAM_stream != nullptr) {
-                    *SAM_stream << template_name                         // QNAME
-                                << '\t' << template_read_data[i].first   // FLAG
-                                << '\t' << chr_data.name                 // RNAME
-                                << '\t' << read_first_position           // POS
-                                << '\t' << mapq                          // MAPQ
-                                << '\t' << get_CIGAR(mismatch_vector);   // CIGAR
+                    *SAM_stream << template_name                        // QNAME
+                                << '\t' << template_read_data[i].first  // FLAG
+                                << '\t' << chr_data.name                // RNAME
+                                << '\t' << read_first_position          // POS
+                                << '\t' << mapq                         // MAPQ
+                                << '\t' << read.get_CIGAR();            // CIGAR
                     if (read_type == ReadType::PAIRED_READ) {
                         const size_t paired_idx = 1-i;
                         const auto paired_pos = template_read_data[paired_idx].second;
@@ -1371,8 +1069,8 @@ private:
                                     << '\t' << '0'   // PNEXT
                                     << '\t' << '0';  // TLEN
                     }
-                    *SAM_stream << '\t' << read  // SEQ
-                                << '\t' << qual;  // QUAL
+                    *SAM_stream << '\t' << read.get_sequence()  // SEQ
+                                << '\t' << qual;                // QUAL
 
                     // TAGS
                     if (sample_name.size()!=0) {
@@ -1426,8 +1124,8 @@ private:
 
             const double current_progress = 100*static_cast<double>(steps)/total_steps;
 
-            const auto& germline_SIDs = germline_fragment.get_mutations();
-            const auto& SIDs = fragment.get_mutations();
+            const auto& germlines = germline_fragment.get_mutations();
+            const auto& passengers = fragment.get_mutations();
 
             auto first_possible_begin = fragment.get_initial_position();
             auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())-template_size+1;
@@ -1437,9 +1135,7 @@ private:
             while (simulated_templates < num_of_frag_templates) {
                 auto begin_pos = dist(random_generator);
 
-                const auto template_read_data = get_template_read_data(begin_pos, template_size);
-
-                process_template(sequencer, chr_data, germline_SIDs, SIDs, begin_pos,
+                process_template(sequencer, chr_data, germlines, passengers, begin_pos,
                                  template_size, chr_statistics, SAM_stream, sample_name);
 
                 num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);

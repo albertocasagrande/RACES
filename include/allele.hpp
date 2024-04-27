@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.16
- * @date 2024-04-23
+ * @version 0.17
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -141,14 +141,14 @@ public:
     }
 
     /**
-     * @brief Check whether the fragment context is free
+     * @brief Check whether a mutation context is free
      *
-     * @param genomic_position is a genomic position
+     * @param mutation is a mutation
      * @return `true` if and only if the allele fragment does not
      *      contains SID mutations in the one-base neighborhood of
-     *      `genomic_position`
+     *      `mutation`
      */
-    bool has_context_free(const GenomicPosition& genomic_position) const;
+    bool has_context_free(const SID& mutation) const;
 
     /**
      * @brief Insert a new SID mutation
@@ -159,7 +159,6 @@ public:
      * @param mutation is the SID mutation to be inserted
      * @return `true` if and only if the mutation insertion
      *          has succeeded
-     * @todo Update to support indel
      */
     bool insert(const SID& mutation);
 
@@ -352,21 +351,21 @@ public:
     /**
      * @brief Check whether a SID is included among the allele mutations
      *
-     * @param snv is the SID whose inclusion among the allele mutations is tested
-     * @return `true` if and only if `snv` is contained among the allele mutations
+     * @param mutation is the SID whose inclusion among the allele mutations
+     *      is tested
+     * @return `true` if and only if `mutation` is contained among the
+     *      allele mutations
      */
     bool includes(const SID& mutation) const;
 
     /**
-     * @brief Check whether the fragment context is free
+     * @brief Check whether a mutation context is free
      *
-     * @param genomic_position is a genomic position
-     * @return `true` if and only if the allele fragment does not
-     *      contains SID mutations in the one-base neighborhood of
-     *      `genomic_position`
-     * @todo Update to support indel
+     * @param mutation is a mutation
+     * @return `true` if and only if the allele does not contains
+     *      SID mutations in the one-base neighborhood of `mutation`
      */
-    bool has_context_free(const GenomicPosition& genomic_position) const;
+    bool has_context_free(const SID& mutation) const;
 
     /**
      * @brief Insert a new SID mutation
@@ -377,7 +376,6 @@ public:
      * @param snv is the SID to insert
      * @return `true` if and only if the SID insertion
      *          has succeeded
-     * @todo Update to support indel
      */
     bool insert(const SID& mutation);
 
@@ -391,7 +389,6 @@ public:
      * @param genomic_position is the genomic position containing the
      *          SID mutation to be removed
      * @return `true` if and only if the removal has succeeded
-     * @todo Update to support indel
      */
     bool remove_mutation(const GenomicPosition& genomic_position);
 

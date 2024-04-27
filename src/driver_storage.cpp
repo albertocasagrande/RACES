@@ -2,8 +2,8 @@
  * @file driver_storage.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements class to load and store driver mutations
- * @version 0.4
- * @date 2024-04-23
+ * @version 0.5
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -66,7 +66,8 @@ DriverStorage DriverStorage::load(const std::filesystem::path& filename)
     size_t code_col = csv_reader.get_column_position("driver_code");
 
     for (const auto& row : csv_reader) {
-        if (row.get_field(type_col)=="SNV") {
+        const auto type = row.get_field(type_col);
+        if (type=="SNV" || type=="indel") {
             auto chr_str = row.get_field(chr_col);
 
             auto chr_id = GenomicPosition::stochr(chr_str);

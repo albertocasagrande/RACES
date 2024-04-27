@@ -2,9 +2,9 @@
  * @file sid.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SNV, Insertion, and Deletion mutations
- * @version 0.1
- * @date 2024-04-23
- * 
+ * @version 0.2
+ * @date 2024-04-27
+ *
  * @copyright Copyright (c) 2023-2024
  *
  * MIT License
@@ -32,8 +32,10 @@
 #define __RACES_SID__
 
 #include <ostream>
+#include <algorithm>
 
 #include "mutation.hpp"
+#include "genomic_region.hpp"
 
 namespace Races
 {
@@ -123,7 +125,6 @@ struct SID : public Mutation
         const std::string& ref, const std::string& alt,
         const Mutation::Nature& nature=Mutation::UNDEFINED);
 
-
     /**
      * @brief A constructor
      *
@@ -172,13 +173,24 @@ struct SID : public Mutation
 
     /**
      * @brief Test whether the mutation is a SNV
-     * 
+     *
      * @return `true` if and only if both the reference and the alternative
      *      sequences have size 1
      */
     inline bool is_SNV() const
     {
         return ref.size()==1 && alt.size()==1;
+    }
+
+    /**
+     * @brief Get the region
+     *
+     * @return GenomicRegion
+     */
+    inline GenomicRegion get_region() const
+    {
+        return GenomicRegion(static_cast<const GenomicPosition&>(*this),
+                             std::max(static_cast<size_t>(1), ref.size()));
     }
 
     /**

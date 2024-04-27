@@ -3,9 +3,9 @@
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic region
  * @version 0.4
- * @date 2023-12-15
+ * @date 2024-04-27
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -31,6 +31,8 @@
 #include <iostream>
 
 #include "genomic_region.hpp"
+
+#include "sid.hpp"
 
 namespace Races
 {
@@ -103,6 +105,19 @@ GenomicRegion& GenomicRegion::join(GenomicRegion& contiguous_region)
     return *this;
 }
 
+bool GenomicRegion::contains(const SID& mutation) const
+{
+    const auto mutation_region = mutation.get_region();
+
+    return contains(mutation_region);
+}
+
+bool GenomicRegion::strictly_contains(const SID& mutation) const
+{
+    const auto mutation_region = mutation.get_region();
+
+    return strictly_contains(mutation_region);
+}
 
 }   // Mutations
 

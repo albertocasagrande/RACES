@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.21
- * @date 2024-04-23
+ * @version 0.22
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023
  *
@@ -88,7 +88,6 @@ class ConfigReader
      * @param mutant_name is the mutant name
      * @param SIDs is the list of SID in which the read SID should be inserted
      * @param SID_json is the JSON of the SID to be inserted into the list
-     * @todo Update to support Indel
      */
     static void
     add_SID(const std::string& mutant_name,

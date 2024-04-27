@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.12
- * @date 2024-04-23
+ * @version 0.13
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -424,6 +424,19 @@ bool read_int(INTEGER_TYPE& value, const std::string& line, size_t& pos, size_t 
     return pos != begin;
 }
 
+std::string get_elem(const std::string& line,
+                     const std::vector<size_t>& column_separators,
+                     const size_t& column_index)
+{
+    if (column_index==0) {
+        return line.substr(0, column_separators[0]);
+    }
+
+    const size_t elem_pos = column_separators[column_index-1]+1;
+    const size_t elem_size = column_separators[column_index]-elem_pos;
+    return line.substr(elem_pos, elem_size);
+}
+
 SID get_SID_from_line(const std::string& line,
                       const std::vector<size_t>& column_separators)
 {
@@ -436,8 +449,15 @@ SID get_SID_from_line(const std::string& line,
     size_t pos = column_separators[0]+1;
     read_int(chr_pos, line, pos, column_separators[1]);
 
-    return {chr_id, chr_pos, line[column_separators[2]+1],
-            line[column_separators[3]+1], Mutation::GERMINAL};
+    const std::string ref = get_elem(line, column_separators, 3);
+    std::string alt = get_elem(line, column_separators, 4);
+
+    pos = alt.find(',');
+    if (pos != std::string::npos) {
+        alt = alt.substr(0, pos);
+    }
+
+    return {chr_id, chr_pos, ref, alt, Mutation::GERMINAL};
 }
 
 std::vector<AlleleId>
@@ -458,7 +478,7 @@ get_alleles_ids(const std::string& line, size_t pos, size_t end)
     return alleles;
 }
 
-void add_SNP(GenomeMutations& mutations, const std::string& line,
+void add_SID(GenomeMutations& mutations, const std::string& line,
              const std::vector<size_t>& column_separators,
              const size_t& num_of_alleles,
              std::vector<AlleleId>& allele_ids)
@@ -502,7 +522,8 @@ void add_mutation(GenomeMutations& mutations, const std::string& line,
     if (in_first_allele || in_second_allele) {
         switch (get_mutation_type(line, column_separators[6])) {
             case MutationType::SNP:
-                add_SNP(mutations, line, column_separators,
+            case MutationType::INDEL:
+                add_SID(mutations, line, column_separators,
                         num_of_alleles, allele_ids);
                 break;
             default:

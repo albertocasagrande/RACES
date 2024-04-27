@@ -2,9 +2,9 @@
  * @file sid.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SNV, Insertion, and Deletion mutations
- * @version 0.1
- * @date 2024-04-23
- * 
+ * @version 0.2
+ * @date 2024-04-27
+ *
  * @copyright Copyright (c) 2023-2024
  *
  * MIT License
@@ -40,55 +40,80 @@ SID::SID():
     Mutation()
 {}
 
+inline void decode_empty_sequence(std::string& sequence)
+{
+    if (sequence == "-") {
+        sequence = "";
+    }
+}
+
+inline void decode_empty_sequences(std::string& ref, std::string& alt)
+{
+    decode_empty_sequence(ref);
+    decode_empty_sequence(alt);
+}
+
 SID::SID(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
-         const char ref_base, const char alt_base,
-         const Mutation::Nature& nature):
+         const char ref_base, const char alt_base, const Mutation::Nature& nature):
     SID(chromosome_id, chromosomic_position, ref_base, alt_base, "", nature)
 {}
 
 SID::SID(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
          const char ref_base, const char alt_base, const std::string& cause,
          const Mutation::Nature& nature):
-    Mutation(chromosome_id, chromosomic_position, nature, cause), 
+    Mutation(chromosome_id, chromosomic_position, nature, cause),
     ref(1, ref_base), alt(1, alt_base)
-{}
-
+{
+    decode_empty_sequences(ref, alt);
+}
 
 SID::SID(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
          const std::string& ref, const std::string& alt,
-         const Mutation::Nature& nature): 
+         const Mutation::Nature& nature):
     Mutation(chromosome_id, chromosomic_position, nature), ref(ref), alt(alt)
-{}
+{
+    decode_empty_sequences(this->ref, this->alt);
+}
 
 SID::SID(const GenomicPosition& genomic_position,
          const std::string& ref, const std::string& alt,
          const Mutation::Nature& nature):
     Mutation(genomic_position, nature), ref(ref), alt(alt)
-{}
+{
+    decode_empty_sequences(this->ref, this->alt);
+}
 
 SID::SID(GenomicPosition&& genomic_position,
          const std::string& ref, const std::string& alt,
          const Mutation::Nature& nature):
     Mutation(std::move(genomic_position), nature), ref(ref), alt(alt)
-{}
+{
+    decode_empty_sequences(this->ref, this->alt);
+}
 
 SID::SID(const ChromosomeId& chromosome_id, const ChrPosition& chromosomic_position,
          const std::string& ref, const std::string& alt,
          const std::string& cause, const Mutation::Nature& nature):
     Mutation(chromosome_id, chromosomic_position, nature, cause), ref(ref), alt(alt)
-{}
+{
+    decode_empty_sequences(this->ref, this->alt);
+}
 
 SID::SID(const GenomicPosition& genomic_position,
          const std::string& ref, const std::string& alt,
          const std::string& cause, const Mutation::Nature& nature):
     Mutation(genomic_position, nature, cause), ref(ref), alt(alt)
-{}
+{
+    decode_empty_sequences(this->ref, this->alt);
+}
 
 SID::SID(GenomicPosition&& genomic_position,
          const std::string& ref, const std::string& alt,
          const std::string& cause, const Mutation::Nature& nature):
     Mutation(std::move(genomic_position), nature, cause), ref(ref), alt(alt)
-{}
+{
+    decode_empty_sequences(this->ref, this->alt);
+}
 
 }   // Mutations
 

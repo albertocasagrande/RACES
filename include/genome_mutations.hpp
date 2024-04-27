@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.30
- * @date 2024-04-23
+ * @version 0.31
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -174,13 +174,13 @@ public:
     std::list<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Get the alleles with context free for a genomic position
+     * @brief Get the alleles with context free for a mutation
      *
-     * @param genomic_position is a genomic position
-     * @return a list of the identifiers of the allele in which the context of `genomic_position`
+     * @param mutation is a mutation
+     * @return a list of the identifiers of the allele in which the context of `mutation`
      *      is free
      */
-    std::list<AlleleId> get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const;
+    std::list<AlleleId> get_alleles_with_context_free_for(const SID& mutation) const;
 
     /**
      * @brief Get an allele in the chromosome
@@ -211,7 +211,21 @@ public:
      * @param genomic_position is a genomic position
      * @return `true` if and only if `genomic_position` lays in the current chromosome
      */
-    bool contains(const GenomicPosition& genomic_position) const;
+    inline bool contains(const GenomicPosition& genomic_position) const
+    {
+        return (genomic_position.chr_id==id()       // same chromosome
+                && genomic_position.position>0      // lays in [1, chromosome size]
+                && genomic_position.position<=size());
+    }
+
+    /**
+     * @brief Check whether a whole mutation lays in a chromosome
+     *
+     * @param mutation is a SID mutation
+     * @return `true` if and only if `mutation` completely lays in the current
+     *      chromosome
+     */
+    bool contains(const SID& mutation) const;
 
     /**
      * @brief Check whether a whole genomic region is mapped in a chromosome
@@ -219,17 +233,22 @@ public:
      * @param genomic_region is a genomic region
      * @return `true` if and only if `genomic_region` lays in the current chromosome
      */
-    bool contains(const GenomicRegion& genomic_region) const;
+    inline bool contains(const GenomicRegion& genomic_region) const
+    {
+        return (genomic_region.get_chromosome_id()==id()     // same chromosome
+                && genomic_region.get_initial_position()>0   // the lays in [1, chromosome size]
+                && genomic_region.get_final_position()<=size());
+    }
 
     /**
-     * @brief Check whether any SID mutation occurs in a possible mutational context
+     * @brief Check whether a mutation context is free
      *
-     * @param genomic_position is the central position of the mutational context
-     * @return `true` if and only if no SID mutation occurred in the context
-     *          centered in `genomic_position`
-     * @throw std::domain_error `genomic_position` does not lays in the fragment
+     * @param mutation is a mutation
+     * @return `true` if and only if the allele does not contains
+     *      SID mutations in the one-base neighborhood of `mutation`
+     * @throw std::domain_error `mutation` does not lays in the chromosome
      */
-    bool has_context_free(const GenomicPosition& genomic_position) const;
+    bool has_context_free(const SID& mutation) const;
 
     /**
      * @brief Amplify a genomic region
@@ -285,7 +304,6 @@ public:
      * @throw std::domain_error `mutation` does not lays in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
-     * @todo Update to support indel
      */
     bool insert(const SID& mutation, const AlleleId& allele_id);
 
@@ -500,13 +518,13 @@ public:
     std::list<AlleleId> get_alleles_containing(const GenomicRegion& genomic_region) const;
 
     /**
-     * @brief Get the alleles with context free for a genomic position
+     * @brief Get the alleles with context free for a mutation
      *
-     * @param genomic_position is a genomic position
-     * @return a list of the identifiers of the allele in which the context of `genomic_position`
+     * @param mutation is a mutation
+     * @return a list of the identifiers of the allele in which the context of `mutation`
      *      is free
      */
-    std::list<AlleleId> get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const;
+    std::list<AlleleId> get_alleles_with_context_free_for(const SID& mutation) const;
 
     /**
      * @brief Check whether an allele contains a chromosomic region
@@ -573,7 +591,6 @@ public:
      * @throw std::domain_error `mutation` does not lays in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
-     * @todo Update to support indel
      */
     bool insert(const SID& mutation, const AlleleId& allele_id);
 
@@ -588,14 +605,14 @@ public:
     bool remove_mutation(const GenomicPosition& genomic_position);
 
     /**
-     * @brief Check whether any SID occurs in a possible mutational context
+     * @brief Check whether a mutation context is free
      *
-     * @param genomic_position is the central position of the mutational context
-     * @return `true` if and only if no SID mutation occurred in the context
-     *          centered in `genomic_position`
-     * @throw std::domain_error `genomic_position` does not lays in the fragment
+     * @param mutation is a mutation
+     * @return `true` if and only if the allele does not contains
+     *      SID mutations in the one-base neighborhood of `mutation`
+     * @throw std::domain_error `mutation` does not lays in the genome
      */
-    bool has_context_free(const GenomicPosition& genomic_position) const;
+    bool has_context_free(const SID& mutation) const;
 
     /**
      * @brief Check whether a SID mutation is included among the genome mutations

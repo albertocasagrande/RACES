@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.11
- * @date 2024-04-23
+ * @version 0.12
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -49,21 +49,27 @@ AlleleFragment::AlleleFragment(const GenomicRegion& genomic_region):
     GenomicRegion(genomic_region)
 {}
 
-bool AlleleFragment::has_context_free(const GenomicPosition& genomic_position) const
+bool AlleleFragment::has_context_free(const SID& mutation) const
 {
-    if (!strictly_contains(genomic_position)) {
+    if (!strictly_contains(mutation)) {
         return false;
     }
 
-    GenomicPosition g_pos(genomic_position);
+    GenomicPosition g_pos{mutation};
     if (g_pos.position>0) {
         g_pos.position -= 1;
     }
 
+    auto end = g_pos.position + mutation.ref.size() + 3;
     auto it = mutations.lower_bound(g_pos);
-
-    if (it != mutations.end() && it->first.position < g_pos.position+3) {
+    if (it != mutations.end() && it->first.position < end) {
         return false;
+    }
+
+    if (it != mutations.begin()) {
+        --it;
+
+        return (it->first.position+it->second.ref.size() < g_pos.position+1);
     }
 
     return true;
@@ -241,14 +247,14 @@ bool Allele::includes(const SID& mutation) const
     return (it != fragments.end() && it->second.includes(mutation));
 }
 
-bool Allele::has_context_free(const GenomicPosition& genomic_position) const
+bool Allele::has_context_free(const SID& mutation) const
 {
-    GenomicPosition g_pos(genomic_position);
+    GenomicPosition g_pos{mutation};
     g_pos.position -=1;
 
     auto it = find_not_after(fragments, g_pos);
 
-    return it->second.has_context_free(genomic_position);
+    return it->second.has_context_free(mutation);
 }
 
 bool Allele::insert(const SID& mutation)

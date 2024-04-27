@@ -89,7 +89,6 @@ public:
      * @param filename is the driver mutation filename
      * @return a map associating a driver code to the corresponding
      *      driver mutation
-     * @todo Update to support indel
      */
     static DriverStorage load(const std::filesystem::path& filename);
 };

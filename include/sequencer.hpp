@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 0.2
- * @date 2024-04-01
+ * @version 0.3
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -38,6 +38,7 @@
 
 #include "genomic_position.hpp"
 #include "genomic_sequence.hpp"
+#include "read.hpp"
 
 namespace Races
 {
@@ -107,7 +108,7 @@ public:
      *      read in paired reads, and 1 for the second read in paired reads
      * @return the quality scores of the read in Sanger FASTQ format
      */
-    virtual std::string simulate_seq(std::string& read,
+    virtual std::string simulate_seq(Mutations::SequencingSimulations::Read& read,
                                      const Mutations::GenomicPosition& position,
                                      const unsigned int read_index) = 0;
 
@@ -213,7 +214,7 @@ public:
      *      read in paired reads, and 1 for the second read in paired reads
      * @return the quality scores of the read in Sanger FASTQ format
      */
-    inline std::string simulate_seq(std::string& read,
+    inline std::string simulate_seq(Mutations::SequencingSimulations::Read& read,
                                     const Mutations::GenomicPosition& position,
                                     const unsigned int read_index) override
     {
@@ -359,21 +360,21 @@ public:
      *      read in paired reads, and 1 for the second read in paired reads
      * @return the quality scores of the read in Sanger FASTQ format
      */
-    std::string simulate_seq(std::string& read,
+    std::string simulate_seq(Mutations::SequencingSimulations::Read& read,
                              const Mutations::GenomicPosition& position,
                              const unsigned int read_index) override
     {
         std::string qual(read.size(), 33);
 
-        auto read_it = read.begin();
+        const std::string& read_seq = read.get_sequence();
         auto qual_it = qual.begin();
-        size_t base_pos{0};
-        while (read_it != read.end()) {
-            *qual_it = simulate_seq(*read_it, base_pos, position, read_index);
+        auto read_it = read_seq.begin();
+        for (size_t base_pos = 0; base_pos < read_seq.size();
+                ++base_pos,++qual_it,++read_it) {
+            char base = *read_it;
+            *qual_it = simulate_seq(base, base_pos, position, read_index);
 
-            ++read_it;
-            ++qual_it;
-            ++base_pos;
+            read.alter_base(base_pos, base);
         }
 
         return qual;

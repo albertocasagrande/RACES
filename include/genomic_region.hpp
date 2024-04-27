@@ -2,10 +2,10 @@
  * @file genomic_region.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic region
- * @version 0.5
- * @date 2023-12-17
+ * @version 0.6
+ * @date 2024-04-27
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -40,6 +40,11 @@ namespace Races
 
 namespace Mutations
 {
+
+/**
+ * @brief A class to represent SNVs, Insertions, and Deletions
+ */
+struct SID;
 
 /**
  * @brief A genomic region is a interval of genomic positions
@@ -284,6 +289,29 @@ public:
     }
 
     /**
+     * @brief Check whether a mutation lays in the genomic region
+     *
+     * @param mutation is a SID mutation
+     * @return `true` if and only if `mutation` completely lays in the current
+     *      genomic region
+     */
+    bool contains(const SID& mutation) const;
+
+    /**
+     * @brief Check whether a genomic region is contained in another genomic region
+     *
+     * @param genomic_region is a genomic region
+     * @return `true` if and only if `genomic_region` is contained in the
+     *      genomic region
+     */
+    inline bool contains(const GenomicRegion& genomic_region) const
+    {
+        return ((genomic_region.get_chromosome_id()==initial_pos.chr_id)
+                && (get_initial_position() <= genomic_region.get_initial_position())
+                && (genomic_region.get_final_position() <= get_final_position()));
+    }
+
+    /**
      * @brief Check whether a position is strictly contained in the genomic region
      *
      * @param genomic_position is the genomic position to check
@@ -310,18 +338,27 @@ public:
     }
 
     /**
-     * @brief Check whether a genomic region is contained in another genomic region
+     * @brief Check whether a genomic region is strictly contained in the genomic region
      *
-     * @param genomic_region is a genomic region
-     * @return `true` if and only if `genomic_region` is contained in the
+     * @param genomic_region is the genomic region whose inclusion is questioned
+     * @return `true` if and only if `genomic_region` is strictly contained in the
      *      genomic region
      */
-    inline bool contains(const GenomicRegion& genomic_region) const
+    inline bool strictly_contains(const GenomicRegion& genomic_region) const
     {
         return ((genomic_region.get_chromosome_id()==initial_pos.chr_id)
-                && (get_initial_position() <= genomic_region.get_initial_position())
-                && (genomic_region.get_final_position() <= get_final_position()));
+                && (get_initial_position()+1 <= genomic_region.get_initial_position())
+                && (genomic_region.get_final_position()+1 <= get_final_position()));
     }
+
+    /**
+     * @brief Check whether a mutation is strictly contained in the genomic region
+     *
+     * @param mutation is a SID mutation
+     * @return `true` if and only if `mutation` is strictly contained in the
+     *      genomic region
+     */
+    bool strictly_contains(const SID& mutation) const;
 
     /**
      * @brief Check whether a region ends before a position

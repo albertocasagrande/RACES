@@ -47,6 +47,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/position_set.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/progress_bar.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/rate_update.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/read.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
@@ -103,6 +104,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/position_set.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/progress_bar.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/rate_update.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/read.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp

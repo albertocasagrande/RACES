@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.26
- * @date 2024-04-23
+ * @version 0.27
+ * @date 2024-04-27
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -86,12 +86,12 @@ std::list<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicReg
     return allele_ids;
 }
 
-std::list<AlleleId> ChromosomeMutations::get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const
+std::list<AlleleId> ChromosomeMutations::get_alleles_with_context_free_for(const SID& mutation) const
 {
     std::list<AlleleId> context_free_alleles;
 
     for (const auto& [allele_id, allele]: alleles) {
-        if (allele.has_context_free(genomic_position)) {
+        if (allele.has_context_free(mutation)) {
             context_free_alleles.push_back(allele_id);
         }
     }
@@ -138,18 +138,11 @@ bool ChromosomeMutations::allele_contains(const AlleleId& allele_id, const Genom
     return get_allele(allele_id).contains(genomic_region);
 }
 
-bool ChromosomeMutations::contains(const GenomicPosition& genomic_position) const
+bool ChromosomeMutations::contains(const SID& mutation) const
 {
-    return (genomic_position.chr_id==id()       // same chromosome
-            && genomic_position.position>0      // lays in [1, chromosome size]
-            && genomic_position.position<=size());
-}
+    const auto mutation_region = mutation.get_region();
 
-bool ChromosomeMutations::contains(const GenomicRegion& genomic_region) const
-{
-    return (genomic_region.get_chromosome_id()==id()     // same chromosome
-            && genomic_region.get_initial_position()>0   // the lays in [1, chromosome size]
-            && genomic_region.get_final_position()<=size());
+    return contains(mutation_region);
 }
 
 bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
@@ -200,18 +193,22 @@ bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, con
     return true;
 }
 
-bool ChromosomeMutations::has_context_free(const GenomicPosition& genomic_position) const
+bool ChromosomeMutations::has_context_free(const SID& mutation) const
 {
-    if (!contains(genomic_position)) {
-        throw std::domain_error("The genomic position is not in the chromosome");
+    if (!contains(mutation)) {
+        std::ostringstream oss;
+
+        oss << mutation << " is does not lays in the chromsome "
+            << id() << ".";
+        throw std::domain_error(oss.str());
     }
 
     bool some_allele_contains_pos{false};
 
     for (const auto& [allele_id, allele]: alleles) {
-        if (allele.strictly_contains(genomic_position)) {
+        if (allele.strictly_contains(mutation)) {
             some_allele_contains_pos = true;
-            if (!allele.has_context_free(genomic_position)) {
+            if (!allele.has_context_free(mutation)) {
                 return false;
             }
         }
@@ -227,10 +224,6 @@ bool ChromosomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
     }
 
     Allele& allele = get_allele(allele_id);
-
-    if (!allele.has_context_free(mutation)) {
-        return false;
-    }
 
     return allele.insert(mutation);
 }
@@ -404,11 +397,11 @@ std::list<AlleleId> GenomeMutations::get_alleles_containing(const GenomicRegion&
     return chr_it->second.get_alleles_containing(genomic_region);
 }
 
-std::list<AlleleId> GenomeMutations::get_alleles_with_context_free_for(const GenomicPosition& genomic_position) const
+std::list<AlleleId> GenomeMutations::get_alleles_with_context_free_for(const SID& mutation) const
 {
-    auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
+    auto chr_it = find_chromosome(chromosomes, mutation.chr_id);
 
-    return chr_it->second.get_alleles_with_context_free_for(genomic_position);
+    return chr_it->second.get_alleles_with_context_free_for(mutation);
 }
 
 bool GenomeMutations::allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const
@@ -448,11 +441,11 @@ bool GenomeMutations::remove_mutation(const GenomicPosition& genomic_position)
     return chr_it->second.remove_mutation(genomic_position);
 }
 
-bool GenomeMutations::has_context_free(const GenomicPosition& genomic_position) const
+bool GenomeMutations::has_context_free(const SID& mutation) const
 {
-    auto chr_it = find_chromosome(chromosomes, genomic_position.chr_id);
+    auto chr_it = find_chromosome(chromosomes, mutation.chr_id);
 
-    return chr_it->second.has_context_free(genomic_position);
+    return chr_it->second.has_context_free(mutation);
 }
 
 bool GenomeMutations::includes(const SID& mutation) const

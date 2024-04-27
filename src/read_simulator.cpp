@@ -2,23 +2,23 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.27
- * @date 2024-04-23
- * 
+ * @version 0.28
+ * @date 2024-04-27
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -83,7 +83,7 @@ void check_in(const GenomicPosition& pos, const ChromosomeId& chr_id)
 
         std::ostringstream oss;
 
-        oss << pos << " does not belong to the chromosome " 
+        oss << pos << " does not belong to the chromosome "
             << GenomicPosition::chrtos(chr_id) << ".";
 
         throw std::domain_error(oss.str());
@@ -148,7 +148,7 @@ ChrCoverage& ChrCoverage::operator+=(const ChrCoverage& chr_coverage)
 
         return *this;
     }
-    
+
     if (chr_coverage.coverage.size()==0) {
         return *this;
     }
@@ -170,7 +170,7 @@ ChrCoverage& ChrCoverage::operator+=(ChrCoverage&& chr_coverage)
 
         return *this;
     }
-    
+
     // `chr_coverage` has been initialized yet
     if (chr_coverage.coverage.size()==0) {
         return *this;
@@ -237,7 +237,7 @@ void check_in(const SID& mutation, const ChromosomeId& chr_id)
 
         std::ostringstream oss;
 
-        oss << mutation << " does not lay in the chromosome " 
+        oss << mutation << " does not lay in the chromosome "
             << GenomicPosition::chrtos(chr_id) << ".";
 
         throw std::domain_error(oss.str());
@@ -257,6 +257,15 @@ void ChrSampleStatistics::account_for(const SID& mutation)
     }
 }
 
+void ChrSampleStatistics::account_for(const Read& read)
+{
+    increase_coverage(read.get_genomic_position().position, read.size());
+
+    for (const auto& mutation: read.get_mutations()) {
+        account_for(mutation);
+    }
+}
+
 SIDData ChrSampleStatistics::get_data(const SID& mutation) const
 {
     check_in(mutation, get_chr_id());
@@ -266,7 +275,7 @@ SIDData ChrSampleStatistics::get_data(const SID& mutation) const
     if (SID_data_it == SID_data.end()) {
         return {mutation, 0};
     }
-    
+
     return SID_data_it->second;
 }
 
@@ -387,7 +396,7 @@ void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
         using namespace Races::Mutants;
 
         throw std::runtime_error("SampleStatistics " + sample_name + " already "
-                                 + "includes statistics about chromosome " 
+                                 + "includes statistics about chromosome "
                                  + GenomicPosition::chrtos(chr_id) + ".");
     }
 
@@ -410,14 +419,14 @@ void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
 ChrCoverage SampleStatistics::get_chr_coverage(const ChromosomeId& chr_id) const
 {
     if (!save_coverage) {
-        throw std::runtime_error("Coverage data is not available.");  
+        throw std::runtime_error("Coverage data is not available.");
     }
 
     if (chr_ids.count(chr_id)==0) {
         using namespace Races::Mutants;
 
         throw std::runtime_error("SampleStatistics " + sample_name + " does not "
-                                 + "include statistics about chromosome " 
+                                 + "include statistics about chromosome "
                                  + GenomicPosition::chrtos(chr_id) + ".");
     }
 
@@ -442,8 +451,8 @@ const BaseCoverage& SampleStatistics::get_coverage(const GenomicPosition& pos) c
     if (found == locus_coverage.end()) {
         std::ostringstream oss;
 
-        oss << "\"" << sample_name 
-            << "\" does not contain any SID in position " 
+        oss << "\"" << sample_name
+            << "\" does not contain any SID in position "
             << pos << ".";
         throw std::runtime_error(oss.str());
     }
@@ -451,12 +460,12 @@ const BaseCoverage& SampleStatistics::get_coverage(const GenomicPosition& pos) c
     return found->second;
 }
 
-void print_SID_data(std::ofstream& os, const size_t& coverage, 
+void print_SID_data(std::ofstream& os, const size_t& coverage,
                     const SIDData& mutation_data, const char separator='\t')
 {
     if (mutation_data.num_of_occurrences != 0) {
         os << separator << mutation_data.num_of_occurrences
-           << separator << coverage 
+           << separator << coverage
            << separator << (static_cast<double>(mutation_data.num_of_occurrences)/coverage);
     } else {
         os << separator << "0" << separator << coverage << separator << "0";
@@ -472,15 +481,15 @@ std::ofstream& SampleSetStatistics::stream_VAF_csv_header(std::ofstream& os, con
     if (stats_map.size()>1) {
         for (const auto& [sample_name, sample_stats]: stats_map) {
             os << separator << sample_name << " occurrences"
-               << separator << sample_name << " coverage" 
+               << separator << sample_name << " coverage"
                << separator << sample_name << " VAF";
         }
         os << separator << "total occurrences"
-           << separator << "total coverage" 
+           << separator << "total coverage"
            << separator << "total VAF" << std::endl;
     } else {
         os << separator << "occurrences"
-           << separator << "coverage" 
+           << separator << "coverage"
            << separator << "VAF" << std::endl;
     }
 
@@ -491,9 +500,9 @@ void check_in(const std::map<std::string, SampleStatistics>& stats_map,
               const std::string& sample_name)
 {
     if (stats_map.count(sample_name)>0) {
-        throw std::runtime_error("The statistics of the sample \"" + sample_name 
+        throw std::runtime_error("The statistics of the sample \"" + sample_name
                                  + "\" are already contained by the object.");
-    }   
+    }
 }
 
 SampleSetStatistics::SampleSetStatistics(const std::filesystem::path& data_directory):
@@ -511,7 +520,7 @@ get_sample_coverages_for_SIDs(const std::map<std::string, SampleStatistics>& sta
 
     for (auto& [sample_name, sample_stats]: stats_map) {
         ChrCoverage chr_coverage;
-        auto it = sample_locus_coverage.insert({sample_name, 
+        auto it = sample_locus_coverage.insert({sample_name,
                                                 sample_stats.get_coverage()}).first;
 
         for (auto& [mutation, occurrences] : SID_occurrences) {
@@ -687,7 +696,7 @@ void SampleSetStatistics::canonize()
                 // has not been loaded yet
                 if (mutation.chr_id!=chr_coverage.get_chr_id()
                         || !chr_coverage.is_initialized()) {
-                    
+
                     // load it
                     chr_coverage = sample_stats.get_chr_coverage(mutation.chr_id);
                 }
@@ -725,7 +734,7 @@ std::set<std::string> get_descriptions(const std::set<Mutation::Nature>& types)
     return string_types;
 }
 
-void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename, 
+void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
                                        const ChromosomeId& chr_id) const
 {
     if (!is_canonical()) {
@@ -745,16 +754,16 @@ void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
     auto total_SID_data = get_total_SID_data(stats_map);
 
     for (const auto& [mutation, total_mutation_data]: total_SID_data) {
-        os << GenomicPosition::chrtos(chr_id) << separator << mutation.position 
-           << separator << mutation.position 
+        os << GenomicPosition::chrtos(chr_id) << separator << mutation.position
+           << separator << mutation.position
            << separator << mutation.ref  << separator << mutation.alt
-           << separator << "SID" << separator;
-        
+           << separator << (mutation.is_SNV()?"SNV":"indel") << separator;
+
         print_join(os, total_mutation_data.causes, ';');
 
         os << separator;
 
-        auto descriptions = get_descriptions(total_mutation_data.nature_set); 
+        auto descriptions = get_descriptions(total_mutation_data.nature_set);
 
         print_join(os, descriptions, ';');
 
@@ -781,7 +790,7 @@ void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
 std::vector<double> down_sample_coverage(const std::vector<BaseCoverage>& coverage, const size_t& new_size=300)
 {
     std::vector<double> down_sampled;
-    
+
     down_sampled.reserve(new_size);
 
     auto bin_size = coverage.size()/new_size;
@@ -822,7 +831,7 @@ void SampleSetStatistics::save_coverage_images(const std::string& base_name,
     progress_bar.set_progress(100, "Coverage images saved");
 }
 
-void SampleSetStatistics::save_coverage_image(const std::filesystem::path& filename, 
+void SampleSetStatistics::save_coverage_image(const std::filesystem::path& filename,
                                      const ChromosomeId& chromosome_id) const
 {
     if (!is_canonical()) {
@@ -841,7 +850,7 @@ void SampleSetStatistics::save_coverage_image(const std::filesystem::path& filen
         const auto& chr_stats = stats_map.begin()->second;
 
         const auto coverage = chr_stats.get_chr_coverage(chromosome_id).get_coverage_vector();
-        
+
         std::vector<std::vector<double>> d_coverage = {down_sample_coverage(coverage, new_size)};
 
         area(d_coverage);
@@ -864,7 +873,7 @@ void SampleSetStatistics::save_coverage_image(const std::filesystem::path& filen
             const auto coverage = sample_stats.get_chr_coverage(chromosome_id).get_coverage_vector();
 
             chr_size = coverage.size();
-            
+
             std::vector<std::vector<double>> d_coverage = {down_sample_coverage(coverage, new_size)};
 
             area(d_coverage);
@@ -926,7 +935,7 @@ std::vector<double> get_VAF_data(const std::map<SID, SIDData>& SID_data,
 }
 
 inline
-std::vector<double> 
+std::vector<double>
 get_VAF_data(const SampleStatistics& sample_statistics, const ChromosomeId& chr_id,
              const double& threshold=0.0)
 {
@@ -968,7 +977,7 @@ void SampleSetStatistics::save_SID_histogram(const std::filesystem::path& filena
 
     auto f = figure(true);
     f->size(1500, 1500);
-    
+
     if (num_of_plots==1) {
         const auto& sample_stats = (stats_map.begin()->second);
 
@@ -995,7 +1004,7 @@ void SampleSetStatistics::save_SID_histogram(const std::filesystem::path& filena
             if (VAF.size()>0) {
                 hist(VAF,num_of_bins);
             }
-            
+
             const auto latex_name = std::regex_replace(sample_name, std::regex("_"), "\\\\_");
             title("Sample \""+latex_name+"\"");
 
