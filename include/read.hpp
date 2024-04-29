@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 0.1
- * @date 2024-04-27
+ * @version 0.2
+ * @date 2024-04-29
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -68,6 +68,15 @@ enum class MatchingType
  */
 class Read
 {
+    /**
+     * @brief Read build direction
+     */
+    enum class Direction
+    {
+        FORWARD,    //!< Forward direction
+        BACKWARD    //!< Backward direction
+    };
+
     /**
      * @brief A class for indices of bases in mutations
      *
@@ -135,9 +144,19 @@ class Read
         std::map<GenomicPosition, SID>::const_iterator p_it;    //!< The passenger iterator
         std::map<GenomicPosition, SID>::const_iterator g_it;    //!< The germline iterator
 
-        bool p_end;   //!< A Boolean flag that holds when the passenger iterator reached the end
-        bool g_end;   //!< A Boolean flag that holds when the germline iterator reached the end
-        bool p_first;   //!< A Boolean flag that holds when the current mutation is a passenger SID
+        Direction direction;    //!< Iterator direction
+
+        bool p_begin;   //!< A Boolean flag that holds when the passenger iterator has already reached the begin
+        bool p_end;     //!< A Boolean flag that holds when the passenger iterator has already reached the end
+        bool g_begin;   //!< A Boolean flag that holds when the germline iterator has already reached the begin
+        bool g_end;     //!< A Boolean flag that holds when the germline iterator has already reached the end
+
+        bool p_it_curr;   //!< A Boolean flag that holds when the referenced mutation is a passenger mutation
+
+        /**
+         * @brief Set the current mutation
+         */
+        void set_current_mutation();
 
         /**
          * @brief Construct a new Forward Mutation Iterator object
@@ -159,7 +178,7 @@ class Read
         using pointer           =   std::allocator_traits<allocator_type>::pointer;
         using const_pointer     =   std::allocator_traits<allocator_type>::const_pointer;
         using reference         =   const value_type&;
-        using iterator_category =   std::forward_iterator_tag;
+        using iterator_category =   std::bidirectional_iterator_tag;
 
         /**
          * @brief The empty constructor
@@ -185,7 +204,7 @@ class Read
          */
         inline reference operator*() const
         {
-            return *(p_first?p_it:g_it);
+            return *(p_it_curr?p_it:g_it);
         }
 
         /**
@@ -195,13 +214,13 @@ class Read
          */
         inline const_pointer operator->() const
         {
-            return (p_first?p_it.operator->():g_it.operator->());
+            return (p_it_curr?p_it.operator->():g_it.operator->());
         }
 
         /**
          * @brief Prefix increment
          *
-         * @return an updated reference to the updated
+         * @return a reference to the updated
          *      constant iterator
          */
         MutationIterator& operator++();
@@ -214,29 +233,40 @@ class Read
         MutationIterator operator++(int);
 
         /**
-         * @brief Prefix increment
+         * @brief Prefix decrement
          *
-         * @return an updated reference to the updated
+         * @return a reference to the updated
          *      constant iterator
          */
         MutationIterator& operator--();
 
         /**
-         * @brief Postfix increment
+         * @brief Postfix decrement
          *
          * @return a copy of the original iterator
          */
         MutationIterator operator--(int);
 
         /**
+         * @brief Test whether the begin of the iterator has been reached
+         *
+         * @return `true` if and only if the iterator reached the begin
+         *      of the germline and passenger maps
+         */
+        inline bool is_begin() const
+        {
+            return p_begin && g_begin;
+        }
+
+        /**
          * @brief Test whether the end of the iterator has been reached
          *
          * @return `true` if and only if the iterator reached the end
-         *      of the germline and passenger map values
+         *      of the germline and passenger maps
          */
         inline bool is_end() const
         {
-            return !(p_end || g_end);
+            return p_end && g_end;
         }
 
         /**
@@ -288,6 +318,15 @@ public:
      */
     Read();
 
+    /**
+     * @brief A read constructor
+     * 
+     * @param reference is the reference sequence
+     * @param germlines is the position-mutation map for germline mutations
+     * @param passengers is the position-mutation map for passenger mutations
+     * @param genomic_position is the aimed position of the first base in the read
+     * @param read_size is the aimed read size
+     */
     Read(const std::string& reference,
          const std::map<GenomicPosition, SID>& germlines,
          const std::map<GenomicPosition, SID>& passengers,

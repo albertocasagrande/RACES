@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.40
- * @date 2024-04-27
+ * @version 0.41
+ * @date 2024-04-29
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1032,33 +1032,36 @@ private:
 
         const size_t template_id = num_of_reads/template_read_data.size();
         const std::string template_name = get_template_name(template_id);
+        Read read[2];
         for (size_t i=0; i<template_read_data.size(); ++i) {
             const auto& read_first_position = template_read_data[i].second;
 
             const GenomicPosition genomic_position{chr_data.chr_id, read_first_position};
 
-            Read read{chr_data.nucleotides, germlines, passengers,
-                      genomic_position, read_size};
+            read[i] = Read{chr_data.nucleotides, germlines, passengers,
+                           genomic_position, read_size};
+        }
 
-            std::string qual = sequencer.simulate_seq(read, genomic_position, i);
+        for (size_t i=0; i<template_read_data.size(); ++i) {
+            const auto& genomic_position = read[i].get_genomic_position();
+            std::string qual = sequencer.simulate_seq(read[i], genomic_position, i);
 
-            const auto hamming_distance = read.Hamming_distance();
+            const auto hamming_distance = read[i].Hamming_distance();
 
             const auto mapq = 33;
 
             if (hamming_distance < hamming_distance_threshold) {
-                chr_statistics.account_for(read);
+                chr_statistics.account_for(read[i]);
 
                 if (SAM_stream != nullptr) {
                     *SAM_stream << template_name                        // QNAME
                                 << '\t' << template_read_data[i].first  // FLAG
                                 << '\t' << chr_data.name                // RNAME
-                                << '\t' << read_first_position          // POS
+                                << '\t' << genomic_position.position    // POS
                                 << '\t' << mapq                         // MAPQ
-                                << '\t' << read.get_CIGAR();            // CIGAR
+                                << '\t' << read[i].get_CIGAR();         // CIGAR
                     if (read_type == ReadType::PAIRED_READ) {
-                        const size_t paired_idx = 1-i;
-                        const auto paired_pos = template_read_data[paired_idx].second;
+                        const auto paired_pos = read[1-i].get_genomic_position().position;
 
                         *SAM_stream << '\t' << '='               // RNEXT
                                     << '\t' << paired_pos        // PNEXT
@@ -1069,8 +1072,8 @@ private:
                                     << '\t' << '0'   // PNEXT
                                     << '\t' << '0';  // TLEN
                     }
-                    *SAM_stream << '\t' << read.get_sequence()  // SEQ
-                                << '\t' << qual;                // QUAL
+                    *SAM_stream << '\t' << read[i].get_sequence()  // SEQ
+                                << '\t' << qual;                   // QUAL
 
                     // TAGS
                     if (sample_name.size()!=0) {
