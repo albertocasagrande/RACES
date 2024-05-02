@@ -2,8 +2,8 @@
  * @file irb_tree.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indexed red-black trees
- * @version 0.1
- * @date 2024-04-18
+ * @version 0.2
+ * @date 2024-05-02
  *
  * @copyright Copyright (c) 2024
  *
@@ -87,7 +87,7 @@ class IRBTree
          *
          * @param key is the node key
          */
-        IRBNode(const KEY& key):
+        explicit IRBNode(const KEY& key):
             color{RED}, subtree_size{1},
             parent{nullptr}, child{nullptr, nullptr}
         {
@@ -1027,35 +1027,35 @@ class IRBTree
      */
     void remove_fixup(IRBNode* node)
     {
-        while (!node->is_root() && node->color == IRBNode::BLACK) {
-            const auto node_side = node->get_side();
-            const auto sibling_side = IRBNode::get_opposite_side(node_side);
+        if (node != nullptr) {
+            while (!node->is_root() && node->color == IRBNode::BLACK) {
+                const auto node_side = node->get_side();
+                const auto sibling_side = IRBNode::get_opposite_side(node_side);
 
-            IRBNode* sibling = node->parent->child[sibling_side];
-            if (sibling->color == IRBNode::RED) {
-                // case 1
-                remove_fixup_case1(sibling, node_side, sibling_side);
-            }
-
-            if (IRBNode::is_black(sibling->child[node_side])
-                    && IRBNode::is_black(sibling->child[sibling_side])) {
-
-                // case 2
-                sibling->color = IRBNode::RED;
-                node = node->parent;
-            } else {
-                if (IRBNode::is_black(sibling->child[sibling_side])) {
-                    // case 3
-                    remove_fixup_case3(node, sibling, node_side, sibling_side);
+                IRBNode* sibling = node->parent->child[sibling_side];
+                if (sibling->color == IRBNode::RED) {
+                    // case 1
+                    remove_fixup_case1(sibling, node_side, sibling_side);
                 }
 
-                // case 4
-                remove_fixup_case4(node, sibling, node_side, sibling_side);
-                node = root;
-            }
-        }
+                if (IRBNode::is_black(sibling->child[node_side])
+                        && IRBNode::is_black(sibling->child[sibling_side])) {
 
-        if (node != nullptr) {
+                    // case 2
+                    sibling->color = IRBNode::RED;
+                    node = node->parent;
+                } else {
+                    if (IRBNode::is_black(sibling->child[sibling_side])) {
+                        // case 3
+                        remove_fixup_case3(node, sibling, node_side, sibling_side);
+                    }
+
+                    // case 4
+                    remove_fixup_case4(node, sibling, node_side, sibling_side);
+                    node = root;
+                }
+            }
+
             node->color = IRBNode::BLACK;
         }
     }
