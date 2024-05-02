@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.56
- * @date 2024-04-03
+ * @version 0.57
+ * @date 2024-05-02
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -54,7 +54,7 @@ Simulation::AddedCell::AddedCell(const SpeciesId& species, const PositionInTissu
 
 Simulation::Simulation(int random_seed):
     logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0),
-    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(true),
+    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(false),
     storage_enabled(true)
 {
     random_gen.seed(random_seed);
@@ -65,7 +65,7 @@ Simulation::Simulation(int random_seed):
 
 Simulation::Simulation(const std::filesystem::path& log_directory, int random_seed):
     logger(log_directory), last_snapshot_time(system_clock::now()), secs_between_snapshots(0),
-    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(true),
+    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(false),
     storage_enabled(true)
 {
     random_gen.seed(random_seed);

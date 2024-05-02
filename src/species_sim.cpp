@@ -2,8 +2,8 @@
  * @file mutants_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the mutants simulator
- * @version 0.4
- * @date 2024-03-11
+ * @version 0.5
+ * @date 2024-05-02
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -355,9 +355,9 @@ public:
             ("recover-simulation,r",
              po::value<std::string>(&snapshot_path)->default_value(""),
              "recover a simulation")
-            ("border-duplications-only,b", "admit duplications exclusively for cells on borders")
+            ("uniform-grow-model,u", "admit duplications of any cell in the tissue")
             ("log directory,o", po::value<std::filesystem::path>(&logging_dir),
-            "the directory in which all the simulation data are saved")
+             "the directory in which all the simulation data are saved")
             ("disable-storage,d", "disable result storage")
             ("seed,s", po::value<int>()->default_value(0), "random generator seed")
     #if WITH_INDICATORS
@@ -365,17 +365,17 @@ public:
     #endif // WITH_INDICATORS
     #ifdef WITH_SDL2
             ("plot,p",
-            "plot a graphical representation of the simulation")
+             "plot a graphical representation of the simulation")
             ("frames-per-second,f", po::value<unsigned int>(&frames_per_second)->default_value(1),
-            "the number of frames per second")
+             "the number of frames per second")
     #endif
             ("help,h", "get the help");
 
         hidden_options.add_options()
             ("simulation file", po::value<std::filesystem::path>(&simulation_filename),
-            "the name of the file describing the simulation")
+             "the name of the file describing the simulation")
             ("time horizon", po::value<long double>(&time_horizon),
-            "the simulation time horizon");
+             "the simulation time horizon");
 
         po::options_description program_options;
         for (const auto& [section_name, section]: visible_options) {
