@@ -2,23 +2,23 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.29
- * @date 2024-03-29
- * 
+ * @version 0.30
+ * @date 2024-04-18
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,18 +33,18 @@
 
 #include <iostream>
 
-#include <map>
 #include <vector>
 #include <random>
 #include <cstddef> // std::ptrdiff_t
 
+#include "imap.hpp"
 #include "archive.hpp"
 #include "time.hpp"
 #include "cell.hpp"
 #include "mutant_properties.hpp"
 
 
-namespace Races 
+namespace Races
 {
 
 namespace Mutants
@@ -57,14 +57,15 @@ class Tissue;
 
 /**
  * @brief Cell species
- * 
+ *
  * This class represents the set of cells in a species.
  */
-class Species: public SpeciesProperties {
+class Species: public SpeciesProperties
+{
     /**
      * @brief A map from cell ids to the corresponding pointers
      */
-    using CellIdToCell = std::map<CellId, CellInTissue*>;
+    using CellIdToCell = imap<CellId, CellInTissue*>;
 
     CellIdToCell cells;                 //!< species cells sorted by birth time/id
     CellIdToCell duplication_enabled;   //!< species cells that are duplication enabled
@@ -87,9 +88,9 @@ class Species: public SpeciesProperties {
 
         const_iterator();
 
-        inline reference operator*() const 
-        { 
-            return *(it->second); 
+        inline reference operator*() const
+        {
+            return *(it->second);
         }
 
         inline pointer operator->() const
@@ -98,33 +99,33 @@ class Species: public SpeciesProperties {
         }
 
         // Prefix increment
-        inline const_iterator& operator++() 
+        inline const_iterator& operator++()
         {
             ++it;
             return *this;
-        }  
+        }
 
         // Postfix increment
         const_iterator operator++(int);
 
         // Prefix decrement
-        inline const_iterator& operator--() 
+        inline const_iterator& operator--()
         {
             --it;
             return *this;
-        }  
+        }
 
         // Postfix decrement
         const_iterator operator--(int);
 
         friend inline bool operator==(const const_iterator& a, const const_iterator& b)
-        { 
-            return a.it == b.it; 
+        {
+            return a.it == b.it;
         }
 
         friend inline bool operator!=(const const_iterator& a, const const_iterator& b)
-        { 
-            return a.it != b.it; 
+        {
+            return a.it != b.it;
         }
 
         friend class Species;
@@ -132,9 +133,9 @@ class Species: public SpeciesProperties {
 
     /**
      * @brief Compute the cell age from the last addition to the species
-     * 
-     * @param cell 
-     * @return Time 
+     *
+     * @param cell
+     * @return Time
      */
     inline Time age(const CellInTissue *cell) const
     {
@@ -143,11 +144,11 @@ class Species: public SpeciesProperties {
 
     /**
      * @brief Add a cell to the species
-     * 
-     * This method add the cell pointer by the parameter to the 
-     * species. The species representation uses the memory pointed 
+     *
+     * This method add the cell pointer by the parameter to the
+     * species. The species representation uses the memory pointed
      * by the parameter.
-     * 
+     *
      * @param cell is a pointer to the cell to be added to the species
      * @return pointer to the added cell
      */
@@ -155,44 +156,30 @@ class Species: public SpeciesProperties {
 
     /**
      * @brief Randomly select a cell among those in a id-cell pointer map
-     * 
-     * This method select a cell by using an exponential over 
+     *
+     * This method select a cell by using an exponential over
      * cell ages.
-     * 
+     *
      * @tparam GENERATOR is a random number generator type
-     * @param generator is the random number generator used to select 
+     * @param generator is the random number generator used to select
      *      the cell
-     * @param id2cell_ptrs is the map id-cell pointers among which the 
+     * @param id2cell_ptrs is the map id-cell pointers among which the
      *      cell must be selected
      * @return a non-constant reference to a randomly selected
-     *       cell in the species 
+     *       cell in the species
      */
     template<typename GENERATOR>
-    const CellInTissue& choose_a_cell(GENERATOR& generator, 
+    const CellInTissue& choose_a_cell(GENERATOR& generator,
                                       const CellIdToCell& id2cell_ptrs) const
     {
         if (id2cell_ptrs.size()==0) {
             throw std::domain_error("No cells can be selected");
         }
 
-        std::exponential_distribution<Time> exp_dist;
+        std::uniform_int_distribution<size_t> dist(0, id2cell_ptrs.size()-1);
 
-        auto aimed_partial_ages_sum = exp_dist(generator);
-
-        Time partial_ages_sum = 0;
-        for (const auto& [cell_id, cell_ptr] : id2cell_ptrs) {
-            if (partial_ages_sum == 0) {
-                aimed_partial_ages_sum *= (10*age(cell_ptr));
-            }
-
-            partial_ages_sum += age(cell_ptr);
-
-            if (partial_ages_sum>=aimed_partial_ages_sum) {
-                return *cell_ptr;
-            }
-        }
-
-        return *(cells.begin()->second);
+        const auto pos = dist(generator);
+        return *(id2cell_ptrs.get(pos)->second);
     }
 
     /**
@@ -202,59 +189,59 @@ class Species: public SpeciesProperties {
 
     /**
      * @brief Reset the species
-     * 
-     * This method resets the species and removes and deletes all 
+     *
+     * This method resets the species and removes and deletes all
      * its cells.
      */
     void reset();
 public:
     /**
      * @brief A constructor
-     * 
+     *
      * @param species_properties is the species of the species
      */
     explicit Species(const SpeciesProperties& species_properties);
 
     /**
      * @brief A copy constructor
-     * 
+     *
      * @param orig is the template object
      */
     Species(const Species& orig);
 
     /**
      * @brief The copy operator
-     * 
-     * @param orig is the original object 
+     *
+     * @param orig is the original object
      * @return a reference to the updated object
      */
     Species& operator=(const Species& orig);
 
     /**
      * @brief The replace operator
-     * 
-     * @param orig is the original object 
+     *
+     * @param orig is the original object
      * @return a reference to the updated object
      */
     Species& operator=(Species&& orig);
 
     /**
      * @brief Get the initial iterator for the species cells
-     * 
+     *
      * @return the initial iterator for the species cells
      */
     const_iterator begin() const;
 
     /**
      * @brief Get the final iterator for the species cells
-     * 
+     *
      * @return the final iterator for the species cells
      */
     const_iterator end() const;
 
     /**
      * @brief Get the number of cells in the species
-     * 
+     *
      * @return the number of cells in the species
      */
     inline size_t num_of_cells() const
@@ -264,10 +251,10 @@ public:
 
     /**
      * @brief Test whether a cell in the species is avaiable for an event
-     * 
+     *
      * @param cell_id is the id of the cell to be tested
      * @param event_type is the event type for which the availability is tested
-     * @return `true` if and only if the cell having id `cell_id` belong to the 
+     * @return `true` if and only if the cell having id `cell_id` belong to the
      *          species and it is available for the the event `event_type`
      */
     inline bool cell_is_available_for(const CellId& cell_id,
@@ -293,7 +280,7 @@ public:
 
     /**
      * @brief Get the number of cells available for an event
-     * 
+     *
      * @param event_type is the event for which the cells are needed
      * @return the number of cells available for `event_type`
      */
@@ -301,17 +288,17 @@ public:
 
     /**
      * @brief Randomly select a cell for a specific event type
-     * 
-     * This method select a cell by using an exponential over 
+     *
+     * This method select a cell by using an exponential over
      * cell ages.
-     * 
+     *
      * @tparam GENERATOR is a random number generator type
-     * @param generator is the random number generator used to select 
+     * @param generator is the random number generator used to select
      *      the cell
-     * @param event_type is the type of the event that will occurs 
+     * @param event_type is the type of the event that will occurs
      *      to the selected cell
      * @return a non-constant reference to a randomly selected
-     *       cell in the species 
+     *       cell in the species
      */
     template<typename GENERATOR>
     const CellInTissue& choose_a_cell(GENERATOR& generator,
@@ -333,15 +320,15 @@ public:
 
     /**
      * @brief Randomly select a cell in the species
-     * 
-     * This method select a cell by using an exponential over 
+     *
+     * This method select a cell by using an exponential over
      * cell ages.
-     * 
+     *
      * @tparam GENERATOR is a random number generator type
-     * @param generator is the random number generator used to select 
+     * @param generator is the random number generator used to select
      *      the cell
      * @return a non-constant reference to a randomly selected
-     *       cell in the species 
+     *       cell in the species
      */
     template<typename GENERATOR>
     inline const CellInTissue& choose_a_cell(GENERATOR& generator) const
@@ -351,16 +338,16 @@ public:
 
     /**
      * @brief Remove a cell from the species and delete it
-     * 
+     *
      * @param cell_id is the id of the cell to be deleted
      */
     void erase(const CellId& cell_id);
 
     /**
      * @brief Add a cell to the species
-     * 
+     *
      * By default the duplication of the cell is switched on.
-     * 
+     *
      * @param cell is the cell to be added to the species
      * @return pointer to the added cell
      */
@@ -371,7 +358,7 @@ public:
 
     /**
      * @brief Add a cell to the species
-     * 
+     *
      * @param cell is the cell to be added to the species
      * @return pointer to the added cell
      */
@@ -379,18 +366,18 @@ public:
 
     /**
      * @brief Switch on/off the duplication of a cell
-     * 
-     * @param cell is the identifier of the cell on which 
+     *
+     * @param cell is the identifier of the cell on which
      *          the duplication will be enabled/disabled
-     * @param duplication_on is a Boolean flag to enable 
-     *          (True)/disable(False) duplication on `cell` 
+     * @param duplication_on is a Boolean flag to enable
+     *          (True)/disable(False) duplication on `cell`
      */
     void switch_duplication_for(const CellId& cell_id,
                                 const bool duplication_on);
 
     /**
      * @brief Enable the duplication of a cell
-     * 
+     *
      * @param cell is the identifier of the cell to be enabled
      *          for the duplication
      */
@@ -398,7 +385,7 @@ public:
 
     /**
      * @brief Disable the duplication of a cell
-     * 
+     *
      * @param cell is the identifier of the cell to be disabled
      *          for the duplication
      */
@@ -406,7 +393,7 @@ public:
 
     /**
      * @brief Get cell by identifier
-     * 
+     *
      * @param cell_id is the identifier of the aimed cell
      * @return a non-constant reference to the aimed cell
      */
@@ -414,7 +401,7 @@ public:
 
     /**
      * @brief Get cell by identifier
-     * 
+     *
      * @param cell_id is the identifier of the aimed cell
      * @return a constant reference to the aimed cell
      */
@@ -422,7 +409,7 @@ public:
 
     /**
      * @brief Test whether a cell is already contained in a species
-     * 
+     *
      * @param cell_id is the identifier of the cell to be tested
      * @return `true` is an only if the cell is already in the species
      */
@@ -438,7 +425,7 @@ public:
 
     /**
      * @brief Save a species in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -464,7 +451,7 @@ public:
 
     /**
      * @brief Load a species from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded species
@@ -510,7 +497,7 @@ public:
 
 /**
  * @brief Swap two species
- * 
+ *
  * @param a is a species
  * @param b is a species
  */
@@ -527,7 +514,7 @@ namespace std
 
 /**
  * @brief Write the information about a species in an output stream
- * 
+ *
  * @param out is the output stream
  * @param species is the species to be streamed
  * @return a reference to the output stream
