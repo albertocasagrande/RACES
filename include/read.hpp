@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 0.2
- * @date 2024-04-29
+ * @version 0.3
+ * @date 2024-05-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -302,8 +302,8 @@ class Read
      * reference.
      *
      * @param reference is the reference
-     * @param length is the length of the sequence fragment
-     *      to be copied
+     * @param up_to_index is reference index up to which
+     *      the reference must be copied
      * @param read_idx is the first position of the read to
      *      be filled by the read
      * @param reference_idx is the first position of the
@@ -320,7 +320,7 @@ public:
 
     /**
      * @brief A read constructor
-     * 
+     *
      * @param reference is the reference sequence
      * @param germlines is the position-mutation map for germline mutations
      * @param passengers is the position-mutation map for passenger mutations
@@ -360,6 +360,13 @@ public:
     {
         return nucleotides[pos];
     }
+
+    /**
+     * @brief Get the covered reference regions
+     *
+     * @return The list of the reference regions covered by this read
+     */
+    std::list<GenomicRegion> get_covered_reference_regions() const;
 
     /**
      * @brief Compute the CIGAR string of a genomic region potentially affected by SIDs

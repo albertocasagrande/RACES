@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 0.2
- * @date 2024-04-29
+ * @version 0.3
+ * @date 2024-05-04
  *
  * @copyright Copyright (c) 2023-2024å
  *
@@ -114,6 +114,8 @@ Read::MutationIterator::operator++()
         direction = Direction::FORWARD;
 
         set_current_mutation();
+
+        return *this;
     }
 
     if (is_end()) {
@@ -185,6 +187,8 @@ Read::MutationIterator::operator--()
         direction = Direction::BACKWARD;
 
         set_current_mutation();
+
+        return *this;
     }
 
     if (is_begin()) {
@@ -250,6 +254,40 @@ size_t Read::Hamming_distance() const
     return total_mismatches;
 }
 
+std::list<GenomicRegion> Read::get_covered_reference_regions() const
+{
+    std::list<GenomicRegion> covered_list;
+
+    if (alignment.size()==0) {
+        return covered_list;
+    }
+
+    MatchingType last_seq_type = MatchingType::DELETION;
+    GenomicPosition seq_begin(this->genomic_position);
+    size_t seq_size{0};
+    for (const auto& matching : alignment) {
+        // if part of the sequence have been deleted
+        if (matching == MatchingType::DELETION) {
+            if (last_seq_type == MatchingType::MATCH) {
+                covered_list.emplace_back(seq_begin, seq_size);
+                seq_begin.position += seq_size;
+            }
+            ++seq_begin.position;
+            seq_size = 0;
+            last_seq_type = MatchingType::DELETION;
+        } else if (matching != MatchingType::INSERTION) { // i.e., MATCH || MISMATCH
+            ++seq_size;
+            last_seq_type = MatchingType::MATCH;
+        }
+    }
+
+    if (last_seq_type == MatchingType::MATCH) {
+        covered_list.emplace_back(seq_begin, seq_size);
+    }
+
+    return covered_list;
+}
+
 std::string Read::get_CIGAR() const
 {
     std::ostringstream oss;
@@ -299,10 +337,10 @@ void validate_mutation(const std::string& reference, const SID& mutation)
     }
 }
 
-void Read::copy_reference(const std::string& reference, const size_t length,
+void Read::copy_reference(const std::string& reference, const size_t up_to_index,
                           size_t& read_end, size_t& ref_end)
 {
-    for (; ref_end <= length && read_end < nucleotides.size();
+    for (; ref_end <= up_to_index && read_end < nucleotides.size();
             ++ref_end,++read_end) {
         nucleotides[read_end] = reference[ref_end-1];
         alignment_index.push_back(alignment.size());
@@ -374,9 +412,11 @@ Read::Read(const std::string& reference,
 
         --prev;
 
-        auto begin_ref = prev->second.get_region().get_final_position()+1;
-        if (begin_ref>this->genomic_position.position) {
-            this->genomic_position.position = begin_ref;
+        if (!prev.is_begin()) {
+            auto begin_ref = prev->second.get_region().get_final_position()+1;
+            if (begin_ref>this->genomic_position.position) {
+                this->genomic_position.position = begin_ref;
+            }
         }
     }
 
@@ -417,7 +457,7 @@ Read::Read(const std::string& reference,
 
             update_alignment(alignment, alignment_index,
                              mutation, to_be_copied);
-            
+
             mutations.push_back(mutation);
         }
 
