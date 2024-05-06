@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.8
- * @date 2024-03-17
+ * @version 0.9
+ * @date 2024-05-06
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,6 +36,7 @@
 #include <vector>
 #include <queue>
 #include <string>
+#include <limits>
 
 #include "cell.hpp"
 #include "binary_logger.hpp"
@@ -207,17 +208,20 @@ private:
 
     /**
      * @brief Collect sticks below a node
-     * 
+     *
      * See `DescendantForest::get_sticks() const` for the definition of stick.
-     * 
+     *
      * @param sticks is the list of sticks in the subtree rooted in `cell_id`
      * @param cell_id is the identifier of a cell represented in the descendant
      *              forest
+     * @param birth_time_threshold is the maximum birth time for a
+     *      cell associated to the returned sticks
      * @return the tail of a candidate stick that ends in the deepest crucial node
-     *              in the subtree rooted in `cell_id`
+     *      in the subtree rooted in `cell_id`
      */
     std::list<CellId>
-    collect_sticks_from(std::list<std::list<CellId>>& sticks, const CellId& cell_id) const;
+    collect_sticks_from(std::list<std::list<CellId>>& sticks, const CellId& cell_id,
+                        const double& birth_time_threshold) const;
 
 protected:
 
@@ -332,7 +336,7 @@ protected:
 
         /**
          * @brief Compute the node height
-         * 
+         *
          * @return the node height
          */
         size_t height() const
@@ -583,7 +587,7 @@ public:
 
     /**
      * @brief Get the forest height
-     * 
+     *
      * @return the forest height
      */
     inline size_t height() const;
@@ -686,16 +690,20 @@ public:
 
     /**
      * @brief Get the forest sticks
-     * 
-     * A _crucial node_ is a root of the forest, a node whose parent
-     * belongs to a different mutant, or the most recent common 
-     * ancestor of two crucial nodes.
-     * A _stick_ is a path of the forest in which the only crucial 
-     * nodes are the first and the last.
-     * 
-     * @return a list of all the forest sticks
+     *
+     * A _crucial node_ is a root of the forest, a node whose parent belongs
+     * to a different species, or the most recent common ancestor of two
+     * crucial nodes.
+     * A _stick_ is a path of the forest in which the only crucial nodes are
+     * the first and the last.
+     *
+     * @param birth_time_threshold is the maximum birth time for a cell
+     *      associated to the returned sticks (default: `double` max)
+     * @return a list of all the forest sticks whose associated cells have
+     *      birth time smaller than or equal to `birth_time_threshold`
      */
-    std::list<std::list<CellId>> get_sticks() const;
+    std::list<std::list<CellId>>
+    get_sticks(const double birth_time_threshold=std::numeric_limits<double>::max()) const;
 
     /**
      * @brief Clear the forest
