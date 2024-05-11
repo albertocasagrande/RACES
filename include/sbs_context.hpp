@@ -1,9 +1,9 @@
 /**
- * @file context.hpp
+ * @file sbs_sbs_context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines mutational contexts and extended context automata
- * @version 0.9
- * @date 2024-03-29
+ * @brief Defines SBS contexts and extended context automata
+ * @version 0.10
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_CONTEXT__
-#define __RACES_CONTEXT__
+#ifndef __RACES_SBS_CONTEXT__
+#define __RACES_SBS_CONTEXT__
 
 #include <cstdint>
 #include <functional>   // std::less
@@ -47,23 +47,23 @@ namespace Mutations
 {
 
 /**
- * @brief A class to represent mutational context
+ * @brief A class to represent SBS context
  *
- * A context is a nucleic triplet where a mutation may
+ * A context is a nucleic triplet where a SBS may
  * occur.
  * Every context univocally corresponds to a code that
  * represents the triplet. This class guarantees the
- * mutational context code to be in the interval
+ * SBS context code to be in the interval
  * natural [0,63]: 5', 3', and the central nucleotide
  * have 4 possible values, i.e., A, C, G, and T.
  * Moreover, all the codes for contexts having either
  * a 'C' and a 'T' as central nucleotide are guaranteed
  * to be in the interval [0,31].
  */
-struct MutationalContext
+struct SBSContext
 {
     /**
-     * @brief The type of mutational context type
+     * @brief The type of SBS context type
      */
     using CodeType = uint8_t;
 
@@ -73,26 +73,26 @@ public:
     /**
      * @brief The empty constructor
      */
-    MutationalContext();
+    SBSContext();
 
     /**
      * @brief A constructor
      *
      * @param nucleic_triplet is the string of the nucleic triplet
      */
-    MutationalContext(const char* nucleic_triplet);
+    SBSContext(const char* nucleic_triplet);
 
     /**
      * @brief A constructor
      *
      * @param nucleic_triplet is the string of the nucleic triplet
      */
-    MutationalContext(const std::string& nucleic_triplet);
+    SBSContext(const std::string& nucleic_triplet);
 
     /**
-     * @brief Get the mutational context code
+     * @brief Get the SBS context code
      *
-     * @return a constant reference to the mutational context code
+     * @return a constant reference to the SBS context code
      */
     inline const CodeType& get_code() const
     {
@@ -100,7 +100,7 @@ public:
     }
 
     /**
-     * @brief Check whether the mutational context is defined
+     * @brief Check whether the SBS context is defined
      *
      * @return `true` if and only if the nucleic triplet was
      *          specified during the object creation
@@ -125,38 +125,38 @@ public:
     char get_central_nucleotide() const;
 
     /**
-     * @brief Get the complement mutational context
+     * @brief Get the complement SBS context
      *
-     * @return the complement mutational context
+     * @return the complement SBS context
      */
-    MutationalContext get_complemented() const;
+    SBSContext get_complemented() const;
 
     /**
-     * @brief Test whether two mutational contexts are equivalent
+     * @brief Test whether two SBS contexts are equivalent
      *
-     * @param context is the mutational context to compare
-     * @return `true` if and only if the two mutational contexts represent
+     * @param context is the SBS context to compare
+     * @return `true` if and only if the two SBS contexts represent
      *      the same nucleic triplet
      */
-    inline bool operator==(const MutationalContext& context) const
+    inline bool operator==(const SBSContext& context) const
     {
         return get_code() == context.get_code();
     }
 
     /**
-     * @brief Test whether two mutational contexts differ
+     * @brief Test whether two SBS contexts differ
      *
-     * @param context is the mutational context to compare
-     * @return `true` if and only if the two mutational contexts represent
+     * @param context is the SBS context to compare
+     * @return `true` if and only if the two SBS contexts represent
      *      different nucleic triplets
      */
-    inline bool operator!=(const MutationalContext& context) const
+    inline bool operator!=(const SBSContext& context) const
     {
         return get_code() != context.get_code();
     }
 
     /**
-     * @brief Save a mutational context in an archive
+     * @brief Save a SBS context in an archive
      *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
@@ -168,16 +168,16 @@ public:
     }
 
     /**
-     * @brief Load a mutational context from an archive
+     * @brief Load a SBS context from an archive
      *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the loaded mutational context
+     * @return the loaded SBS context
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    static MutationalContext load(ARCHIVE& archive)
+    static SBSContext load(ARCHIVE& archive)
     {
-        MutationalContext mcode;
+        SBSContext mcode;
 
         archive & mcode.code;
 
@@ -185,9 +185,9 @@ public:
     }
 
     /**
-     * @brief Get the code of the complement mutational context
+     * @brief Get the code of the complement SBS context
      *
-     * @param code is the mutational context code whose complement is request
+     * @param code is the SBS context code whose complement is request
      * @return the code of the complement context of the
      *      context whose code is `code`
      */
@@ -220,13 +220,13 @@ struct ExtendedContextAutomaton
      * map is the code of the newly read base; the value is the
      * new context code.
      */
-    using FromNodeEdgeType = std::map<BaseCodeType, MutationalContext::CodeType>;
+    using FromNodeEdgeType = std::map<BaseCodeType, SBSContext::CodeType>;
 
-    std::array<bool, 125> is_a_context;             //!< a Boolean vector to flag proper context
-    std::array<MutationalContext, 125> contexts;    //!< the state corresponding contexts
-    std::array<FromNodeEdgeType, 125> edges;        //!< the automata edges
+    std::array<bool, 125> is_a_context;         //!< a Boolean vector to flag proper context
+    std::array<SBSContext, 125> contexts;       //!< the state corresponding contexts
+    std::array<FromNodeEdgeType, 125> edges;    //!< the automata edges
 
-    MutationalContext::CodeType state;  //!< the current automaton state
+    SBSContext::CodeType state;  //!< the current automaton state
 
     /**
      * @brief Get a code for a character
@@ -247,8 +247,8 @@ struct ExtendedContextAutomaton
      * @return the automaton state corresponding to the extended
      *      context formed by the three characters.
      */
-    static MutationalContext::CodeType get_state_for(const char& first, const char& second,
-                                                     const char& third);
+    static SBSContext::CodeType get_state_for(const char& first, const char& second,
+                                              const char& third);
 
 public:
     /**
@@ -261,7 +261,7 @@ public:
      *
      * @return return the current automaton state
      */
-    inline const MutationalContext::CodeType& get_state() const
+    inline const SBSContext::CodeType& get_state() const
     {
         return state;
     }
@@ -282,7 +282,7 @@ public:
      *
      * @return the context corresponding to the current state
      */
-    inline const MutationalContext& get_context() const
+    inline const SBSContext& get_context() const
     {
         return contexts[state];
     }
@@ -323,10 +323,10 @@ public:
 }   // Races
 
 template<>
-struct std::less<Races::Mutations::MutationalContext>
+struct std::less<Races::Mutations::SBSContext>
 {
-    inline bool operator()(const Races::Mutations::MutationalContext &lhs,
-                           const Races::Mutations::MutationalContext &rhs) const
+    inline bool operator()(const Races::Mutations::SBSContext &lhs,
+                           const Races::Mutations::SBSContext &rhs) const
     {
         return lhs.get_code() < rhs.get_code();
     }
@@ -336,17 +336,17 @@ namespace std
 {
 
 /**
- * @brief Stream the mutational context in a stream
+ * @brief Stream the SBS context in a stream
  *
  * @param out is the output stream
- * @param context is the mutational context to stream
+ * @param context is the SBS context to stream
  * @return a reference to the output stream
  */
-inline std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalContext& context)
+inline std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSContext& context)
 {
     return (out << context.get_sequence());
 }
 
 }   // std
 
-#endif // __RACES_CONTEXT__
+#endif // __RACES_SBS_CONTEXT__

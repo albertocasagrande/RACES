@@ -2,10 +2,10 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.22
- * @date 2024-04-27
+ * @version 0.23
+ * @date 2024-05-11
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -140,7 +140,7 @@ public:
      * @brief Get the default exposure
      *
      * @param exposures_json is the JSON of the exposures
-     * @return a map associating to a set of mutational signatures their percentage
+     * @return a map associating to a set of SBS signatures their percentage
      *          in the default mutational configuration
      */
     static Races::Mutations::Exposure
@@ -298,7 +298,7 @@ public:
      * @brief Get the exposure
      *
      * @param exposure_json the JSON of the exposure
-     * @return a map associating a set of mutational signature to their percentage
+     * @return a map associating a set of SBS signature to their percentage
      *          in the exposure
      */
     static Races::Mutations::Exposure

@@ -5,7 +5,7 @@ RACES is framework for simulating cancer genomic evolution. It supports:
 -   cell strand competition and spacial simulations
 -   epigenetic switches
 -   copy-number variations
--   mutational signature ruled SNV
+-   SBS signature support
 
 RACES consists in 4 main programs:
 -   `build_context_index` creates an index for the mutational contexts (i.e., consecutive triplets of nucleotides) in a genome. In normal conditions, the context index for a genome must be created once for all and the resulting file can be used many times.

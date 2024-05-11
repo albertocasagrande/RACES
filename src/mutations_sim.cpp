@@ -175,11 +175,11 @@ class MutationsSimulator : public BasicExecutable
         return context_index;
     }
 
-    static std::map<std::string, Races::Mutations::MutationalSignature> load_signatures(const std::string filename)
+    static std::map<std::string, Races::Mutations::SBSSignature> load_signatures(const std::string filename)
     {
         std::ifstream is(filename);
 
-        return Races::Mutations::MutationalSignature::read_from_stream(is);
+        return Races::Mutations::SBSSignature::read_from_stream(is);
     }
 
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
@@ -521,8 +521,8 @@ class MutationsSimulator : public BasicExecutable
                                 + "\"  is not a regular file", 1);
         }
 
-        if (!vm.count("mutational signature")) {
-            print_help_and_exit("The mutational signature is mandatory.", 1);
+        if (!vm.count("SBS signature")) {
+            print_help_and_exit("The SBS signature is mandatory.", 1);
         }
 
         if (!fs::exists(SBS_filename)) {
@@ -717,8 +717,8 @@ public:
              "the species simulation directory")
             ("context index", po::value<std::filesystem::path>(&context_index_filename),
              "the genome context index")
-            ("mutational signature", po::value<std::filesystem::path>(&SBS_filename),
-             "the mutational signature")
+            ("SBS signature", po::value<std::filesystem::path>(&SBS_filename),
+             "the SBS signature")
             ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename),
              "the filename of the reference genome FASTA file")
             ("driver mutations",  po::value<std::filesystem::path>(&driver_mutations_filename),
@@ -736,7 +736,7 @@ public:
         positional_options.add("mutation file", 1);
         positional_options.add("species simulation", 1);
         positional_options.add("context index", 1);
-        positional_options.add("mutational signature", 1);
+        positional_options.add("SBS signature", 1);
         positional_options.add("reference genome", 1);
         positional_options.add("driver mutations", 1);
         positional_options.add("passenger CNAs file", 1);

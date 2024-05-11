@@ -1,9 +1,9 @@
 /**
- * @file snv_signature.cpp
+ * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Some SNV example
- * @version 0.8
- * @date 2024-03-29
+ * @brief Some SBS example
+ * @version 0.9
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -29,7 +29,7 @@
  */
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE snv_signature
+#define BOOST_TEST_MODULE sbs_signature
 
 #include <iostream>
 #include <fstream>
@@ -40,24 +40,24 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "snv_signature.hpp"
+#include "sbs_signature.hpp"
 
 
-BOOST_AUTO_TEST_CASE(mutational_context_creation)
+BOOST_AUTO_TEST_CASE(sbs_context_creation)
 {
     using namespace Races::Mutations;
 
-    BOOST_CHECK_NO_THROW(MutationalContext());
-    BOOST_CHECK_NO_THROW(MutationalContext("AAA"));
-    BOOST_CHECK_NO_THROW(MutationalContext("ACA"));
-    BOOST_CHECK_THROW(MutationalContext("AA"), std::domain_error);
-    BOOST_CHECK_THROW(MutationalContext("AAAA"), std::domain_error);
-    BOOST_CHECK_THROW(MutationalContext("AZA"), std::domain_error);
+    BOOST_CHECK_NO_THROW(SBSContext());
+    BOOST_CHECK_NO_THROW(SBSContext("AAA"));
+    BOOST_CHECK_NO_THROW(SBSContext("ACA"));
+    BOOST_CHECK_THROW(SBSContext("AA"), std::domain_error);
+    BOOST_CHECK_THROW(SBSContext("AAAA"), std::domain_error);
+    BOOST_CHECK_THROW(SBSContext("AZA"), std::domain_error);
 }
 
 struct ContextFixture
 {
-    std::list<Races::Mutations::MutationalContext> contexts;
+    std::list<Races::Mutations::SBSContext> contexts;
 
     ContextFixture()
     {
@@ -77,7 +77,7 @@ struct ContextFixture
 
 BOOST_FIXTURE_TEST_SUITE( context_test, ContextFixture )
 
-BOOST_AUTO_TEST_CASE(mutational_context_lower_case)
+BOOST_AUTO_TEST_CASE(sbs_context_lower_case)
 {
     using namespace Races::Mutations;
     std::vector<char> bases{'a', 'c', 'g', 't'};
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_lower_case)
         for (const auto& seq1: bases) {
             for (const auto& seq2: bases) {
                 std::string seq{seq0,seq1,seq2};
-                MutationalContext mc(seq);
+                SBSContext mc(seq);
 
                 BOOST_CHECK_EQUAL(mc, *(it++));
             }
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_lower_case)
 
 }
 
-BOOST_AUTO_TEST_CASE(mutational_context_relation)
+BOOST_AUTO_TEST_CASE(sbs_context_relation)
 {
     using namespace Races::Mutations;
 
@@ -118,23 +118,23 @@ BOOST_AUTO_TEST_CASE(mutational_context_relation)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_context_copy_by_sequence)
+BOOST_AUTO_TEST_CASE(sbs_context_copy_by_sequence)
 {
     using namespace Races::Mutations;
 
     for (const auto& context: contexts) {
-        MutationalContext copy(context.get_sequence());
+        SBSContext copy(context.get_sequence());
 
         BOOST_CHECK_EQUAL(context, copy);
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_context_sequence)
+BOOST_AUTO_TEST_CASE(sbs_context_sequence)
 {
     using namespace Races::Mutations;
 
     for (const auto& context: contexts) {
-        MutationalContext copy(context.get_sequence());
+        SBSContext copy(context.get_sequence());
 
         BOOST_CHECK_EQUAL(context.get_sequence(), copy.get_sequence());
     }
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_sequence)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_CASE(mutational_context_complement)
+BOOST_AUTO_TEST_CASE(sbs_context_complement)
 {
     using namespace Races::Mutations;
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
 
     for (const auto& [seq, c_seq]: tests) {
         {
-            MutationalContext context(seq);
+            SBSContext context(seq);
 
             auto c_context = context.get_complemented();
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
         }
 
         {
-            MutationalContext c_context(c_seq);
+            SBSContext c_context(c_seq);
 
             auto context = c_context.get_complemented();
 
@@ -173,11 +173,11 @@ BOOST_AUTO_TEST_CASE(mutational_context_complement)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_type_create)
+BOOST_AUTO_TEST_CASE(SBS_type_create)
 {
     using namespace Races::Mutations;
 
-    BOOST_CHECK_NO_THROW(MutationalType());
+    BOOST_CHECK_NO_THROW(SBSType());
 
     for (const auto base: {'A', 'C', 'G', 'T'}){
         for (const auto seq0: {'A', 'C', 'G', 'T'}){
@@ -185,14 +185,14 @@ BOOST_AUTO_TEST_CASE(mutational_type_create)
                 for (const auto seq2: {'A', 'C', 'G', 'T'}){
                     std::string seq{seq0,seq1,seq2};
 
-                    MutationalContext context(seq);
+                    SBSContext context(seq);
 
                     if (seq1!=base) {
-                        BOOST_CHECK_NO_THROW(MutationalType(seq, base));
-                        BOOST_CHECK_NO_THROW(MutationalType(context, base));
+                        BOOST_CHECK_NO_THROW(SBSType(seq, base));
+                        BOOST_CHECK_NO_THROW(SBSType(context, base));
                     } else {
-                        BOOST_CHECK_THROW(MutationalType(seq, base), std::domain_error);
-                        BOOST_CHECK_THROW(MutationalType(context, base), std::domain_error);
+                        BOOST_CHECK_THROW(SBSType(seq, base), std::domain_error);
+                        BOOST_CHECK_THROW(SBSType(context, base), std::domain_error);
                     }
                 }
             }
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_create)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_type_get_replace_base)
+BOOST_AUTO_TEST_CASE(SBS_type_get_replace_base)
 {
     using namespace Races::Mutations;
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_replace_base)
                 for (const auto seq0: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                     for (const auto seq2: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                         std::string seq{seq0,seq1,seq2};
-                        MutationalType type(seq, base);
+                        SBSType type(seq, base);
 
                         BOOST_CHECK_EQUAL(type.get_replace_base(), toupper(base));
                     }
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_replace_base)
                 for (const auto seq0: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                     for (const auto seq2: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                         std::string seq{seq0,seq1,seq2};
-                        MutationalType type(seq, base);
+                        SBSType type(seq, base);
 
                         char c_base;
                         switch(base) {
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_replace_base)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_type_get_complement_replace_base)
+BOOST_AUTO_TEST_CASE(SBS_type_get_complement_replace_base)
 {
     using namespace Races::Mutations;
 
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_complement_replace_base)
                 for (const auto seq0: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                     for (const auto seq2: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                         std::string seq{seq0,seq1,seq2};
-                        MutationalType type(seq, base);
+                        SBSType type(seq, base);
 
                         char c_base;
                         switch(base) {
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_complement_replace_base)
                 for (const auto seq0: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                     for (const auto seq2: {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't'}){
                         std::string seq{seq0,seq1,seq2};
-                        MutationalType type(seq, base);
+                        SBSType type(seq, base);
 
                         BOOST_CHECK_EQUAL(type.get_complement_replace_base(), toupper(base));
                     }
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_get_complement_replace_base)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_type_read)
+BOOST_AUTO_TEST_CASE(SBS_type_read)
 {
     using namespace Races::Mutations;
 
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_read)
 
     for (const auto& [input, results]: tests) {
         std::istringstream is(input);
-        MutationalType type;
+        SBSType type;
 
         is >> type;
 
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_read)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mutational_type_read_error)
+BOOST_AUTO_TEST_CASE(SBS_type_read_error)
 {
     using namespace Races::Mutations;
 
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(mutational_type_read_error)
 
     for (const auto& error: errors) {
         std::istringstream is(error);
-        MutationalType type;
+        SBSType type;
 
         BOOST_CHECK_THROW(is >> type, std::runtime_error);
     }
@@ -369,16 +369,16 @@ std::ostream& operator<<(std::ostream& out, const std::set<T>& S)
 
 }
 
-BOOST_AUTO_TEST_CASE(mutational_signature_load)
+BOOST_AUTO_TEST_CASE(SBS_signature_load)
 {
     using namespace Races::Mutations;
 
     std::set<std::string> signature_names{"SBS3_GRCh37","SBS3_GRCh38","SBS3_mm9","SBS3_mm10","SBS3_rn6"};
 
-    std::map<std::string, MutationalSignature> example;
+    std::map<std::string, SBSSignature> example;
     {
         std::ifstream in(SBS_EXAMPLE, std::ios_base::in);
-        BOOST_CHECK_NO_THROW(example = MutationalSignature::read_from_stream(in));
+        BOOST_CHECK_NO_THROW(example = SBSSignature::read_from_stream(in));
     }
 
     std::set<std::string> example_set;
@@ -389,16 +389,16 @@ BOOST_AUTO_TEST_CASE(mutational_signature_load)
     BOOST_CHECK_EQUAL(signature_names,example_set);
 }
 
-BOOST_AUTO_TEST_CASE(selective_mutational_signature_load)
+BOOST_AUTO_TEST_CASE(selective_SBS_signature_load)
 {
     using namespace Races::Mutations;
 
     std::set<std::string> signature_names{"SBS3_GRCh38","SBS3_mm10","SBS3_rn6"};
 
-    std::map<std::string, MutationalSignature> example;
+    std::map<std::string, SBSSignature> example;
     {
         std::ifstream in(SBS_EXAMPLE, std::ios_base::in);
-        BOOST_CHECK_NO_THROW(example = MutationalSignature::read_from_stream(in, signature_names));
+        BOOST_CHECK_NO_THROW(example = SBSSignature::read_from_stream(in, signature_names));
     }
 
     std::set<std::string> example_set;
@@ -408,22 +408,22 @@ BOOST_AUTO_TEST_CASE(selective_mutational_signature_load)
     BOOST_CHECK_EQUAL(signature_names,example_set);
 }
 
-BOOST_AUTO_TEST_CASE(mutational_signature_expression)
+BOOST_AUTO_TEST_CASE(SBS_signature_expression)
 {
     using namespace Races::Mutations;
 
-    std::map<std::string, MutationalSignature> signatures;
+    std::map<std::string, SBSSignature> signatures;
     {
         std::ifstream in(SBS_EXAMPLE, std::ios_base::in);
-        signatures = MutationalSignature::read_from_stream(in);
+        signatures = SBSSignature::read_from_stream(in);
     }
 
     double alpha = 1.0/signatures.size();
 
-    MutationalSignatureExprResult expr_result;
+    SBSSignatureExprResult expr_result;
     for (const auto& [key, signature]: signatures) {
         expr_result = expr_result + alpha * signature;
     }
 
-    MutationalSignature test = static_cast<MutationalSignature>(expr_result);
+    SBSSignature test = static_cast<SBSSignature>(expr_result);
 }

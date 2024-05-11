@@ -18,7 +18,6 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cell_event.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cna.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/csv_reader.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/descendant_forest.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_storage.cpp
@@ -54,7 +53,8 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sid.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/snv_signature.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_context.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
@@ -69,7 +69,6 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cell_event.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/cna.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/context.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/context_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/csv_reader.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/descendant_forest.hpp
@@ -115,7 +114,8 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sid.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/snv_signature.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sbs_context.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sbs_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp

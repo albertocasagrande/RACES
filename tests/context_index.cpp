@@ -2,23 +2,23 @@
  * @file context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing Races::Mutations::ContextIndex class
- * @version 0.8
- * @date 2024-02-28
- * 
+ * @version 0.9
+ * @date 2024-05-11
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(context_index_creation)
 
 template<typename GENOME_WIDE_POSITION>
 std::set<Races::Mutations::GenomicPosition> get_genomic_positions(const Races::Mutations::ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                                                                   const Races::Mutations::MutationalContext& mutational_context)
+                                                                   const Races::Mutations::SBSContext& mutational_context)
 {
     std::set<Races::Mutations::GenomicPosition> positions;
 
@@ -70,10 +70,10 @@ std::set<Races::Mutations::GenomicPosition> get_genomic_positions(const Races::M
 
 struct ContextFixture
 {
-    using MutationalContext = Races::Mutations::MutationalContext;
+    using SBSContext = Races::Mutations::SBSContext;
     using GenomicPosition = Races::Mutations::GenomicPosition;
 
-    std::map<MutationalContext, std::set<GenomicPosition> > test_positions;
+    std::map<SBSContext, std::set<GenomicPosition> > test_positions;
 
     ContextFixture():
         test_positions{

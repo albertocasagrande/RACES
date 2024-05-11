@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.59
- * @date 2024-04-27
+ * @version 0.60
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -41,7 +41,7 @@
 
 #include "context_index.hpp"
 #include "genome_mutations.hpp"
-#include "snv_signature.hpp"
+#include "sbs_signature.hpp"
 #include "mutational_properties.hpp"
 #include "driver_storage.hpp"
 
@@ -177,18 +177,18 @@ class MutationEngine
     /**
      * @brief The SBS inverse cumulative distributions
      *
-     * SBS's are probability distributions for mutational types. If we arbitrary assign
-     * an order to mutational type, given a SBS and a mutational type T, we can compute
-     * the probability of randomly choosing a mutational type smaller or equal to T.
+     * SBS's are probability distributions for SBS types. If we arbitrary assign
+     * an order to SBS type, given a SBS and a SBS type T, we can compute
+     * the probability of randomly choosing a SBS type smaller or equal to T.
      * The inverse cumulative SBS type associated such a probability to T itself for
-     * all the mutational type T.
+     * all the SBS type T.
      */
-    using InverseCumulativeSBS = std::map<double, Races::Mutations::MutationalType>;
+    using InverseCumulativeSBS = std::map<double, Races::Mutations::SBSType>;
 
     /**
      * @brief The stack of contexts removed from the context index
      */
-    using ContextStack = std::stack<std::pair<MutationalContext, GENOME_WIDE_POSITION>>;
+    using ContextStack = std::stack<std::pair<SBSContext, GENOME_WIDE_POSITION>>;
 
     RANDOM_GENERATOR generator; //!< the random generator
 
@@ -232,20 +232,20 @@ class MutationEngine
     /**
      * @brief Compute the inverse cumulative SBS
 
-     * SBS's are probability distributions for mutational types. If we arbitrary assign
-     * an order to mutational type, given a SBS and a mutational type T, we can compute
-     * the probability of randomly choosing a mutational type smaller or equal to T.
+     * SBS's are probability distributions for SBS types. If we arbitrary assign
+     * an order to SBS type, given a SBS and a SBS type T, we can compute
+     * the probability of randomly choosing a SBS type smaller or equal to T.
      * The inverse cumulative SBS type associated such a probability to T itself for
-     * all the mutational type T.
+     * all the SBS type T.
      *
-     * @param m_signature is a mutational signature (SBS)
-     * @return the corresponding mutational signature
+     * @param SBS_signature is a SBS signature
+     * @return the inverse cumulative SBS of `SBS_signature`
      */
-    static InverseCumulativeSBS get_inv_cumulative_SBS(const MutationalSignature& m_signature)
+    static InverseCumulativeSBS get_inv_cumulative_SBS(const SBSSignature& SBS_signature)
     {
         InverseCumulativeSBS inv_cumulative_SBS;
         double cumulative_prob = 0;
-        for (const auto& [m_type, prob]: m_signature) {
+        for (const auto& [m_type, prob]: SBS_signature) {
             if (prob != 0) {
                 cumulative_prob += prob;
 
@@ -278,20 +278,20 @@ class MutationEngine
      * @brief Select a random passenger SNV
      *
      * This method selects a random passenger SNV among whose having a
-     * specified mutational type and available in a context index.
+     * specified SBS type and available in a context index.
      * The selected SNV is extracted from the context index and inserted
      * into a stack to revert the selection.
      *
-     * @param[in] m_type is the mutational type of the SNV to be selected
+     * @param[in] m_type is the SBS type of the SNV to be selected
      * @return a passenger SNV whose type is `m_type` and which was
      *          available in `context_index`
      */
-    SID select_SNV(const MutationalType& m_type)
+    SID select_SNV(const SBSType& m_type)
     {
         using namespace Races::Mutations;
 
-        MutationalContext context = m_type.get_context();
-        MutationalContext compl_context = context.get_complemented();
+        SBSContext context = m_type.get_context();
+        SBSContext compl_context = context.get_complemented();
 
         size_t total_pos = context_index[context].size();
         total_pos += context_index[compl_context].size();
@@ -547,7 +547,7 @@ class MutationEngine
         // while some of the requested SNVs have not been set
         size_t new_SNVs{0}, context_misses{0};
         while (new_SNVs < num_of_mutations) {
-            // randomly pick a mutational type according to the current SBS
+            // randomly pick a SBS type according to the current SBS
             auto it = inv_cumulative_SBS.lower_bound(u_dist(generator));
 
             if (it != inv_cumulative_SBS.end() &&
@@ -555,7 +555,7 @@ class MutationEngine
 
                 context_misses = 0;
 
-                // select a SNV among those having the picked mutational type
+                // select a SNV among those having the picked SBS type
                 // and that available in the context index
                 SID snv = select_SNV(it->second);
 
@@ -997,17 +997,17 @@ public:
      * @brief A constructor
      *
      * @param context_index is the genome context index
-     * @param mutational_signatures is the map of the mutational signatures
+     * @param SBS_signatures is the map of the SBS signatures
      * @param germline_mutations are the germline mutations
      * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                   const std::map<std::string, MutationalSignature>& mutational_signatures,
+                   const std::map<std::string, SBSSignature>& SBS_signatures,
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={}):
-        MutationEngine(context_index, mutational_signatures, MutationalProperties(),
+        MutationEngine(context_index, SBS_signatures, MutationalProperties(),
                        germline_mutations, driver_storage, passenger_CNAs)
     {}
 
@@ -1015,14 +1015,14 @@ public:
      * @brief A constructor
      *
      * @param context_index is the genome context index
-     * @param mutational_signatures is the map of the mutational signatures
+     * @param SBS_signatures is the map of the SBS signatures
      * @param mutational_properties are the mutational properties of all the species
      * @param germline_mutations are the germline mutations
      * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
-                   const std::map<std::string, MutationalSignature>& mutational_signatures,
+                   const std::map<std::string, SBSSignature>& SBS_signatures,
                    const MutationalProperties& mutational_properties,
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
@@ -1033,8 +1033,8 @@ public:
     {
         MutationEngine::check_genomes_consistency(context_index, germline_mutations);
 
-        for (const auto& [name, mutational_signature]: mutational_signatures) {
-            inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(mutational_signature);
+        for (const auto& [name, SBS_signature]: SBS_signatures) {
+            inv_cumulative_SBSs[name] = get_inv_cumulative_SBS(SBS_signature);
         }
 
         this->passenger_CNAs = filter_CNA_by_chromosome_ids(passenger_CNAs);

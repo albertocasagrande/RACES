@@ -1,9 +1,9 @@
 /**
- * @file snv_signature.cpp
+ * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements Single Variation Mutation mutational signature
- * @version 0.16
- * @date 2024-03-29
+ * @brief Implements SBS signature
+ * @version 0.17
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 #include <cmath>
 #include <limits>
 
-#include "snv_signature.hpp"
+#include "sbs_signature.hpp"
 
 
 namespace Races
@@ -85,11 +85,11 @@ std::istream& read_symbol(std::istream& in, const char& symbol)
     return in;
 }
 
-MutationalType::MutationalType():
+SBSType::SBSType():
     context(), replace_base('A')
 {}
 
-MutationalType::MutationalType(const MutationalContext& context, const char& replace_base)
+SBSType::SBSType(const SBSContext& context, const char& replace_base)
 {
     auto central_nucleotide = context.get_central_nucleotide();
 
@@ -120,7 +120,7 @@ MutationalType::MutationalType(const MutationalContext& context, const char& rep
     }
 }
 
-MutationalType::MutationalType(const std::string& context, const char& replace_base):
+SBSType::SBSType(const std::string& context, const char& replace_base):
     context(context), replace_base(toupper(replace_base))
 {
     if (context[1] == replace_base) {
@@ -147,27 +147,27 @@ MutationalType::MutationalType(const std::string& context, const char& replace_b
     }
 }
 
-MutationalType::MutationalType(const std::string& type)
+SBSType::SBSType(const std::string& type)
 {
     std::istringstream iss(type);
 
     iss >> *this;
 }
 
-MutationalSignatureExprResult::MutationalSignatureExprResult():
+SBSSignatureExprResult::SBSSignatureExprResult():
     value_map()
 {}
 
-MutationalSignatureExprResult::MutationalSignatureExprResult(const std::map<MutationalType, double>& dist_map):
+SBSSignatureExprResult::SBSSignatureExprResult(const std::map<SBSType, double>& dist_map):
     value_map(dist_map)
 {}
 
-MutationalSignatureExprResult::operator MutationalSignature()
+SBSSignatureExprResult::operator SBSSignature()
 {
-    return MutationalSignature(value_map);
+    return SBSSignature(value_map);
 }
 
-MutationalSignatureExprResult& MutationalSignatureExprResult::operator+(MutationalSignatureExprResult&& expression_value)
+SBSSignatureExprResult& SBSSignatureExprResult::operator+(SBSSignatureExprResult&& expression_value)
 {
     for (auto& [type, prob]: value_map) {
         auto it = expression_value.value_map.find(type);
@@ -185,7 +185,7 @@ MutationalSignatureExprResult& MutationalSignatureExprResult::operator+(Mutation
     return *this;
 }
 
-MutationalSignatureExprResult& MutationalSignatureExprResult::operator+(const MutationalSignature& signature)
+SBSSignatureExprResult& SBSSignatureExprResult::operator+(const SBSSignature& signature)
 {
     for (auto& [type, prob]: value_map) {
         prob += signature(type);
@@ -200,10 +200,10 @@ MutationalSignatureExprResult& MutationalSignatureExprResult::operator+(const Mu
     return *this;
 }
 
-MutationalSignature::MutationalSignature():
+SBSSignature::SBSSignature():
     dist_map()
 {
-    dist_map[MutationalType()] = 1;
+    dist_map[SBSType()] = 1;
 }
 
 bool is_about(double x, double y)
@@ -211,7 +211,7 @@ bool is_about(double x, double y)
     return std::fabs(x - y) <= 1e-6;
 }
 
-MutationalSignature::MutationalSignature(const std::map<MutationalType, double>& distribution):
+SBSSignature::SBSSignature(const std::map<SBSType, double>& distribution):
     dist_map(distribution)
 {
     double partial = 0;
@@ -234,7 +234,7 @@ MutationalSignature::MutationalSignature(const std::map<MutationalType, double>&
     }
 }
 
-double MutationalSignature::operator()(const MutationalType& type) const
+double SBSSignature::operator()(const SBSType& type) const
 {
     auto it = dist_map.find(type);
     if (it != dist_map.end()) {
@@ -261,9 +261,9 @@ std::vector<std::string> read_row(std::istream& in, const char& delimiter)
     return row;
 }
 
-std::map<std::string, std::map<MutationalType, double>> not_validated_read_from_stream(std::istream& in, const char& delimiter)
+std::map<std::string, std::map<SBSType, double>> not_validated_read_from_stream(std::istream& in, const char& delimiter)
 {
-    std::map<std::string, std::map<MutationalType, double>> result;
+    std::map<std::string, std::map<SBSType, double>> result;
     std::vector<std::string> name_vector = read_row(in,delimiter);
 
     unsigned int row_number = 2;
@@ -276,7 +276,7 @@ std::map<std::string, std::map<MutationalType, double>> not_validated_read_from_
             throw std::runtime_error(oss.str());
         }
 
-        MutationalType type(row.front());
+        SBSType type(row.front());
 
         auto row_it = row.begin();
         auto name_it = name_vector.begin();
@@ -292,9 +292,9 @@ std::map<std::string, std::map<MutationalType, double>> not_validated_read_from_
 }
 
 
-std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream(std::istream& in)
+std::map<std::string, SBSSignature> SBSSignature::read_from_stream(std::istream& in)
 {
-    std::map<std::string, MutationalSignature> result;
+    std::map<std::string, SBSSignature> result;
 
     std::string curLocale = setlocale(LC_ALL, nullptr);
     setlocale(LC_ALL,"C");
@@ -302,11 +302,11 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
     setlocale(LC_ALL, curLocale.c_str());
     for (const auto& [name, signature]: name_signature_map) {
         try {
-            result.emplace(std::string(name), MutationalSignature(signature));
+            result.emplace(std::string(name), SBSSignature(signature));
         } catch (std::domain_error& ex) {
             std::ostringstream oss;
 
-            oss << "Column \"" << name << "\" is not a mutational signature: "
+            oss << "Column \"" << name << "\" is not a SBS signature: "
                 << ex.what();
             throw std::runtime_error(oss.str());
         }
@@ -315,9 +315,9 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
     return result;
 }
 
-std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream(std::istream& in, const std::set<std::string>& signature_names)
+std::map<std::string, SBSSignature> SBSSignature::read_from_stream(std::istream& in, const std::set<std::string>& signature_names)
 {
-    auto result = MutationalSignature::read_from_stream(in);
+    auto result = SBSSignature::read_from_stream(in);
 
     auto it = result.begin();
 
@@ -339,8 +339,8 @@ std::map<std::string, MutationalSignature> MutationalSignature::read_from_stream
 namespace std
 {
 
-bool less<Races::Mutations::MutationalType>::operator()(const Races::Mutations::MutationalType &lhs,
-                                                         const Races::Mutations::MutationalType &rhs) const
+bool less<Races::Mutations::SBSType>::operator()(const Races::Mutations::SBSType &lhs,
+                                                         const Races::Mutations::SBSType &rhs) const
 {
     const auto& lhs_code = lhs.get_context().get_code();
     const auto& rhs_code = rhs.get_context().get_code();
@@ -349,7 +349,7 @@ bool less<Races::Mutations::MutationalType>::operator()(const Races::Mutations::
             ((lhs_code == rhs_code) && (lhs.get_replace_base()<rhs.get_replace_base())));
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalType& type)
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSType& type)
 {
     std::string type_sequence = type.get_context().get_sequence();
 
@@ -360,7 +360,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalTy
     return out;
 }
 
-std::istream& operator>>(std::istream& in, Races::Mutations::MutationalType& type)
+std::istream& operator>>(std::istream& in, Races::Mutations::SBSType& type)
 {
     using namespace Races::Mutations;
 
@@ -376,7 +376,7 @@ std::istream& operator>>(std::istream& in, Races::Mutations::MutationalType& typ
     seq.push_back(read_a_base(in));
 
     try {
-        type = MutationalType(seq, replace_base);
+        type = SBSType(seq, replace_base);
     } catch (std::domain_error& err) {
         throw std::runtime_error(err.what());
     }

@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.19
- * @date 2024-03-29
+ * @version 0.20
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -43,7 +43,7 @@
 #include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_header
 #include "genomic_region.hpp"   // Mutations::GenomicRegion
 #include "basic_IO.hpp"         // IO::get_stream_size
-#include "context.hpp"          // Mutations::ExtendedContextAutomaton
+#include "sbs_context.hpp"          // Mutations::ExtendedContextAutomaton
 
 #include "progress_bar.hpp"
 
@@ -72,7 +72,7 @@ protected:
     /**
      * @brief Maps associating mutational contexts to their position in the genome
      */
-    using ContextPositionMap = std::map<MutationalContext, std::vector<GenomeWidePosition> >;
+    using ContextPositionMap = std::map<SBSContext, std::vector<GenomeWidePosition> >;
 
     std::shared_ptr<ContextPositionMap> context2pos;             //!< the context-genomic positions map
     std::map<GenomeWidePosition, ChromosomeId> abs_pos2chr;      //!< the absolute genomic position-chromosome id map
@@ -113,7 +113,7 @@ protected:
      *          `sampling_rate` times.
      */
     static bool update_skipped_contexts(std::array<size_t, 125>& skipped_contexts,
-                                        const MutationalContext::CodeType& context_code,
+                                        const SBSContext::CodeType& context_code,
                                         const size_t& sampling_rate)
     {
         if ((++(skipped_contexts[context_code]))==sampling_rate) {
@@ -253,7 +253,7 @@ protected:
         for (const auto& nucleotide1 : GenomicSequence::DNA_bases) {
             for (const auto& nucleotide2 : GenomicSequence::DNA_bases) {
                 for (const auto& nucleotide3 : GenomicSequence::DNA_bases) {
-                    MutationalContext context(std::string{nucleotide1, nucleotide2, nucleotide3});
+                    SBSContext context(std::string{nucleotide1, nucleotide2, nucleotide3});
                     (*context2pos)[context] = std::vector<GENOME_WIDE_POSITION>();
                 }
             }
@@ -446,7 +446,7 @@ public:
      *
      * @return a constant reference to simulator context positions
      */
-    inline const std::map<MutationalContext, std::vector<GENOME_WIDE_POSITION> >& get_context_positions() const
+    inline const std::map<SBSContext, std::vector<GENOME_WIDE_POSITION> >& get_context_positions() const
     {
         return *context2pos;
     }
@@ -457,7 +457,7 @@ public:
      * @param context is the searched context
      * @return the vector of the absolute genomic positions
      */
-    inline const std::vector<GENOME_WIDE_POSITION>& operator[](const MutationalContext& context) const
+    inline const std::vector<GENOME_WIDE_POSITION>& operator[](const SBSContext& context) const
     {
         return context2pos->at(context);
     }
@@ -469,7 +469,7 @@ public:
      * @param index is the index of the position that will be extracted
      * @return the extracted absolute position for `context`
      */
-    GENOME_WIDE_POSITION extract(const MutationalContext& context, const size_t index)
+    GENOME_WIDE_POSITION extract(const SBSContext& context, const size_t index)
     {
         auto& context_pos = context2pos->at(context);
 
@@ -497,7 +497,7 @@ public:
      * @param context is the context whose position will be inserted
      * @param absolute_position is the absolute position to insert
      */
-    void insert(const MutationalContext& context, const GENOME_WIDE_POSITION& absolute_position)
+    void insert(const SBSContext& context, const GENOME_WIDE_POSITION& absolute_position)
     {
         context2pos->at(context).push_back(absolute_position);
     }
@@ -510,7 +510,7 @@ public:
      * @param index is the index in the position vector of `context`
      *          in which `absolute_position` will inserted
      */
-    void insert(const MutationalContext& context, const GENOME_WIDE_POSITION& absolute_position,
+    void insert(const SBSContext& context, const GENOME_WIDE_POSITION& absolute_position,
                 const size_t index)
     {
         auto& context_pos = context2pos->at(context);

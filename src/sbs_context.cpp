@@ -1,9 +1,9 @@
 /**
- * @file context.cpp
+ * @file sbs_context.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements mutational contexts and extended context automata
- * @version 0.9
- * @date 2024-03-29
+ * @brief Implements SBS contexts and extended context automata
+ * @version 0.10
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -31,7 +31,7 @@
 #include <sstream>
 #include <cstring>
 
-#include "context.hpp"
+#include "sbs_context.hpp"
 
 #include "archive.hpp"
 
@@ -78,11 +78,11 @@ uint8_t encode_base(const char& base)
     }
 }
 
-MutationalContext::MutationalContext():
+SBSContext::SBSContext():
     code(std::numeric_limits<CodeType>::max())
 {}
 
-MutationalContext::MutationalContext(const char* nucleic_triplet):
+SBSContext::SBSContext(const char* nucleic_triplet):
     code(0)
 {
     if (nucleic_triplet[0]=='\0' || nucleic_triplet[1]=='\0'
@@ -99,7 +99,7 @@ MutationalContext::MutationalContext(const char* nucleic_triplet):
     }
 }
 
-MutationalContext::MutationalContext(const std::string& nucleic_triplet):
+SBSContext::SBSContext(const std::string& nucleic_triplet):
     code(0)
 {
     if (nucleic_triplet.size()!=3) {
@@ -115,7 +115,7 @@ MutationalContext::MutationalContext(const std::string& nucleic_triplet):
     }
 }
 
-std::string MutationalContext::get_sequence() const
+std::string SBSContext::get_sequence() const
 {
     std::string sequence;
 
@@ -136,7 +136,7 @@ std::string MutationalContext::get_sequence() const
     return sequence;
 }
 
-char MutationalContext::get_central_nucleotide() const
+char SBSContext::get_central_nucleotide() const
 {
     if (!is_defined()) {
         return '?';
@@ -145,7 +145,7 @@ char MutationalContext::get_central_nucleotide() const
     return static_cast<char>(decode_base((code >> 4)&0x03));
 }
 
-uint8_t MutationalContext::get_complemented(const uint8_t& code)
+uint8_t SBSContext::get_complemented(const uint8_t& code)
 {
     if (code == std::numeric_limits<CodeType>::max()) {
         return code;
@@ -171,9 +171,9 @@ uint8_t MutationalContext::get_complemented(const uint8_t& code)
     return complementary_code;
 }
 
-MutationalContext MutationalContext::get_complemented() const
+SBSContext SBSContext::get_complemented() const
 {
-    MutationalContext complement;
+    SBSContext complement;
 
     complement.code = get_complemented(code);
 
@@ -203,7 +203,7 @@ ExtendedContextAutomaton::BaseCodeType ExtendedContextAutomaton::base2code(const
     }
 }
 
-MutationalContext::CodeType ExtendedContextAutomaton::get_state_for(const char& first, const char& second, const char& third)
+SBSContext::CodeType ExtendedContextAutomaton::get_state_for(const char& first, const char& second, const char& third)
 {
     return 5*(5*base2code(first)+base2code(second))+base2code(third);
 }
@@ -225,7 +225,7 @@ ExtendedContextAutomaton::ExtendedContextAutomaton():
                 if (context[0] != 'N' && context[1] != 'N' && context[2] != 'N') {
                     is_a_context[state] = true;
 
-                    contexts[state] = MutationalContext(context);
+                    contexts[state] = SBSContext(context);
                 } else {
                     is_a_context[state] = false;
                 }

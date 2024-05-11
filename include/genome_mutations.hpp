@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.31
- * @date 2024-04-27
+ * @version 0.32
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 #include <map>
 #include <fstream>
 
-#include "snv_signature.hpp"
+#include "sbs_signature.hpp"
 #include "context_index.hpp"
 
 #include "allele.hpp"

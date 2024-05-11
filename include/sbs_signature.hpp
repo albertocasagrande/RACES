@@ -1,9 +1,9 @@
 /**
- * @file snv_signature.hpp
+ * @file sbs_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines Single Variation Mutation mutational signature
- * @version 0.14
- * @date 2024-03-29
+ * @brief Defines SBS signature
+ * @version 0.15
+ * @date 2024-05-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -28,8 +28,8 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_SNV_DISTRIBUTION__
-#define __RACES_SNV_DISTRIBUTION__
+#ifndef __RACES_SBS_SIGNATURE__
+#define __RACES_SBS_SIGNATURE__
 
 #include <string>
 #include <map>
@@ -38,7 +38,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "context.hpp"
+#include "sbs_context.hpp"
 #include "genomic_sequence.hpp"
 
 namespace Races
@@ -48,61 +48,61 @@ namespace Mutations
 {
 
 /**
- * @brief A class to represent mutational type
+ * @brief A class to represent SBS type
  *
- * A mutational type is a mutational context and the
+ * A SBS type is a SBS context and the
  * replacing nucleic base for the central nucleotide.
- * For consistency with the literature, the mutational
+ * For consistency with the literature, the SBS
  * context will always be either a 'C' or a 'T'. We
  * call it normal context. If the provided context
  * is not a normal context, the complement context
  * and replacing nucleic base are used.
  */
-class MutationalType
+class SBSType
 {
-    MutationalContext context;    //!< the normal context
-    char replace_base;            //!< the replace base
+    SBSContext context;    //!< the normal context
+    char replace_base;     //!< the replace base
 public:
     /**
      * @brief The empty constructor
      */
-    MutationalType();
+    SBSType();
 
     /**
      * @brief A constructor
      *
-     * @param context is the mutational type context
+     * @param context is the SBS type context
      * @param replace_base is the base replacing the context central nucleotide
      */
-    MutationalType(const MutationalContext& context, const char& replace_base);
+    SBSType(const SBSContext& context, const char& replace_base);
 
     /**
      * @brief A constructor
      *
-     * @param context is the mutational type context
+     * @param context is the SBS type context
      * @param replace_base is the base replacing the context central nucleotide
      */
-    MutationalType(const std::string& context, const char& replace_base);
+    SBSType(const std::string& context, const char& replace_base);
 
     /**
      * @brief A constructor
      *
-     * A mutational type is conventionally represented by a string in the
+     * A SBS type is conventionally represented by a string in the
      * form `X[Y>W]K` where `X` and `K` and the bases on 5' and 3', respectively,
      * and `Y` and `W` are the central nucleotide before and after the mutation.
      * This constructor takes as parameter a string in this format and build
-     * the corresponding `MutationalType` object.
+     * the corresponding `SBSType` object.
      *
-     * @param type is the textual representation of a mutational type
+     * @param type is the textual representation of a SBS type
      */
-    explicit MutationalType(const std::string& type);
+    explicit SBSType(const std::string& type);
 
     /**
      * @brief Get the mutational context
      *
      * @return the mutational context
      */
-    inline const MutationalContext& get_context() const
+    inline const SBSContext& get_context() const
     {
         return context;
     }
@@ -128,25 +128,25 @@ public:
     }
 
     /**
-     * @brief Test whether two mutational types are equivalent
+     * @brief Test whether two SBS types are equivalent
      *
-     * @param type is the mutational type to compare
-     * @return `true` if and only if the two mutational types refer
+     * @param type is the SBS type to compare
+     * @return `true` if and only if the two SBS types refer
      *      to equivalent contexts and the same replace base
      */
-    inline bool operator==(const MutationalType& type) const
+    inline bool operator==(const SBSType& type) const
     {
         return (context == type.context) && (replace_base == type.replace_base);
     }
 
     /**
-     * @brief Test whether two mutational types differ
+     * @brief Test whether two SBS types differ
      *
-     * @param type is the mutational type to compare
-     * @return `true` if and only if the two mutational types refer
+     * @param type is the SBS type to compare
+     * @return `true` if and only if the two SBS types refer
      *      to different contexts or different replace bases
      */
-    inline bool operator!=(const MutationalType& type) const
+    inline bool operator!=(const SBSType& type) const
     {
         return !(*this == type);
     }
@@ -157,10 +157,10 @@ public:
 }   // Races
 
 template<>
-struct std::less<Races::Mutations::MutationalType>
+struct std::less<Races::Mutations::SBSType>
 {
-    bool operator()(const Races::Mutations::MutationalType &lhs,
-                    const Races::Mutations::MutationalType &rhs) const;
+    bool operator()(const Races::Mutations::SBSType &lhs,
+                    const Races::Mutations::SBSType &rhs) const;
 };
 
 namespace Races
@@ -170,10 +170,10 @@ namespace Mutations
 {
 
 
-class MutationalSignature;
+class SBSSignature;
 
 /**
- * @brief A class to represent the result of a mutational signature expression
+ * @brief A class to represent the result of a SBS signature expression
  *
  * This class is meant to represent temporary object that are evaluated during
  * the computation of expressions of the kind:
@@ -181,41 +181,41 @@ class MutationalSignature;
  * \f$\alpha_1 * \beta_1 + alpha_2 * beta_2 + \ldots\f$
  *
  * where the \f$\alpha_i\f$'s are real values in the interval \f$[0,1]\f$ and
- * the \f$\beta_i\f$'s are `MutationalSignature` objects.
+ * the \f$\beta_i\f$'s are `SBSSignature` objects.
  *
- * Even if the final result of above expression is a mutational signature, the
+ * Even if the final result of above expression is a SBS signature, the
  * partial results may be different from a probability distribution and that
  * is why this class is needed.
  */
-class MutationalSignatureExprResult
+class SBSSignatureExprResult
 {
-    std::map<MutationalType, double> value_map; //!< the mutational type-value map
+    std::map<SBSType, double> value_map; //!< the SBS type-value map
 
     /**
      * @brief The constructor
      *
      * This constructor is private and it is meant to be exclusively called by
-     * `MutationalSignature`'s methods.
+     * `SBSSignature`'s methods.
      *
-     * @param value_map is a mutational type-value map
+     * @param value_map is a SBS type-value map
      */
-    MutationalSignatureExprResult(const std::map<MutationalType, double>& value_map);
+    SBSSignatureExprResult(const std::map<SBSType, double>& value_map);
 public:
     /**
      * @brief The empty constructor
      */
-    MutationalSignatureExprResult();
+    SBSSignatureExprResult();
 
     /**
-     * @brief Cast to `MutationalSignature`
+     * @brief Cast to `SBSSignature`
      *
-     * This method tries to cast a mutational signature expression to a
-     * mutational signature. When the expression does not represent a
+     * This method tries to cast a SBS signature expression to a
+     * SBS signature. When the expression does not represent a
      * probability distribution a `std::domain_error` is thrown.
      *
-     * @return the corresponding `MutationalSignature` object
+     * @return the corresponding `SBSSignature` object
      */
-    operator MutationalSignature();
+    operator SBSSignature();
 
     /**
      * @brief Inplace multiply by an arithmetic value
@@ -225,7 +225,7 @@ public:
      * @return a reference to the updated object
      */
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    MutationalSignatureExprResult& operator*(const T& value)
+    SBSSignatureExprResult& operator*(const T& value)
     {
         if (value>1 || value<0) {
             std::ostringstream oss;
@@ -244,47 +244,47 @@ public:
     }
 
     /**
-     * @brief Inplace add a mutational signature expression value
+     * @brief Inplace add a SBS signature expression value
      *
-     * @param expression_value is a mutational signature expression value
+     * @param expression_value is a SBS signature expression value
      * @return a reference to the updated object
      */
-    MutationalSignatureExprResult& operator+(MutationalSignatureExprResult&& expression_value);
+    SBSSignatureExprResult& operator+(SBSSignatureExprResult&& expression_value);
 
     /**
      * @brief Inplace add a signature
      *
-     * @param signature is a mutational signature
+     * @param signature is a SBS signature
      * @return a reference to the updated object
      */
-    MutationalSignatureExprResult& operator+(const MutationalSignature& signature);
+    SBSSignatureExprResult& operator+(const SBSSignature& signature);
 
-    friend class MutationalSignature;
+    friend class SBSSignature;
 };
 
 /**
- * @brief A class to represent a mutational signature
+ * @brief A class to represent a SBS signature
  *
- * A mutational signature is a probability distribution on
- * the set of mutational types.
+ * A SBS signature is a probability distribution on
+ * the set of SBS types.
  */
-class MutationalSignature
+class SBSSignature
 {
-    std::map<MutationalType, double> dist_map; //!< the signature probability distribution map
+    std::map<SBSType, double> dist_map; //!< the signature probability distribution map
 public:
-    using const_iterator = std::map<MutationalType, double>::const_iterator;
+    using const_iterator = std::map<SBSType, double>::const_iterator;
 
     /**
      * @brief The empty constructor
      */
-    MutationalSignature();
+    SBSSignature();
 
     /**
      * @brief A constructor
      *
      * @param distribution is a mutation type-value map representing a distribution
      */
-    explicit MutationalSignature(const std::map<MutationalType, double>& distribution);
+    explicit SBSSignature(const std::map<SBSType, double>& distribution);
 
     /**
      * @brief Get the initial constant iterator
@@ -307,68 +307,68 @@ public:
     }
 
     /**
-     * @brief Get the probability associated to a mutational type
+     * @brief Get the probability associated to a SBS type
      *
-     * @param type is the mutational type whose probability is aimed
+     * @param type is the SBS type whose probability is aimed
      * @return the probability of `type`
      */
-    double operator()(const MutationalType& type) const;
+    double operator()(const SBSType& type) const;
 
     /**
      * @brief Multiply by an arithmetic value
      *
      * @tparam T is the type of the multiplicand
      * @param value is the multiplicand
-     * @return the resulting mutational signature expression value
+     * @return the resulting SBS signature expression value
      */
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    inline MutationalSignatureExprResult operator*(const T& value) const
+    inline SBSSignatureExprResult operator*(const T& value) const
     {
-        return MutationalSignatureExprResult(dist_map) * value;
+        return SBSSignatureExprResult(dist_map) * value;
     }
 
     /**
      * @brief Add a signature
      *
-     * @param signature is a mutational signature
-     * @return the resulting mutational signature expression value
+     * @param signature is a SBS signature
+     * @return the resulting SBS signature expression value
      */
-    inline MutationalSignatureExprResult operator+(const MutationalSignature& signature) const
+    inline SBSSignatureExprResult operator+(const SBSSignature& signature) const
     {
-        return MutationalSignatureExprResult(dist_map) + signature;
+        return SBSSignatureExprResult(dist_map) + signature;
     }
 
     /**
-     * @brief Read mutational signature from a input stream
+     * @brief Read SBS signature from a input stream
      *
      * @param in is the input stream
      * @return a map that associates the name of the signatures in the file
      *         and the corresponding signature.
      */
-    static std::map<std::string, MutationalSignature> read_from_stream(std::istream& in);
+    static std::map<std::string, SBSSignature> read_from_stream(std::istream& in);
 
     /**
-     * @brief Read mutational signature from a input stream
+     * @brief Read SBS signature from a input stream
      *
      * @param in is the input stream
      * @param signature_names is the set of the requested signature
      * @return a map that associates the name of the signatures in the file that
      *         match `signature_names` and the corresponding signature.
      */
-    static std::map<std::string, MutationalSignature> read_from_stream(std::istream& in, const std::set<std::string>& signature_names);
+    static std::map<std::string, SBSSignature> read_from_stream(std::istream& in, const std::set<std::string>& signature_names);
 };
 
 /**
- * @brief Multiply an arithmetic value and a mutational signature
+ * @brief Multiply an arithmetic value and a SBS signature
  *
  * @tparam T is the type of the arithmetic value
  * @param value is the arithmetic value
  * @param signature
- * @return a `MutationalSignatureExprResult` object representing the
+ * @return a `SBSSignatureExprResult` object representing the
  *         the multiplication result
  */
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-inline MutationalSignatureExprResult operator*(const T& value, const MutationalSignature& signature)
+inline SBSSignatureExprResult operator*(const T& value, const SBSSignature& signature)
 {
     return signature * value;
 }
@@ -381,23 +381,23 @@ inline MutationalSignatureExprResult operator*(const T& value, const MutationalS
 namespace std
 {
 /**
- * @brief Stream the mutational type in a stream
+ * @brief Stream the SBS type in a stream
  *
  * @param out is the output stream
- * @param type is the mutational type to stream
+ * @param type is the SBS type to stream
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::MutationalType& type);
+std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSType& type);
 
 /**
- * @brief Stream the mutational type from a stream
+ * @brief Stream the SBS type from a stream
  *
  * @param in is the input stream
- * @param type is the object where the streamed mutational type will be placed
+ * @param type is the object where the streamed SBS type will be placed
  * @return a reference to the input stream
  */
-std::istream& operator>>(std::istream& in, Races::Mutations::MutationalType& type);
+std::istream& operator>>(std::istream& in, Races::Mutations::SBSType& type);
 
 }  // std
 
-#endif // __RACES_SNV_DISTRIBUTION__
+#endif // __RACES_SBS_SIGNATURE__
