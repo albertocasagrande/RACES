@@ -108,6 +108,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/rate_update.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/read.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/read_simulator.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/rs_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sequencer.hpp

@@ -2,23 +2,23 @@
  * @file utils.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines utility functions
- * @version 0.1
- * @date 2024-03-09
- * 
+ * @version 0.2
+ * @date 2024-05-11
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,6 +43,21 @@ inline std::string to_string(const std::filesystem::path& fs_path)
 #else
     return fs_path;
 #endif
+}
+
+
+/**
+ * @brief Compute the ceiling of a division
+ *
+ * @tparam TYPE is the type of the operands
+ * @param x is the dividend
+ * @param y is the divisor
+ * @return the ceiling of the division `x/y`
+ */
+template<typename TYPE>
+inline static TYPE ceil_div(const TYPE& x, const TYPE& y)
+{
+    return 1 + ((x - 1) / y);
 }
 
 #endif // __RACES_UTILS__
