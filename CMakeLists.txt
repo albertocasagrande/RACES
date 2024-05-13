@@ -49,6 +49,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/rate_update.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/read.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/rs_index.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_context.cpp
