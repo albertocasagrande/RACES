@@ -2,23 +2,23 @@
  * @file logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation loggers
- * @version 0.16
- * @date 2024-03-09
- * 
+ * @version 0.17
+ * @date 2024-05-13
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,13 +37,13 @@
 
 #include "utils.hpp"
 
-namespace Races 
+namespace Races
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 std::string BasicLogger::get_time_string()
@@ -70,11 +70,15 @@ BasicLogger::BasicLogger(const std::filesystem::path& simulation_dir)
 }
 
 void BasicLogger::reset(const std::filesystem::path& new_directory)
-{   
-    if (std::filesystem::exists(new_directory)) {
-        throw std::runtime_error("The directory \""
-                                 + to_string(new_directory)
-                                 + "\" already exists");
+{
+    std::filesystem::path new_ext_directory{new_directory};
+
+    size_t i=1;
+    while (std::filesystem::exists(new_ext_directory)) {
+        std::ostringstream oss;
+
+        oss << to_string(new_directory) << "_" << (++i);
+        new_ext_directory = std::filesystem::path(oss.str());
     }
 
     close();
