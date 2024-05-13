@@ -2,8 +2,8 @@
  * @file sbs_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SBS signature
- * @version 0.15
- * @date 2024-05-11
+ * @version 0.16
+ * @date 2024-05-13
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -32,14 +32,14 @@
 #define __RACES_SBS_SIGNATURE__
 
 #include <string>
-#include <map>
-#include <set>
 #include <functional> // std::less
 #include <iostream>
 #include <sstream>
 
 #include "sbs_context.hpp"
 #include "genomic_sequence.hpp"
+
+#include "signature.hpp"
 
 namespace Races
 {
@@ -156,230 +156,17 @@ public:
 
 }   // Races
 
+
+namespace std
+{
+
 template<>
-struct std::less<Races::Mutations::SBSType>
+struct less<Races::Mutations::SBSType>
 {
     bool operator()(const Races::Mutations::SBSType &lhs,
                     const Races::Mutations::SBSType &rhs) const;
 };
 
-namespace Races
-{
-
-namespace Mutations
-{
-
-
-class SBSSignature;
-
-/**
- * @brief A class to represent the result of a SBS signature expression
- *
- * This class is meant to represent temporary object that are evaluated during
- * the computation of expressions of the kind:
- *
- * \f$\alpha_1 * \beta_1 + alpha_2 * beta_2 + \ldots\f$
- *
- * where the \f$\alpha_i\f$'s are real values in the interval \f$[0,1]\f$ and
- * the \f$\beta_i\f$'s are `SBSSignature` objects.
- *
- * Even if the final result of above expression is a SBS signature, the
- * partial results may be different from a probability distribution and that
- * is why this class is needed.
- */
-class SBSSignatureExprResult
-{
-    std::map<SBSType, double> value_map; //!< the SBS type-value map
-
-    /**
-     * @brief The constructor
-     *
-     * This constructor is private and it is meant to be exclusively called by
-     * `SBSSignature`'s methods.
-     *
-     * @param value_map is a SBS type-value map
-     */
-    SBSSignatureExprResult(const std::map<SBSType, double>& value_map);
-public:
-    /**
-     * @brief The empty constructor
-     */
-    SBSSignatureExprResult();
-
-    /**
-     * @brief Cast to `SBSSignature`
-     *
-     * This method tries to cast a SBS signature expression to a
-     * SBS signature. When the expression does not represent a
-     * probability distribution a `std::domain_error` is thrown.
-     *
-     * @return the corresponding `SBSSignature` object
-     */
-    operator SBSSignature();
-
-    /**
-     * @brief Inplace multiply by an arithmetic value
-     *
-     * @tparam T is the type of the multiplicand
-     * @param value is the multiplicand
-     * @return a reference to the updated object
-     */
-    template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    SBSSignatureExprResult& operator*(const T& value)
-    {
-        if (value>1 || value<0) {
-            std::ostringstream oss;
-
-            oss << "the multiplying value must be in the real interval [0,1]. "
-                << std::to_string(value) << " passed.";
-
-            throw std::domain_error(oss.str());
-        }
-
-        for (auto& [type, type_value]: value_map) {
-            type_value *= value;
-        }
-
-        return *this;
-    }
-
-    /**
-     * @brief Inplace add a SBS signature expression value
-     *
-     * @param expression_value is a SBS signature expression value
-     * @return a reference to the updated object
-     */
-    SBSSignatureExprResult& operator+(SBSSignatureExprResult&& expression_value);
-
-    /**
-     * @brief Inplace add a signature
-     *
-     * @param signature is a SBS signature
-     * @return a reference to the updated object
-     */
-    SBSSignatureExprResult& operator+(const SBSSignature& signature);
-
-    friend class SBSSignature;
-};
-
-/**
- * @brief A class to represent a SBS signature
- *
- * A SBS signature is a probability distribution on
- * the set of SBS types.
- */
-class SBSSignature
-{
-    std::map<SBSType, double> dist_map; //!< the signature probability distribution map
-public:
-    using const_iterator = std::map<SBSType, double>::const_iterator;
-
-    /**
-     * @brief The empty constructor
-     */
-    SBSSignature();
-
-    /**
-     * @brief A constructor
-     *
-     * @param distribution is a mutation type-value map representing a distribution
-     */
-    explicit SBSSignature(const std::map<SBSType, double>& distribution);
-
-    /**
-     * @brief Get the initial constant iterator
-     *
-     * @return the initial constant iterator
-     */
-    inline const_iterator begin() const
-    {
-        return dist_map.begin();
-    }
-
-    /**
-     * @brief Get the final constant iterator
-     *
-     * @return the final constant iterator
-     */
-    inline const_iterator end() const
-    {
-        return dist_map.end();
-    }
-
-    /**
-     * @brief Get the probability associated to a SBS type
-     *
-     * @param type is the SBS type whose probability is aimed
-     * @return the probability of `type`
-     */
-    double operator()(const SBSType& type) const;
-
-    /**
-     * @brief Multiply by an arithmetic value
-     *
-     * @tparam T is the type of the multiplicand
-     * @param value is the multiplicand
-     * @return the resulting SBS signature expression value
-     */
-    template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    inline SBSSignatureExprResult operator*(const T& value) const
-    {
-        return SBSSignatureExprResult(dist_map) * value;
-    }
-
-    /**
-     * @brief Add a signature
-     *
-     * @param signature is a SBS signature
-     * @return the resulting SBS signature expression value
-     */
-    inline SBSSignatureExprResult operator+(const SBSSignature& signature) const
-    {
-        return SBSSignatureExprResult(dist_map) + signature;
-    }
-
-    /**
-     * @brief Read SBS signature from a input stream
-     *
-     * @param in is the input stream
-     * @return a map that associates the name of the signatures in the file
-     *         and the corresponding signature.
-     */
-    static std::map<std::string, SBSSignature> read_from_stream(std::istream& in);
-
-    /**
-     * @brief Read SBS signature from a input stream
-     *
-     * @param in is the input stream
-     * @param signature_names is the set of the requested signature
-     * @return a map that associates the name of the signatures in the file that
-     *         match `signature_names` and the corresponding signature.
-     */
-    static std::map<std::string, SBSSignature> read_from_stream(std::istream& in, const std::set<std::string>& signature_names);
-};
-
-/**
- * @brief Multiply an arithmetic value and a SBS signature
- *
- * @tparam T is the type of the arithmetic value
- * @param value is the arithmetic value
- * @param signature
- * @return a `SBSSignatureExprResult` object representing the
- *         the multiplication result
- */
-template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-inline SBSSignatureExprResult operator*(const T& value, const SBSSignature& signature)
-{
-    return signature * value;
-}
-
-}   // Mutations
-
-}   // Races
-
-
-namespace std
-{
 /**
  * @brief Stream the SBS type in a stream
  *
@@ -399,5 +186,18 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSType& typ
 std::istream& operator>>(std::istream& in, Races::Mutations::SBSType& type);
 
 }  // std
+
+namespace Races
+{
+
+namespace Mutations
+{
+
+using SBSSignature = Signature<SBSType>;
+
+}   // Mutations
+
+}   // Races
+
 
 #endif // __RACES_SBS_SIGNATURE__

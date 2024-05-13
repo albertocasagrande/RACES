@@ -2,8 +2,8 @@
  * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some SBS example
- * @version 0.9
- * @date 2024-05-11
+ * @version 0.10
+ * @date 2024-05-13
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(SBS_signature_expression)
 
     double alpha = 1.0/signatures.size();
 
-    SBSSignatureExprResult expr_result;
+    SignatureExprResult<SBSType> expr_result;
     for (const auto& [key, signature]: signatures) {
         expr_result = expr_result + alpha * signature;
     }

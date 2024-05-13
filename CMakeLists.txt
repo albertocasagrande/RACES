@@ -30,6 +30,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_region.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_sequence.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/germline.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/id_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/lineage_graph.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/logics.cpp
@@ -50,11 +51,11 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/read_simulator.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_specification.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_context.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sid.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_context.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_signature.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/species.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
@@ -84,6 +85,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_region.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/genomic_sequence.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/germline.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/id_signature.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/imap.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/irb_tree.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/lineage_graph.hpp
@@ -110,12 +112,13 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/rs_index.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sample_specification.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sampling.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/sequencer.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/sid.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sbs_context.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/sbs_signature.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sequencer.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/sid.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/signature.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/simulation_event.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/species.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/statistics.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/time.hpp
