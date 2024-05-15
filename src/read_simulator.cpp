@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.29
- * @date 2024-05-04
+ * @version 0.30
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -546,7 +546,7 @@ template<typename K, typename V>
 bool have_different_keys(const std::map<K, V>& map_a, const std::map<K, V>& map_b)
 {
     if (map_a.size() != map_b.size()) {
-        return false;
+        return true;
     }
 
     auto it_a = map_a.begin();
@@ -554,13 +554,13 @@ bool have_different_keys(const std::map<K, V>& map_a, const std::map<K, V>& map_
 
     while (it_a != map_a.end()) {
         if (it_a->first != it_b->first) {
-            return false;
+            return true;
         }
 
         ++it_a; ++it_b;
     }
 
-    return true;
+    return false;
 }
 
 bool SampleSetStatistics::is_canonical() const
