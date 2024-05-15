@@ -107,7 +107,7 @@
             "type": "liveness rate update",
             "mutant": "A", 
             "status": "-", 
-            "rate name": "death", 
+            "rate name": "deaths", 
             "rate": 0.3
         },
         {
@@ -115,7 +115,7 @@
             "type": "liveness rate update",
             "mutant": "A", 
             "status": "+", 
-            "rate name": "death", 
+            "rate name": "deaths", 
             "rate": 0.3
         }
     ],

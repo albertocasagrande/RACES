@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.24
- * @date 2024-04-23
+ * @version 0.25
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -110,9 +110,11 @@ class MutationsSimulator : public BasicExecutable
     std::filesystem::path snapshot_path;
     std::filesystem::path driver_mutations_filename;
     std::filesystem::path context_index_filename;
+    std::filesystem::path rs_index_filename;
     std::filesystem::path ref_genome_filename;
     std::filesystem::path passenger_CNA_filename;
     std::filesystem::path SBS_filename;
+    std::filesystem::path ID_filename;
 
     double coverage;
     double purity;
@@ -175,11 +177,28 @@ class MutationsSimulator : public BasicExecutable
         return context_index;
     }
 
-    static std::map<std::string, Races::Mutations::SBSSignature> load_signatures(const std::string filename)
+    Races::Mutations::RSIndex load_rs_index(const std::string& filename) const
+    {
+        Races::Archive::Binary::In archive(filename);
+
+        Races::Mutations::RSIndex rs_index;
+
+        if (quiet) {
+            archive & rs_index;
+        } else {
+            archive.load(rs_index, "repetition index");
+        }
+
+        return rs_index;
+    }
+
+    template<typename MUTATION_TYPE>
+    static std::map<std::string, Races::Mutations::Signature<MUTATION_TYPE>>
+    load_signatures(const std::string filename)
     {
         std::ifstream is(filename);
 
-        return Races::Mutations::SBSSignature::read_from_stream(is);
+        return Races::Mutations::Signature<MUTATION_TYPE>::read_from_stream(is);
     }
 
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
@@ -364,6 +383,29 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename GENOME_WIDE_POSITION>
+    static void add_exposures(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION>& engine,
+                              const nlohmann::json& exposures_json, const std::string& mutation_name,
+                              const Races::Mutations::Mutation::Type& mutation_type)
+    {
+        using namespace Races;
+
+        ConfigReader::expecting(mutation_name, exposures_json,
+                                "The elements of the \"exposures\" field");
+        const auto& type_exposures_json = exposures_json[mutation_name];
+
+        auto default_exposure = ConfigReader::get_default_exposure(mutation_name,
+                                                                   type_exposures_json);
+        engine.add(mutation_type, default_exposure);
+
+        auto timed_exposures = ConfigReader::get_timed_exposures(mutation_name,
+                                                                 type_exposures_json);
+
+        for (const auto& [time, exposure] : timed_exposures) {
+            engine.add(mutation_type, time, exposure);
+        }
+    }
+
+    template<typename GENOME_WIDE_POSITION>
     void run_abs_position() const
     {
         using namespace Races;
@@ -412,9 +454,11 @@ class MutationsSimulator : public BasicExecutable
             }
         }
 
-        auto signatures = load_signatures(SBS_filename);
+        auto SBS_signatures = load_signatures<SBSType>(SBS_filename);
+        auto ID_signatures = load_signatures<IDType>(ID_filename);
 
         auto context_index = load_context_index<GENOME_WIDE_POSITION>(context_index_filename);
+        auto rs_index = load_rs_index(rs_index_filename);
 
         if (!simulation_cfg.contains("exposures")) {
             throw std::runtime_error("The passengers simulation configuration must contain "
@@ -441,15 +485,14 @@ class MutationsSimulator : public BasicExecutable
             germline = GermlineMutations::load(germline_csv_filename, num_of_alleles, germline_subject);
         }
 
-        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, signatures, mutational_properties,
-                                                    germline, driver_storage, passenger_CNAs);
+        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, rs_index, SBS_signatures, ID_signatures,
+                                                    mutational_properties, germline, driver_storage,
+                                                    passenger_CNAs);
 
         const auto& exposures_json = simulation_cfg["exposures"];
 
-        auto default_exposure = ConfigReader::get_default_exposure(exposures_json);
-        engine.add(default_exposure);
-
-        ConfigReader::add_timed_exposures(engine, exposures_json);
+        add_exposures(engine, exposures_json, "SBS", Mutation::Type::SBS);
+        add_exposures(engine, exposures_json, "ID", Mutation::Type::INDEL);
 
         auto num_of_pnp_mutations = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg);
 
@@ -474,6 +517,26 @@ class MutationsSimulator : public BasicExecutable
         process_statistics(mutations_list);
     }
 
+    void test_file_existence(boost::program_options::variables_map vm, const std::string& name,
+                             const std::filesystem::path& file, const std::string& productor="") const
+    {
+        if (!vm.count(name)) {
+            std::string msg = "The " + name + " file is mandatory.";
+            if (productor.size()>0) {
+                msg = msg + " You can produce it by using `" + productor +"`.";
+            }
+            print_help_and_exit(msg, 1);
+        }
+
+        if (!std::filesystem::exists(file)) {
+            print_help_and_exit("\"" + to_string(file) + "\"  does not exist.", 1);
+        }
+
+        if (!std::filesystem::is_regular_file(file)) {
+            print_help_and_exit("\"" + to_string(file) + "\"  is not a regular file.", 1);
+        }
+    }
+
     void validate(boost::program_options::variables_map vm) const
     {
         namespace fs = std::filesystem;
@@ -491,63 +554,12 @@ class MutationsSimulator : public BasicExecutable
             print_help_and_exit("\"" + std::string(species_directory) + "\"  does not exist", 1);
         }
 
-        if (!vm.count("driver mutations")) {
-            print_help_and_exit("The driver mutation file is mandatory. "
-                                "You can produce it by using `races_build_index`", 1);
-        }
-
-        if (!fs::exists(driver_mutations_filename)) {
-            print_help_and_exit("\"" + std::string(driver_mutations_filename)
-                                + "\"  does not exist", 1);
-        }
-
-        if (!fs::is_regular_file(driver_mutations_filename)) {
-            print_help_and_exit("\"" + std::string(driver_mutations_filename)
-                                + "\"  is not a regular file", 1);
-        }
-
-        if (!vm.count("context index")) {
-            print_help_and_exit("The context index is mandatory. "
-                                "You can produce it by using `races_build_index`", 1);
-        }
-
-        if (!fs::exists(context_index_filename)) {
-            print_help_and_exit("\"" + std::string(context_index_filename)
-                                + "\"  does not exist", 1);
-        }
-
-        if (!fs::is_regular_file(context_index_filename)) {
-            print_help_and_exit("\"" + std::string(context_index_filename)
-                                + "\"  is not a regular file", 1);
-        }
-
-        if (!vm.count("SBS signature")) {
-            print_help_and_exit("The SBS signature is mandatory.", 1);
-        }
-
-        if (!fs::exists(SBS_filename)) {
-            print_help_and_exit("\"" + std::string(SBS_filename)
-                                + "\"  does not exist", 1);
-        }
-
-        if (!fs::is_regular_file(SBS_filename)) {
-            print_help_and_exit("\"" + std::string(SBS_filename)
-                                + "\"  is not a regular file", 1);
-        }
-
-        if (!vm.count("reference genome")) {
-            print_help_and_exit("The reference genome FASTA file is mandatory.", 1);
-        }
-
-        if (!fs::exists(ref_genome_filename)) {
-            print_help_and_exit("\"" + std::string(ref_genome_filename)
-                                + "\"  does not exist", 1);
-        }
-
-        if (!fs::is_regular_file(ref_genome_filename)) {
-            print_help_and_exit("\"" + std::string(ref_genome_filename)
-                                + "\"  is not a regular file", 1);
-        }
+        test_file_existence(vm, "driver mutations", driver_mutations_filename);
+        test_file_existence(vm, "context index", context_index_filename, "build_contex_index");
+        test_file_existence(vm, "repetition index", rs_index_filename, "build_repetition_index");
+        test_file_existence(vm, "SBS signature", SBS_filename);
+        test_file_existence(vm, "ID signature", ID_filename);
+        test_file_existence(vm, "reference genome", ref_genome_filename);
 
         if (vm.count("germline-file") > 1) {
             print_help_and_exit("One germline file can be specified at most", 1);
@@ -717,8 +729,12 @@ public:
              "the species simulation directory")
             ("context index", po::value<std::filesystem::path>(&context_index_filename),
              "the genome context index")
+            ("repetition index", po::value<std::filesystem::path>(&rs_index_filename),
+             "the genome repetition index")
             ("SBS signature", po::value<std::filesystem::path>(&SBS_filename),
              "the SBS signature")
+            ("ID signature", po::value<std::filesystem::path>(&ID_filename),
+             "the ID signature")
             ("reference genome", po::value<std::filesystem::path>(&ref_genome_filename),
              "the filename of the reference genome FASTA file")
             ("driver mutations",  po::value<std::filesystem::path>(&driver_mutations_filename),
@@ -736,7 +752,9 @@ public:
         positional_options.add("mutation file", 1);
         positional_options.add("species simulation", 1);
         positional_options.add("context index", 1);
+        positional_options.add("repetition index", 1);
         positional_options.add("SBS signature", 1);
+        positional_options.add("ID signature", 1);
         positional_options.add("reference genome", 1);
         positional_options.add("driver mutations", 1);
         positional_options.add("passenger CNAs file", 1);

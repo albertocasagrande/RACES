@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.20
- * @date 2024-05-11
+ * @version 0.21
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,6 +39,7 @@
 #include <type_traits>
 
 #include "archive.hpp"
+#include "utils.hpp"
 #include "genomic_sequence.hpp"
 #include "fasta_utils.hpp"      // IO::FASTA::is_chromosome_header
 #include "genomic_region.hpp"   // Mutations::GenomicRegion
@@ -353,7 +354,7 @@ protected:
         if (!genome_fasta_stream.good()) {
             std::ostringstream oss;
 
-            oss << "\"" << fasta_filename << "\" does not exist";
+            oss << "\"" << to_string(fasta_filename) << "\" does not exist";
             throw std::runtime_error(oss.str());
         }
 

@@ -2,7 +2,7 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 0.30
+ * @version 0.31
  * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
@@ -760,7 +760,7 @@ void SampleSetStatistics::save_VAF_CSV(const std::filesystem::path& filename,
         os << GenomicPosition::chrtos(chr_id) << separator << mutation.position
            << separator << mutation.position
            << separator << mutation.ref  << separator << mutation.alt
-           << separator << (mutation.is_SNV()?"SNV":"indel") << separator;
+           << separator << (mutation.is_SBS()?"SNV":"indel") << separator;
 
         print_join(os, total_mutation_data.causes, ';');
 

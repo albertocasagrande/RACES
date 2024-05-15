@@ -15,6 +15,7 @@ mutations_sim
 descendants_builder
 tissue_sampler
 build_context_index
+build_repetition_index
 sample_context_index
 RACES.so
 RACES.dll

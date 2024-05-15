@@ -2,8 +2,8 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a general class for mutations
- * @version 0.1
- * @date 2024-03-12
+ * @version 0.2
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -60,6 +60,17 @@ struct Mutation : public GenomicPosition
         UNDEFINED
     };
 
+    /**
+     * @brief Type of the mutation
+     */
+    enum class Type
+    {
+        SBS = 0,
+        INDEL = 1,
+        MNP = 2,
+        UNKNOWN = 3
+    };
+
     Nature nature;      //!< The mutation nature
     std::string cause;  //!< The cause of the SNV
 
@@ -70,7 +81,7 @@ struct Mutation : public GenomicPosition
 
     /**
      * @brief Construct a new Mutation object
-     * 
+     *
      * @param chr_id is the id of the SNV chromosome
      * @param chr_position is the SNV position in the chromosome
      * @param nature is the nature of the mutation
@@ -81,7 +92,7 @@ struct Mutation : public GenomicPosition
 
     /**
      * @brief Construct a new Mutation object
-     * 
+     *
      * @param position is the mutation position
      * @param nature is the nature of the mutation
      * @param cause is the cause of the mutation
@@ -91,15 +102,15 @@ struct Mutation : public GenomicPosition
 
     /**
      * @brief Get a string describing a mutation nature
-     * 
+     *
      * @param nature is the mutation nature whose description is required
-     * @return a string describing the mutation 
+     * @return a string describing the mutation
      */
     static std::string get_nature_description(const Nature& nature);
 
     /**
      * @brief Get a string describing the mutation nature
-     * 
+     *
      * @return a string describing the mutation nature
      */
     inline std::string get_nature_description() const

@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 0.17
- * @date 2024-04-23
+ * @version 0.18
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -154,7 +154,7 @@ std::ostream& MutationStatistics::write_SIDs_table(std::ostream& os, const char 
            << separator << mutation.position << separator
            << (mutation.ref==""?"-":mutation.ref) << separator
            << (mutation.alt==""?"-":mutation.alt) << separator
-           << (mutation.is_SNV()?"SNV":"indel") << separator
+           << (mutation.is_SBS()?"SNV":"indel") << separator
            << mutation.cause << separator
            << mutation.get_nature_description();
 

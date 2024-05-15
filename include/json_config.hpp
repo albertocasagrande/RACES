@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.23
- * @date 2024-05-11
+ * @version 0.24
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -139,59 +139,24 @@ public:
     /**
      * @brief Get the default exposure
      *
+     * @param mutation_name is the mutation type name (i.e., either "ID" or "SBS")
      * @param exposures_json is the JSON of the exposures
      * @return a map associating to a set of SBS signatures their percentage
      *          in the default mutational configuration
      */
-    static Races::Mutations::Exposure
-    get_default_exposure(const nlohmann::json& exposures_json);
+    static Races::Mutations::MutationalExposure
+    get_default_exposure(const std::string& mutation_name,
+                         const nlohmann::json& exposures_json);
 
     /**
      * @brief Add the timed exposures to a mutation engine
      *
-     * @tparam GENOME_WIDE_POSITION is the genome wide position type
-     * @tparam RANDOM_GENERATOR is the type of the random generator
-     * @param engine is a mutation engine
+     * @param mutation_name is the mutation type name (i.e., either "ID" or "SBS")
      * @param exposures_json is the JSON of the exposures
      */
-    template<typename GENOME_WIDE_POSITION, typename RANDOM_GENERATOR>
-    static void
-    add_timed_exposures(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION,RANDOM_GENERATOR>& engine,
-                                      const nlohmann::json& exposures_json)
-    {
-        std::map<double, Races::Mutations::Exposure> timed_exposures;
-
-        if (!exposures_json.is_object()) {
-            throw std::runtime_error("The \"exposures\" field must be an object");
-        }
-
-        if (exposures_json.contains("timed")) {
-
-            auto& timed_coeff_json = exposures_json["timed"];
-
-            if (!timed_coeff_json.is_array()) {
-                throw std::runtime_error("The optional \"timed\" field must be an array");
-            }
-
-            for (const auto& timed_json : timed_coeff_json) {
-                if (!timed_json.is_object()) {
-                    throw std::runtime_error("The elements of the \"timed\" field must be objects");
-                }
-
-                double time = get_from<double>("time", timed_json,
-                                               "The elements of the \"timed\" field");
-
-                if (timed_exposures.count(time)>0) {
-                    throw std::runtime_error("Two elements of the \"timed\" field have the "
-                                             "same \"time\"");
-                }
-
-                expecting("exposure", timed_json, "The elements of the \"timed\" field");
-
-                engine.add(time, get_exposure(timed_json["exposure"]));
-            }
-        }
-    }
+    static std::map<double, Races::Mutations::MutationalExposure>
+    get_timed_exposures(const std::string& mutation_name,
+                        const nlohmann::json& exposures_json);
 
     /**
      * @brief Get a sample region
@@ -301,7 +266,7 @@ public:
      * @return a map associating a set of SBS signature to their percentage
      *          in the exposure
      */
-    static Races::Mutations::Exposure
+    static Races::Mutations::MutationalExposure
     get_exposure(const nlohmann::json& exposure_json);
 
     /**

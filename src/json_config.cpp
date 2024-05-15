@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.29
- * @date 2024-04-23
+ * @version 0.30
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -241,16 +241,57 @@ ConfigReader::add_mutational_properties(Races::Mutations::MutationalProperties& 
     mutational_properties.add_mutant(mutant_name, passenger_rates, SIDs, CNAs);
 }
 
-Races::Mutations::Exposure
-ConfigReader::get_default_exposure(const nlohmann::json& exposures_json)
+Races::Mutations::MutationalExposure
+ConfigReader::get_default_exposure(const std::string& mutation_name, const nlohmann::json& exposures_json)
 {
     if (!exposures_json.is_object()) {
-        throw std::runtime_error("The \"exposures\" field must be an object");
+        throw std::runtime_error("The \"" + mutation_name + "\" field must be an object");
     }
 
-    expecting("default", exposures_json, "The \"exposures\" field");
+    expecting("default", exposures_json, "The \"" + mutation_name + "\" field");
 
     return get_exposure(exposures_json["default"]);
+}
+
+std::map<double, Races::Mutations::MutationalExposure>
+ConfigReader::get_timed_exposures(const std::string& mutation_name,
+                                  const nlohmann::json& exposures_json)
+{
+    std::map<double, Races::Mutations::MutationalExposure> timed_exposures;
+
+    if (!exposures_json.is_object()) {
+        throw std::runtime_error("The \"" + mutation_name + "\" field must be an object");
+    }
+
+    if (exposures_json.contains("timed")) {
+
+        auto& timed_coeff_json = exposures_json["timed"];
+
+        if (!timed_coeff_json.is_array()) {
+            throw std::runtime_error("The optional \"timed\" field must be an array");
+        }
+
+        for (const auto& timed_json : timed_coeff_json) {
+            if (!timed_json.is_object()) {
+                throw std::runtime_error("The elements of the \"timed\" field must be objects");
+            }
+
+            double time = get_from<double>("time", timed_json,
+                                            "The elements of the \"timed\" field");
+            if (timed_exposures.count(time)>0) {
+                std::ostringstream oss;
+
+                oss << "Two elements of the \"timed\" field have time " << time << ".";
+                throw std::runtime_error(oss.str());
+            }
+
+            expecting("exposure", timed_json, "The elements of the \"timed\" field");
+
+            timed_exposures.insert({time, get_exposure(timed_json["exposure"])});
+        }
+    }
+
+    return timed_exposures;
 }
 
 Mutants::Evolutions::SampleSpecification
@@ -478,9 +519,9 @@ void ConfigReader::expecting(const std::string& field_name, const nlohmann::json
 {
     if (!json.contains(field_name)) {
         if (context.length()>0) {
-            throw std::runtime_error("Expected a missing \""+field_name+"\" field");
-        } else {
             throw std::runtime_error(context+ " must contains a \""+field_name+"\" field");
+        } else {
+            throw std::runtime_error("Expected a missing \""+field_name+"\" field");
         }
     }
 }
@@ -556,7 +597,7 @@ ConfigReader::get_number_of_alleles(const nlohmann::json& simulation_json,
     return num_of_alleles;
 }
 
-Races::Mutations::Exposure
+Races::Mutations::MutationalExposure
 ConfigReader::get_exposure(const nlohmann::json& exposure_json)
 {
     if (!exposure_json.is_array()) {
@@ -565,17 +606,17 @@ ConfigReader::get_exposure(const nlohmann::json& exposure_json)
 
     double total=0;
 
-    Races::Mutations::Exposure exposure;
+    Races::Mutations::MutationalExposure exposure;
     for (const auto& exposures_json : exposure_json) {
 
         if (!exposures_json.is_object()) {
             throw std::runtime_error("An exposure must be an object");
         }
 
-        const std::string SBS = get_from<std::string>("SBS", exposures_json,
+        const std::string name = get_from<std::string>("name", exposures_json,
                                                         "Every exposure");
-        if (exposure.count(SBS)>0) {
-            throw std::runtime_error("\""+SBS+"\" already among exposures");
+        if (exposure.count(name)>0) {
+            throw std::runtime_error("\""+name+"\" already among exposures");
         }
 
         double fraction = get_from<double>("fraction", exposures_json,
@@ -591,7 +632,7 @@ ConfigReader::get_exposure(const nlohmann::json& exposure_json)
             throw std::runtime_error(oss.str());
         }
 
-        exposure[SBS] = fraction;
+        exposure[name] = fraction;
     }
 
     if (std::abs(1-total)>10*std::numeric_limits<double>::epsilon()) {

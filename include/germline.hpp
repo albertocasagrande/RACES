@@ -2,8 +2,8 @@
  * @file germline.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines the functions to generate and load germline mutations
- * @version 0.3
- * @date 2024-04-23
+ * @version 0.4
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,6 +34,7 @@
 #include <map>
 #include <string>
 #include <filesystem>
+#include <random>
 
 #include "genome_mutations.hpp"
 #include "fasta_chr_reader.hpp"

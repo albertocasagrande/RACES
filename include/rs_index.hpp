@@ -2,8 +2,8 @@
  * @file rs_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to compute the repeated substring index
- * @version 0.2
- * @date 2024-05-13
+ * @version 0.4
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -38,7 +38,9 @@
 #include <random>
 
 #include "genomic_position.hpp"
+#include "genomic_region.hpp"
 #include "utils.hpp"
+#include "progress_bar.hpp"
 #include "archive.hpp"
 
 #include "id_signature.hpp"
@@ -521,15 +523,17 @@ struct RSIndex
     /**
      * @brief Add the repeated sequences of a genomic sequence
      *
-     * @param sequence is a genomic sequence
-     * @param chr_id is the identifier of the chromosome containing the
+     * @param[in] sequence is a genomic sequence
+     * @param[in] chr_id is the identifier of the chromosome containing the
      *      genomic sequence
-     * @param begin is the position of the genomic sequence first base
+     * @param[in] begin is the position of the genomic sequence first base
      *      on the chromosome
-     * @param length is the length of the considered sequence
+     * @param[in] length is the length of the considered sequence
+     * @param[in,out] progress_bar is the progress bar
      */
     void add_repetitions_in(const std::string& sequence, const ChromosomeId& chr_id,
-                            const ChrPosition begin, size_t length);
+                            const ChrPosition begin, size_t length,
+                            UI::ProgressBar* progress_bar = nullptr);
 
     //!< @private
     static inline uint8_t get_first_index(const uint8_t& unit_size)
@@ -546,22 +550,21 @@ struct RSIndex
     }
 
     /**
-     * @brief Get a polymer reference
+     * @brief Find the storages matching the parameters
      *
      * @tparam INDEX_TYPE is the polymer map index type
      * @param polymer_map is the polymer map (i.e., `hetero_map` or `homo_map`)
-     * @param polymer_type is a description of the polymer map
      * @param index is the polymer map index (i.e., unit size or homopolymer nucleotide)
      * @param num_of_repetitions is the number of repetitions of the searched polymer
      * @param for_insertion is a Boolean flag declaring whether the polymer will be
      *      targeted for insertion
-     * @return a pair repetition storage-position in the storage refering to a polymer
-     *      satisfing the argument specification
+     * @return the vector of the pointers of the storages matching the parameter
+     *      specification
      */
     template<typename INDEX_TYPE>
-    std::pair<RepetitionStorage*, size_t>
-    find_a_polymer(std::map<INDEX_TYPE, RepetitionMap>& polymer_map, const std::string& polymer_type,
-                   const INDEX_TYPE index, const uint8_t& num_of_repetitions, const bool& for_insertion)
+    static std::vector<RepetitionStorage*>
+    find_storages(std::map<INDEX_TYPE, RepetitionMap>& polymer_map, const INDEX_TYPE index,
+                  const uint8_t& num_of_repetitions, const bool& for_insertion)
     {
         const uint8_t repeated_unit = get_second_index(num_of_repetitions, for_insertion);
 
@@ -574,31 +577,99 @@ struct RSIndex
             auto r_it = p_map.find(repeated_unit);
             if (r_it != p_map.end()) {
                 r_vectors.push_back(&(r_it->second));
-                auto total_size = r_vectors.back()->size();
 
                 if (for_insertion && repeated_unit==5) {
                     r_it = p_map.find(6);
 
                     if (r_it != p_map.end()) {
                         r_vectors.push_back(&(r_it->second));
-                        total_size += r_vectors.back()->size();
                     }
                 }
+            }
+        }
 
-                if (total_size>0) {
+        return r_vectors;
+    }
 
-                    std::uniform_int_distribution<size_t> dist(0, total_size-1);
+    /**
+     * @brief Find the storages matching the parameters
+     *
+     * @tparam INDEX_TYPE is the polymer map index type
+     * @param polymer_map is the polymer map (i.e., `hetero_map` or `homo_map`)
+     * @param index is the polymer map index (i.e., unit size or homopolymer nucleotide)
+     * @param num_of_repetitions is the number of repetitions of the searched polymer
+     * @param for_insertion is a Boolean flag declaring whether the polymer will be
+     *      targeted for insertion
+     * @return the vector of the pointers of the storages matching the parameter
+     *      specification
+     */
+    template<typename INDEX_TYPE>
+    static std::vector<RepetitionStorage const*>
+    find_storages(const std::map<INDEX_TYPE, RepetitionMap>& polymer_map, const INDEX_TYPE index,
+                  const uint8_t& num_of_repetitions, const bool& for_insertion)
+    {
+        const uint8_t repeated_unit = get_second_index(num_of_repetitions, for_insertion);
 
-                    auto pos = dist(random_gen);
+        auto p_it = polymer_map.find(index);
 
-                    for (const auto& r_pointer : r_vectors) {
-                        if (pos < r_pointer->size()) {
-                            return {r_pointer, pos};
-                        }
+        std::vector<RepetitionStorage const*> r_vectors;
 
-                        pos -= r_pointer->size();
+        if (p_it != polymer_map.end()) {
+            auto &p_map = p_it->second;
+            auto r_it = p_map.find(repeated_unit);
+            if (r_it != p_map.end()) {
+                r_vectors.push_back(&(r_it->second));
+
+                if (for_insertion && repeated_unit==5) {
+                    r_it = p_map.find(6);
+
+                    if (r_it != p_map.end()) {
+                        r_vectors.push_back(&(r_it->second));
                     }
                 }
+            }
+        }
+
+        return r_vectors;
+    }
+
+    /**
+     * @brief Get a polymer reference
+     *
+     * @tparam INDEX_TYPE is the polymer map index type
+     * @param polymer_map is the polymer map (i.e., `hetero_map` or `homo_map`)
+     * @param polymer_type is a description of the polymer map
+     * @param index is the polymer map index (i.e., unit size or homopolymer nucleotide)
+     * @param num_of_repetitions is the number of repetitions of the searched polymer
+     * @param for_insertion is a Boolean flag declaring whether the polymer will be
+     *      targeted for insertion
+     * @return a pair repetition storage-position in the storage refering to a polymer
+     *      satisfing the parameters
+     */
+    template<typename INDEX_TYPE>
+    std::pair<RepetitionStorage*, size_t>
+    find_a_polymer(std::map<INDEX_TYPE, RepetitionMap>& polymer_map, const std::string& polymer_type,
+                   const INDEX_TYPE index, const uint8_t& num_of_repetitions, const bool& for_insertion)
+    {
+        auto s_pointers = find_storages(polymer_map, index, num_of_repetitions, for_insertion);
+
+        size_t total_size{0};
+        for (const auto& s_pointer: s_pointers) {
+            total_size += s_pointer->size();
+        }
+
+        if (total_size>0) {
+
+            std::uniform_int_distribution<size_t> dist(0, total_size-1);
+
+            auto pos = dist(random_gen);
+
+            for (const auto& r_pointer : s_pointers) {
+                if (pos < r_pointer->size()) {
+                    return {r_pointer, pos};
+                }
+
+                pos -= r_pointer->size();
             }
         }
         throw std::runtime_error("No such a " + polymer_type + " available.");
@@ -621,7 +692,7 @@ struct RSIndex
     find_a_heteropolymer(const uint8_t& unit_size, const uint8_t& num_of_repetitions,
                          const bool& for_insertion)
     {
-        return find_a_polymer(hetero_map, "heteropolymer", get_first_index(unit_size),  
+        return find_a_polymer(hetero_map, "heteropolymer", get_first_index(unit_size),
                               num_of_repetitions, for_insertion);
     }
 
@@ -673,6 +744,27 @@ struct RSIndex
              const char* unit, const size_t& unit_size,
              const char& previous_base);
 
+    /**
+     * @brief Add to the index all the repetitions in a chromosome
+     *
+     * @param[in] chr_id is the identifier of a chrosomome
+     * @param[in] chr_sequence is the nucleotide sequence of a chrosomome
+     * @param[in,out] progress_bar is the progress bar
+     */
+    void add_repetitions_in(const ChromosomeId& chr_id, const std::string& chr_sequence,
+                            UI::ProgressBar* progress_bar = nullptr);
+
+    /**
+     * @brief Add a repetition to the index
+     *
+     * @param[in] repetition is the repetition to be added to the index
+     */
+    inline void add(const Repetition<RepetitionType>& repetition)
+    {
+        add(repetition.begin.chr_id, repetition.begin.position,
+            repetition.num_of_repetitions, repetition.unit.c_str(), repetition.unit.size(),
+            repetition.prev_base);
+    }
 public:
     /**
      * @brief A constructor
@@ -684,26 +776,6 @@ public:
     RSIndex(const size_t max_unit_size = std::numeric_limits<size_t>::max(),
             const size_t max_stored_repetitions = std::numeric_limits<size_t>::max(),
             const int seed = 0);
-
-    /**
-     * @brief Add to the index all the repetitions in a chromosome
-     *
-     * @param chr_id is the identifier of a chrosomome
-     * @param chr_sequence is the nucleotide sequence of a chrosomome
-     */
-    void add_repetitions_in(const ChromosomeId& chr_id, const std::string& chr_sequence);
-
-    /**
-     * @brief Add a repetition to the index
-     *
-     * @param repetition is the repetition to be added to the index
-     */
-    inline void add(const Repetition<RepetitionType>& repetition)
-    {
-        add(repetition.begin.chr_id, repetition.begin.position,
-            repetition.num_of_repetitions, repetition.unit.c_str(), repetition.unit.size(),
-            repetition.prev_base);
-    }
 
     /**
      * @brief Randomly select a repetition according to an ID type
@@ -718,10 +790,76 @@ public:
 
     /**
      * @brief Restore the last extracted repetition of a given type
-     * 
+     *
      * @param id_type is the ID type of the repetition to be restored in the index
      */
     void restore(const IDType& id_type);
+
+    /**
+     * @brief Get the number of repetitions matching an indel type
+     *
+     * @param id_type is an ID type
+     * @return the number of repetitions matching the indel type `id_type`
+     */
+    size_t count_available_for(const IDType& id_type) const;
+
+    /**
+     * @brief Find the context positions in a FASTA file
+     *
+     * @param[in] genome_fasta is the path of a FASTA file
+     * @param[in] max_unit_size is the maximum considered size of the repetition unit
+     * @param[in] max_stored_repetitions is the maximum number of stored repetitions
+     * @param[in,out] progress_bar is the progress bar
+     * @return the index of the repetitions that lay in the sequences corresponding
+     *          to a chromosome according to `Races::IO::FASTA::seq_name_decoders`
+     */
+    static inline RSIndex build_index(const std::filesystem::path& genome_fasta,
+                                      const size_t max_unit_size,
+                                      const size_t max_stored_repetitions,
+                                      UI::ProgressBar* progress_bar=nullptr)
+    {
+        return build_index(genome_fasta, max_unit_size, max_stored_repetitions,
+                           0, progress_bar);
+    }
+
+    /**
+     * @brief Find the context positions in a FASTA file
+     *
+     * @param[in] genome_fasta is the path of a FASTA file
+     * @param[in] max_unit_size is the maximum considered size of the repetition unit
+     * @param[in] max_stored_repetitions is the maximum number of stored repetitions
+     * @param[in] seed is the random generator seed
+     * @param[in,out] progress_bar is the progress bar
+     * @return the index of the repetitions that lay in the sequences corresponding
+     *          to a chromosome according to `Races::IO::FASTA::seq_name_decoders`
+     */
+    static inline RSIndex build_index(const std::filesystem::path& genome_fasta,
+                                      const size_t max_unit_size,
+                                      const size_t max_stored_repetitions,
+                                      const int seed,
+                                      UI::ProgressBar* progress_bar=nullptr)
+    {
+        return build_index(genome_fasta, {}, max_unit_size,
+                           max_stored_repetitions, seed, progress_bar);
+    }
+
+    /**
+     * @brief Find the context positions in some genomic fragments of a FASTA file
+     *
+     * @param[in] genome_fasta is the path of a FASTA file
+     * @param[in] regions_to_avoid is a set of regions to avoid
+     * @param[in] sampling_rate is the number of contexts to be found in order to record a context
+     *          in the index
+     * @param[in,out] progress_bar is the progress bar
+     * @return the index of the repetitions that lay in the sequences corresponding
+     *          to a chromosome according to `Races::IO::FASTA::seq_name_decoders`,
+     *          but that are located outside the regions in `regions_to_avoid`
+     */
+    static RSIndex build_index(const std::filesystem::path& genome_fasta,
+                               const std::set<GenomicRegion>& regions_to_avoid,
+                               const size_t max_unit_size,
+                               const size_t max_stored_repetitions,
+                               const int seed, UI::ProgressBar* progress_bar=nullptr);
 
     /**
      * @brief Restore the extracted polymers

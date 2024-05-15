@@ -270,8 +270,11 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     set(MUTATIONS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/mutations_sim.cpp
                             ${COMMON_SOURCES})
 
-    set(BUILD_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp)
+    set(BUILD_CONTEXT_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp
+                                    ${COMMON_SOURCES})
 
+    set(BUILD_RS_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_repetition_index.cpp
+                            ${COMMON_SOURCES})
 
     set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
 
@@ -287,9 +290,13 @@ if(NOT ${BUILD_ONLY_LIBRARIES})
     target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
     target_link_libraries(tissue_sampler ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
 
-    add_executable(build_context_index ${BUILD_INDEX_SOURCES})
+    add_executable(build_context_index ${BUILD_CONTEXT_INDEX_SOURCES})
     target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
     target_link_libraries(build_context_index ${BUILD_LIB_TARGET})
+
+    add_executable(build_repetition_index ${BUILD_RS_INDEX_SOURCES})
+    target_include_directories(build_repetition_index PRIVATE ${Boost_INCLUDE_DIR})
+    target_link_libraries(build_repetition_index ${BUILD_LIB_TARGET})
 
     add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
     target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})

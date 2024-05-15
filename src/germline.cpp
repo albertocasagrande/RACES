@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.13
- * @date 2024-04-27
+ * @version 0.14
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -357,15 +357,7 @@ get_subject_column(const std::string& header, const std::string& subject)
     throw std::runtime_error(subject + " not present.");
 }
 
-enum class MutationType
-{
-    SNP,
-    INDEL,
-    MNP,
-    UNKNOWN
-};
-
-MutationType get_mutation_type(const std::string& line, size_t pos=0)
+Mutation::Type get_mutation_type(const std::string& line, size_t pos=0)
 {
     pos = line.find("VT=", pos);
 
@@ -373,37 +365,37 @@ MutationType get_mutation_type(const std::string& line, size_t pos=0)
         pos += 3;
 
         if (line.size() < pos+3) {
-            return MutationType::UNKNOWN;
+            return Mutation::Type::UNKNOWN;
         }
         switch (line[pos]) {
         case 'S':
             if (line[pos+1]!='N' || line[pos+2]!='P') {
-                return MutationType::UNKNOWN;
+                return Mutation::Type::UNKNOWN;
             }
 
             pos += 3;
             if (line.size() == pos || line[pos] == '\t'
                     || line[pos] == ';') {
-                return MutationType::SNP;
+                return Mutation::Type::SBS;
             }
 
             break;
         case 'I':
             if (line.find("INDEL", pos) == pos) {
-                return MutationType::INDEL;
+                return Mutation::Type::INDEL;
             }
             break;
         case 'M':
             if (line.find("MNP", pos) == pos) {
-                return MutationType::MNP;
+                return Mutation::Type::MNP;
             }
             break;
         default:
-            return MutationType::UNKNOWN;
+            return Mutation::Type::UNKNOWN;
         }
     }
 
-    return MutationType::UNKNOWN;
+    return Mutation::Type::UNKNOWN;
 }
 
 template<typename INTEGER_TYPE>
@@ -521,8 +513,8 @@ void add_mutation(GenomeMutations& mutations, const std::string& line,
 
     if (in_first_allele || in_second_allele) {
         switch (get_mutation_type(line, column_separators[6])) {
-            case MutationType::SNP:
-            case MutationType::INDEL:
+            case Mutation::Type::SBS:
+            case Mutation::Type::INDEL:
                 add_SID(mutations, line, column_separators,
                         num_of_alleles, allele_ids);
                 break;

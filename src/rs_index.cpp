@@ -2,8 +2,8 @@
  * @file rs_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to compute the repeated substring index
- * @version 0.1
- * @date 2024-05-13
+ * @version 0.2
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -29,6 +29,10 @@
  */
 
 #include "rs_index.hpp"
+
+#include "utils.hpp"
+#include "basic_IO.hpp"
+#include "fasta_chr_reader.hpp"
 
 namespace Races
 {
@@ -363,7 +367,8 @@ void RSIndex::analyze_non_repeated_seq(const char* s, const ChromosomeId& chr_id
 }
 
 void RSIndex::add_repetitions_in(const std::string& sequence, const ChromosomeId& chr_id,
-                                 const ChrPosition begin, size_t length)
+                                 const ChrPosition begin, size_t length,
+                                 UI::ProgressBar* progress_bar)
 {
     if (length == 0) {
         return;
@@ -388,6 +393,10 @@ void RSIndex::add_repetitions_in(const std::string& sequence, const ChromosomeId
 
         collect_repetitions(subseq, chr_id, begin, h, suffix_array, classes, covered);
         update_suffix_array(h, suffix_array, classes, num_of_classes, tmp_a, tmp_b);
+
+        if (progress_bar != nullptr) {
+            progress_bar->set_progress(progress_bar->get_progress());
+        }
     }
     collect_repetitions(subseq, chr_id, begin, h, suffix_array, classes, covered);
 
@@ -431,7 +440,8 @@ RSIndex::RSIndex(const size_t max_unit_size, const size_t max_stored_repetitions
     max_stored_repetitions(max_stored_repetitions)
 {}
 
-void RSIndex::add_repetitions_in(const ChromosomeId& chr_id, const std::string& chr_sequence)
+void RSIndex::add_repetitions_in(const ChromosomeId& chr_id, const std::string& chr_sequence,
+                                 UI::ProgressBar* progress_bar)
 {
     size_t begin=1, length=0;
     for (size_t i=0; i<chr_sequence.size(); ++i) {
@@ -442,13 +452,37 @@ void RSIndex::add_repetitions_in(const ChromosomeId& chr_id, const std::string& 
             ++length;
         } else {
             if (length > 0) {
-                add_repetitions_in(chr_sequence, chr_id,
-                                    begin, length);
+                add_repetitions_in(chr_sequence, chr_id, begin, length, progress_bar);
                 length = 0;
             }
         }
     }
-    add_repetitions_in(chr_sequence, chr_id, begin, length);
+    add_repetitions_in(chr_sequence, chr_id, begin, length, progress_bar);
+}
+
+size_t RSIndex::count_available_for(const IDType& id_type) const
+{
+    std::vector<RepetitionStorage const*> s_pointers;
+
+    switch (id_type.ftype) {
+        case IDType::FragmentType::HETEROPOLYMER:
+            s_pointers = find_storages(hetero_map, get_first_index(id_type.fl_index),
+                                       id_type.sl_index, id_type.insertion);
+            break;
+        case IDType::FragmentType::HOMOPOLYMER:
+            s_pointers = find_storages(homo_map, canonize(id_type.fl_index),
+                                       id_type.sl_index, id_type.insertion);
+            break;
+        default:
+            throw std::domain_error("Microhomology is not supported yet.");
+    }
+
+    size_t total_size{0};
+    for (const auto& s_pointer: s_pointers) {
+        total_size += s_pointer->size();
+    }
+
+    return total_size;
 }
 
 const Repetition<RSIndex::RepetitionType>&
@@ -458,11 +492,11 @@ RSIndex::select(const IDType& id_type, const bool remove)
     switch (id_type.ftype) {
         case IDType::FragmentType::HETEROPOLYMER:
             rep_reference = find_a_heteropolymer(id_type.fl_index, id_type.sl_index,
-                                                    id_type.insertion);
+                                                 id_type.insertion);
             break;
         case IDType::FragmentType::HOMOPOLYMER:
             rep_reference = find_a_homopolymer(id_type.fl_index, id_type.sl_index,
-                                                id_type.insertion);
+                                               id_type.insertion);
             break;
         default:
             throw std::domain_error("Microhomology is not supported yet.");
@@ -490,6 +524,47 @@ void RSIndex::restore(const IDType& id_type)
     }
 
     r_map->at(get_second_index(id_type.sl_index, id_type.insertion)).restore();
+}
+
+RSIndex RSIndex::build_index(const std::filesystem::path& genome_fasta,
+                             const std::set<GenomicRegion>& regions_to_avoid,
+                             const size_t max_unit_size,
+                             const size_t max_stored_repetitions,
+                             const int seed, UI::ProgressBar* progress_bar)
+{
+    if (regions_to_avoid.size()>0) {
+        throw std::domain_error("The region to avoid parameter is not supported yet.");
+    }
+
+    using namespace IO::FASTA;
+
+    RSIndex rs_index(max_unit_size, max_stored_repetitions, seed);
+
+    std::ifstream genome_fasta_stream(genome_fasta);
+
+    if (!genome_fasta_stream.good()) {
+        std::ostringstream oss;
+
+        oss << "\"" << to_string(genome_fasta) << "\" does not exist";
+        throw std::runtime_error(oss.str());
+    }
+
+    auto streamsize = Races::IO::get_stream_size(genome_fasta_stream);
+
+    ChromosomeData<Sequence> chr;
+    while (ChromosomeData<Sequence>::read(genome_fasta_stream, chr)) {
+        if (progress_bar != nullptr) {
+            progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr.chr_id));
+            progress_bar->set_progress(static_cast<uint8_t>(100*genome_fasta_stream.tellg()/streamsize));
+        }
+        rs_index.add_repetitions_in(chr.chr_id, chr.nucleotides, progress_bar);
+    }
+
+    if (progress_bar != nullptr) {
+        progress_bar->set_progress(100, "Repetition index built");
+    }
+
+    return rs_index;
 }
 
 void RSIndex::restore()

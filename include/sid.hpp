@@ -2,8 +2,8 @@
  * @file sid.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SNV, Insertion, and Deletion mutations
- * @version 0.2
- * @date 2024-04-27
+ * @version 0.3
+ * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -172,14 +172,24 @@ struct SID : public Mutation
         const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
-     * @brief Test whether the mutation is a SNV
+     * @brief Test whether the mutation is a SBS
      *
      * @return `true` if and only if both the reference and the alternative
      *      sequences have size 1
      */
-    inline bool is_SNV() const
+    inline bool is_SBS() const
     {
         return ref.size()==1 && alt.size()==1;
+    }
+
+    /**
+     * @brief Get the mutation type
+     *
+     * @return the mutation type
+     */
+    inline Type type() const
+    {
+        return (is_SBS()?Type::SBS:Type::INDEL);
     }
 
     /**

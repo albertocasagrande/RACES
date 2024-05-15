@@ -1,8 +1,8 @@
 /**
- * @file build_context_index.cpp
+ * @file build_repetition_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Builds the context index
- * @version 0.11
+ * @brief Builds the repetition index
+ * @version 0.1
  * @date 2024-05-15
  *
  * @copyright Copyright (c) 2023-2024
@@ -43,17 +43,18 @@
 
 #include "progress_bar.hpp"
 
-class ContextIndexBuilder : public BasicExecutable
+class RepetitionIndexBuilder: public BasicExecutable
 {
     std::string output_filename;
     std::string genome_fasta_filename;
     std::string driver_mutations_filename;
-    size_t sampling_rate;
-    unsigned int byte_per_abs_position;
+    size_t max_rep_per_type;
+    size_t max_unit_size;
+    unsigned int rep_type_size;
     bool quiet;
 
     template<typename GENOME_WIDE_POSITION>
-    std::list<Races::Mutations::GenomicRegion> build_and_save_context_index() const
+    void build_and_save_rs_index() const
     {
         using namespace Races;
         using namespace Races::Mutations;
@@ -71,61 +72,35 @@ class ContextIndexBuilder : public BasicExecutable
         }
 
         {
-            using Index = ContextIndex<GENOME_WIDE_POSITION>;
-
-            Index context_index;
+            RSIndex rs_index;
 
             if (quiet) {
-                context_index = Index::build_index(genome_fasta_filename, regions_to_avoid, sampling_rate);
+                rs_index = RSIndex::build_index(genome_fasta_filename, regions_to_avoid,
+                                                max_unit_size, max_rep_per_type, 0);
             } else {
                 UI::ProgressBar::hide_console_cursor();
 
                 UI::ProgressBar progress_bar(std::cout);
 
-                context_index = Index::build_index(genome_fasta_filename, regions_to_avoid, sampling_rate, &progress_bar);
+                rs_index = RSIndex::build_index(genome_fasta_filename, regions_to_avoid, max_unit_size,
+                                                max_rep_per_type, 0, &progress_bar);
             }
 
-            chr_regions = context_index.get_chromosome_regions();
+            Archive::Binary::Out archive(output_filename);
 
-            if (chr_regions.size() > 0) {
-                Archive::Binary::Out archive(output_filename);
-
-                if (quiet) {
-                    archive & context_index;
-                } else {
-                    archive.save(context_index, "context index");
-                }
-            }
-
-            if (!quiet) {
+            if (quiet) {
+                archive & rs_index;
+            } else {
+                archive.save(rs_index, "repetition index");
                 std::cout << " Cleaning memory..." << std::flush;
             }
         }
-
-        if (!quiet) {
-            UI::ProgressBar::show_console_cursor();
-
-            std::cout << "done" << std::endl;
-
-            if (chr_regions.size()==0) {
-                std::cout << " No chromosome processed. Try to select the proper "
-                          << "sequence name decoder by using \"-s\"" << std::endl;
-            } else {
-                std::cout << " Processed:" << std::endl;
-                for (const auto& chr_region: chr_regions) {
-                    std::cout << "  - Chromosome "
-                                << GenomicPosition::chrtos(chr_region.get_chromosome_id())
-                                << " (size: " << chr_region.size() << " bps)" << std::endl;
-                }
-            }
-        }
-
-        return chr_regions;
+        std::cout << "done" << std::endl;
     }
 
 public:
 
-    ContextIndexBuilder(const int argc, const char* argv[]):
+    RepetitionIndexBuilder(const int argc, const char* argv[]):
         BasicExecutable(argv[0], {{"generic", "Options"}})
     {
         namespace po = boost::program_options;
@@ -135,11 +110,13 @@ public:
              "the driver mutations file")
             ("output-filename,o", po::value<std::string>(&output_filename),
              "output filename")
-            ("sampling-rate,s", po::value<size_t>(&sampling_rate)->default_value(1),
-             "context sampling rate (to sample contexts and reduce index memory and space requirements)")
+            ("max-rep-per-type,r", po::value<size_t>(&max_rep_per_type)->default_value(500000),
+             "maximum number of stored repetitions per type")
+            ("max-motif-size,s", po::value<size_t>(&max_unit_size)->default_value(50),
+             "maximum size of the repeated motif")
             ("force-overwrite,f", "force overwriting output file")
-            ("bytes-per-pos,b", po::value<unsigned int>(&byte_per_abs_position)->default_value(4),
-             "bytes per absolute position (2, 4, or 8)")
+            ("rep-type-bytes,b", po::value<unsigned int>(&rep_type_size)->default_value(4),
+             "size of the repetition type (one among 1, 2, 4, or 8)")
 #if WITH_INDICATORS
             ("quiet,q", "disable output messages")
 #endif // WITH_INDICATORS
@@ -179,11 +156,21 @@ public:
         }
 
         if (!vm.count("output-filename")) {
-            output_filename = std::filesystem::path(genome_fasta_filename + ".cif").filename();
+            output_filename = std::filesystem::path(genome_fasta_filename + ".rsif").filename();
         }
 
-        if (vm.count("sampling-rate") && sampling_rate==0) {
-            print_help_and_exit("The sampling rate must be positive.", 1);
+        std::set<size_t> admitted_rep_type_size{1,2,4,8};
+
+        if (admitted_rep_type_size.count(rep_type_size)==0) {
+            print_help_and_exit("The size of repetition type must be among 1, 2, 4, and 8.", 1);
+        }
+
+        if (max_unit_size<1 || max_unit_size > 255) {
+            print_help_and_exit("The maximum motif size must lay in the interval [1, 255].", 1);
+        }
+
+        if (max_rep_per_type<=0) {
+            print_help_and_exit("The maximum stored repetitions per type must be a positive value.", 1);
         }
 
         if (std::ifstream(output_filename).good() && !vm.count("force-overwrite")) {
@@ -194,30 +181,33 @@ public:
         }
     }
 
-    std::list<Races::Mutations::GenomicRegion> run() const
+    void run() const
     {
-        using namespace Races::IO::FASTA;
-
-        switch (byte_per_abs_position) {
+        switch (rep_type_size) {
+            case 1:
+                build_and_save_rs_index<uint8_t>();
+                return;
             case 2:
-                return build_and_save_context_index<uint16_t>();
+                build_and_save_rs_index<uint16_t>();
+                return;
             case 4:
-                return build_and_save_context_index<uint32_t>();
+                build_and_save_rs_index<uint32_t>();
+                return;
             case 8:
-                return build_and_save_context_index<uint64_t>();
+                build_and_save_rs_index<uint64_t>();
+                return;
             default:
                 std::cerr << "Unsupported bits per absolute position."
                         << " Supported values are 1, 2, 4, or 8." << std::endl<< std::endl;
 
                 print_help_and_exit(1);
-                exit(1);
         }
     }
 };
 
 int main(const int argc, const char* argv[])
 {
-    ContextIndexBuilder builder(argc, argv);
+    RepetitionIndexBuilder builder(argc, argv);
 
     builder.run();
 
