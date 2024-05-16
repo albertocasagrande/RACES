@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.24
- * @date 2024-05-15
+ * @version 0.25
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -139,7 +139,7 @@ public:
     /**
      * @brief Get the default exposure
      *
-     * @param mutation_name is the mutation type name (i.e., either "ID" or "SBS")
+     * @param mutation_name is the mutation type name (i.e., either "indel" or "SBS")
      * @param exposures_json is the JSON of the exposures
      * @return a map associating to a set of SBS signatures their percentage
      *          in the default mutational configuration
@@ -151,7 +151,7 @@ public:
     /**
      * @brief Add the timed exposures to a mutation engine
      *
-     * @param mutation_name is the mutation type name (i.e., either "ID" or "SBS")
+     * @param mutation_name is the mutation type name (i.e., either "indel" or "SBS")
      * @param exposures_json is the JSON of the exposures
      */
     static std::map<double, Races::Mutations::MutationalExposure>

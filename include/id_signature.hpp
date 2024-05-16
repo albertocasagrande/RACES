@@ -2,8 +2,8 @@
  * @file id_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indel signature
- * @version 0.1
- * @date 2024-05-13
+ * @version 0.2
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,6 +36,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "mutation.hpp"
 #include "signature.hpp"
 
 namespace Races
@@ -54,7 +55,7 @@ namespace Mutations
  * HETEROPOLYMER) or the homology size (for MICROHOMOLOGY), and a Boolean flag
  * establishing whether the mutation is an insertion or a deletion.
  */
-class IDType
+class IDType : public MutationType
 {
 public:
     using RepetitionType = uint16_t;
@@ -115,6 +116,27 @@ public:
      * @param type is the textual representation of an ID type
      */
     explicit IDType(const std::string& type);
+
+    /**
+     * @brief Get the type of the mutation type
+     *
+     * @return the type of the mutation type (i.e.,
+     *      `MutationType::Type::INDEL`)
+     */
+    static inline constexpr Type type()
+    {
+        return Type::INDEL;
+    }
+
+    /**
+     * @brief Get the mutation type name
+     *
+     * @return the mutation type name
+     */
+    static inline const std::string name()
+    {
+        return "indel";
+    }
 
     /**
      * @brief Test whether two ID types are equivalent

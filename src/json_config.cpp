@@ -2,8 +2,8 @@
  * @file json_config.cpp
  * @author Alberto Casagrande (alberto.casagrande@units.it)
  * @brief Implements classes and function for reading JSON configurations
- * @version 0.30
- * @date 2024-05-15
+ * @version 0.31
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -70,7 +70,10 @@ ConfigReader::get_epistate_passenger_rates(const nlohmann::json& epistate_rates_
                                     "must be objects");
     }
 
-    double SNV_rate{0}, CNA_rate{0};
+    double indel_rate{0}, SNV_rate{0}, CNA_rate{0};
+    if (epistate_rates_json.contains("indel")) {
+        indel_rate = epistate_rates_json["indel"].get<double>();
+    }
     if (epistate_rates_json.contains("SNV")) {
         SNV_rate = epistate_rates_json["SNV"].get<double>();
     }
@@ -80,8 +83,8 @@ ConfigReader::get_epistate_passenger_rates(const nlohmann::json& epistate_rates_
 
     return {
         get_from<std::string>("epistate", epistate_rates_json,
-                                "All the elements in \"passenger rates\""),
-        Races::Mutations::PassengerRates(SNV_rate, CNA_rate)
+                              "All the elements in \"passenger rates\""),
+        Races::Mutations::PassengerRates(indel_rate, SNV_rate, CNA_rate)
     };
 }
 
@@ -185,8 +188,8 @@ ConfigReader::schedule_mutation(const std::string& mutant_name,
     }
 
     auto type = get_from<std::string>("type", mutation_json,
-                                        "All the elements in \"mutations\"");
-    if (type=="SNV" || type=="Indel") {
+                                      "All the elements in \"mutations\"");
+    if (type=="SNV" || type=="indel") {
         add_SID(mutant_name, SIDs, mutation_json);
 
         return;

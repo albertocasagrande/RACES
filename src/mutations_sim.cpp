@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.25
- * @date 2024-05-15
+ * @version 0.26
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -385,7 +385,7 @@ class MutationsSimulator : public BasicExecutable
     template<typename GENOME_WIDE_POSITION>
     static void add_exposures(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION>& engine,
                               const nlohmann::json& exposures_json, const std::string& mutation_name,
-                              const Races::Mutations::Mutation::Type& mutation_type)
+                              const Races::Mutations::MutationType::Type& mutation_type)
     {
         using namespace Races;
 
@@ -491,8 +491,8 @@ class MutationsSimulator : public BasicExecutable
 
         const auto& exposures_json = simulation_cfg["exposures"];
 
-        add_exposures(engine, exposures_json, "SBS", Mutation::Type::SBS);
-        add_exposures(engine, exposures_json, "ID", Mutation::Type::INDEL);
+        add_exposures(engine, exposures_json, "SBS", MutationType::Type::SBS);
+        add_exposures(engine, exposures_json, "indel", MutationType::Type::INDEL);
 
         auto num_of_pnp_mutations = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg);
 

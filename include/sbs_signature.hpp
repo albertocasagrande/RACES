@@ -2,8 +2,8 @@
  * @file sbs_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SBS signature
- * @version 0.16
- * @date 2024-05-13
+ * @version 0.17
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -38,7 +38,7 @@
 
 #include "sbs_context.hpp"
 #include "genomic_sequence.hpp"
-
+#include "mutation.hpp"
 #include "signature.hpp"
 
 namespace Races
@@ -58,7 +58,7 @@ namespace Mutations
  * is not a normal context, the complement context
  * and replacing nucleic base are used.
  */
-class SBSType
+class SBSType : public MutationType
 {
     SBSContext context;    //!< the normal context
     char replace_base;     //!< the replace base
@@ -125,6 +125,27 @@ public:
     inline char get_complement_replace_base() const
     {
         return GenomicSequence::get_complemented(replace_base);
+    }
+
+    /**
+     * @brief Get the type of the mutation type
+     *
+     * @return the type of the mutation type (i.e.,
+     *      `MutationType::Type::SBS`)
+     */
+    static inline constexpr Type type()
+    {
+        return Type::SBS;
+    }
+
+    /**
+     * @brief Get the mutation type name
+     *
+     * @return the mutation type name
+     */
+    static inline const std::string name()
+    {
+        return "SBS";
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.19
- * @date 2024-04-23
+ * @version 0.20
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,11 +39,12 @@ namespace Mutations
 {
 
 PassengerRates::PassengerRates():
-    snv{0}, cna{0}
+    indel{0}, snv{0}, cna{0}
 {}
 
-PassengerRates::PassengerRates(const double& SNV_rate, const double& CNA_rate):
-    snv{SNV_rate}, cna{CNA_rate}
+PassengerRates::PassengerRates(const double& indel_rate, const double& SNV_rate,
+                               const double& CNA_rate):
+    indel{indel_rate}, snv{SNV_rate}, cna{CNA_rate}
 {}
 
 DriverMutations::DriverMutations()

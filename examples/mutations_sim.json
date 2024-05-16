@@ -13,8 +13,8 @@
         {
             "name": "A",
             "passenger rates": [
-                { "epistate": "-", "SNV": 3e-9, "CNA": 4e-11},
-                { "epistate": "+", "SNV": 6e-9}
+                { "epistate": "-", "indel": 1e-9, "SNV": 3e-9, "CNA": 4e-11},
+                { "epistate": "+", "indel": 1e-9, "SNV": 6e-9}
             ],
             "driver mutations": [
                 {
@@ -74,19 +74,17 @@
                 }
             ]
         },
-        "ID": {
+        "indel": {
             "default": [
-                { "name": "ID3", "fraction": 0.6 },
-                { "name": "ID13", "fraction": 0.3 },
-                { "name": "ID21", "fraction": 0.1 }
+                { "name": "ID2", "fraction": 0.7 },
+                { "name": "ID20", "fraction": 0.3 }
             ],
             "timed": [
                 {
                     "time": 70,
                     "exposure": [
-                        { "name": "ID3", "fraction": 0.5 },
-                        { "name": "ID13", "fraction": 0.3 },
-                        { "name": "ID21", "fraction": 0.2 }
+                        { "name": "ID2", "fraction": 0.3 },
+                        { "name": "ID20", "fraction": 0.7 }
                     ]
                 }
             ]

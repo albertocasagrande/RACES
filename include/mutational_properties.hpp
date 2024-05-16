@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.19
- * @date 2024-04-23
+ * @version 0.20
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -80,8 +80,9 @@ struct DriverMutations
  */
 struct PassengerRates
 {
-    double snv; //!< The species SNV rate
-    double cna; //!< The species CNA rate
+    double indel;   //!< The species indel rate
+    double snv;     //!< The species SNV rate
+    double cna;     //!< The species CNA rate
 
     /**
      * @brief The empty constructor
@@ -91,10 +92,12 @@ struct PassengerRates
     /**
      * @brief A constructor
      *
+     * @param indel_rate is the the SNV rate
      * @param SNV_rate is the the SNV rate
      * @param CNA_rate is the the CNA rate
      */
-    PassengerRates(const double& SNV_rate, const double& CNA_rate);
+    PassengerRates(const double& indel_rate, const double& SNV_rate,
+                   const double& CNA_rate);
 };
 
 /**

@@ -2,8 +2,8 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a general class for mutations
- * @version 0.2
- * @date 2024-05-15
+ * @version 0.3
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -40,6 +40,43 @@ namespace Mutations
 {
 
 /**
+ * @brief The mutation type
+ */
+struct MutationType
+{
+    /**
+     * @brief Type of the mutation
+     */
+    enum class Type
+    {
+        SBS = 0,
+        INDEL = 1,
+        MNP = 2,
+        UNKNOWN = 3
+    };
+
+    /**
+     * @brief Get the type of the mutation type
+     *
+     * @return the type of the mutation type
+     */
+    static inline constexpr Type type()
+    {
+        return Type::UNKNOWN;
+    }
+
+    /**
+     * @brief Get the mutation type name
+     *
+     * @return the mutation type name
+     */
+    static inline const std::string name()
+    {
+        return "UNKNOWN";
+    }
+};
+
+/**
  * @brief A general class to represent mutations
  */
 struct Mutation : public GenomicPosition
@@ -58,17 +95,6 @@ struct Mutation : public GenomicPosition
         PRENEOPLASTIC,
         GERMINAL,
         UNDEFINED
-    };
-
-    /**
-     * @brief Type of the mutation
-     */
-    enum class Type
-    {
-        SBS = 0,
-        INDEL = 1,
-        MNP = 2,
-        UNKNOWN = 3
     };
 
     Nature nature;      //!< The mutation nature

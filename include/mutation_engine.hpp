@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.61
- * @date 2024-05-15
+ * @version 0.62
+ * @date 2024-05-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -185,18 +185,20 @@ class MutationEngine
      * randomly choosing a mutation type smaller or equal to MUTATION_TYPE.
      * The inverse cumulative signature associates such a probability to
      * MUTATION_TYPE itself for all the mutation types MUTATION_TYPE.
-     * 
+     *
      * @tparam MUTATION_TYPE is a mutation type
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     using InverseCumulativeSignature = std::map<double, MUTATION_TYPE>;
 
     /**
      * @brief A collection of inverse cumulative signatures
-     * 
+     *
      * @tparam MUTATION_TYPE is a mutation type
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     using InverseCumulativeSignatures = std::map<std::string, InverseCumulativeSignature<MUTATION_TYPE>>;
 
     /**
@@ -231,10 +233,10 @@ class MutationEngine
 
     RANDOM_GENERATOR generator; //!< the random generator
 
-    ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
-    ContextStack context_stack;                        //!< the stack of the contexts removed from `context_index`
+    ContextIndex<GENOME_WIDE_POSITION>* context_index;  //!< the genome context index
+    ContextStack context_stack;                         //!< the stack of the contexts removed from `context_index`
 
-    RSIndex rs_index;       //!< the genome repetition index
+    RSIndex* rs_index;      //!< the genome repetition index
     IDTypeStack rs_stack;   //!< the stack of the repetition removed from `rs_index`
 
     std::map<Time, MutationalExposure> timed_exposures[2];  //!< the timed exposures
@@ -245,9 +247,9 @@ class MutationEngine
 
     GenomeMutations germline_mutations; //!< the germline mutations
 
-    DriverStorage driver_storage;  //!< the driver storage
+    DriverStorage driver_storage;       //!< the driver storage
 
-    std::vector<CNA> passenger_CNAs;   //!< the admissible passenger CNAs
+    std::vector<CNA> passenger_CNAs;    //!< the admissible passenger CNAs
 
     /**
      * @brief Select a random value in a set
@@ -284,7 +286,8 @@ class MutationEngine
      * @param signature is a mutation signature
      * @return the inverse cumulative signature of `signature`
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     static InverseCumulativeSignature<MUTATION_TYPE>
     get_inv_cumulative_signature(const Signature<MUTATION_TYPE>& signature)
     {
@@ -307,16 +310,18 @@ class MutationEngine
      * The active exposure depend on the simulation time. It must be selected in
      * agreement with cell birth times.
      *
+     * @tparam MUTATION_TYPE is the type of the mutation whose exposures are aimed
      * @param mutation_type is the type of mutation affected by the exposure
      * @param cell is the cell whose birth time select the exposure
      * @return a constant reference to exposure that are associated
      *         to `cell` birth time
      */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     const MutationalExposure&
-    get_active_exposure(const Mutation::Type& mutation_type,
-                        const Mutants::Cell& cell) const
+    get_active_exposure(const Mutants::Cell& cell) const
     {
-        auto exposure_it = get_timed_exposures(mutation_type).upper_bound(cell.get_birth_time());
+        auto exposure_it = get_timed_exposures(MUTATION_TYPE::type()).upper_bound(cell.get_birth_time());
 
         return (--exposure_it)->second;
     }
@@ -334,7 +339,8 @@ class MutationEngine
      * @return a passenger mutation whose type is `mutation_type` and which
      *          was available in corresponding index
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     SID select_SID(const MUTATION_TYPE& m_type);
 
     /**
@@ -357,8 +363,8 @@ class MutationEngine
         SBSContext context = m_type.get_context();
         SBSContext compl_context = context.get_complemented();
 
-        size_t total_pos = context_index[context].size();
-        total_pos += context_index[compl_context].size();
+        size_t total_pos = (*context_index)[context].size();
+        total_pos += (*context_index)[compl_context].size();
 
         size_t index;
         {
@@ -367,8 +373,8 @@ class MutationEngine
         }
 
         char alt_base = m_type.get_replace_base();
-        if (index >= context_index[context].size()) {
-            index -= context_index[context].size();
+        if (index >= (*context_index)[context].size()) {
+            index -= (*context_index)[context].size();
             context = compl_context;
 
             alt_base = GenomicSequence::get_complemented(alt_base);
@@ -377,13 +383,13 @@ class MutationEngine
         GENOME_WIDE_POSITION pos;
 
         if (infinite_sites_model) {
-            pos = context_index.extract(context, index);
+            pos = context_index->extract(context, index);
 
             context_stack.push({context, pos});
         } else {
-            pos = context_index[context][index];
+            pos = (*context_index)[context][index];
         }
-        auto genomic_pos = context_index.get_genomic_position(pos);
+        auto genomic_pos = context_index->get_genomic_position(pos);
 
         return {genomic_pos.chr_id, genomic_pos.position,
                 context.get_central_nucleotide(), alt_base, Mutation::UNDEFINED};
@@ -408,17 +414,21 @@ class MutationEngine
         if (infinite_sites_model) {
             rs_stack.push(id_type);
         }
-        auto& repetition = rs_index.select(id_type, infinite_sites_model);
+        auto& repetition = rs_index->select(id_type, infinite_sites_model);
 
         std::string alt(1, repetition.prev_base);
-        std::string ref = alt + repetition.unit;
+        std::string ref = alt;
+        for (size_t i=0; i<repetition.num_of_repetitions; ++i) {
+            ref.append(repetition.unit);
+        }
+
         if (id_type.insertion) {
             std::swap(alt, ref);
         }
 
         GenomicPosition pos(repetition.begin);
         --pos.position;
-        
+
         return {pos, ref, alt, Mutation::UNDEFINED};
     }
 
@@ -625,46 +635,48 @@ class MutationEngine
 
     /**
      * @brief Get the number of indiced mutations of a given type
-     * 
+     *
      * @tparam MUTATION_TYPE is the mutation type
      * @param mutation_type is the type of the aimed mutation
      * @return the number of indiced mutations of type `mutation_type`
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     size_t count_available(const MUTATION_TYPE& mutation_type) const;
 
     /**
      * @brief Get the number of indiced SBSs of a given type
-     * 
+     *
      * @param mutation_type is the type of the aimed SBS
      * @return the number of indiced SBSs of type `mutation_type`
      */
     template<>
     inline size_t count_available<SBSType>(const SBSType& mutation_type) const
     {
-        return context_index[mutation_type.get_context()].size();
+        return (*context_index)[mutation_type.get_context()].size();
     }
 
     /**
      * @brief Get the number of indiced indels of a given type
-     * 
+     *
      * @param mutation_type is the type of the aimed SBS
      * @return the number of indiced SBSs of type `mutation_type`
      */
     template<>
     inline size_t count_available<IDType>(const IDType& mutation_type) const
     {
-        return rs_index.count_available_for(mutation_type);
+        return rs_index->count_available_for(mutation_type);
     }
 
     /**
      * @brief Get the inverse cumulative signatures of a type
-     * 
+     *
      * @tparam MUTATION_TYPE is the mutation type
      * @return the inverse cumulative signatures of the type
      *      `MUTATION_TYPE`
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     const InverseCumulativeSignatures<MUTATION_TYPE>&
     get_inverse_cumulative_signatures() const;
 
@@ -701,7 +713,8 @@ class MutationEngine
      * @param num_of_mutations is the number of SIDs to apply
      * @param nature is the nature of the mutations
      */
-    template<typename MUTATION_TYPE>
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     void place_SIDs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
                     const std::string& signature_name, const size_t& num_of_mutations,
                     const Mutation::Nature& nature)
@@ -753,26 +766,64 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the SNVs in a cell genome in the phylogenetic forest
+     * @brief Get the passenger rate of a specific mutation type
      *
-     * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
+     * @tparam MUTATION_TYPE is the mutation type of the aimed rate
+     * @param rates are the passenger rates
+     * @return the passenger rate of the mutation type `MUTATION_TYPE`
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    static const double& get_rate(const PassengerRates& rates);
+
+    /**
+     * @brief Get the SBS passenger rate
+     *
+     * @param rates are the passenger rates
+     * @return the SBS passenger rate
+     */
+    template<>
+    static inline const double& get_rate<SBSType>(const PassengerRates& rate)
+    {
+        return rate.snv;
+    }
+
+    /**
+     * @brief Get the indel passenger rate
+     *
+     * @param rates are the passenger rates
+     * @return the indel passenger rate
+     */
+    template<>
+    static inline const double& get_rate<IDType>(const PassengerRates& rate)
+    {
+        return rate.indel;
+    }
+
+    /**
+     * @brief Place mutations on the genome of a phylogenetic forest cell
+     *
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
-     * @param SID_rate is the rate of passegers SIDs
+     * @param rates are the passenger mutation rates
      */
-    void place_SNVs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
-                    const double& SNV_rate)
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    void place_passengers(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
+                          const PassengerRates& rates)
     {
-        const auto num_of_SNVs = number_of_mutations(cell_mutations.allelic_size(), SNV_rate);
+        const auto num_of_mutations = number_of_mutations(cell_mutations.allelic_size(),
+                                                          get_rate<MUTATION_TYPE>(rates));
 
         // for each active SBS probability in the active exposure
-        for (const auto& [SBS_name, probability]: get_active_exposure(Mutation::Type::SBS, node)) {
+        for (const auto& [signature_name, probability]:
+                get_active_exposure<MUTATION_TYPE>(node)) {
 
             // evaluate how many of the SNVs due to the current SBS
-            const size_t SBS_num_of_SNVs = probability*num_of_SNVs;
+            const size_t num_of_signature_mutations = probability*num_of_mutations;
 
-            place_SIDs<SBSType>(&node, cell_mutations, SBS_name, SBS_num_of_SNVs,
-                                Mutation::PASSENGER);
+            place_SIDs<MUTATION_TYPE>(&node, cell_mutations, signature_name,
+                                      num_of_signature_mutations, Mutation::PASSENGER);
         }
     }
 
@@ -990,7 +1041,8 @@ class MutationEngine
 
             throw std::runtime_error("Unknown species \""+ species_name +"\"");
         }
-        place_SNVs(node, cell_mutations, rates_it->second.snv);
+        place_passengers<SBSType>(node, cell_mutations, rates_it->second);
+        place_passengers<IDType>(node, cell_mutations, rates_it->second);
         place_CNAs(node, cell_mutations, rates_it->second.cna);
 
         ++visited_nodes;
@@ -1020,33 +1072,73 @@ class MutationEngine
 
         if (!infinite_sites_model) {
             // reverse context index extractions
-            while (context_stack.size() > context_stack_size) {
-                reinsert_last_context();
+            while (get_stack_size<SBSType>() > context_stack_size) {
+                restore_last_extracted_from_index<SBSType>();
             }
 
             // reverse repetition index extractions
-            while (rs_stack.size() > rs_stack_size) {
-                reinsert_last_repetition();
+            while (get_stack_size<IDType>() > rs_stack_size) {
+                restore_last_extracted_from_index<IDType>();
             }
         }
     }
 
     /**
-     * @brief Remove the context stack top and insert it in the context index
+     * @brief Get the size of the stack associated to a mutation type
+     *
+     * @tparam MUTATION_TYPE is the mutation type of the
+     *      of the stack
      */
-    inline void reinsert_last_context()
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    size_t get_stack_size() const;
+
+    /**
+     * @brief Get the size of the stack of the extracted context
+     */
+    template<>
+    inline size_t get_stack_size<SBSType>() const
+    {
+        return context_stack.size();
+    }
+
+    /**
+     * @brief Get the size of the stack of the extracted repeated sequences
+     */
+    template<>
+    inline size_t get_stack_size<IDType>() const
+    {
+        return rs_stack.size();
+    }
+
+    /**
+     * @brief Re-insert the last extracted from an index
+     *
+     * @tparam MUTATION_TYPE is the mutation type of the
+     *      of the index
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    void restore_last_extracted_from_index();
+
+    /**
+     * @brief  Re-insert the last extracted from the context index
+     */
+    template<>
+    void restore_last_extracted_from_index<SBSType>()
     {
         const auto& top_stack = context_stack.top();
-        context_index.insert(top_stack.first, top_stack.second);
+        context_index->insert(top_stack.first, top_stack.second);
         context_stack.pop();
     }
 
     /**
-     * @brief Reinsert the last repetition in the repetition index
+     * @brief  Re-insert the last extracted from the repeated sequence index
      */
-    inline void reinsert_last_repetition()
+    template<>
+    void restore_last_extracted_from_index<IDType>()
     {
-        rs_index.restore(rs_stack.top());
+        rs_index->restore(rs_stack.top());
         rs_stack.pop();
     }
 
@@ -1128,7 +1220,7 @@ class MutationEngine
     std::vector<CNA>
     filter_CNA_by_chromosome_ids(const std::vector<CNA>& CNAs) const
     {
-        auto chr_ids = context_index.get_chromosome_ids();
+        auto chr_ids = context_index->get_chromosome_ids();
 
         std::set<ChromosomeId> chr_id_set(chr_ids.begin(),chr_ids.end());
 
@@ -1172,7 +1264,7 @@ class MutationEngine
      * @return a constant reference to the exposures
      */
     inline std::map<Time, MutationalExposure>&
-    get_timed_exposures(const Mutation::Type& mutation_type)
+    get_timed_exposures(const MutationType::Type& mutation_type)
     {
         return timed_exposures[static_cast<size_t>(mutation_type)];
     }
@@ -1229,7 +1321,7 @@ public:
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={}):
-        generator(), context_index(context_index), rs_index(repetition_index),
+        generator(), context_index(&context_index), rs_index(&repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(germline_mutations), driver_storage(driver_storage),
         infinite_sites_model(true)
@@ -1274,10 +1366,10 @@ public:
 
     /**
      * @brief Validate the names of an exposure
-     * 
+     *
      * This method validates the names of an exposure by searching them among the keys
-     * of a map. 
-     * 
+     * of a map.
+     *
      * @tparam VALUE_TYPE is the map value type
      * @param signature_map is a map whose keys are the signature names
      * @param exposure is an exposure
@@ -1304,7 +1396,7 @@ public:
      * @param exposure is a SBS exposure
      * @return a reference to the updated object
      */
-    MutationEngine& add(const Mutation::Type& mutation_type, const Time& time,
+    MutationEngine& add(const MutationType::Type& mutation_type, const Time& time,
                         MutationalExposure&& exposure)
     {
         if (time<0) {
@@ -1321,10 +1413,10 @@ public:
         }
 
         switch(mutation_type) {
-            case Mutation::Type::SBS:
+            case MutationType::Type::SBS:
                 validate_signature_names(inv_cumulative_SBSs, exposure);
                 break;
-            case Mutation::Type::INDEL:
+            case MutationType::Type::INDEL:
                 validate_signature_names(inv_cumulative_IDs, exposure);
                 break;
             default:
@@ -1352,7 +1444,7 @@ public:
      * @param exposure is an SBS exposure
      * @return a reference to the updated object
      */
-    MutationEngine& add(const Mutation::Type& mutation_type, const Time& time,
+    MutationEngine& add(const MutationType::Type& mutation_type, const Time& time,
                         const MutationalExposure& exposure)
     {
         return add(mutation_type, time, MutationalExposure(exposure));
@@ -1367,7 +1459,7 @@ public:
      * @param default_exposure is the exposure at time 0
      * @return a reference to the updated object
      */
-    MutationEngine& add(const Mutation::Type& mutation_type,
+    MutationEngine& add(const MutationType::Type& mutation_type,
                         const MutationalExposure& default_exposure)
     {
         return add(mutation_type, 0, default_exposure);
@@ -1406,9 +1498,15 @@ public:
         using namespace Races::Mutants::Evolutions;
         using namespace Races::Mutations;
 
-        if (!has_default_exposure(Mutation::Type::SBS)) {
-            throw std::runtime_error("The mutation engine SBS default exposure "
-                                     "has not been set yet.");
+        for (const auto& [name, type]:
+                std::map<std::string, MutationType::Type>({{"SBS", MutationType::Type::SBS},
+                                                           {"indel", MutationType::Type::INDEL}})) {
+            if (!has_default_exposure(type)) {
+                std::ostringstream oss;
+                oss << "The mutation engine " << name << " default exposure "
+                    << "has not been set yet.";
+                throw std::runtime_error(oss.str());
+            }
         }
 
         generator.seed(seed);
@@ -1422,7 +1520,7 @@ public:
         auto species_rates = get_species_rate_map(descendants_forest);
         auto driver_mutations = get_driver_mutation_map(descendants_forest);
 
-        auto chr_regions = context_index.get_chromosome_regions();
+        auto chr_regions = context_index->get_chromosome_regions();
 
         auto wild_type_structure = germline_mutations.duplicate_structure();
 
@@ -1438,10 +1536,9 @@ public:
                             visited_node, progress_bar);
         }
 
-        // reverse context index extractions
-        while (context_stack.size() > 0) {
-            reinsert_last_context();
-        }
+        // reverse index extractions
+        reset_index<SBSType>();
+        reset_index<IDType>();
 
         return forest;
     }
@@ -1496,7 +1593,7 @@ public:
      * @param mutation_type is the type of mutation affected by the exposure
      * @return `true` if and only if a default mutation type exposure has been set
      */
-    inline bool has_default_exposure(const Mutation::Type& mutation_type) const
+    inline bool has_default_exposure(const MutationType::Type& mutation_type) const
     {
         const auto& timed_type_exposures = get_timed_exposures(mutation_type);
 
@@ -1510,8 +1607,8 @@ public:
      */
     inline bool has_default_exposures() const
     {
-        return has_default_exposure(Mutation::Type::SBS) 
-            && has_default_exposure(Mutation::Type::INDEL);
+        return has_default_exposure(MutationType::Type::SBS)
+            && has_default_exposure(MutationType::Type::INDEL);
     }
 
     /**
@@ -1530,7 +1627,7 @@ public:
      * @return a constant reference to the exposures
      */
     inline const std::map<Time, MutationalExposure>&
-    get_timed_exposures(const Mutation::Type& mutation_type) const
+    get_timed_exposures(const MutationType::Type& mutation_type) const
     {
         return timed_exposures[static_cast<size_t>(mutation_type)];
     }
@@ -1546,15 +1643,17 @@ public:
     }
 
     /**
-     * @brief Bring back the context index to its original state
+     * @brief Reset the index to its original state
      *
-     * This method may be used after an exception to bring back the
-     * context index to its original state.
+     * @tparam MUTATION_TYPE is the mutation type of the
+     *      of the index to be reset
      */
-    void reset_context_index()
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    void reset_index()
     {
-        while (!context_stack.empty()) {
-            reinsert_last_context();
+        while (get_stack_size<MUTATION_TYPE>()>0) {
+            restore_last_extracted_from_index<MUTATION_TYPE>();
         }
     }
 };
