@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.26
- * @date 2024-05-16
+ * @version 0.27
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -124,8 +124,10 @@ class MutationsSimulator : public BasicExecutable
     size_t read_size;
     size_t insert_size;
     double sequencer_error_rate;
-    std::string SNVs_csv_filename;
+    std::string SIDs_csv_filename;
     std::string CNAs_csv_filename;
+    std::string preneoplatic_SNV_signature_name;
+    std::string preneoplatic_ID_signature_name;
     std::string germline_csv_filename;
     std::string germline_subject;
     bool epigenetic_FACS;
@@ -205,18 +207,26 @@ class MutationsSimulator : public BasicExecutable
     Races::Mutations::PhylogeneticForest
     place_mutations(Races::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
                     const Races::Mutants::DescendantsForest& forest,
-                    const size_t& num_of_preneoplastic_mutations) const
+                    const size_t& num_of_preneoplastic_SNVs,
+                    const size_t& num_of_preneoplastic_IDs,
+                    const std::string& preneoplatic_SNV_signature,
+                    const std::string& preneoplatic_indel_signature) const
     {
         if (quiet) {
-            return engine.place_mutations(forest, num_of_preneoplastic_mutations);
+            return engine.place_mutations(forest, num_of_preneoplastic_SNVs,
+                                          num_of_preneoplastic_IDs, 0,
+                                          preneoplatic_SNV_signature,
+                                          preneoplatic_indel_signature);
         }
 
         Races::UI::ProgressBar progress_bar(std::cout);
 
         progress_bar.set_message("Placing mutations");
 
-        auto phylo_forest = engine.place_mutations(forest, num_of_preneoplastic_mutations,
-                                                   progress_bar);
+        auto phylo_forest = engine.place_mutations(forest, num_of_preneoplastic_SNVs,
+                                                   num_of_preneoplastic_IDs, progress_bar,
+                                                   0, preneoplatic_SNV_signature,
+                                                   preneoplatic_indel_signature);
 
         progress_bar.set_message("Mutations placed");
 
@@ -235,7 +245,7 @@ class MutationsSimulator : public BasicExecutable
         using namespace Races::UI;
         using namespace Races::Mutations;
 
-        if ((SNVs_csv_filename != "") || (CNAs_csv_filename != "")) {
+        if ((SIDs_csv_filename != "") || (CNAs_csv_filename != "")) {
 
             ProgressBar bar(std::cout);
 
@@ -243,8 +253,8 @@ class MutationsSimulator : public BasicExecutable
 
             statistics.record(mutations_list, bar);
 
-            if (SNVs_csv_filename != "") {
-                std::ofstream os(SNVs_csv_filename);
+            if (SIDs_csv_filename != "") {
+                std::ofstream os(SIDs_csv_filename);
 
                 statistics.write_SIDs_table(os);
             }
@@ -384,8 +394,7 @@ class MutationsSimulator : public BasicExecutable
 
     template<typename GENOME_WIDE_POSITION>
     static void add_exposures(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION>& engine,
-                              const nlohmann::json& exposures_json, const std::string& mutation_name,
-                              const Races::Mutations::MutationType::Type& mutation_type)
+                              const nlohmann::json& exposures_json, const std::string& mutation_name)
     {
         using namespace Races;
 
@@ -395,13 +404,13 @@ class MutationsSimulator : public BasicExecutable
 
         auto default_exposure = ConfigReader::get_default_exposure(mutation_name,
                                                                    type_exposures_json);
-        engine.add(mutation_type, default_exposure);
+        engine.add(default_exposure);
 
         auto timed_exposures = ConfigReader::get_timed_exposures(mutation_name,
                                                                  type_exposures_json);
 
         for (const auto& [time, exposure] : timed_exposures) {
-            engine.add(mutation_type, time, exposure);
+            engine.add(time, exposure);
         }
     }
 
@@ -485,18 +494,22 @@ class MutationsSimulator : public BasicExecutable
             germline = GermlineMutations::load(germline_csv_filename, num_of_alleles, germline_subject);
         }
 
-        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, rs_index, SBS_signatures, ID_signatures,
+        MutationEngine<GENOME_WIDE_POSITION> engine(context_index, rs_index,
+                                                    SBS_signatures, ID_signatures,
                                                     mutational_properties, germline, driver_storage,
                                                     passenger_CNAs);
 
         const auto& exposures_json = simulation_cfg["exposures"];
 
-        add_exposures(engine, exposures_json, "SBS", MutationType::Type::SBS);
-        add_exposures(engine, exposures_json, "indel", MutationType::Type::INDEL);
+        add_exposures(engine, exposures_json, "SBS");
+        add_exposures(engine, exposures_json, "indel");
 
-        auto num_of_pnp_mutations = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg);
+        auto num_of_pnp_SNV = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg, "SNV");
+        auto num_of_pnp_indel = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg, "indel");
 
-        auto phylogenetic_forest = place_mutations(engine, descendants_forest, num_of_pnp_mutations);
+        auto phylogenetic_forest = place_mutations(engine, descendants_forest, num_of_pnp_SNV,
+                                                   num_of_pnp_indel, preneoplatic_SNV_signature_name,
+                                                   preneoplatic_ID_signature_name);
 
         auto mutations_list = phylogenetic_forest.get_sample_mutations_list();
 
@@ -596,8 +609,8 @@ class MutationsSimulator : public BasicExecutable
                                 + "\"  is not a regular file", 1);
         }
 
-        if (vm.count("SNVs-csv")>0 && fs::exists(SNVs_csv_filename)) {
-            print_help_and_exit("\"" + std::string(SNVs_csv_filename)
+        if (vm.count("mutations-csv")>0 && fs::exists(SIDs_csv_filename)) {
+            print_help_and_exit("\"" + std::string(SIDs_csv_filename)
                                 + "\" already exists", 1);
         }
 
@@ -676,7 +689,7 @@ public:
                                   {"mutants", "Mutants evolution related options"},
                                   {"generic", "Generic options"}}),
         paired_read(false),
-        insert_size(0), sequencer_error_rate(0), SNVs_csv_filename(""),
+        insert_size(0), sequencer_error_rate(0), SIDs_csv_filename(""),
         CNAs_csv_filename(""), epigenetic_FACS(false)
     {
         namespace po = boost::program_options;
@@ -685,13 +698,19 @@ public:
 
         visible_options.at("mutations").add_options()
             ("germline-file,G", po::value<std::string>(&germline_csv_filename),
-             "a CSV file reporting the IGSR VCF file of each chromosome")
+             "CSV file reporting the IGSR VCF file of each chromosome")
             ("germline-subject,J", po::value<std::string>(&germline_subject),
-             "the name of the subject whose germline is to be used" )
-            ("SNVs-CSV,S", po::value<std::string>(&SNVs_csv_filename),
-             "the SNVs CSV output file")
+             "name of the germline subject" )
+            ("pnp-SNV,S",
+             po::value<std::string>(&preneoplatic_SNV_signature_name)->default_value("SBS1"),
+             "name of the preneoplastic SNV signature" )
+            ("pnp-indel,I",
+             po::value<std::string>(&preneoplatic_ID_signature_name)->default_value("ID1"),
+             "name of the preneoplastic indel signature" )
+            ("mutations-CSV,M", po::value<std::string>(&SIDs_csv_filename),
+             "mutations CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
-             "the CNAs CSV output file")
+             "CNAs CSV output file")
         ;
 
         visible_options.at("sequencing").add_options()
@@ -700,7 +719,7 @@ public:
             ("purity,p", po::value<double>(&purity)->default_value(1.0),
              "purity of the sample (a value in [0,1])")
             ("output-directory,d", po::value<std::string>(&seq_output_directory),
-             "the output directory for sequencing simulation")
+             "sequencing output directory")
             ("overwrite,o", "overwrite the output directory")
             ("read-size,r", po::value<size_t>(&read_size)->default_value(150),
              "simulated read size")

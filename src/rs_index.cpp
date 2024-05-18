@@ -2,8 +2,8 @@
  * @file rs_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to compute the repeated substring index
- * @version 0.2
- * @date 2024-05-15
+ * @version 0.3
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -140,18 +140,17 @@ void RSIndex::update_suffix_array(const size_t h,
     std::swap(h_classes, new_classes);
 }
 
-void RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
+bool RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
                   const ChrPosition& begin,
+                  const uint8_t index,
                   const RepetitionType& num_of_repetitions,
                   const char*& unit, const uint8_t& unit_size,
                   const char& previous_character)
 {
-    const uint8_t unit_index = (num_of_repetitions>6?6:num_of_repetitions);
-
-    auto r_it = r_map.find(unit_index);
+    auto r_it = r_map.find(index);
 
     if (r_it == r_map.end()) {
-        r_it = r_map.emplace(unit_index, RepetitionStorage()).first;
+        r_it = r_map.emplace(index, RepetitionStorage()).first;
     }
 
     auto& r_storage = r_it->second;
@@ -159,6 +158,7 @@ void RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
     if (r_storage.total_number < max_stored_repetitions) {
         r_storage.push_back({chr_id, begin, num_of_repetitions, unit, unit_size,
                                 previous_character});
+        return true;
     } else {
         std::uniform_int_distribution<size_t> dist(0, ++r_storage.total_number);
 
@@ -169,8 +169,11 @@ void RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
                                                         num_of_repetitions,
                                                         unit, unit_size,
                                                         previous_character);
+            return true;
         }
     }
+
+    return false;
 }
 
 void RSIndex::add_repetition(const char* s, const ChromosomeId& chr_id,
@@ -181,8 +184,8 @@ void RSIndex::add_repetition(const char* s, const ChromosomeId& chr_id,
     const auto rep_begin = r_begin+begin;
     if (rep_begin>1) {
         auto num_of_repetitions = 1+(r_end-r_begin)/unit_size;
-        add(chr_id, rep_begin, static_cast<RepetitionType>(num_of_repetitions),
-            s+r_begin, unit_size, *(s+r_begin-1));
+        add_polymer(chr_id, rep_begin, static_cast<RepetitionType>(num_of_repetitions),
+                    s+r_begin, unit_size, *(s+r_begin-1));
 
         fill(covered.begin()+r_begin, covered.begin()+r_end+unit_size, true);
     }
@@ -221,7 +224,7 @@ void RSIndex::add_null_heteropolymer(const char* s, const ChromosomeId& chr_id,
 {
     const auto rep_begin = r_begin+begin;
     if (rep_begin>1) {
-        auto& r_storage = hetero_map[unit_size][0];
+        auto& r_storage = (*hetero_map)[unit_size][0];
 
         if (r_storage.total_number < max_stored_repetitions) {
             std::string k_mer = build_k_mer(unit_size);
@@ -249,8 +252,8 @@ void RSIndex::add_null_homopolymer(const size_t nucleotide_index, const char* s,
 {
     const auto rep_begin = r_begin+begin;
     if (rep_begin>1) {
-        add(chr_id, rep_begin, static_cast<uint8_t>(0), s+nucleotide_index, 1,
-            *(s+r_begin));
+        add_polymer(chr_id, rep_begin, static_cast<uint8_t>(0),
+                    s+nucleotide_index, 1, *(s+r_begin));
     }
 }
 
@@ -331,8 +334,8 @@ void RSIndex::collect_repetitions(const char* s, const ChromosomeId& chr_id,
     }
 }
 
-void RSIndex::analyze_non_repeated_seq(const char* s, const ChromosomeId& chr_id,
-                                       const ChrPosition& begin, std::vector<bool>& covered)
+void RSIndex::collected_non_repeated_seq(const char* s, const ChromosomeId& chr_id,
+                                        const ChrPosition& begin, std::vector<bool>& covered)
 {
     ChrPosition begin_uncovered{0};
     std::vector<ChrPosition> last_char(1<<8, 0);
@@ -366,23 +369,55 @@ void RSIndex::analyze_non_repeated_seq(const char* s, const ChromosomeId& chr_id
     }
 }
 
-void RSIndex::add_repetitions_in(const std::string& sequence, const ChromosomeId& chr_id,
-                                 const ChrPosition begin, size_t length,
-                                 UI::ProgressBar* progress_bar)
+void RSIndex::collect_microhomologies(const char* subseq, const ChromosomeId& chr_id,
+                                      const ChrPosition& begin, std::vector<bool>& covered)
 {
-    if (length == 0) {
-        return;
-    }
+    for (size_t i=1; i<covered.size()-2; ++i) {
+        if (!covered[i]) {
+            char const* head = subseq+i;
+            const auto mh_begin = begin+i;
 
-    length = std::min(sequence.size()-begin+1, length);
-    const char *subseq = sequence.c_str()+begin-1;
+            size_t j=i+2;
+            auto cover_it = covered.begin()+j;
+            while (j<std::min(covered.size()-1, i+50) && !(*cover_it)) {
+                char const* head_z = head;
+                char const* tail_z = subseq+j;
+
+                while (tail_z<subseq+std::min(covered.size()-1, i+50)
+                        && !(*cover_it)
+                        && *(head_z)==*(tail_z)
+                        && head_z < subseq+j) {
+                    ++head_z;
+                    ++tail_z;
+                    ++cover_it;
+                }
+
+                if (head < head_z && head_z < subseq+j) {
+                    size_t homology_distance = j-i;
+                    size_t homology_size = head_z-head;
+
+                    add((*micro_map)[get_first_index(homology_distance)], chr_id, mh_begin,
+                        (homology_size<5?homology_size:5), 1, head, homology_distance,
+                        *(head-1));
+                }
+                ++j;
+                cover_it = covered.begin()+j;
+            }
+        }
+    }
+}
+
+std::vector<bool>
+RSIndex::collect_repetitions(const char *subseq, const ChromosomeId& chr_id,
+                             const ChrPosition begin, const size_t& length,
+                             UI::ProgressBar* progress_bar)
+{
+    std::vector<bool> covered(length, false);
 
     std::vector<ChrPosition> suffix_array(length), classes(length),
                                 tmp_a(length), tmp_b(length);
 
     size_t num_of_classes = init_suffix_array(subseq, suffix_array, classes);
-
-    std::vector<bool> covered(length, false);
 
     size_t h;
     size_t next_h;
@@ -400,7 +435,24 @@ void RSIndex::add_repetitions_in(const std::string& sequence, const ChromosomeId
     }
     collect_repetitions(subseq, chr_id, begin, h, suffix_array, classes, covered);
 
-    analyze_non_repeated_seq(subseq, chr_id, begin, covered);
+    return covered;
+}
+
+void RSIndex::collect_data_from(const std::string& sequence, const ChromosomeId& chr_id,
+                                const ChrPosition begin, size_t length,
+                                UI::ProgressBar* progress_bar)
+{
+    if (length < 2) {
+        return;
+    }
+
+    const char *subseq = sequence.c_str()+begin-1;
+    length = std::min(sequence.size()-begin+1, length);
+    auto covered = collect_repetitions(subseq, chr_id, begin, length, progress_bar);
+
+    collect_microhomologies(subseq, chr_id, begin, covered);
+
+    collected_non_repeated_seq(subseq, chr_id, begin, covered);
 }
 
 char RSIndex::canonize(const char& nucleotide)
@@ -412,10 +464,10 @@ char RSIndex::canonize(const char& nucleotide)
     return 'C';
 }
 
-void RSIndex::add(const ChromosomeId& chr_id, const ChrPosition& begin,
-                  const RepetitionType& num_of_repetitions,
-                  const char* unit, const size_t& unit_size,
-                  const char& previous_base)
+void RSIndex::add_polymer(const ChromosomeId& chr_id, const ChrPosition& begin,
+                          const RepetitionType& num_of_repetitions,
+                          const char* unit, const size_t& unit_size,
+                          const char& previous_base)
 {
     if (unit_size==0) {
         throw std::domain_error("Only initialized repetitions can be added.");
@@ -423,28 +475,32 @@ void RSIndex::add(const ChromosomeId& chr_id, const ChrPosition& begin,
 
     RepetitionMap* r_map;
     if (unit_size == 1) {
-        r_map = &(homo_map[canonize(unit[0])]);
+        r_map = &((*homo_map)[canonize(unit[0])]);
     } else {
-        const uint8_t unit_index = (unit_size>5?5:unit_size);
-
-        r_map = &(hetero_map[unit_index]);
+        r_map = &((*hetero_map)[get_first_index(unit_size)]);
     }
 
-    add(*r_map, chr_id, begin, num_of_repetitions, unit, unit_size,
-        previous_base);
+    const uint8_t sl_index = static_cast<uint8_t>(num_of_repetitions>6?6:num_of_repetitions);
+
+    add(*r_map, chr_id, begin, sl_index, num_of_repetitions, unit,
+        unit_size, previous_base);
 }
 
 RSIndex::RSIndex(const size_t max_unit_size, const size_t max_stored_repetitions,
                  const int seed):
+    hetero_map(std::make_shared<std::map<uint8_t, RepetitionMap>>()),
+    homo_map(std::make_shared<std::map<char, RepetitionMap>>()),
+    micro_map(std::make_shared<std::map<uint8_t, RepetitionMap>>()),
     random_gen(seed), max_unit_size(max_unit_size),
     max_stored_repetitions(max_stored_repetitions)
 {}
 
-void RSIndex::add_repetitions_in(const ChromosomeId& chr_id, const std::string& chr_sequence,
-                                 UI::ProgressBar* progress_bar)
+void RSIndex::collect_data_from(const ChromosomeId& chr_id, const std::string& chr_sequence,
+                                UI::ProgressBar* progress_bar)
 {
-    size_t begin=1, length=0;
-    for (size_t i=0; i<chr_sequence.size(); ++i) {
+    ChrPosition begin=1;
+    size_t length=0;
+    for (ChrPosition i=0; i<static_cast<ChrPosition>(chr_sequence.size()); ++i) {
         if (chr_sequence[i] != 'N' && chr_sequence[i] != 'n') {
             if (length == 0) {
                 begin = i+1;
@@ -452,12 +508,12 @@ void RSIndex::add_repetitions_in(const ChromosomeId& chr_id, const std::string& 
             ++length;
         } else {
             if (length > 0) {
-                add_repetitions_in(chr_sequence, chr_id, begin, length, progress_bar);
+                collect_data_from(chr_sequence, chr_id, begin, length, progress_bar);
                 length = 0;
             }
         }
     }
-    add_repetitions_in(chr_sequence, chr_id, begin, length, progress_bar);
+    collect_data_from(chr_sequence, chr_id, begin, length, progress_bar);
 }
 
 size_t RSIndex::count_available_for(const IDType& id_type) const
@@ -466,15 +522,22 @@ size_t RSIndex::count_available_for(const IDType& id_type) const
 
     switch (id_type.ftype) {
         case IDType::FragmentType::HETEROPOLYMER:
-            s_pointers = find_storages(hetero_map, get_first_index(id_type.fl_index),
+            s_pointers = find_storages(static_cast<const std::map<uint8_t, RepetitionMap>&>(*hetero_map),
+                                       get_first_index(id_type.fl_index),
                                        id_type.sl_index, id_type.insertion);
             break;
         case IDType::FragmentType::HOMOPOLYMER:
-            s_pointers = find_storages(homo_map, canonize(id_type.fl_index),
+            s_pointers = find_storages(static_cast<const std::map<char, RepetitionMap>&>(*homo_map),
+                                       canonize(id_type.fl_index),
+                                       id_type.sl_index, id_type.insertion);
+            break;
+        case IDType::FragmentType::MICROHOMOLOGY:
+            s_pointers = find_storages(static_cast<const std::map<uint8_t, RepetitionMap>&>(*micro_map),
+                                       get_first_index(id_type.fl_index),
                                        id_type.sl_index, id_type.insertion);
             break;
         default:
-            throw std::domain_error("Microhomology is not supported yet.");
+            throw std::domain_error("Unsupported indel type.");
     }
 
     size_t total_size{0};
@@ -498,8 +561,11 @@ RSIndex::select(const IDType& id_type, const bool remove)
             rep_reference = find_a_homopolymer(id_type.fl_index, id_type.sl_index,
                                                id_type.insertion);
             break;
+        case IDType::FragmentType::MICROHOMOLOGY:
+            rep_reference = find_a_microhomology(id_type.fl_index, id_type.sl_index);
+            break;
         default:
-            throw std::domain_error("Microhomology is not supported yet.");
+            throw std::domain_error("Unsupported indel type.");
     }
 
     if (remove) {
@@ -514,16 +580,28 @@ void RSIndex::restore(const IDType& id_type)
     RepetitionMap* r_map;
     switch (id_type.ftype) {
         case IDType::FragmentType::HETEROPOLYMER:
-            r_map = &(hetero_map.at(get_first_index(id_type.fl_index)));
+        case IDType::FragmentType::MICROHOMOLOGY:
+            r_map = &(hetero_map->at(get_first_index(id_type.fl_index)));
             break;
         case IDType::FragmentType::HOMOPOLYMER:
-            r_map = &(homo_map.at(id_type.fl_index));
+            r_map = &(homo_map->at(id_type.fl_index));
             break;
         default:
             throw std::domain_error("Microhomology is not supported yet.");
     }
 
     r_map->at(get_second_index(id_type.sl_index, id_type.insertion)).restore();
+}
+
+RSIndex RSIndex::clone() const
+{
+    RSIndex copy(max_unit_size, max_stored_repetitions);
+
+    *(copy.hetero_map) = *hetero_map;
+    *(copy.homo_map) = *homo_map;
+    *(copy.micro_map) = *micro_map;
+
+    return copy;
 }
 
 RSIndex RSIndex::build_index(const std::filesystem::path& genome_fasta,
@@ -557,11 +635,11 @@ RSIndex RSIndex::build_index(const std::filesystem::path& genome_fasta,
             progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr.chr_id));
             progress_bar->set_progress(static_cast<uint8_t>(100*genome_fasta_stream.tellg()/streamsize));
         }
-        rs_index.add_repetitions_in(chr.chr_id, chr.nucleotides, progress_bar);
+        rs_index.collect_data_from(chr.chr_id, chr.nucleotides, progress_bar);
     }
 
     if (progress_bar != nullptr) {
-        progress_bar->set_progress(100, "Repetition index built");
+        progress_bar->set_progress(100, "RS index built");
     }
 
     return rs_index;
@@ -569,13 +647,19 @@ RSIndex RSIndex::build_index(const std::filesystem::path& genome_fasta,
 
 void RSIndex::restore()
 {
-    for (auto& [unit_nucleotipe, r_map]: homo_map) {
+    for (auto& [unit_nucleotipe, r_map]: *homo_map) {
         for (auto& [num_of_repeats, r_storage]: r_map) {
             r_storage.restore();
         }
     }
 
-    for (auto& [unit_size, r_map]: hetero_map) {
+    for (auto& [unit_size, r_map]: *hetero_map) {
+        for (auto& [num_of_repeats, r_storage]: r_map) {
+            r_storage.restore();
+        }
+    }
+
+    for (auto& [unit_size, r_map]: *micro_map) {
         for (auto& [num_of_repeats, r_storage]: r_map) {
             r_storage.restore();
         }

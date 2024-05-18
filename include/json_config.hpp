@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.25
- * @date 2024-05-16
+ * @version 0.26
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -286,12 +286,16 @@ public:
      * @brief Get the number of neoplastic mutations
      *
      * @param simulation_json is the JSON simulation configuration
+     * @param type_name is the type name of the mutations (i.e., "SNV" or "indel")
      * @return the number of neoplastic mutations
      */
     static size_t
-    get_number_of_neoplastic_mutations(const nlohmann::json& simulation_json)
+    get_number_of_neoplastic_mutations(const nlohmann::json& simulation_json,
+                                       const std::string& type_name)
     {
-        return get_from<size_t>("number of pre-neoplastic mutations", simulation_json,
+        std::string desc = "number of pre-neoplastic " + type_name + "s";
+
+        return get_from<size_t>(desc, simulation_json,
                                 "The passengers simulation configuration");
     }
 };

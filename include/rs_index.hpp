@@ -2,8 +2,8 @@
  * @file rs_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to compute the repeated substring index
- * @version 0.4
- * @date 2024-05-15
+ * @version 0.5
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,6 +36,7 @@
 #include <tuple>
 #include <ostream>
 #include <random>
+#include <memory>
 
 #include "genomic_position.hpp"
 #include "genomic_region.hpp"
@@ -298,12 +299,13 @@ struct RSIndex
     };
 
     /**
-     * @brief The number-of-repetition to repetition-storage map
+     * @brief The second level index to repetition-storage map
      */
     using RepetitionMap = std::map<uint8_t, RepetitionStorage>;
 
-    std::map<uint8_t, RepetitionMap> hetero_map;  //!< The heteropolymer map unit-size to repetition-map
-    std::map<char, RepetitionMap> homo_map;       //!< Tha homopolymer map nucleotide to repetition-map
+    std::shared_ptr<std::map<uint8_t, RepetitionMap>> hetero_map;    //!< The heteropolymer map unit-size to repetition-map
+    std::shared_ptr<std::map<char, RepetitionMap>> homo_map;         //!< Tha homopolymer map nucleotide to repetition-map
+    std::shared_ptr<std::map<uint8_t, RepetitionMap>> micro_map;     //!< The micro-homology map deletion size to repetition-map
 
     std::mt19937_64 random_gen;     //!< The index random generator
 
@@ -415,14 +417,18 @@ struct RSIndex
      *      the repeated sequence
      * @param begin is the position of the repeated sequence first base
      *      in the chromosome
+     * @param index is the index of the repetition in the repetion map
      * @param num_of_repetitions is the number of repetition of the unit
      * @param unit is the pointer to the unit first base in the sequence
      * @param unit_size is the unit size
      * @param previous_base is base preceding the first repetition of
      *      the unit
+     * @return `true` if and only if the repeated sequence has been
+     *      sampled and saved in the storage
      */
-    void add(RepetitionMap& r_map, const ChromosomeId& chr_id,
+    bool add(RepetitionMap& r_map, const ChromosomeId& chr_id,
              const ChrPosition& begin,
+             const uint8_t index,
              const RepetitionType& num_of_repetitions,
              const char*& unit, const uint8_t& unit_size,
              const char& previous_character);
@@ -507,6 +513,20 @@ struct RSIndex
                              std::vector<bool>& covered);
 
     /**
+     * @brief Collect micro-homologies
+     *
+     * @param s is the considered genomic sequence
+     * @param chr_id is the identifier of the chromosome containing the
+     *      repeated sequence
+     * @param begin is the position of the genomic sequence first base
+     *      on the chromosome
+     * @param covered is the vector of bases in the considered genomic
+     *      sequence that belong to a repeated sequence
+     */
+    void collect_microhomologies(const char* s, const ChromosomeId& chr_id,
+                                 const ChrPosition& begin, std::vector<bool>& covered);
+
+    /**
      * @brief Analyze non-repeated sequence
      *
      * @param s is the considered genomic sequence
@@ -517,11 +537,27 @@ struct RSIndex
      * @param covered is the vector of bases in the considered genomic
      *      sequence that belong to a repeated sequence
      */
-    void analyze_non_repeated_seq(const char* s, const ChromosomeId& chr_id,
-                                  const ChrPosition& begin, std::vector<bool>& covered);
+    void collected_non_repeated_seq(const char* s, const ChromosomeId& chr_id,
+                                    const ChrPosition& begin, std::vector<bool>& covered);
 
     /**
      * @brief Add the repeated sequences of a genomic sequence
+     *
+     * @param s is the considered genomic sequence
+     * @param[in] chr_id is the identifier of the chromosome containing the
+     *      genomic sequence
+     * @param[in] begin is the position of the genomic sequence first base
+     *      on the chromosome
+     * @param[in] length is the length of the considered sequence
+     * @param[in,out] progress_bar is the progress bar
+     */
+    std::vector<bool>
+    collect_repetitions(const char* s, const ChromosomeId& chr_id,
+                        const ChrPosition begin, const size_t& length,
+                        UI::ProgressBar* progress_bar = nullptr);
+
+    /**
+     * @brief Collect the data from a genomic sequence
      *
      * @param[in] sequence is a genomic sequence
      * @param[in] chr_id is the identifier of the chromosome containing the
@@ -531,9 +567,10 @@ struct RSIndex
      * @param[in] length is the length of the considered sequence
      * @param[in,out] progress_bar is the progress bar
      */
-    void add_repetitions_in(const std::string& sequence, const ChromosomeId& chr_id,
-                            const ChrPosition begin, size_t length,
-                            UI::ProgressBar* progress_bar = nullptr);
+    void collect_data_from(const std::string& sequence,
+                           const ChromosomeId& chr_id,
+                           const ChrPosition begin, size_t length,
+                           UI::ProgressBar* progress_bar = nullptr);
 
     //!< @private
     static inline uint8_t get_first_index(const uint8_t& unit_size)
@@ -692,7 +729,7 @@ struct RSIndex
     find_a_heteropolymer(const uint8_t& unit_size, const uint8_t& num_of_repetitions,
                          const bool& for_insertion)
     {
-        return find_a_polymer(hetero_map, "heteropolymer", get_first_index(unit_size),
+        return find_a_polymer(*hetero_map, "heteropolymer", get_first_index(unit_size),
                               num_of_repetitions, for_insertion);
     }
 
@@ -713,8 +750,24 @@ struct RSIndex
     find_a_homopolymer(const char& unit_nucleotide, const uint8_t& num_of_repetitions,
                        const bool& for_insertion)
     {
-        return find_a_polymer(homo_map, "homopolymer", canonize(unit_nucleotide),
+        return find_a_polymer(*homo_map, "homopolymer", canonize(unit_nucleotide),
                               num_of_repetitions, for_insertion);
+    }
+
+    /**
+     * @brief Find a microhomolory
+     *
+     * @param homology_distance is the aimed micro-homology distance
+     * @param homology_size is the aimed micro-homology size
+     * @return a pair repetition storage-position refering to a micro-homology
+     *      between sequences whose distance is `homology_distance` and whose
+     *      size if `homology_size`.
+     */
+    inline std::pair<RepetitionStorage*, size_t>
+    find_a_microhomology(const uint8_t& homology_distance, const uint8_t& homology_size)
+    {
+        return find_a_polymer(*micro_map, "microhomolory", get_first_index(homology_distance),
+                              homology_size, false);
     }
 
     /**
@@ -727,7 +780,7 @@ struct RSIndex
     static char canonize(const char& nucleotide);
 
     /**
-     * @brief Add a repetition to the index
+     * @brief Add a polymeric repetition to the index
      *
      * @param chr_id is the identifier of the chromosome containing
      *      the repeated sequence
@@ -739,10 +792,10 @@ struct RSIndex
      * @param previous_base is base preceding the first repetition of
      *      the unit
      */
-    void add(const ChromosomeId& chr_id, const ChrPosition& begin,
-             const RepetitionType& num_of_repetitions,
-             const char* unit, const size_t& unit_size,
-             const char& previous_base);
+    void add_polymer(const ChromosomeId& chr_id, const ChrPosition& begin,
+                     const RepetitionType& num_of_repetitions,
+                     const char* unit, const size_t& unit_size,
+                     const char& previous_base);
 
     /**
      * @brief Add to the index all the repetitions in a chromosome
@@ -751,20 +804,8 @@ struct RSIndex
      * @param[in] chr_sequence is the nucleotide sequence of a chrosomome
      * @param[in,out] progress_bar is the progress bar
      */
-    void add_repetitions_in(const ChromosomeId& chr_id, const std::string& chr_sequence,
-                            UI::ProgressBar* progress_bar = nullptr);
-
-    /**
-     * @brief Add a repetition to the index
-     *
-     * @param[in] repetition is the repetition to be added to the index
-     */
-    inline void add(const Repetition<RepetitionType>& repetition)
-    {
-        add(repetition.begin.chr_id, repetition.begin.position,
-            repetition.num_of_repetitions, repetition.unit.c_str(), repetition.unit.size(),
-            repetition.prev_base);
-    }
+    void collect_data_from(const ChromosomeId& chr_id, const std::string& chr_sequence,
+                           UI::ProgressBar* progress_bar = nullptr);
 public:
     /**
      * @brief A constructor
@@ -794,6 +835,15 @@ public:
      * @param id_type is the ID type of the repetition to be restored in the index
      */
     void restore(const IDType& id_type);
+
+    /**
+     * @brief Deep clone the repeated sequence index
+     *
+     * This method performs a complete copy of the repeated sequence index.
+     *
+     * @return a deep clone the repeated sequence index
+     */
+    RSIndex clone() const;
 
     /**
      * @brief Get the number of repetitions matching an indel type
@@ -876,8 +926,9 @@ public:
     inline void save(ARCHIVE& archive) const
     {
         archive & sizeof(RepetitionType)
-                & hetero_map
-                & homo_map
+                & *hetero_map
+                & *homo_map
+                & *micro_map
                 & max_unit_size
                 & max_stored_repetitions;
     }
@@ -907,8 +958,9 @@ public:
             throw std::runtime_error(oss.str());
         }
 
-        archive & rs_index.hetero_map
-                & rs_index.homo_map
+        archive & *(rs_index.hetero_map)
+                & *(rs_index.homo_map)
+                & *(rs_index.micro_map)
                 & rs_index.max_unit_size
                 & rs_index.max_stored_repetitions;
 

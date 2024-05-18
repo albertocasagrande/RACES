@@ -2,8 +2,8 @@
  * @file build_repetition_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the repetition index
- * @version 0.1
- * @date 2024-05-15
+ * @version 0.2
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -110,7 +110,7 @@ public:
              "the driver mutations file")
             ("output-filename,o", po::value<std::string>(&output_filename),
              "output filename")
-            ("max-rep-per-type,r", po::value<size_t>(&max_rep_per_type)->default_value(500000),
+            ("reps-per-type,r", po::value<size_t>(&max_rep_per_type)->default_value(500000),
              "maximum number of stored repetitions per type")
             ("max-motif-size,s", po::value<size_t>(&max_unit_size)->default_value(50),
              "maximum size of the repeated motif")

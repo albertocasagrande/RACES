@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.62
- * @date 2024-05-16
+ * @version 0.63
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -48,6 +48,7 @@
 #include "driver_storage.hpp"
 
 #include "filter.hpp"
+#include "utils.hpp"
 
 
 namespace Races
@@ -233,10 +234,10 @@ class MutationEngine
 
     RANDOM_GENERATOR generator; //!< the random generator
 
-    ContextIndex<GENOME_WIDE_POSITION>* context_index;  //!< the genome context index
-    ContextStack context_stack;                         //!< the stack of the contexts removed from `context_index`
+    ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
+    ContextStack context_stack;                        //!< the stack of the contexts removed from `context_index`
 
-    RSIndex* rs_index;      //!< the genome repetition index
+    RSIndex rs_index;       //!< the genome repetition index
     IDTypeStack rs_stack;   //!< the stack of the repetition removed from `rs_index`
 
     std::map<Time, MutationalExposure> timed_exposures[2];  //!< the timed exposures
@@ -327,23 +328,6 @@ class MutationEngine
     }
 
     /**
-     * @brief Select a random SID mutation
-     *
-     * This method selects a random passenger mutation among whose having a
-     * specified type and available in the corresponding index.
-     * The selected mutation is extracted from the index and inserted
-     * into a stack to revert the selection.
-     *
-     * @tparam MUTATION_TYPE is the type of the to-be-selected mutation
-     * @param[in] mutation_type is the type of the mutation to be selected
-     * @return a passenger mutation whose type is `mutation_type` and which
-     *          was available in corresponding index
-     */
-    template<typename MUTATION_TYPE,
-             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    SID select_SID(const MUTATION_TYPE& m_type);
-
-    /**
      * @brief Select a random SBS
      *
      * This method selects a random SBS among whose having a specified
@@ -355,16 +339,15 @@ class MutationEngine
      * @return a SBS whose type is `m_type` and which was available in
      *          the context index
      */
-    template<>
-    SID select_SID<SBSType>(const SBSType& m_type)
+    SID select_SID(const SBSType& m_type)
     {
         using namespace Races::Mutations;
 
         SBSContext context = m_type.get_context();
         SBSContext compl_context = context.get_complemented();
 
-        size_t total_pos = (*context_index)[context].size();
-        total_pos += (*context_index)[compl_context].size();
+        size_t total_pos = context_index[context].size();
+        total_pos += context_index[compl_context].size();
 
         size_t index;
         {
@@ -373,8 +356,8 @@ class MutationEngine
         }
 
         char alt_base = m_type.get_replace_base();
-        if (index >= (*context_index)[context].size()) {
-            index -= (*context_index)[context].size();
+        if (index >= context_index[context].size()) {
+            index -= context_index[context].size();
             context = compl_context;
 
             alt_base = GenomicSequence::get_complemented(alt_base);
@@ -383,13 +366,13 @@ class MutationEngine
         GENOME_WIDE_POSITION pos;
 
         if (infinite_sites_model) {
-            pos = context_index->extract(context, index);
+            pos = context_index.extract(context, index);
 
             context_stack.push({context, pos});
         } else {
-            pos = (*context_index)[context][index];
+            pos = context_index[context][index];
         }
-        auto genomic_pos = context_index->get_genomic_position(pos);
+        auto genomic_pos = context_index.get_genomic_position(pos);
 
         return {genomic_pos.chr_id, genomic_pos.position,
                 context.get_central_nucleotide(), alt_base, Mutation::UNDEFINED};
@@ -406,15 +389,14 @@ class MutationEngine
      * @return an indel whose type is `m_type` and which was available in the
      *      repeated sequence index
      */
-    template<>
-    SID select_SID<IDType>(const IDType& id_type)
+    SID select_SID(const IDType& id_type)
     {
         using namespace Races::Mutations;
 
         if (infinite_sites_model) {
             rs_stack.push(id_type);
         }
-        auto& repetition = rs_index->select(id_type, infinite_sites_model);
+        auto& repetition = rs_index.select(id_type, infinite_sites_model);
 
         std::string alt(1, repetition.prev_base);
         std::string ref = alt;
@@ -634,26 +616,14 @@ class MutationEngine
     }
 
     /**
-     * @brief Get the number of indiced mutations of a given type
-     *
-     * @tparam MUTATION_TYPE is the mutation type
-     * @param mutation_type is the type of the aimed mutation
-     * @return the number of indiced mutations of type `mutation_type`
-     */
-    template<typename MUTATION_TYPE,
-             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    size_t count_available(const MUTATION_TYPE& mutation_type) const;
-
-    /**
      * @brief Get the number of indiced SBSs of a given type
      *
      * @param mutation_type is the type of the aimed SBS
      * @return the number of indiced SBSs of type `mutation_type`
      */
-    template<>
-    inline size_t count_available<SBSType>(const SBSType& mutation_type) const
+    inline size_t count_available(const SBSType& mutation_type) const
     {
-        return (*context_index)[mutation_type.get_context()].size();
+        return context_index[mutation_type.get_context()].size();
     }
 
     /**
@@ -662,10 +632,9 @@ class MutationEngine
      * @param mutation_type is the type of the aimed SBS
      * @return the number of indiced SBSs of type `mutation_type`
      */
-    template<>
-    inline size_t count_available<IDType>(const IDType& mutation_type) const
+    inline size_t count_available(const IDType& mutation_type) const
     {
-        return rs_index->count_available_for(mutation_type);
+        return rs_index.count_available_for(mutation_type);
     }
 
     /**
@@ -678,30 +647,17 @@ class MutationEngine
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
     const InverseCumulativeSignatures<MUTATION_TYPE>&
-    get_inverse_cumulative_signatures() const;
-
-    /**
-     * @brief Get the SBS inverse cumulative signatures
-     *
-     * @return the SBS inverse cumulative signatures
-     */
-    template<>
-    inline const InverseCumulativeSignatures<SBSType>&
-    get_inverse_cumulative_signatures<SBSType>() const
+    get_inverse_cumulative_signatures() const
     {
-        return inv_cumulative_SBSs;
-    }
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, SBSType>) {
+            return inv_cumulative_SBSs;
+        }
 
-    /**
-     * @brief Get the ID inverse cumulative signatures
-     *
-     * @return the ID inverse cumulative signatures
-     */
-    template<>
-    inline const InverseCumulativeSignatures<IDType>&
-    get_inverse_cumulative_signatures<IDType>() const
-    {
-        return inv_cumulative_IDs;
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, IDType>) {
+            return inv_cumulative_IDs;
+        }
+
+        throw std::runtime_error("Unsupported mutation type.");
     }
 
     /**
@@ -774,30 +730,17 @@ class MutationEngine
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    static const double& get_rate(const PassengerRates& rates);
-
-    /**
-     * @brief Get the SBS passenger rate
-     *
-     * @param rates are the passenger rates
-     * @return the SBS passenger rate
-     */
-    template<>
-    static inline const double& get_rate<SBSType>(const PassengerRates& rate)
+    static const double& get_rate(const PassengerRates& rates)
     {
-        return rate.snv;
-    }
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, SBSType>) {
+            return rates.snv;
+        }
 
-    /**
-     * @brief Get the indel passenger rate
-     *
-     * @param rates are the passenger rates
-     * @return the indel passenger rate
-     */
-    template<>
-    static inline const double& get_rate<IDType>(const PassengerRates& rate)
-    {
-        return rate.indel;
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, IDType>) {
+            return rates.indel;
+        }
+
+        throw std::runtime_error("Unsupported mutation type.");
     }
 
     /**
@@ -1091,24 +1034,17 @@ class MutationEngine
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    size_t get_stack_size() const;
-
-    /**
-     * @brief Get the size of the stack of the extracted context
-     */
-    template<>
-    inline size_t get_stack_size<SBSType>() const
+    size_t get_stack_size() const
     {
-        return context_stack.size();
-    }
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, SBSType>) {
+            return context_stack.size();
+        }
 
-    /**
-     * @brief Get the size of the stack of the extracted repeated sequences
-     */
-    template<>
-    inline size_t get_stack_size<IDType>() const
-    {
-        return rs_stack.size();
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, IDType>) {
+            return rs_stack.size();
+        }
+
+        throw std::runtime_error("Unsupported mutation type.");
     }
 
     /**
@@ -1119,27 +1055,24 @@ class MutationEngine
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    void restore_last_extracted_from_index();
-
-    /**
-     * @brief  Re-insert the last extracted from the context index
-     */
-    template<>
-    void restore_last_extracted_from_index<SBSType>()
+    void restore_last_extracted_from_index()
     {
-        const auto& top_stack = context_stack.top();
-        context_index->insert(top_stack.first, top_stack.second);
-        context_stack.pop();
-    }
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, SBSType>) {
+            const auto& top_stack = context_stack.top();
+            context_index.insert(top_stack.first, top_stack.second);
+            context_stack.pop();
 
-    /**
-     * @brief  Re-insert the last extracted from the repeated sequence index
-     */
-    template<>
-    void restore_last_extracted_from_index<IDType>()
-    {
-        rs_index->restore(rs_stack.top());
-        rs_stack.pop();
+            return;
+        }
+
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, IDType>) {
+            rs_index.restore(rs_stack.top());
+            rs_stack.pop();
+
+            return;
+        }
+
+        throw std::runtime_error("Unsupported mutation type.");
     }
 
     /**
@@ -1220,7 +1153,7 @@ class MutationEngine
     std::vector<CNA>
     filter_CNA_by_chromosome_ids(const std::vector<CNA>& CNAs) const
     {
-        auto chr_ids = context_index->get_chromosome_ids();
+        auto chr_ids = context_index.get_chromosome_ids();
 
         std::set<ChromosomeId> chr_id_set(chr_ids.begin(),chr_ids.end());
 
@@ -1267,6 +1200,59 @@ class MutationEngine
     get_timed_exposures(const MutationType::Type& mutation_type)
     {
         return timed_exposures[static_cast<size_t>(mutation_type)];
+    }
+
+    /**
+     * @brief Validate the names of an exposure
+     *
+     * This method validates the names of an exposure by searching them among the keys
+     * of a map.
+     *
+     * @param signature_map is a map whose keys are the signature names
+     * @param exposure is an exposure
+     */
+    std::map<MutationType::Type, MutationalExposure>
+    split_exposures(const MutationalExposure& exposure) const
+    {
+        std::map<MutationType::Type, MutationalExposure> exposures;
+
+        for (const auto& [name, coeff]: exposure) {
+            if (inv_cumulative_SBSs.count(name)>0) {
+                exposures[MutationType::Type::SBS][name]=coeff;
+            } else if (inv_cumulative_IDs.count(name)>0) {
+                exposures[MutationType::Type::INDEL][name]=coeff;
+            } else {
+                throw std::runtime_error("Unknown signature " + name + ".");
+            }
+        }
+
+        return exposures;
+    }
+
+    /**
+     * @brief Validate an exposure
+     *
+     * This static method validates an exposure by testing whether its
+     * coefficients sums up to 1. If this is not the case, this method
+     * throw a domain error exception.
+     *
+     * @param exposure is the exposure to-be-validated
+     */
+    static void validate_exposure(const MutationalExposure& exposure)
+    {
+        double sum{1};
+        for (const auto& [sbs, coeff]: exposure) {
+            sum -= coeff;
+        }
+
+        if (std::abs(sum)>1e-13) {
+            std::ostringstream oss;
+
+            oss << "The exposures must sum up to 1: " << exposure
+                << " sums up to " << sum << ".";
+
+            throw std::domain_error(oss.str());
+        }
     }
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
@@ -1321,7 +1307,7 @@ public:
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={}):
-        generator(), context_index(&context_index), rs_index(&repetition_index),
+        generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(germline_mutations), driver_storage(driver_storage),
         infinite_sites_model(true)
@@ -1391,44 +1377,24 @@ public:
      * This method add a exposure that will be applied from the specified simulation
      * time on.
      *
-     * @param mutation_type is the type of mutation affected by the exposure
      * @param time is the simulation time from which the exposure will be applied
-     * @param exposure is a SBS exposure
+     * @param exposure is a SNV-indel exposure
      * @return a reference to the updated object
      */
-    MutationEngine& add(const MutationType::Type& mutation_type, const Time& time,
-                        MutationalExposure&& exposure)
+    MutationEngine& add(const Time& time, const MutationalExposure& exposure)
     {
         if (time<0) {
             throw std::domain_error("Simulation time is a non-negative value");
         }
 
-        auto& timed_mutation_exposures = get_timed_exposures(mutation_type);
-
-        if (timed_mutation_exposures.count(time)>0) {
-            std::ostringstream oss;
-
-            oss << "Another exposure has been set for time " << time << ".";
-            throw std::runtime_error(oss.str());
-        }
-
-        switch(mutation_type) {
-            case MutationType::Type::SBS:
-                validate_signature_names(inv_cumulative_SBSs, exposure);
-                break;
-            case MutationType::Type::INDEL:
-                validate_signature_names(inv_cumulative_IDs, exposure);
-                break;
-            default:
-            {
-                std::ostringstream oss;
-
-                oss << "Unsupported mutation type "
-                    << static_cast<size_t>(mutation_type) << ".";
-                throw std::domain_error(oss.str());
+        for (const auto& [m_type, mt_exposure] : split_exposures(exposure)) {
+            auto& ttimed_exposures = get_timed_exposures(m_type);
+            if (ttimed_exposures.count(time)>0) {
+                throw std::runtime_error("Another exposure has been set for time "
+                                         + std::to_string(time) + ".");
             }
+            ttimed_exposures.emplace(Time(time), mt_exposure);
         }
-        timed_mutation_exposures.emplace(Time(time), std::move(exposure));
 
         return *this;
     }
@@ -1439,15 +1405,13 @@ public:
      * This method add a exposure that will be applied from the specified simulation
      * time on.
      *
-     * @param mutation_type is the type of mutation affected by the exposure
      * @param time is the simulation time from which the exposure will be applied
-     * @param exposure is an SBS exposure
+     * @param exposure is an SNV-indel exposure
      * @return a reference to the updated object
      */
-    MutationEngine& add(const MutationType::Type& mutation_type, const Time& time,
-                        const MutationalExposure& exposure)
+    MutationEngine& add(const Time& time, MutationalExposure&& exposure)
     {
-        return add(mutation_type, time, MutationalExposure(exposure));
+        return add(time, exposure);
     }
 
     /**
@@ -1455,44 +1419,59 @@ public:
      *
      * This method add a default exposure.
      *
-     * @param mutation_type is the type of mutation affected by the exposure
      * @param default_exposure is the exposure at time 0
      * @return a reference to the updated object
      */
-    MutationEngine& add(const MutationType::Type& mutation_type,
-                        const MutationalExposure& default_exposure)
+    MutationEngine& add(const MutationalExposure& default_exposure)
     {
-        return add(mutation_type, 0, default_exposure);
+        return add(0, default_exposure);
     }
 
     /**
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_mutations is the number of preneoplastic mutations
+     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
+     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
      * @param seed is the random generator seed
+     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     inline
-    PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                                       const size_t& num_of_preneoplatic_mutations,
-                                       const int& seed=0)
+    PhylogeneticForest
+    place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                    const size_t& num_of_preneoplatic_SNVs,
+                    const size_t& num_of_preneoplatic_indels,
+                    const int& seed=0,
+                    const std::string& preneoplatic_SNV_signature_name="SBS1",
+                    const std::string& preneoplatic_indel_signature_name="ID1")
     {
-        return place_mutations(descendants_forest, num_of_preneoplatic_mutations, nullptr, seed);
+        return place_mutations(descendants_forest, num_of_preneoplatic_SNVs,
+                               num_of_preneoplatic_indels, nullptr, seed,
+                               preneoplatic_SNV_signature_name,
+                               preneoplatic_indel_signature_name);
     }
 
     /**
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_mutations is the number of preneoplastic mutations
+     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
+     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
+     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
-    PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                                       const size_t& num_of_preneoplatic_mutations,
-                                       UI::ProgressBar *progress_bar, const int& seed=0)
+    PhylogeneticForest
+    place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                    const size_t& num_of_preneoplatic_SNVs,
+                    const size_t& num_of_preneoplatic_indels,
+                    UI::ProgressBar *progress_bar, const int& seed=0,
+                    const std::string& preneoplatic_SNV_signature_name="SBS1",
+                    const std::string& preneoplatic_indel_signature_name="ID1")
     {
         using namespace Races::Mutants;
         using namespace Races::Mutants::Evolutions;
@@ -1520,7 +1499,7 @@ public:
         auto species_rates = get_species_rate_map(descendants_forest);
         auto driver_mutations = get_driver_mutation_map(descendants_forest);
 
-        auto chr_regions = context_index->get_chromosome_regions();
+        auto chr_regions = context_index.get_chromosome_regions();
 
         auto wild_type_structure = germline_mutations.duplicate_structure();
 
@@ -1529,8 +1508,10 @@ public:
             GenomeMutations mutations = wild_type_structure;
 
             // place preneoplastic mutations
-            place_SIDs<SBSType>(&root, mutations, "SBS1", num_of_preneoplatic_mutations,
-                                Mutation::PRENEOPLASTIC);
+            place_SIDs<SBSType>(&root, mutations, preneoplatic_SNV_signature_name,
+                                num_of_preneoplatic_SNVs, Mutation::PRENEOPLASTIC);
+            place_SIDs<IDType>(&root, mutations, preneoplatic_indel_signature_name,
+                               num_of_preneoplatic_indels, Mutation::PRENEOPLASTIC);
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
@@ -1547,27 +1528,43 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_mutations is the number of preneoplastic mutations
+     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
+     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
+     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
-    inline PhylogeneticForest place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                                              const size_t& num_of_preneoplatic_mutations,
-                                              UI::ProgressBar &progress_bar, const int& seed=0)
+    PhylogeneticForest
+    place_mutations(const Mutants::DescendantsForest& descendants_forest,
+                    const size_t& num_of_preneoplatic_SNVs,
+                    const size_t& num_of_preneoplatic_indels,
+                    UI::ProgressBar& progress_bar, const int& seed=0,
+                    const std::string& preneoplatic_SNV_signature_name="SBS1",
+                    const std::string& preneoplatic_indel_signature_name="ID1")
     {
-        return place_mutations(descendants_forest, num_of_preneoplatic_mutations, &progress_bar, seed);
+        return place_mutations(descendants_forest, num_of_preneoplatic_SNVs,
+                               num_of_preneoplatic_indels, &progress_bar, seed,
+                               preneoplatic_SNV_signature_name, preneoplatic_indel_signature_name);
     }
 
     /**
      * @brief Get the a sample of wild-type cells
      *
      * @param num_of_cells is the number of cells in the wild-type sample
-     * @param num_of_somatic_mutations is the number of somatic mutations
+     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
+     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
+     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a sample of `num_of_cells` wild-type cells
      */
-    SampleGenomeMutations get_wild_type_sample(const size_t& num_of_cells,
-                                               const size_t& num_of_somatic_mutations)
+    SampleGenomeMutations
+    get_wild_type_sample(const size_t& num_of_cells,
+                         const size_t& num_of_preneoplatic_SNVs,
+                         const size_t& num_of_preneoplatic_indels,
+                         const std::string& preneoplatic_SNV_signature_name="SBS1",
+                         const std::string& preneoplatic_indel_signature_name="ID1")
     {
         using namespace Mutants::Evolutions;
 
@@ -1578,8 +1575,10 @@ public:
             auto mutations = std::make_shared<CellGenomeMutations>(germline_structure);
 
             // place preneoplastic mutations
-            place_SIDs<SBSType>(nullptr, *mutations, "SBS1", num_of_somatic_mutations,
-                                Mutation::PRENEOPLASTIC);
+            place_SIDs<SBSType>(nullptr, *mutations, preneoplatic_SNV_signature_name,
+                                num_of_preneoplatic_SNVs, Mutation::PRENEOPLASTIC);
+            place_SIDs<IDType>(nullptr, *mutations, preneoplatic_indel_signature_name,
+                               num_of_preneoplatic_indels, Mutation::PRENEOPLASTIC);
 
             sample_mutations.mutations.push_back(mutations);
         }

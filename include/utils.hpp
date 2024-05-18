@@ -2,8 +2,8 @@
  * @file utils.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines utility functions
- * @version 0.2
- * @date 2024-05-11
+ * @version 0.3
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,6 +30,8 @@
 
 #include <string>
 #include <filesystem>
+#include <map>
+#include <ostream>
 
 #ifndef __RACES_UTILS__
 #define __RACES_UTILS__
@@ -59,5 +61,24 @@ inline static TYPE ceil_div(const TYPE& x, const TYPE& y)
 {
     return 1 + ((x - 1) / y);
 }
+
+namespace std
+{
+
+template<typename KEYS, typename VALUES>
+std::ostream& operator<<(std::ostream& os, const std::map<KEYS, VALUES>& m)
+{
+  os << "{";
+  std::string sep = "";
+  for (const auto& [key, value]: m) {
+    os << sep << "\"" << key << "\": " << value;
+    sep = ", ";
+  }
+  os << "}";
+
+  return os;
+}
+
+}   // std
 
 #endif // __RACES_UTILS__

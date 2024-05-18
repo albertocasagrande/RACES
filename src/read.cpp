@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 0.3
- * @date 2024-05-04
+ * @version 0.4
+ * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024å
  *
@@ -299,7 +299,7 @@ std::string Read::get_CIGAR() const
         {MatchingType::DELETION, "D"},
     };
 
-    MatchingType last_seq_type;
+    MatchingType last_seq_type = MatchingType::MATCH;
     size_t last_seq=0;
     for (const auto& matching : alignment) {
         if (last_seq_type != matching) {
