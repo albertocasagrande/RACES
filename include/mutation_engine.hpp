@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.63
+ * @version 0.64
  * @date 2024-05-18
  *
  * @copyright Copyright (c) 2023-2024
@@ -758,6 +758,10 @@ class MutationEngine
         const auto num_of_mutations = number_of_mutations(cell_mutations.allelic_size(),
                                                           get_rate<MUTATION_TYPE>(rates));
 
+        if (num_of_mutations == 0) {
+            return;
+        }
+
         // for each active SBS probability in the active exposure
         for (const auto& [signature_name, probability]:
                 get_active_exposure<MUTATION_TYPE>(node)) {
@@ -1203,13 +1207,10 @@ class MutationEngine
     }
 
     /**
-     * @brief Validate the names of an exposure
+     * @brief Split mutational exposure by mutation type
      *
-     * This method validates the names of an exposure by searching them among the keys
-     * of a map.
-     *
-     * @param signature_map is a map whose keys are the signature names
      * @param exposure is an exposure
+     * @return a map from mutation type to the corresponding mutational exposure
      */
     std::map<MutationType::Type, MutationalExposure>
     split_exposures(const MutationalExposure& exposure) const
@@ -1226,33 +1227,75 @@ class MutationEngine
             }
         }
 
+        for (const auto& [m_type, s_exposure]: exposures) {
+            std::string desc = std::string(m_type==MutationType::Type::SBS? "SNV": "indel")
+                                + " exposure";
+            validate_probability(s_exposure, desc);
+        }
+
         return exposures;
     }
 
-    /**
-     * @brief Validate an exposure
+    /*
+     * @brief Validate a probability map
      *
-     * This static method validates an exposure by testing whether its
-     * coefficients sums up to 1. If this is not the case, this method
+     * This static method validates a probability by testing whether its
+     * values sum up to 1. If this is not the case, this method
      * throw a domain error exception.
      *
-     * @param exposure is the exposure to-be-validated
+     * @param prob_map is a map whose values are the key probabilities
+     * @param prob_name is the name of the probability map
+     * @param approx_error is the approximation error
      */
-    static void validate_exposure(const MutationalExposure& exposure)
+    template<typename KEYS, typename VALUES>
+    static void validate_probability(const std::map<KEYS, VALUES>& prob_map,
+                                     const std::string& prob_name,
+                                     const VALUES& approx_error=1e-13)
     {
-        double sum{1};
-        for (const auto& [sbs, coeff]: exposure) {
-            sum -= coeff;
+        VALUES sum{0};
+        for (const auto& [key, value]: prob_map) {
+            sum += value;
         }
 
-        if (std::abs(sum)>1e-13) {
+        if (std::abs(1-sum)>approx_error) {
             std::ostringstream oss;
 
-            oss << "The exposures must sum up to 1: " << exposure
+            oss << "The " << prob_name << " must sum up to 1: " << prob_map
                 << " sums up to " << sum << ".";
 
             throw std::domain_error(oss.str());
         }
+    }
+
+    /**
+     * @brief Check whether any species has a mutation rate greater than 0
+     *
+     * @param mutation_type is a mutation type (i.e., INDEL or SBS)
+     * @return `true` if and only if any specified species has a rate
+     *  for `mutation_type` greater than 0
+     */
+    bool may_place_passengers(const MutationType::Type& mutation_type) const
+    {
+        for (const auto& [species, passenger_rates] :
+                    mutational_properties.get_passenger_rates()) {
+            switch (mutation_type) {
+                case MutationType::Type::INDEL:
+                    if (passenger_rates.indel>0) {
+                        return true;
+                    }
+                    break;
+                case MutationType::Type::SBS:
+                    if (passenger_rates.snv>0) {
+                        return true;
+                    }
+                    break;
+                default:
+                    throw std::domain_error("Unsupported mutation type "
+                                            + std::to_string(static_cast<size_t>(mutation_type)));
+            }
+        }
+
+        return false;
     }
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
@@ -1480,11 +1523,9 @@ public:
         for (const auto& [name, type]:
                 std::map<std::string, MutationType::Type>({{"SBS", MutationType::Type::SBS},
                                                            {"indel", MutationType::Type::INDEL}})) {
-            if (!has_default_exposure(type)) {
-                std::ostringstream oss;
-                oss << "The mutation engine " << name << " default exposure "
-                    << "has not been set yet.";
-                throw std::runtime_error(oss.str());
+            if (may_place_passengers(type) && !has_default_exposure(type)) {
+                throw std::runtime_error("The default exposure for " + name
+                                         + "s has not been set yet.");
             }
         }
 
