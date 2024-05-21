@@ -2,10 +2,10 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumor evolution simulation
- * @version 0.48
- * @date 2024-04-03
+ * @version 0.49
+ * @date 2024-05-21
  *
- * @copyright Copyright (c) 2023-24
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -312,6 +312,28 @@ protected:
      */
     template<typename INDICATOR>
     void snapshot_on_time(INDICATOR *indicator);
+
+    /**
+     * @brief Collect proxies of cells in a rectangle
+     *
+     * @param rectangle is the rectangle of tissue in which the proxies
+     *      should be collected
+     * @return a vector of constant proxies referencing the non-wild cells
+     *      in the tissue region bounded by the rectangle
+     */
+    std::vector<Tissue::CellInTissueConstantProxy>
+    collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle) const;
+
+    /**
+     * @brief Collect proxies of cells in a rectangle
+     *
+     * @param rectangle is the rectangle of tissue in which the proxies
+     *      should be collected
+     * @return a vector of proxies referencing the non-wild cells in the
+     *      tissue region bounded by the rectangle
+     */
+    std::vector<Tissue::CellInTissueProxy>
+    collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle);
 public:
     /**
      * @brief Simulation test
@@ -967,12 +989,10 @@ public:
      * data, but avoiding cell removal. The resulting sample is
      * not stored among those collected during the simulation.
      *
-     * @param sample_name is the name of the sample
-     * @param rectangle is the rectangle to sample
+     * @param specification is the sample specification
      * @return the sample of the tissue in `rectangle`
      */
-    TissueSample simulate_sampling(const std::string& sample_name,
-                                   const RectangleSet& rectangle) const;
+    TissueSample simulate_sampling(const SampleSpecification& specification);
 
     /**
      * @brief Sample the simulation tissue
@@ -982,12 +1002,10 @@ public:
      * sample is stored among those collected during the
      * simulation.
      *
-     * @param sample_name is the name of the sample
-     * @param rectangle is the rectangle to sample
+     * @param specification is the sample specification
      * @return the sample of the tissue in `rectangle`
      */
-    TissueSample sample_tissue(const std::string& sample_name,
-                               const RectangleSet& rectangle);
+    TissueSample sample_tissue(const SampleSpecification& specification);
 
     /**
      * @brief Return all the simulation samples

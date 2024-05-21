@@ -2,23 +2,23 @@
  * @file tissue_sampler.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES tool that sample tissues
- * @version 0.11
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 0.12
+ * @date 2024-05-21
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include <iostream> 
+#include <iostream>
 #include <string>
 #include <filesystem>
 
@@ -63,7 +63,7 @@ class TissueSampler : public BasicExecutable
         for (const auto& sample_specs_json : sampling_cfg) {
             const auto sample_specs = ConfigReader::get_sample_specification(sample_specs_json);
 
-            simulation.sample_tissue(sample_specs.get_name(), sample_specs.get_region());
+            simulation.sample_tissue(sample_specs);
         }
 
         simulation.make_snapshot<Races::UI::ProgressBar>(nullptr);
@@ -84,9 +84,9 @@ public:
         ;
 
         hidden_options.add_options()
-            ("species simulation", po::value<std::filesystem::path>(&species_directory), 
+            ("species simulation", po::value<std::filesystem::path>(&species_directory),
             "the species simulation directory")
-            ("sampling-config", po::value<std::filesystem::path>(&config), 
+            ("sampling-config", po::value<std::filesystem::path>(&config),
             "the sampling simulation config")
         ;
 

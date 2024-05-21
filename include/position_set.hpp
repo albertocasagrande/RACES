@@ -2,23 +2,23 @@
  * @file position_set.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to represent tissue position set
- * @version 0.8
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 0.9
+ * @date 2025-05-21
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -53,9 +53,9 @@ struct BasicPositionSet
 
     /**
      * @brief Get the initial sampled cell iterator
-     * 
+     *
      * This method must be over-loaded.
-     * 
+     *
      * @return the initial sampled cell iterator
      * @throws std::runtime_error
      */
@@ -63,9 +63,9 @@ struct BasicPositionSet
 
     /**
      * @brief Get the final sampled cell iterator
-     * 
+     *
      * This method must be over-loaded.
-     * 
+     *
      * @return the final sampled cell iterator
      * @throws std::runtime_error
      */
@@ -73,7 +73,7 @@ struct BasicPositionSet
 
     /**
      * @brief Return the number of positions in the rectangle
-     * 
+     *
      * @return the number of positions in the rectangle
      */
     virtual size_t size() const = 0;
@@ -103,7 +103,7 @@ struct RectangleSet : public BasicPositionSet
 
         /**
          * @brief A constructor
-         * 
+         *
          * @param rectangle is the a rectangle set
          * @param position is the current position of the new iterator
          */
@@ -122,34 +122,34 @@ struct RectangleSet : public BasicPositionSet
 
         /**
          * @brief Reference operator
-         * 
-         * @return a reference to the species pointer by the iterator 
+         *
+         * @return a reference to the species pointer by the iterator
          */
-        inline reference operator*() const 
-        { 
+        inline reference operator*() const
+        {
             return pos;
         }
 
         /**
          * @brief Pointer operator
-         * 
-         * @return a pointer to the species pointer by the iterator 
+         *
+         * @return a pointer to the species pointer by the iterator
          */
-        inline pointer operator->() 
+        inline pointer operator->()
         {
             return &(pos);
         }
 
         /**
          * @brief The prefix increment
-         * 
+         *
          * @return a reference to the updated object
          */
         const_iterator& operator++();
 
         /**
          * @brief The postfix increment
-         * 
+         *
          * @return a copy of the original object
          */
         inline const_iterator operator++(int)
@@ -163,14 +163,14 @@ struct RectangleSet : public BasicPositionSet
 
         /**
          * @brief The prefix decrement
-         * 
+         *
          * @return a reference to the updated object
          */
         const_iterator& operator--();
 
         /**
          * @brief The postfix decrement
-         * 
+         *
          * @return a copy of the original object
          */
         inline const_iterator operator--(int)
@@ -184,15 +184,15 @@ struct RectangleSet : public BasicPositionSet
 
         /**
          * @brief Test whether two iterators are the same
-         * 
+         *
          * @param a is the first iterator to compare
          * @param b is the second iterator to compare
-         * @return `true` if and only if the two iterators 
+         * @return `true` if and only if the two iterators
          *      refer to the same object
          */
         friend inline bool operator==(const const_iterator& a, const const_iterator& b)
-        { 
-            return (a.pos == b.pos) && (a.rectangle == b.rectangle); 
+        {
+            return (a.pos == b.pos) && (a.rectangle == b.rectangle);
         }
 
         friend struct RectangleSet;
@@ -205,79 +205,112 @@ struct RectangleSet : public BasicPositionSet
 
     /**
      * @brief A punctual hyper-rectangle set constructor
-     * 
+     *
      * @param position is the only position in the hyper-rectangle set
      */
     explicit RectangleSet(const Evolutions::PositionInTissue& position);
 
     /**
      * @brief A hyper-rectangle set constructor
-     * 
+     *
      * @param lower_corner is the hyper-rectangle lower corner
      * @param upper_corner is the hyper-rectangle upper corner
      */
-    RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+    RectangleSet(const Evolutions::PositionInTissue& lower_corner,
                  const Evolutions::PositionInTissue& upper_corner);
 
     /**
      * @brief A cuboid set constructor
-     * 
-     * @param lower_corner is the hyper-rectangle lower corner 
+     *
+     * @param lower_corner is the hyper-rectangle lower corner
      * @param x_size is the hyper-rectangle size along the x-axis
      * @param y_size is the hyper-rectangle size along the y-axis
      * @param z_size is the hyper-rectangle size along the z-axis
      */
-    RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
-                 const Evolutions::AxisSize& x_size, const Evolutions::AxisSize& y_size, 
+    RectangleSet(const Evolutions::PositionInTissue& lower_corner,
+                 const Evolutions::AxisSize& x_size, const Evolutions::AxisSize& y_size,
                  const Evolutions::AxisSize& z_size);
 
     /**
      * @brief A rectangle set constructor
-     * 
-     * @param lower_corner is the hyper-rectangle lower corner 
+     *
+     * @param lower_corner is the hyper-rectangle lower corner
      * @param x_size is the hyper-rectangle size along the x-axis
      * @param y_size is the hyper-rectangle size along the y-axis
      */
-    RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+    RectangleSet(const Evolutions::PositionInTissue& lower_corner,
                  const Evolutions::AxisSize& x_size, const Evolutions::AxisSize& y_size);
 
     /**
      * @brief Get the initial position iterator
-     * 
+     *
      * @return the initial position iterator
      */
     const_iterator begin() const;
 
     /**
      * @brief Get the final position iterator
-     * 
+     *
      * @return the final position iterator
      */
     const_iterator end() const;
 
     /**
      * @brief Return the number of positions in the rectangle
-     * 
+     *
      * @return the number of positions in the rectangle
      */
-    size_t size() const;
+    inline size_t size() const
+    {
+        return width()*height()*depth();
+    }
+
+    /**
+     * @brief Return the width of the rectangle
+     *
+     * @return the width of the rectangle
+     */
+    inline size_t width() const
+    {
+        return (upper_corner.x<lower_corner.x?0:upper_corner.x-lower_corner.x+1);
+    }
+
+    /**
+     * @brief Return the height of the rectangle
+     *
+     * @return the height of the rectangle
+     */
+    inline size_t height() const
+    {
+        return (upper_corner.y<lower_corner.y?0:upper_corner.y-lower_corner.y+1);
+    }
+
+    /**
+     * @brief Return the depth of the rectangle
+     *
+     * @return the depth of the rectangle
+     */
+    inline size_t depth() const
+    {
+        return (upper_corner.z<lower_corner.z?0:upper_corner.z-lower_corner.z+1);
+    }
 
     /**
      * @brief Save a rectangle set
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
-        archive & lower_corner 
+        archive & lower_corner
                 & upper_corner;
     }
 
     /**
      * @brief Load a timed genomic mutation from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded timed genomic mutation
@@ -295,14 +328,14 @@ struct RectangleSet : public BasicPositionSet
 
     /**
      * @brief Test whether two position rectangle sets are the same
-     * 
+     *
      * @param a is the first position rectangle set to compare
      * @param b is the second position rectangle set to compare
-     * @return `true` if and only if the two rectangle sets 
+     * @return `true` if and only if the two rectangle sets
      *      refer to the same region
      */
     friend inline bool operator==(const RectangleSet& a, const RectangleSet& b)
-    { 
+    {
         return ((a.lower_corner==b.lower_corner)
                 && (a.upper_corner==b.upper_corner));
     }
@@ -312,15 +345,15 @@ struct RectangleSet : public BasicPositionSet
 
 /**
  * @brief Test whether two iterators differs
- * 
+ *
  * @param a is the first iterator to compare
  * @param b is the second iterator to compare
- * @return `true` if and only if the two iterators 
+ * @return `true` if and only if the two iterators
  *      do not refer to the same object
  */
 inline bool operator!=(const RectangleSet::const_iterator& a, const RectangleSet::const_iterator& b)
-{ 
-    return !(a==b); 
+{
+    return !(a==b);
 }
 
 }   // Mutants
@@ -330,7 +363,7 @@ inline bool operator!=(const RectangleSet::const_iterator& a, const RectangleSet
 namespace std {
 /**
  * @brief Write the data of a rectangle position set in a stream
- * 
+ *
  * @param os is the output stream
  * @param rectangle is a rectangle position set
  * @return a reference to the updated output stream

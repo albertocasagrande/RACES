@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumor evolution simulation
- * @version 0.57
- * @date 2024-05-02
+ * @version 0.58
+ * @date 2024-05-21
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -519,7 +519,7 @@ void Simulation::handle_timed_sampling(const TimedEvent& timed_sampling, CellEve
     time = timed_sampling.time;
 
     // sample tissue
-    sample_tissue(sampling.get_name(), sampling.get_region());
+    sample_tissue(sampling);
 
     // update candidate event to avoid removed regions
     candidate_event = select_next_cell_event();
@@ -1046,50 +1046,97 @@ void Simulation::log_initial_cells()
     }
 }
 
-TissueSample
-Simulation::simulate_sampling(const std::string& sample_name, const RectangleSet& rectangle) const
+std::vector<Tissue::CellInTissueConstantProxy>
+Simulation::collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle) const
 {
-    TissueSample sample(sample_name, time, rectangle);
+    std::vector<Tissue::CellInTissueConstantProxy> proxies;
 
     for (const auto& position: rectangle) {
         if (tissue().is_valid(position)) {
-            auto cell = tissue()(position);
-            if (!cell.is_wild_type()) {
-                auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
-
-                sample.add_cell_id(cell_in_tissue.get_id());
+            auto proxy = tissue()(position);
+            if (!proxy.is_wild_type()) {
+                proxies.push_back(proxy);
             }
         }
+    }
+
+    return proxies;
+}
+
+std::vector<Tissue::CellInTissueProxy>
+Simulation::collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle)
+{
+    std::vector<Tissue::CellInTissueProxy> proxies;
+
+    for (const auto& position: rectangle) {
+        if (tissue().is_valid(position)) {
+            auto proxy = tissue()(position);
+            if (!proxy.is_wild_type()) {
+                proxies.push_back(proxy);
+            }
+        }
+    }
+
+    return proxies;
+}
+
+TissueSample
+Simulation::simulate_sampling(const SampleSpecification& specification)
+{
+    auto proxies = static_cast<const Simulation*>(this)->collect_cell_proxies_in(specification.get_bounding_box());
+
+    size_t num_of_proxies = proxies.size();
+
+    TissueSample sample(specification.get_name(), time, specification.get_bounding_box(),
+                        num_of_proxies);
+    size_t to_collect = std::min(specification.get_num_of_cells(), num_of_proxies);
+    while (to_collect>0) {
+        std::uniform_int_distribution<size_t> dist(0, --num_of_proxies);
+
+        size_t pos = dist(random_gen);
+
+        auto& cell_proxy = proxies[pos];
+        auto cell_in_tissue = static_cast<const CellInTissue&>(cell_proxy);
+        sample.add_cell_id(cell_in_tissue.get_id());
+
+        cell_proxy = proxies[num_of_proxies];
+        --to_collect;
     }
 
     return sample;
 }
 
 TissueSample
-Simulation::sample_tissue(const std::string& sample_name, const RectangleSet& rectangle)
+Simulation::sample_tissue(const SampleSpecification& specification)
 {
-    if (name2sample.count(sample_name)>0) {
-        throw std::domain_error("Sample name \""+sample_name+ "\" has been already used");
+    if (name2sample.count(specification.get_name())>0) {
+        throw std::domain_error("Sample name \"" + specification.get_name()
+                                + "\" has been already used");
     }
 
-    TissueSample sample(sample_name, time, rectangle);
+    auto proxies = collect_cell_proxies_in(specification.get_bounding_box());
+    size_t num_of_proxies = proxies.size();
 
-    for (const auto& position: rectangle) {
-        if (tissue().is_valid(position)) {
-            auto cell = tissue()(position);
-            if (!cell.is_wild_type()) {
-                auto cell_in_tissue = static_cast<const CellInTissue&>(cell);
+    TissueSample sample(specification.get_name(), time, specification.get_bounding_box(),
+                        num_of_proxies);
+    size_t to_collect = std::min(specification.get_num_of_cells(), num_of_proxies);
+    while (to_collect>0) {
+        std::uniform_int_distribution<size_t> dist(0, --num_of_proxies);
 
-                sample.add_cell_id(cell_in_tissue.get_id());
+        size_t pos = dist(random_gen);
 
-                ++(statistics[cell_in_tissue.get_species_id()].lost_cells);
-                cell.erase();
-            }
-        }
+        auto& cell_proxy = proxies[pos];
+        auto cell_in_tissue = static_cast<const CellInTissue&>(cell_proxy);
+        sample.add_cell_id(cell_in_tissue.get_id());
+        ++(statistics[cell_in_tissue.get_species_id()].lost_cells);
+        cell_proxy.erase();
+
+        cell_proxy = proxies[num_of_proxies];
+        --to_collect;
     }
 
     samples.push_back(sample);
-    name2sample[sample_name]=(samples.end()--);
+    name2sample[specification.get_name()]=(samples.end()--);
 
     return sample;
 }

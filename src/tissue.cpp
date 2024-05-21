@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.35
- * @date 2024-04-03
+ * @version 0.36
+ * @date 2024-05-21
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -92,21 +92,21 @@ Tissue::CellInTissueProxy& Tissue::CellInTissueProxy::operator=(const Cell& cell
     // erase the cell in the current position
     erase();
 
-    Species& species = tissue.get_species(cell.get_species_id());
+    Species& species = tissue->get_species(cell.get_species_id());
 
     // if the new cell is already in its species
     if (species.contains(cell.get_id())) {
         auto cell_ptr = &species(cell.get_id());
 
         // reset the corresponding tissue position
-        tissue.cell_pointer(*cell_ptr) = nullptr;
+        tissue->cell_pointer(*cell_ptr) = nullptr;
 
         // update the cell position in the species
         *cell_ptr = position;
-        tissue.cell_pointer(position) = cell_ptr;
+        tissue->cell_pointer(position) = cell_ptr;
     } else { // if, otherwise, the new cell is not in its species
         // add the cell to the species
-        tissue.cell_pointer(position) = species.add(CellInTissue(cell, position));
+        tissue->cell_pointer(position) = species.add(CellInTissue(cell, position));
     }
 
     return *this;
@@ -116,10 +116,10 @@ void Tissue::CellInTissueProxy::erase()
 {
     // if the position already contains a cell with mutations
     if (!is_wild_type()) {
-        CellInTissue*& space_ptr = tissue.cell_pointer(position);
+        CellInTissue*& space_ptr = tissue->cell_pointer(position);
 
         // remove the cell from its species
-        Species& former_species = tissue.get_species(space_ptr->get_species_id());
+        Species& former_species = tissue->get_species(space_ptr->get_species_id());
         former_species.erase(space_ptr->get_id());
 
         space_ptr = nullptr;
@@ -139,17 +139,17 @@ void Tissue::CellInTissueProxy::switch_duplication(const bool duplication_on)
 {
     // if the position already contains a cell
     if (!is_wild_type()) {
-        CellInTissue*& space_ptr = tissue.cell_pointer(position);
+        CellInTissue*& space_ptr = tissue->cell_pointer(position);
 
         // switch duplication behaviour of the cell
-        Species& species = tissue.get_species(space_ptr->get_species_id());
+        Species& species = tissue->get_species(space_ptr->get_species_id());
         species.switch_duplication_for(space_ptr->get_id(), duplication_on);
     }
 }
 
 Tissue::CellInTissueProxy::operator CellInTissue&()
 {
-    const auto ptr = tissue.cell_pointer(position);
+    const auto ptr = tissue->cell_pointer(position);
 
     if (ptr!=nullptr) {
         return *ptr;

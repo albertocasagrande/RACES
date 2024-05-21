@@ -2,8 +2,8 @@
  * @file event_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a simulation event wrapper
- * @version 0.5
- * @date 2023-12-11
+ * @version 0.6
+ * @date 2024-05-21
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -157,7 +157,7 @@ struct SimulationEventWrapper
                 }
             case Type::SAMPLING:
                 {
-                    auto sampling = Sampling::load(archive);
+                    auto sampling = Sampling(SampleSpecification::load(archive));
 
                     return SimulationEventWrapper(sampling);
                 }

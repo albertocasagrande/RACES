@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.27
- * @date 2024-05-18
+ * @version 0.28
+ * @date 2024-05-21
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -138,7 +138,7 @@ class MutationsSimulator : public BasicExecutable
     bool quiet;
 
     std::list<Races::Mutants::Evolutions::TissueSample>
-    get_samples(const Races::Mutants::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
+    get_samples(Races::Mutants::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
     {
         using namespace Races::Mutants;
         using namespace Races::Mutants::Evolutions;
@@ -153,8 +153,7 @@ class MutationsSimulator : public BasicExecutable
 
             for (const auto& sample_region_json: sample_regions_json) {
                 auto sample_specification = Races::ConfigReader::get_sample_specification(sample_region_json);
-                samples.push_back(simulation.simulate_sampling(sample_specification.get_name(),
-                                                               sample_specification.get_region()));
+                samples.push_back(simulation.simulate_sampling(sample_specification));
             }
 
             return samples;

@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.42
- * @date 2024-04-03
+ * @version 0.43
+ * @date 2024-05-21
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -393,11 +393,11 @@ public:
     class BaseCellInTissueProxy
     {
     protected:
-        TISSUE_TYPE &tissue;                //!< tissue
-        const PositionInTissue position;    //!< position of the cell
+        TISSUE_TYPE *tissue;          //!< tissue
+        PositionInTissue position;    //!< position of the cell
 
         BaseCellInTissueProxy(TISSUE_TYPE &tissue, const PositionInTissue position):
-            tissue(tissue), position(position)
+            tissue(&tissue), position(position)
         {
             if (!tissue.is_valid(position)) {
                 std::ostringstream oss;
@@ -422,7 +422,7 @@ public:
          */
         inline bool is_wild_type() const
         {
-            return tissue.cell_pointer(position)==nullptr;
+            return tissue->cell_pointer(position)==nullptr;
         }
 
         /**
@@ -437,8 +437,8 @@ public:
                 return false;
             }
 
-            const CellInTissue& cell = *(tissue.cell_pointer(position));
-            const Species& species = tissue.species[tissue.id_pos.at(cell.get_species_id())];
+            const CellInTissue& cell = *(tissue->cell_pointer(position));
+            const Species& species = tissue->species[tissue->id_pos.at(cell.get_species_id())];
 
             return species.cell_is_available_for(cell.get_id(), event_type);
         }
@@ -460,9 +460,9 @@ public:
                 return false;
             }
 
-            auto sizes = tissue.size();
+            auto sizes = tissue->size();
 
-            const SpeciesId species_id = tissue.cell_pointer(position)->get_species_id();
+            const SpeciesId species_id = tissue->cell_pointer(position)->get_species_id();
             PositionInTissue pos;
             pos.x = (position.x>0?position.x-1:0);
             for (; (pos.x < position.x+2 &&  pos.x < sizes[0]); ++pos.x) {
@@ -471,7 +471,7 @@ public:
                     pos.z = (position.z>0?position.z-1:0);
                     for (; ((sizes.size()==3 && pos.z < position.z+2 &&  pos.z < sizes[2])
                             || (sizes.size()==2 && pos.z==0)); ++pos.z) {
-                        const auto* cell_ptr = tissue.cell_pointer(pos);
+                        const auto* cell_ptr = tissue->cell_pointer(pos);
                         if (cell_ptr==nullptr) {
                             return true;
                         }
@@ -497,7 +497,7 @@ public:
          */
         operator const CellInTissue&() const
         {
-            const auto ptr = tissue.cell_pointer(position);
+            const auto ptr = tissue->cell_pointer(position);
 
             if (ptr!=nullptr) {
                 return *ptr;

@@ -2,23 +2,23 @@
  * @file position_set.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to represent tissue position set
- * @version 0.6
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 0.7
+ * @date 2024-05-21
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -67,8 +67,8 @@ bool increase_and_update(T& value, const T& min, const T& max)
         value = min;
 
         return true;
-    } 
-    
+    }
+
     ++value;
     return false;
 }
@@ -116,8 +116,8 @@ bool decrease_and_update(T& value, const T& min, const T& max)
         value = max;
 
         return true;
-    } 
-    
+    }
+
     --value;
     return false;
 }
@@ -153,7 +153,7 @@ RectangleSet::RectangleSet(const Evolutions::PositionInTissue& position):
     RectangleSet(position, position)
 {}
 
-RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner, 
+RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner,
                            const Evolutions::PositionInTissue& upper_corner):
     lower_corner(lower_corner), upper_corner(upper_corner)
 {
@@ -163,7 +163,7 @@ RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner,
                             const Evolutions::AxisSize& x_size,
                             const Evolutions::AxisSize& y_size,
                             const Evolutions::AxisSize& z_size):
-    lower_corner(lower_corner), 
+    lower_corner(lower_corner),
     upper_corner(lower_corner.x+x_size-1,lower_corner.y+y_size-1,lower_corner.z+z_size-1)
 {
 }
@@ -171,10 +171,10 @@ RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner,
 RectangleSet::RectangleSet(const Evolutions::PositionInTissue& lower_corner,
                            const Evolutions::AxisSize& x_size,
                            const Evolutions::AxisSize& y_size):
-    lower_corner(lower_corner), 
+    lower_corner(lower_corner),
     upper_corner(lower_corner.x+x_size-1,lower_corner.y+y_size-1)
 {
-    if (lower_corner.z!=0) { 
+    if (lower_corner.z!=0) {
         throw std::domain_error("The lower corner must be a 2D position.");
     }
 }
@@ -191,19 +191,6 @@ RectangleSet::const_iterator RectangleSet::end() const
     return ++it;
 }
 
-size_t RectangleSet::size() const
-{
-    if (upper_corner.x<lower_corner.x
-            || upper_corner.y<lower_corner.y
-            || upper_corner.z<lower_corner.z) {
-        return 0;
-    }
-
-    return ((upper_corner.x-lower_corner.x+1)
-            *(upper_corner.y-lower_corner.y+1)
-            *(upper_corner.z-lower_corner.z+1));
-}
-
 }   // Mutants
 
 }   // Races
@@ -213,7 +200,7 @@ namespace std
 
 std::ostream& operator<<(std::ostream& os, const Races::Mutants::RectangleSet& rectangle)
 {
-    os << "RectangleSet{" << rectangle.lower_corner 
+    os << "RectangleSet{" << rectangle.lower_corner
        << "," << rectangle.upper_corner << "}";
 
     return os;
