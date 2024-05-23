@@ -1,9 +1,9 @@
 /**
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines a tumor evolution simulation
- * @version 0.49
- * @date 2024-05-21
+ * @brief Defines a tumour evolution simulation
+ * @version 0.50
+ * @date 2024-05-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -64,7 +64,7 @@ namespace Evolutions
 {
 
 /**
- * @brief A tumor evolution simulation
+ * @brief A tumour evolution simulation
  */
 class Simulation
 {

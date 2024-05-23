@@ -1,9 +1,9 @@
 /**
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Define a tumor evolution simulation
- * @version 0.58
- * @date 2024-05-21
+ * @brief Define a tumour evolution simulation
+ * @version 0.59
+ * @date 2024-05-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -302,7 +302,7 @@ bool border_visible_from(PositionInTissue& pos, const Tissue& tissue, const Posi
     return true;
 }
 
-bool search_tumoral_cell(PositionInTissue& pos, const Tissue& tissue, const PositionDelta& delta,
+bool search_tumour_cell(PositionInTissue& pos, const Tissue& tissue, const PositionDelta& delta,
                          const std::set<SpeciesId>& species_ids)
 {
     while (tissue.is_valid(pos)) {
@@ -337,7 +337,7 @@ bool choose_border_cell_in(PositionInTissue& pos, const Tissue& tissue, const Di
                 pos.x = (delta.x > 0?0:rect_sizes[0]-1)+lower_corner.x;
 
                 PositionInTissue towards_border(pos);
-                if (search_tumoral_cell(pos, tissue, delta, species_ids)
+                if (search_tumour_cell(pos, tissue, delta, species_ids)
                         && border_visible_from(towards_border, tissue, delta)) {
                     return true;
                 }
@@ -353,7 +353,7 @@ bool choose_border_cell_in(PositionInTissue& pos, const Tissue& tissue, const Di
                 pos.y = (delta.y > 0?0:rect_sizes[1]-1)+lower_corner.y;
 
                 PositionInTissue towards_border(pos);
-                if (search_tumoral_cell(pos, tissue, delta, species_ids)
+                if (search_tumour_cell(pos, tissue, delta, species_ids)
                         && border_visible_from(towards_border, tissue, delta)) {
                     return true;
                 }

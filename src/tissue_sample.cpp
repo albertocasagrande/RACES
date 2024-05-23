@@ -46,30 +46,30 @@ TissueSample::TissueSample():
 {}
 
 TissueSample::TissueSample(const Time& time, const RectangleSet& bounding_box,
-                           const size_t& tumor_cells_in_bbox):
-    TissueSample(time, bounding_box, tumor_cells_in_bbox, {})
+                           const size_t& tumour_cells_in_bbox):
+    TissueSample(time, bounding_box, tumour_cells_in_bbox, {})
 {}
 
 TissueSample::TissueSample(const std::string& name, const Races::Time& time,
                            const Races::Mutants::RectangleSet& bounding_box,
-                           const size_t& tumor_cells_in_bbox):
-    TissueSample(name, time, bounding_box, tumor_cells_in_bbox, {})
+                           const size_t& tumour_cells_in_bbox):
+    TissueSample(name, time, bounding_box, tumour_cells_in_bbox, {})
 {}
 
 TissueSample::TissueSample(const Time& time, const RectangleSet& bounding_box,
-                           const size_t& tumor_cells_in_bbox,
+                           const size_t& tumour_cells_in_bbox,
                            const std::list<Races::Mutants::CellId>& cell_ids):
-    TissueSample("", time, bounding_box, tumor_cells_in_bbox, cell_ids)
+    TissueSample("", time, bounding_box, tumour_cells_in_bbox, cell_ids)
 {
     name = "S_"+std::to_string(id);
 }
 
 TissueSample::TissueSample(const std::string& name, const Time& time,
                            const RectangleSet& bounding_box,
-                           const size_t& tumor_cells_in_bbox,
+                           const size_t& tumour_cells_in_bbox,
                            const std::list<Races::Mutants::CellId>& cell_ids):
     id(counter++), time(time), bounding_box(bounding_box),
-    tumor_cells_in_bbox(tumor_cells_in_bbox), cell_ids(cell_ids),
+    tumour_cells_in_bbox(tumour_cells_in_bbox), cell_ids(cell_ids),
     name(name)
 {}
 

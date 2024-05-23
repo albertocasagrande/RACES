@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.10
- * @date 2024-05-21
+ * @version 0.11
+ * @date 2024-05-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -60,7 +60,7 @@ class TissueSample
     TissueSampleId  id;         //!< The sample identifier
     Races::Time time;           //!< The sampling time
     RectangleSet bounding_box;  //!< The sample bounding box
-    size_t tumor_cells_in_bbox; //!< The number of tumor cells in the bounding box
+    size_t tumour_cells_in_bbox; //!< The number of tumour cells in the bounding box
     std::list<CellId> cell_ids; //!< The list of cell identifier
 
     std::string name;           //!< The name of the sample
@@ -76,12 +76,12 @@ public:
      *
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumor_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumeral cells in
      *      the bounding box
      */
     TissueSample(const Races::Time& time,
                  const Races::Mutants::RectangleSet& bounding_box,
-                 const size_t& tumor_cells_in_bbox);
+                 const size_t& tumour_cells_in_bbox);
 
     /**
      * @brief Construct a new cell sample
@@ -89,25 +89,25 @@ public:
      * @param name is the sample name
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumor_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumeral cells in
      *      the bounding box
      */
     TissueSample(const std::string& name, const Races::Time& time,
                  const Races::Mutants::RectangleSet& bounding_box,
-                 const size_t& tumor_cells_in_bbox);
+                 const size_t& tumour_cells_in_bbox);
 
     /**
      * @brief Construct a new cell sample
      *
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumor_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumeral cells in
      *      the bounding box
      * @param cell_ids is a list of the identifiers of the sample cells
      */
     TissueSample(const Races::Time& time,
                  const Races::Mutants::RectangleSet& bounding_box,
-                 const size_t& tumor_cells_in_bbox,
+                 const size_t& tumour_cells_in_bbox,
                  const std::list<Races::Mutants::CellId>& cell_ids);
 
     /**
@@ -116,13 +116,13 @@ public:
      * @param name is the sample name
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumor_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumeral cells in
      *      the bounding box
      * @param cell_ids is a list of the identifiers of the sample cells
      */
     TissueSample(const std::string& name, const Races::Time& time,
                  const Races::Mutants::RectangleSet& bounding_box,
-                 const size_t& tumor_cells_in_bbox,
+                 const size_t& tumour_cells_in_bbox,
                  const std::list<Races::Mutants::CellId>& cell_ids);
 
     /**
@@ -184,14 +184,14 @@ public:
     }
 
     /**
-     * @brief Get the number of tumor cells in the bounding box
+     * @brief Get the number of tumour cells in the bounding box
      *
-     * @return a constant reference to the number of tumor cells
+     * @return a constant reference to the number of tumour cells
      *      in the bounding box
      */
-    inline const size_t& get_tumor_cells_in_bbox() const
+    inline const size_t& get_tumour_cells_in_bbox() const
     {
-        return tumor_cells_in_bbox;
+        return tumour_cells_in_bbox;
     }
 
     /**
@@ -215,7 +215,7 @@ public:
     {
         archive & time
                 & bounding_box
-                & tumor_cells_in_bbox
+                & tumour_cells_in_bbox
                 & id
                 & cell_ids
                 & name;
@@ -237,10 +237,10 @@ public:
 
         RectangleSet bounding_box = RectangleSet::load(archive);
 
-        size_t tumor_cells_in_bbox;
-        archive & tumor_cells_in_bbox;
+        size_t tumour_cells_in_bbox;
+        archive & tumour_cells_in_bbox;
 
-        TissueSample tissue_sample(time, bounding_box, tumor_cells_in_bbox);
+        TissueSample tissue_sample(time, bounding_box, tumour_cells_in_bbox);
 
         archive & tissue_sample.id;
 

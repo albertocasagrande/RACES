@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.41
- * @date 2024-04-29
+ * @version 0.42
+ * @date 2024-05-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1567,7 +1567,7 @@ public:
      * @param chromosome_ids is the set of chromosome identifiers whose reads will be
      *      simulated
      * @param coverage is the aimed coverage
-     * @param purity is ratio between the number of sampled tumoral cells, which are
+     * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
      * @param base_name is the prefix of the filename (default: "chr_")
@@ -1620,8 +1620,8 @@ public:
 
         for (auto& mutation_list : mutations_list) {
             if (purity>0) {
-                size_t tumor_number = mutation_list.mutations.size();
-                size_t normal_number = static_cast<size_t>(tumor_number*(1-purity)/purity);
+                size_t tumour_number = mutation_list.mutations.size();
+                size_t normal_number = static_cast<size_t>(tumour_number*(1-purity)/purity);
 
                 for (size_t i=0; i<normal_number; ++i) {
                     mutation_list.mutations.push_back(normal_structure);
@@ -1648,7 +1648,7 @@ public:
      * @param sequencer is the sequencer
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
-     * @param purity is ratio between the number of sampled tumoral cells, which are
+     * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
      * @param base_name is the prefix of the filename (default: "chr_")
@@ -1684,7 +1684,7 @@ public:
      * @param sequencer is the sequencer
      * @param mutations is a sample genome mutations
      * @param coverage is the aimed coverage
-     * @param purity is ratio between the number of sampled tumoral cells, which are
+     * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
      * @param base_name is the prefix of the filename (default: "chr_")
@@ -1725,7 +1725,7 @@ public:
      * @param chromosome_ids is the set of chromosome identifiers whose reads will be
      *      simulated
      * @param coverage is the aimed coverage
-     * @param purity is ratio between the number of sampled tumoral cells, which are
+     * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
      * @param base_name is the prefix of the filename (default: "chr_")
