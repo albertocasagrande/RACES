@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.27
- * @date 2024-04-27
+ * @version 0.28
+ * @date 2024-05-23
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,6 +30,7 @@
 
 #include <sstream>
 #include <cassert>
+#include <exception>
 
 #include "genome_mutations.hpp"
 
@@ -152,6 +153,28 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
         throw std::domain_error("The genomic region is not in the chromosome");
     }
 
+    if (new_allele_id != RANDOM_ALLELE) {
+        if (alleles.find(new_allele_id) != alleles.end()) {
+            throw std::domain_error("Chromosome " + std::to_string(identifier)
+                                    + " already contains the allele "
+                                    + std::to_string(new_allele_id) + ".");
+        }
+
+        if (new_allele_id > this->next_allele_id) {
+            this->next_allele_id = new_allele_id + 1;
+        } else if (new_allele_id == this->next_allele_id) {
+            ++(this->next_allele_id);
+        }
+    } else {
+        new_allele_id = this->next_allele_id;
+
+        ++(this->next_allele_id);
+    }
+
+    while (alleles.find(this->next_allele_id) != alleles.end()) {
+        ++(this->next_allele_id);
+    }
+
     const auto& allele = get_allele(allele_id);
     if (!allele.contains(genomic_region)) {
         return false;
@@ -164,11 +187,7 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
     alleles.insert({next_allele_id, std::move(new_allele)});
 
     CNAs.push_back(CNA::new_amplification(genomic_region.get_begin(), genomic_region.size(),
-                                          allele_id, this->next_allele_id, nature));
-
-    new_allele_id = this->next_allele_id;
-
-    ++(this->next_allele_id);
+                                          allele_id, new_allele_id, nature));
 
     return true;
 }
