@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 0.4
- * @date 2024-05-18
+ * @version 0.5
+ * @date 2024-05-29
  *
  * @copyright Copyright (c) 2023-2024å
  *
@@ -371,10 +371,13 @@ size_t get_common_prefix_size(const std::string& a, const std::string& b)
 inline
 void update_alignment(std::vector<MatchingType>& alignment,
                       std::vector<size_t>& alignment_index,
-                      const SID& mutation, const size_t& to_be_copied)
+                      const SID& mutation, const size_t& to_be_copied,
+                      size_t& last_base, const bool is_the_last)
 {
-    const size_t common_size = get_common_prefix_size(mutation.ref,
-                                                      mutation.alt);
+    size_t common_size = get_common_prefix_size(mutation.ref,
+                                                mutation.alt);
+
+    common_size = std::min(common_size, to_be_copied);
 
     auto num_of_matches = std::min(mutation.ref.size(),
                                    to_be_copied);
@@ -383,16 +386,20 @@ void update_alignment(std::vector<MatchingType>& alignment,
         alignment_index.push_back(alignment.size());
         alignment.push_back(MatchingType::MATCH);
     }
-    for (; i< num_of_matches; ++i) {
+    for (; i<num_of_matches; ++i) {
         alignment_index.push_back(alignment.size());
         alignment.push_back(MatchingType::MISMATCH);
     }
-    for (size_t i=num_of_matches; i< mutation.ref.size(); ++i) {
+    for (size_t i=num_of_matches; i<mutation.ref.size()
+            && !is_the_last; ++i) {
+        ++last_base;
         alignment.push_back(MatchingType::DELETION);
     }
-    for (size_t i=num_of_matches; i< to_be_copied; ++i) {
-        alignment_index.push_back(alignment.size());
-        alignment.push_back(MatchingType::INSERTION);
+    if (i==mutation.ref.size()) {
+        for (size_t i=num_of_matches; i<to_be_copied; ++i) {
+            alignment_index.push_back(alignment.size());
+            alignment.push_back(MatchingType::INSERTION);
+        }
     }
 }
 
@@ -427,13 +434,15 @@ Read::Read(const std::string& reference,
     mutation_index = std::vector<MutationBaseIndex>(read_size);
 
     size_t read_end=0, ref_end=this->genomic_position.position;
+    size_t last_base = std::min(this->genomic_position.position+read_size,
+                                reference.size())-1;
 
     while (!it.is_end() && read_end < read_size
             && ref_end <= reference.size()) {
 
         // copy from the reference up to the mutation begin
         const auto ref_up_to = std::min(static_cast<size_t>(it->first.position-1),
-                                        reference.size());
+                                        last_base);
         copy_reference(reference, ref_up_to, read_end, ref_end);
 
         if (read_end < read_size) {
@@ -454,20 +463,19 @@ Read::Read(const std::string& reference,
                 mutation_index[read_end] = {mutations.size(), i};
                 ++read_end;
             }
-
-            update_alignment(alignment, alignment_index,
-                             mutation, to_be_copied);
+            update_alignment(alignment, alignment_index, mutation,
+                             to_be_copied, last_base, read_size<=read_end);
 
             mutations.push_back(mutation);
         }
 
         ++it;
     }
-
-    // copy from the reference until the mutation
-    copy_reference(reference, reference.size(), read_end, ref_end);
+    // copy from the reference until the last base
+    copy_reference(reference, last_base, read_end, ref_end);
 
     nucleotides.resize(read_end);
+    mutation_index.resize(read_end);
 }
 
 
