@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.33
- * @date 2024-05-15
+ * @version 0.34
+ * @date 2024-05-30
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -484,6 +484,14 @@ public:
     {
         return chromosomes;
     }
+
+    /**
+     * @brief Get the absolute chromosome positions
+     *
+     * @return a map from chromosome identifier to the position of the first base
+     *      of the chromosome
+     */
+    std::map<ChromosomeId, size_t> get_absolute_chromosome_positions() const;
 
     /**
      * @brief Get the mutations of a genome chromosome
