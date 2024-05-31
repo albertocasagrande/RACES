@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.23
- * @date 2024-03-11
+ * @version 0.24
+ * @date 2024-05-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -42,6 +42,8 @@
 #include <chrono>
 
 #include "progress_bar.hpp"
+
+#include "utils.hpp"
 
 /**
  * @brief The RACES namespace
@@ -115,6 +117,70 @@ public:
 };
 
 /**
+ * @brief The wrong file format descriptor exception
+ */
+struct WrongFileFormatDescr : public std::exception
+{
+    std::string expected_descr;     //!< The expected file format descriptor
+    std::string read_descr;         //!< The read file format descriptor
+
+    std::filesystem::path filepath; //!< The file path
+
+    /**
+     * @brief Construct a new wrong file format descriptor exception
+     *
+     * @param expected_description is the expected descriptor
+     * @param read_description is the read descriptor
+     * @param filepath is the file path
+     */
+    WrongFileFormatDescr(const std::string& expected_descriptor,
+                         const std::string& read_descriptor,
+                         const std::filesystem::path& filepath);
+
+    /**
+     * @brief Get the exception description
+     *
+     * @return the exception description
+     */
+    inline const char* what() const noexcept
+    {
+        return "Wrong file format descriptor.";
+    }
+};
+
+/**
+ * @brief The wrong file format version exception
+ */
+struct WrongFileFormatVersion: public std::exception
+{
+    uint8_t expected_version;     //!< The expected file format expected version
+    uint8_t read_version;         //!< The read file format read version
+
+    std::filesystem::path filepath; //!< The file path
+
+    /**
+     * @brief Construct a new wrong file format version exception
+     *
+     * @param expected_version is the expected version
+     * @param read_version is the read version
+     * @param filepath is the file path
+     */
+    WrongFileFormatVersion(const uint8_t& expected_version,
+                           const uint8_t& read_version,
+                           const std::filesystem::path& filepath);
+
+    /**
+     * @brief Get the exception description
+     *
+     * @return the exception description
+     */
+    inline const char* what() const noexcept
+    {
+        return "Wrong file format version.";
+    }
+};
+
+/**
  * @brief The namespace for basic classes
  */
 namespace Basic
@@ -125,7 +191,10 @@ namespace Basic
  */
 struct Basic
 {
-    std::fstream fs;  //!< The archive file stream
+    constexpr static uint8_t file_format_desc_size = 31;    //!< The size of the file format description
+
+    std::fstream fs;                  //!< The archive file stream
+    std::filesystem::path filepath;   //!< The archive file path
 
     /**
      * @brief The empty constructor
@@ -251,6 +320,36 @@ struct Out : public Basic
 
         return *this;
     }
+
+    /**
+     * @brief Write a file header
+     *
+     * @tparam ARCHIVE is the type archive in which the header is wrote
+     * @param[in,out] archive is the archive from which the header is read
+     * @param[in] file_format_description is the read file format description
+     * @param[in] file_format_version is the read file format version
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    static void write_header(ARCHIVE& archive, const std::string& file_format_description,
+                             const uint8_t file_format_version)
+    {
+        if (file_format_description.size() > file_format_desc_size) {
+            throw std::domain_error("The file format description \"" + file_format_description
+                                    + "\" is larger than the file format size (i.e., "
+                                    + std::to_string(file_format_desc_size) + ").");
+        }
+
+        size_t i=0;
+        for (; i<file_format_description.size(); ++i) {
+            archive & file_format_description[i];
+        }
+
+        for (; i<file_format_desc_size; ++i) {
+            archive & ' ';
+        }
+
+        archive & file_format_version;
+    }
 };
 
 /**
@@ -325,6 +424,56 @@ struct In : public Basic
      * @return the archive file size
      */
     std::streampos size();
+
+    /**
+     * @brief Read a file header
+     *
+     * @tparam ARCHIVE is the type archive from which the header is read
+     * @param[in,out] archive is the archive from which the header is read
+     * @param[out] file_format_description is the read file format description
+     * @param[out] file_format_version is the read file format version
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static void read_header(ARCHIVE& archive, std::string& file_format_description, uint8_t& file_format_version)
+    {
+        if (archive.size() - archive.tellg()<file_format_desc_size+1) {
+            throw std::runtime_error("The " + to_string(archive.filepath) + " is not a RACES archive.");
+        }
+
+        file_format_description = std::string(file_format_desc_size+1, '\n');
+
+        for (size_t i=0; i<file_format_desc_size; ++i) {
+            archive & file_format_description[i];
+        }
+
+        archive & file_format_version;
+    }
+
+    /**
+     * @brief Read a file header
+     *
+     * @tparam ARCHIVE is the type archive from which the header is read
+     * @param[in,out] archive is the archive from which the header is read
+     * @param[out] file_format_description is the read file format description
+     * @param[out] file_format_version is the read file format version
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    static void read_header(ARCHIVE& archive, const std::string& file_format_description,
+                            const uint8_t& file_format_version)
+    {
+        std::string read_descr;
+        uint8_t read_version;
+
+        ARCHIVE::read_header(archive, read_descr, read_version);
+
+        if (read_descr.substr(0, file_format_description.size()) != file_format_description) {
+            throw WrongFileFormatDescr(file_format_description, read_descr, archive.filepath);
+        }
+
+        if (read_version != file_format_version) {
+            throw WrongFileFormatVersion(file_format_version, read_version, archive.filepath);
+        }
+    }
 };
 
 /**
@@ -493,7 +642,7 @@ struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
      * @param object is the object to save
      * @param description is a description of the object to
      *          be loaded
-     * @param progress_bar_stream is the output stream for 
+     * @param progress_bar_stream is the output stream for
      *          the progress bar
      */
     template<typename T>
@@ -677,7 +826,7 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
      *          data is placed
      * @param description is a description of the object to
      *          be loaded
-     * @param progress_bar_stream is the output stream for 
+     * @param progress_bar_stream is the output stream for
      *          the progress bar
      */
     template<typename T>

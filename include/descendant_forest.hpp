@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.10
- * @date 2024-05-22
+ * @version 0.11
+ * @date 2024-05-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -739,6 +739,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES Descendants Forest", 0);
+
         archive & roots
                 & cells
                 & branches
@@ -758,6 +760,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static DescendantsForest load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES Descendants Forest", 0);
+
         DescendantsForest forest;
 
         archive & forest.roots

@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.34
- * @date 2024-05-30
+ * @version 0.35
+ * @date 2024-05-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -714,6 +714,8 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES Genome Mutations", 0);
+
         archive & static_cast<const Mutants::Cell&>(*this)
                 & static_cast<const GenomeMutations&>(*this);
     }
@@ -728,6 +730,8 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static CellGenomeMutations load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES Genome Mutations", 0);
+
         CellGenomeMutations cg_mutations;
 
         archive & static_cast<Mutants::Cell&>(cg_mutations)

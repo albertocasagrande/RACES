@@ -2,8 +2,8 @@
  * @file rs_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to compute the repeated substring index
- * @version 0.5
- * @date 2024-05-18
+ * @version 0.6
+ * @date 2024-05-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -925,6 +925,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES RS Index", 0);
+
         archive & sizeof(RepetitionType)
                 & *hetero_map
                 & *homo_map
@@ -943,6 +945,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static RSIndex load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES RS Index", 0);
+
         RSIndex rs_index;
 
         size_t size_of_repetition_type;

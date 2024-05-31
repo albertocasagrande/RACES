@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.21
- * @date 2024-05-15
+ * @version 0.22
+ * @date 2024-05-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -612,6 +612,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES Context Index", 0);
+
         uint8_t abs_pos_size = sizeof(GENOME_WIDE_POSITION);
 
         archive & abs_pos_size
@@ -630,6 +632,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static ContextIndex load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES Context Index", 0);
+
         ContextIndex context_index;
         uint8_t abs_pos_size;
 

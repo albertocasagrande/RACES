@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumour evolution simulation
- * @version 0.50
- * @date 2024-05-23
+ * @version 0.51
+ * @date 2024-05-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1129,6 +1129,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES Tissue Simulation", 0);
+
         archive & tissues
                 & lineage_graph
                 & mutant_name2id
@@ -1155,6 +1157,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static Simulation load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES Tissue Simulation", 0);
+
         Simulation simulation;
 
         archive & simulation.tissues
