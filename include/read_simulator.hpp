@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.43
+ * @version 0.44
  * @date 2024-06-03
  *
  * @copyright Copyright (c) 2023-2024
@@ -978,16 +978,19 @@ private:
     /**
      * @brief Get the name of a template
      *
-     *
+     * @param chr_id is the chromosome identifier from which the
+     *      template comes from
      * @param template_id is the identifier of the template
      * @return the name of the template whose identifier is
      *      `template_id`.
      */
-    static std::string get_template_name(const size_t& template_id)
+    static std::string get_template_name(const ChromosomeId& chr_id,
+                                         const size_t& template_id)
     {
         std::ostringstream oss_name;
 
-        oss_name << "r" <<  std::setfill('0') << std::setw(11)
+        oss_name << "r" << static_cast<size_t>(chr_id)
+                 << std::setfill('0') << std::setw(11)
                  << template_id;
 
         return oss_name.str();
@@ -1031,7 +1034,7 @@ private:
         const auto template_read_data = get_template_read_data(template_begin_pos, template_size);
 
         const size_t template_id = num_of_reads/template_read_data.size();
-        const std::string template_name = get_template_name(template_id);
+        const std::string template_name = get_template_name(chr_data.chr_id, template_id);
         Read read[2];
         for (size_t i=0; i<template_read_data.size(); ++i) {
             const auto& read_first_position = template_read_data[i].second;
@@ -1056,7 +1059,7 @@ private:
                 if (SAM_stream != nullptr) {
                     *SAM_stream << template_name                        // QNAME
                                 << '\t' << template_read_data[i].first  // FLAG
-                                << '\t' << chr_data.name                // RNAME
+                                << '\t' << "chr" << chr_data.name       // RNAME
                                 << '\t' << genomic_position.position    // POS
                                 << '\t' << mapq                         // MAPQ
                                 << '\t' << read[i].get_CIGAR();         // CIGAR
@@ -1301,8 +1304,8 @@ private:
 
         // write the SAM header
         SAM_stream << "@HD\tVN:1.6\tSO:unknown" << std::endl;
-        SAM_stream << "@SQ\tSN:" << chr_data.name << "\tLN:" << chr_data.length
-                << "\tAN:chromosome" << chr_str << ",chr" << chr_str
+        SAM_stream << "@SQ\tSN:chr" << chr_data.name << "\tLN:" << chr_data.length
+                << "\tAN:chromosome" << chr_str << "," << chr_str
                 << ",chromosome_" << chr_str << ",chr_" << chr_str << std::endl;
         for (const auto& sample_mutations : mutations_list) {
             SAM_stream << "@RG\tID:" << sample_mutations.name
