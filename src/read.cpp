@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 0.5
- * @date 2024-05-29
+ * @version 0.6
+ * @date 2024-06-03
  *
  * @copyright Copyright (c) 2023-2024å
  *
@@ -471,7 +471,9 @@ Read::Read(const std::string& reference,
 
         ++it;
     }
+
     // copy from the reference until the last base
+    last_base = read_size - read_end - 1 + ref_end;
     copy_reference(reference, last_base, read_end, ref_end);
 
     nucleotides.resize(read_end);
