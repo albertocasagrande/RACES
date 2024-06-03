@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 0.3
- * @date 2024-04-27
+ * @version 0.4
+ * @date 2024-06-03
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -55,6 +55,8 @@ namespace Sequencers
 class BasicSequencer
 {
 public:
+    constexpr static uint8_t max_phred_code = 93; //!< The maximum Phred score
+
     /**
      * @brief Get the model name
      *
@@ -197,7 +199,7 @@ public:
         (void)read_position;
         (void)read_index;
 
-        return 33;
+        return 33 + max_phred_code;
     }
 
     /**
@@ -221,7 +223,7 @@ public:
         (void)position;
         (void)read_index;
 
-        return std::string(read.size(), 33);
+        return std::string(read.size(), 33 + max_phred_code);
     }
 
     /**
@@ -323,24 +325,24 @@ public:
         (void)read_index;
 
         if (base == 'N') {
-            return 33 + 93;
+            return 33;
         }
 
         auto error_sample = error_dist(number_generator);
 
-        if (error_sample >= error_rate) {
-            return 33;
+        if (error_sample > error_rate) {
+            return 33 + max_phred_code;
         }
 
         base = get_wrong_base(base);
         if (error_sample == error_rate) {
-            return 33 + 93;
+            return 33;
         }
 
         const char qual = 34 - 10 * std::log10(1-error_sample/error_rate);
 
-        if (qual > 33 + 93) {
-            return 33 + 93;
+        if (qual > 33 + max_phred_code) {
+            return 33 + max_phred_code;
         }
 
         return qual;
@@ -364,7 +366,7 @@ public:
                              const Mutations::GenomicPosition& position,
                              const unsigned int read_index) override
     {
-        std::string qual(read.size(), 33);
+        std::string qual(read.size(), 33 + 60);
 
         const std::string& read_seq = read.get_sequence();
         auto qual_it = qual.begin();

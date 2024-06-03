@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 0.42
- * @date 2024-05-23
+ * @version 0.43
+ * @date 2024-06-03
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1048,7 +1048,7 @@ private:
 
             const auto hamming_distance = read[i].Hamming_distance();
 
-            const auto mapq = 33;
+            const auto mapq = 33 + 60;
 
             if (hamming_distance < hamming_distance_threshold) {
                 chr_statistics.account_for(read[i]);
