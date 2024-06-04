@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.29
- * @date 2024-05-30
+ * @version 0.30
+ * @date 2024-06-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -160,19 +160,19 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
                                     + std::to_string(new_allele_id) + ".");
         }
 
-        if (new_allele_id > this->next_allele_id) {
-            this->next_allele_id = new_allele_id + 1;
-        } else if (new_allele_id == this->next_allele_id) {
-            ++(this->next_allele_id);
+        if (new_allele_id > next_allele_id) {
+            next_allele_id = new_allele_id + 1;
+        } else if (new_allele_id == next_allele_id) {
+            ++(next_allele_id);
         }
     } else {
-        new_allele_id = this->next_allele_id;
+        new_allele_id = next_allele_id;
 
-        ++(this->next_allele_id);
+        ++(next_allele_id);
     }
 
-    while (alleles.find(this->next_allele_id) != alleles.end()) {
-        ++(this->next_allele_id);
+    while (alleles.find(next_allele_id) != alleles.end()) {
+        ++(next_allele_id);
     }
 
     const auto& allele = get_allele(allele_id);
@@ -180,11 +180,11 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
         return false;
     }
 
-    auto new_allele = allele.copy(next_allele_id, genomic_region);
+    auto new_allele = allele.copy(new_allele_id, genomic_region);
 
     allelic_length += new_allele.size();
 
-    alleles.insert({next_allele_id, std::move(new_allele)});
+    alleles.insert({new_allele_id, std::move(new_allele)});
 
     CNAs.push_back(CNA::new_amplification(genomic_region.get_begin(), genomic_region.size(),
                                           allele_id, new_allele_id, nature));
