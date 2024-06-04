@@ -3,7 +3,7 @@
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
  * @version 0.64
- * @date 2024-05-18
+ * @date 2024-06-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -582,37 +582,38 @@ class MutationEngine
     /**
      * @brief Place a passenger SID
      *
-     * @param snv is the SID to place
+     * @param mutation is the SID to place
      * @param cell_mutations are the cell mutations
      * @return `true` if and only if the SID placement has succeed. This
      *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    inline bool place_SID(const SID& snv, GenomeMutations& cell_mutations)
+    inline bool place_SID(const SID& mutation,
+                          GenomeMutations& cell_mutations)
     {
-        return place_SID(snv, cell_mutations, infinite_sites_model);
+        return place_SID(mutation, cell_mutations, infinite_sites_model);
     }
 
     /**
      * @brief Place a driver SID with an allele specification
      *
-     * @param snv is the SID to place
+     * @param mutation is the SID to place
      * @param cell_mutations are the cell mutations
      * @return `true` if and only if the SID placement has succeed. This
      *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SID(const MutationSpec<SID>& snv,
+    bool place_SID(const MutationSpec<SID>& mutation,
                    GenomeMutations& cell_mutations)
     {
-        if (snv.allele_id == RANDOM_ALLELE) {
-            return place_SID(static_cast<const SID&>(snv), cell_mutations,
-                             false);
+        if (mutation.allele_id == RANDOM_ALLELE) {
+            return place_SID(static_cast<const SID&>(mutation),
+                             cell_mutations, false);
         }
 
-        return cell_mutations.insert(snv, snv.allele_id);
+        return cell_mutations.insert(mutation, mutation.allele_id);
     }
 
     /**
@@ -919,17 +920,16 @@ class MutationEngine
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
             const auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
 
-            for (auto snv : mutant_mp.SIDs) {
-                snv.cause = mutant_mp.name;
-                snv.nature = Mutation::DRIVER;
-
-                if (place_SID(snv, cell_mutations)) {
-                    node.add_new_mutation(snv);
+            for (auto mutation : mutant_mp.SIDs) {
+                mutation.cause = mutant_mp.name;
+                mutation.nature = Mutation::DRIVER;
+                if (place_SID(mutation, cell_mutations)) {
+                    node.add_new_mutation(mutation);
                 } else {
                     std::ostringstream oss;
 
                     oss << mutant_mp.name << "'s driver mutation "
-                        << snv << " cannot be placed.";
+                        << mutation << " cannot be placed.";
 
                     throw std::runtime_error(oss.str());
                 }
