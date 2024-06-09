@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 0.59
- * @date 2024-05-23
+ * @version 0.60
+ * @date 2024-06-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -581,6 +581,10 @@ CellEvent Simulation::select_next_cell_event()
 
     for (const Species& species: tissue()) {
         select_next_event_in_species(event, tissue(), death_enabled, species, uni_dist, random_gen);
+    }
+
+    if (event.delay == std::numeric_limits<Time>::max()) {
+        throw std::runtime_error("No event available for the selecton.");
     }
 
     return event;
