@@ -5,26 +5,31 @@ RACES is framework for simulating cancer genomic evolution. It supports:
 -   cell strand competition and spacial simulations
 -   epigenetic switches
 -   copy-number variations
--   SBS signature support
+-   SBS and indel signature support
+-   sequencing simulation
 
-RACES consists in 4 main programs:
+RACES consists in a library `libRACES` and 6 main CLI tools:
 -   `build_context_index` creates an index for the mutational contexts (i.e., consecutive triplets of nucleotides) in a genome. In normal conditions, the context index for a genome must be created once for all and the resulting file can be used many times.
+-   `build_repetition_index` creates an index for the repeated sequences in a genome. As for the `build_context_index`, the repeated sequences index for a genome must be created once for all and the resulting file can be used many times.
 -   `species_sim` performs cell spacial simulation by using mutant evolutional information. It supports epigenetic switching.
 -   `tissue_sampler` samples the results of `species_sim`.
+-   `descendants_builder` builds the descendants forest from the species simulation.
 -   `mutations_sim` builds the phylogenetic forest for the sampled cells, and places mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
     *   produce simulated reads and generate the correspoding SAM file for them;
-    *   collect SNVs and CNAs statistical data and save them in CSV files.
+    *   collect SNVs, indels, and CNAs statistical data and save them in CSV files.
 
 ## Required Packages
 -   CMake
 -   a C++17 compiler
+
+### CLI Tools Required Packages
 -   Boost::program_options
 -   nlohmann/json library
 
 ### Optional Packages
--   Boost::unit_test_framework (it enables C++ code testing)
--   SDL_ttf and SDL_image libraries (they enable simulation plotting)
--   Boost::Python (it enables Python bindings)
+-   Boost::unit_test_framework (enabling C++ code testing)
+-   SDL_ttf and SDL_image libraries (enabling simulation plotting)
+-   Boost::Python (enabling Python bindings)
 
 ## Setup
 
@@ -39,17 +44,9 @@ cmake .
 make -j
 ```
 
-### Windows
-
-TBD
-
-## Usage
-
-TBD
-
 ## License
 
-Copyright (c) 2023 
+Copyright (c) 2023-2024
 Alberto Casagrande <[alberto.casagrande@uniud.it](mailto:alberto.casagrande@uniud.it)>
 
 MIT License

@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(CMAKE_MACOSX_RPATH 1)
+endif()
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
@@ -138,36 +143,6 @@ if(NOT DEFINED USE_OPTIONAL_LIBS)
 endif()
 
 if(${USE_OPTIONAL_LIBS})
-    find_package(SDL2 QUIET)
-    find_package(SDL2_image QUIET)
-    find_package(SDL2_ttf QUIET)
-
-    set(COMPILE_SDL2_CODE TRUE)
-    if(${SDL2_ttf_FOUND})
-        message("SDL2_ttf found")
-    else()
-        message("SDL2_ttf NOT found!")
-        set(COMPILE_SDL2_CODE FALSE)
-    endif()
-
-    if(${SDL2_image_FOUND})
-        message("SDL2_image found")
-    else()
-        message("SDL2_image NOT found!")
-        set(COMPILE_SDL2_CODE FALSE)
-    endif()
-
-    if(${COMPILE_SDL2_CODE})
-        add_compile_definitions(WITH_SDL2)
-
-        include_directories(${SDL2_INCLUDE_DIRS} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-
-        set(RACES_SOURCES ${RACES_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/SDL_plot.cpp)
-        set(RACES_HEADER ${RACES_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include/SDL_plot.hpp)
-
-        set(RACES_LIBRARIES ${RACES_LIBRARIES} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
-    endif()
-
     find_package(Matplot++ QUIET)
 
     if(${Matplot++_FOUND})
@@ -214,7 +189,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp.in ${CMAKE_CURR
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-
 add_library(objlib OBJECT ${RACES_SOURCES})
 target_link_libraries(objlib ${RACES_LIBRARIES})
 
@@ -249,64 +223,8 @@ endif()
 if(NOT ${BUILD_ONLY_LIBRARIES})
     message("Building executable, Python wrapper, and tests")
 
-    find_package( Boost COMPONENTS program_options REQUIRED )
-
-    set(RACES_LIBRARIES ${RACES_LIBRARIES} ${Boost_LIBRARIES})
-
-    find_package(nlohmann_json 3.2.0 REQUIRED)
-
-    set(COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/json_config.cpp
-                       ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp)
-
-    set(SPECIES_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/species_sim.cpp
-                            ${COMMON_SOURCES})
-
-    set(TISSUE_SAMPLER ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sampler.cpp
-                        ${COMMON_SOURCES})
-
-    set(DESCENDANTS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/descendants_builder.cpp
-                    ${COMMON_SOURCES})
-
-    set(MUTATIONS_SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/mutations_sim.cpp
-                            ${COMMON_SOURCES})
-
-    set(BUILD_CONTEXT_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_context_index.cpp
-                                    ${COMMON_SOURCES})
-
-    set(BUILD_RS_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/build_repetition_index.cpp
-                            ${COMMON_SOURCES})
-
-    set(SAMPLE_INDEX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/sample_context_index.cpp)
-
-    add_executable(species_sim ${SPECIES_SIM_SOURCES})
-    target_include_directories(species_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(species_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
-
-    add_executable(descendants_builder ${DESCENDANTS_SOURCES})
-    target_include_directories(descendants_builder PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(descendants_builder ${BUILD_LIB_TARGET})
-
-    add_executable(tissue_sampler ${TISSUE_SAMPLER})
-    target_include_directories(tissue_sampler PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(tissue_sampler ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
-
-    add_executable(build_context_index ${BUILD_CONTEXT_INDEX_SOURCES})
-    target_include_directories(build_context_index PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(build_context_index ${BUILD_LIB_TARGET})
-
-    add_executable(build_repetition_index ${BUILD_RS_INDEX_SOURCES})
-    target_include_directories(build_repetition_index PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(build_repetition_index ${BUILD_LIB_TARGET})
-
-    add_executable(sample_context_index ${SAMPLE_INDEX_SOURCES})
-    target_include_directories(sample_context_index PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(sample_context_index ${BUILD_LIB_TARGET})
-
-    add_executable(mutations_sim ${MUTATIONS_SIM_SOURCES})
-    target_include_directories(mutations_sim PRIVATE ${Boost_INCLUDE_DIR})
-    target_link_libraries(mutations_sim ${BUILD_LIB_TARGET} nlohmann_json::nlohmann_json)
-
     add_subdirectory(python)
+    add_subdirectory(tools)
 
     enable_testing()
 
