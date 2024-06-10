@@ -2,10 +2,10 @@
  * @file filter.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines filters
- * @version 0.3
- * @date 2024-04-23
+ * @version 1.0
+ * @date 2024-06-10
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -34,7 +34,7 @@
 #include <set>
 #include <type_traits>
 
-namespace Races
+namespace RACES
 {
 
 /**
@@ -111,6 +111,6 @@ public:
     }
 };
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_FILTER__

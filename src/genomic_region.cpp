@@ -2,8 +2,8 @@
  * @file genomic_region.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic region
- * @version 0.4
- * @date 2024-04-27
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 
 #include "sid.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -121,16 +121,16 @@ bool GenomicRegion::strictly_contains(const SID& mutation) const
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicRegion& genomic_region)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::GenomicRegion& genomic_region)
 {
     auto begin_pos = genomic_region.get_begin();
 
-    out << "GenomicRegion(chr: " << Races::Mutations::GenomicPosition::chrtos(begin_pos.chr_id)
+    out << "GenomicRegion(chr: " << RACES::Mutations::GenomicPosition::chrtos(begin_pos.chr_id)
         << ", begin: " << begin_pos.position
         << ", length: " << genomic_region.size() << ")";
 

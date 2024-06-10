@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 0.60
- * @date 2024-06-09
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 #include <list>
 #include <string>
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -1051,7 +1051,7 @@ void Simulation::log_initial_cells()
 }
 
 std::vector<Tissue::CellInTissueConstantProxy>
-Simulation::collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle) const
+Simulation::collect_cell_proxies_in(const RACES::Mutants::RectangleSet& rectangle) const
 {
     std::vector<Tissue::CellInTissueConstantProxy> proxies;
 
@@ -1068,7 +1068,7 @@ Simulation::collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangl
 }
 
 std::vector<Tissue::CellInTissueProxy>
-Simulation::collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle)
+Simulation::collect_cell_proxies_in(const RACES::Mutants::RectangleSet& rectangle)
 {
     std::vector<Tissue::CellInTissueProxy> proxies;
 
@@ -1174,4 +1174,4 @@ Simulation::~Simulation()
 
 }   // Mutants
 
-}   // Races
+}   // RACES

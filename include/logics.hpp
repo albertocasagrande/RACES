@@ -2,8 +2,8 @@
  * @file logics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a logic about the simulation
- * @version 0.3
- * @date 2024-03-19
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,7 +39,7 @@
 
 struct Context;
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -60,6 +60,9 @@ namespace Logics
 class Variable
 {
 public:
+    /**
+     * @brief Variable type
+     */
     enum class Type {
         CARDINALITY,    //!< The variable represents a species cardinality
         EVENT,          //!< The variable represents a species event
@@ -73,12 +76,12 @@ public:
 
     /**
      * @brief Evaluate a variable in a context
-     * 
+     *
      * @tparam CONTEXT is the type of the context in which the variable
      *   must be evaluated
      * @param context is the context in which the variable must be
      *   evaluated
-     * @return The variable evalutation, i.e., the cardinality of the 
+     * @return The variable evalutation, i.e., the cardinality of the
      *   species in the context
      */
     template<typename CONTEXT>
@@ -89,7 +92,7 @@ public:
 
     /**
      * @brief Get the identified of the species
-     * 
+     *
      * @return the identified of the species
      */
     inline const SpeciesId& get_species_id() const
@@ -99,7 +102,7 @@ public:
 
     /**
      * @brief Get the name of the variable species
-     * 
+     *
      * @return the name of the variable species
      */
     inline const std::string& get_name() const
@@ -117,8 +120,8 @@ public:
         return type;
     }
 
-    friend class Races::Mutants::Evolutions::Tissue;
-    friend class Races::Mutants::Evolutions::Simulation;
+    friend class RACES::Mutants::Evolutions::Tissue;
+    friend class RACES::Mutants::Evolutions::Simulation;
     friend std::ostream& operator<<(std::ostream& os, const Variable& variable);
 private:
 
@@ -147,7 +150,7 @@ private:
 
 /**
  * @brief Write in a stream a species variable representation
- * 
+ *
  * @param os is the output stream
  * @param variable is the species variable to write
  * @return the updated output stream
@@ -174,25 +177,25 @@ public:
 
     /**
      * @brief A constructor for expressions consisting in a variable
-     * 
+     *
      * @param variable is the expression variable
      */
     Expression(const Variable& variable);
 
     /**
      * @brief A constructor for expressions consisting in a value
-     * 
+     *
      * @param value is the expression value
      */
     Expression(const double& value);
 
     /**
      * @brief Evaluate the expression in a context
-     * 
+     *
      * @tparam CONTEXT is the context type
      * @param context is the context in which the expression must be
      *   evaluated
-     * @return the value of the expression in `context` 
+     * @return the value of the expression in `context`
      */
     template<typename CONTEXT>
     double evaluate(const CONTEXT& context) const
@@ -216,7 +219,7 @@ public:
 
     /**
      * @brief Get the expression type
-     * 
+     *
      * @return the expression type
      */
     inline const Type& get_type() const
@@ -231,7 +234,7 @@ public:
     friend Expression operator+(Expression&& lhs, Expression&& rhs);
     friend Expression operator-(Expression&& lhs, Expression&& rhs);
     friend Expression operator*(Expression&& lhs, Expression&& rhs);
-    
+
     friend std::ostream& operator<<(std::ostream& os, const Expression& expression);
 private:
     Type type;          //!< the type of expressions
@@ -242,7 +245,7 @@ private:
 
     /**
      * @brief Build an expression involving two sub-expressions
-     * 
+     *
      * @param type is the type of the new expression
      * @param lhs is the left hand-side of the new expression
      * @param rhs is the left hand-side of the new expression
@@ -251,7 +254,7 @@ private:
 
     /**
      * @brief Build an expression involving two sub-expressions
-     * 
+     *
      * @param type is the type of the new expression
      * @param lhs is the left hand-side of the new expression
      * @param rhs is the left hand-side of the new expression
@@ -261,7 +264,7 @@ private:
 
 /**
  * @brief Add two expressions
- * 
+ *
  * @param lhs is the left hand-side of the sum
  * @param rhs is the left hand-side of the sum
  * @return the expression that is the sum of the two parameters
@@ -273,7 +276,7 @@ inline Expression operator+(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Add two expressions
- * 
+ *
  * @param lhs is the left hand-side of the sum
  * @param rhs is the left hand-side of the sum
  * @return the expression that is the sum of the two parameters
@@ -285,7 +288,7 @@ inline Expression operator+(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Subtract two expressions
- * 
+ *
  * @param lhs is the left hand-side of the difference
  * @param rhs is the left hand-side of the difference
  * @return the expression that is the difference of the two parameters
@@ -297,7 +300,7 @@ inline Expression operator-(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Subtract two expressions
- * 
+ *
  * @param lhs is the left hand-side of the difference
  * @param rhs is the left hand-side of the difference
  * @return the expression that is the difference of the two parameters
@@ -309,7 +312,7 @@ inline Expression operator-(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Multiply two expressions
- * 
+ *
  * @param lhs is the left hand-side of the product
  * @param rhs is the left hand-side of the product
  * @return the expression that is the product of the two parameters
@@ -321,7 +324,7 @@ inline Expression operator*(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Multiply two expressions
- * 
+ *
  * @param lhs is the left hand-side of the product
  * @param rhs is the left hand-side of the product
  * @return the expression that is the product of the two parameters
@@ -333,7 +336,7 @@ inline Expression operator*(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Write in a stream an expression representation
- * 
+ *
  * @param os is the output stream
  * @param expression is the expression to write
  * @return the updated output stream
@@ -359,11 +362,11 @@ public:
 
     /**
      * @brief Evaluate the relation in a context
-     * 
+     *
      * @tparam CONTEXT is the context type
      * @param context is the context in which the relation must be
      *   evaluated
-     * @return the value of the relation in `context` 
+     * @return the value of the relation in `context`
      */
     template<typename CONTEXT>
     bool evaluate(const CONTEXT& context) const
@@ -381,14 +384,14 @@ public:
             case Type::NE:
                 return l_value != r_value;
             default:
-                throw std::runtime_error("Unknown relation type code " 
+                throw std::runtime_error("Unknown relation type code "
                                          + std::to_string(static_cast<unsigned int>(type)));
         }
     }
 
     /**
      * @brief Measure the distance of the relation from being satisfied
-     * 
+     *
      * @tparam CONTEXT is the context type
      * @param context is the context in which the relation must be
      *   evaluated
@@ -411,14 +414,14 @@ public:
             case Type::NE:
                 return (l_dist != r_dist? 0: 1);
             default:
-                throw std::runtime_error("Unknown relation type code " 
+                throw std::runtime_error("Unknown relation type code "
                                          + std::to_string(static_cast<unsigned int>(type)));
         }
     }
 
     /**
      * @brief Get the relation type
-     * 
+     *
      * @return the relation type
      */
     inline const Type& get_type() const
@@ -448,7 +451,7 @@ private:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param type is the type of the relation
      * @param lhs is the left hand-side of the relation
      * @param rhs is the left hand-side of the relation
@@ -457,7 +460,7 @@ private:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param type is the type of the relation
      * @param lhs is the left hand-side of the relation
      * @param rhs is the left hand-side of the relation
@@ -467,19 +470,19 @@ private:
 
 /**
  * @brief Write in a stream a relation representation
- * 
+ *
  * @param os is the output stream
- * @param expression is the relation to write
+ * @param relation is the relation to write
  * @return the updated output stream
  */
 std::ostream& operator<<(std::ostream& os, const Relation& relation);
 
 /**
  * @brief Build the relation ">"
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs > rhs` 
+ * @return the relation `lhs > rhs`
  */
 inline Relation operator>(const Expression& lhs, const Expression& rhs)
 {
@@ -488,10 +491,10 @@ inline Relation operator>(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Build the relation ">"
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs > rhs` 
+ * @return the relation `lhs > rhs`
  */
 inline Relation operator>(Expression&& lhs, Expression&& rhs)
 {
@@ -500,10 +503,10 @@ inline Relation operator>(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Build the relation ">="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs >= rhs` 
+ * @return the relation `lhs >= rhs`
  */
 inline Relation operator>=(const Expression& lhs, const Expression& rhs)
 {
@@ -512,10 +515,10 @@ inline Relation operator>=(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Build the relation ">="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs >= rhs` 
+ * @return the relation `lhs >= rhs`
  */
 inline Relation operator>=(Expression&& lhs, Expression&& rhs)
 {
@@ -524,10 +527,10 @@ inline Relation operator>=(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Build the relation "=="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs == rhs` 
+ * @return the relation `lhs == rhs`
  */
 inline Relation operator==(const Expression& lhs, const Expression& rhs)
 {
@@ -536,10 +539,10 @@ inline Relation operator==(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Build the relation "=="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs == rhs` 
+ * @return the relation `lhs == rhs`
  */
 inline Relation operator==(Expression&& lhs, Expression&& rhs)
 {
@@ -548,10 +551,10 @@ inline Relation operator==(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Build the relation "!="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs != rhs` 
+ * @return the relation `lhs != rhs`
  */
 inline Relation operator!=(const Expression& lhs, const Expression& rhs)
 {
@@ -560,10 +563,10 @@ inline Relation operator!=(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Build the relation "!="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `lhs != rhs` 
+ * @return the relation `lhs != rhs`
  */
 inline Relation operator!=(Expression&& lhs, Expression&& rhs)
 {
@@ -572,10 +575,10 @@ inline Relation operator!=(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Build the relation "<="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `rhs >= lhs` 
+ * @return the relation `rhs >= lhs`
  */
 inline Relation operator<=(const Expression& lhs, const Expression& rhs)
 {
@@ -584,10 +587,10 @@ inline Relation operator<=(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Build the relation "<="
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `rhs >= lhs` 
+ * @return the relation `rhs >= lhs`
  */
 inline Relation operator<=(Expression&& lhs, Expression&& rhs)
 {
@@ -596,10 +599,10 @@ inline Relation operator<=(Expression&& lhs, Expression&& rhs)
 
 /**
  * @brief Build the relation "<"
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `rhs < lhs` 
+ * @return the relation `rhs < lhs`
  */
 inline Relation operator<(const Expression& lhs, const Expression& rhs)
 {
@@ -608,10 +611,10 @@ inline Relation operator<(const Expression& lhs, const Expression& rhs)
 
 /**
  * @brief Build the relation "<"
- * 
+ *
  * @param lhs is the left hand-side of the relation
  * @param rhs is the left hand-side of the relation
- * @return the relation `rhs < lhs` 
+ * @return the relation `rhs < lhs`
  */
 inline Relation operator<(Expression&& lhs, Expression&& rhs)
 {
@@ -646,25 +649,25 @@ struct Formula
 
     /**
      * @brief Build a formula that consists in a relation
-     * 
+     *
      * @param relation is the relation
      */
     Formula(const Relation& relation);
 
     /**
      * @brief Build a formula that consists in a relation
-     * 
+     *
      * @param relation is the relation
      */
     Formula(Relation&& relation);
 
     /**
      * @brief Evaluate the formula in a context
-     * 
+     *
      * @tparam CONTEXT is the context type
      * @param context is the context in which the formula must be
      *   evaluated
-     * @return the value of the formula in `context` 
+     * @return the value of the formula in `context`
      */
     template<typename CONTEXT>
     bool evaluate(const CONTEXT& context) const
@@ -679,14 +682,14 @@ struct Formula
             case Type::OR:
                 return (lhs->evaluate(context) || rhs->evaluate(context));
             default:
-                throw std::runtime_error("Unknown formula type code " 
+                throw std::runtime_error("Unknown formula type code "
                                          + std::to_string(static_cast<unsigned int>(type)));
         }
     }
 
     /**
      * @brief Measure the distance of the formula from being satisfied
-     * 
+     *
      * @tparam CONTEXT is the context type
      * @param context is the context in which the formula must be
      *   evaluated
@@ -706,14 +709,14 @@ struct Formula
             case Type::OR:
                 return std::min(lhs->sat_distance(context), rhs->sat_distance(context));
             default:
-                throw std::runtime_error("Unknown formula type code " 
+                throw std::runtime_error("Unknown formula type code "
                                          + std::to_string(static_cast<unsigned int>(type)));
         }
     }
 
     /**
      * @brief Get the formula type
-     * 
+     *
      * @return the formula type
      */
     inline const Type& get_type() const
@@ -721,10 +724,10 @@ struct Formula
         return type;
     }
 
-    friend Formula operator!(const Formula& op);
+    friend Formula operator!(const Formula& subformula);
     friend Formula operator&&(const Formula& lhs, const Formula& rhs);
     friend Formula operator||(const Formula& lhs, const Formula& rhs);
-    friend Formula operator!(Formula&& op);
+    friend Formula operator!(Formula&& subformula);
     friend Formula operator&&(Formula&& lhs, Formula&& rhs);
     friend Formula operator||(Formula&& lhs, Formula&& rhs);
 
@@ -733,7 +736,7 @@ private:
 
     /**
      * @brief A constructor for a formula having two sub-fomulas
-     * 
+     *
      * @param type is the type of the new formula
      * @param lhs is the left hand-side of the new formula
      * @param rhs is the left hand-side of the new formula
@@ -742,7 +745,7 @@ private:
 
     /**
      * @brief A constructor for a formula having two sub-fomulas
-     * 
+     *
      * @param type is the type of the new formula
      * @param lhs is the left hand-side of the new formula
      * @param rhs is the left hand-side of the new formula
@@ -751,7 +754,7 @@ private:
 
     /**
      * @brief A constructor for a formula having one sub-fomula
-     * 
+     *
      * @param type is the type of the new formula
      * @param subformula is the subformula
      */
@@ -759,7 +762,7 @@ private:
 
     /**
      * @brief A constructor for a formula having one sub-fomula
-     * 
+     *
      * @param type is the type of the new formula
      * @param subformula is the subformula
      */
@@ -768,17 +771,17 @@ private:
 
 /**
  * @brief Write in a stream a formula representation
- * 
+ *
  * @param os is the output stream
- * @param expression is the formula to write
+ * @param formula is the formula to write
  * @return the updated output stream
  */
 std::ostream& operator<<(std::ostream& os, const Formula& formula);
 
 /**
  * @brief Negate a formula
- * 
- * @param subformula is the formula to be negated 
+ *
+ * @param subformula is the formula to be negated
  * @return the formula that negate `subformula`
  */
 inline Formula operator!(const Formula& subformula)
@@ -788,18 +791,18 @@ inline Formula operator!(const Formula& subformula)
 
 /**
  * @brief Negate a formula
- * 
- * @param subformula is the formula to be negated 
+ *
+ * @param subformula is the formula to be negated
  * @return the formula that negate `subformula`
  */
-inline Formula operator!(Formula&& op)
+inline Formula operator!(Formula&& subformula)
 {
-    return Formula(Formula::Type::NEG, std::move(op));
+    return Formula(Formula::Type::NEG, std::move(subformula));
 }
 
 /**
  * @brief Get the conjunction of two formulas
- * 
+ *
  * @param lhs is the left hand-side of the conjunction
  * @param rhs is the right hand-side of the conjunction
  * @return the conjunction of `lhs` and `rhs`
@@ -811,7 +814,7 @@ inline Formula operator&&(const Formula& lhs, const Formula& rhs)
 
 /**
  * @brief Get the conjunction of two formulas
- * 
+ *
  * @param lhs is the left hand-side of the conjunction
  * @param rhs is the right hand-side of the conjunction
  * @return the conjunction of `lhs` and `rhs`
@@ -823,7 +826,7 @@ inline Formula operator&&(Formula&& lhs, Formula&& rhs)
 
 /**
  * @brief Get the disjunction of two formulas
- * 
+ *
  * @param lhs is the left hand-side of the disjunction
  * @param rhs is the right hand-side of the disjunction
  * @return the disjunction of `lhs` and `rhs`
@@ -835,7 +838,7 @@ inline Formula operator||(const Formula& lhs, const Formula& rhs)
 
 /**
  * @brief Get the disjunction of two formulas
- * 
+ *
  * @param lhs is the left hand-side of the disjunction
  * @param rhs is the right hand-side of the disjunction
  * @return the disjunction of `lhs` and `rhs`
@@ -849,6 +852,6 @@ inline Formula operator||(Formula&& lhs, Formula&& rhs)
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_LOGIC__

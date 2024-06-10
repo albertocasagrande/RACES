@@ -2,23 +2,23 @@
  * @file statistics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define simulation statistics
- * @version 0.19
- * @date 2024-03-19
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@
 #include "statistics.hpp"
 #include "tissue.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -49,7 +49,7 @@ SpeciesStatistics::SpeciesStatistics():
 
 SpeciesStatistics::SpeciesStatistics(const size_t& num_of_cells):
     rise_time(0), extinction_time(0), total_cells(0),
-    curr_cells(num_of_cells), killed_cells(0), lost_cells(0), 
+    curr_cells(num_of_cells), killed_cells(0), lost_cells(0),
     num_duplications(0)
 {}
 
@@ -160,7 +160,7 @@ void TissueStatistics::record_species_change(const SpeciesId& src_species, const
     }
 }
 
-void TissueStatistics::record_epigenetic_switch(const SpeciesId& src_species, 
+void TissueStatistics::record_epigenetic_switch(const SpeciesId& src_species,
                                                 const SpeciesId& dst_species,
                                                 const Time &time)
 {
@@ -209,11 +209,11 @@ void TissueStatistics::record_event(const CellEvent& event, const Time &time)
             record_duplication(event.initial_species, time);
             break;
         case CellEventType::EPIGENETIC_SWITCH:
-            record_epigenetic_switch(event.initial_species, 
+            record_epigenetic_switch(event.initial_species,
                                      event.final_species, time);
             break;
         case CellEventType::MUTATION:
-            record_mutation(event.initial_species, 
+            record_mutation(event.initial_species,
                             event.final_species, time);
             break;
         default:
@@ -247,4 +247,4 @@ size_t TissueStatistics::count_fired_events(const SpeciesId& species_id,
 
 }   // Mutants
 
-}   // Races
+}   // RACES

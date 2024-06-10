@@ -2,8 +2,8 @@
  * @file json_config.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for reading JSON configurations
- * @version 0.26
- * @date 2024-05-18
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -41,7 +41,7 @@
 #include "mutation_engine.hpp"
 #include "timed_event.hpp"
 
-namespace Races
+namespace RACES
 {
 
 class ConfigReader
@@ -51,9 +51,9 @@ class ConfigReader
      *
      * @param sampler_region_json is the JSON of the region to sample
      * @param corner_field_name is the corner field name
-     * @return std::vector<Races::Mutants::Evolutions::AxisPosition>
+     * @return std::vector<RACES::Mutants::Evolutions::AxisPosition>
      */
-    static std::vector<Races::Mutants::Evolutions::AxisPosition>
+    static std::vector<RACES::Mutants::Evolutions::AxisPosition>
     get_corner(const nlohmann::json& sampler_region_json, const std::string& corner_field_name);
 
     /**
@@ -62,7 +62,7 @@ class ConfigReader
      * @param epistate_rates_json is the JSON of the epistate passenger rates
      * @return a pair epigenetic state/passenger mutation rate
      */
-    static std::pair<std::string, Races::Mutations::PassengerRates>
+    static std::pair<std::string, RACES::Mutations::PassengerRates>
     get_epistate_passenger_rates(const nlohmann::json& epistate_rates_json);
 
     /**
@@ -71,7 +71,7 @@ class ConfigReader
      * @param CNA_json is the JSON of the CNA
      * @return the type of the CNA
      */
-    static Races::Mutations::CNA::Type get_CNA_type(const nlohmann::json& CNA_json);
+    static RACES::Mutations::CNA::Type get_CNA_type(const nlohmann::json& CNA_json);
 
     /**
      * @brief Add a CNA to a list
@@ -79,7 +79,7 @@ class ConfigReader
      * @param CNAs is the list of CNA in which the read CNA should be inserted
      * @param CNA_json is the JSON of the CNA to be inserted into the list
      */
-    static void add_CNA(std::list<Races::Mutations::CNA>& CNAs,
+    static void add_CNA(std::list<RACES::Mutations::CNA>& CNAs,
                         const nlohmann::json& CNA_json);
 
     /**
@@ -91,7 +91,7 @@ class ConfigReader
      */
     static void
     add_SID(const std::string& mutant_name,
-            std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
+            std::list<RACES::Mutations::MutationSpec<RACES::Mutations::SID>>& SIDs,
             const nlohmann::json& SID_json);
 
     /**
@@ -100,7 +100,7 @@ class ConfigReader
      * @param passenger_rates_json is the JSON of the passenger rates
      * @return a map associating an epigenetic status to its mutation rate
      */
-    static std::map<std::string, Races::Mutations::PassengerRates>
+    static std::map<std::string, RACES::Mutations::PassengerRates>
     get_passenger_rates(const nlohmann::json& passenger_rates_json);
 
     /**
@@ -113,8 +113,8 @@ class ConfigReader
      */
     static void
     schedule_mutation(const std::string& mutant_name,
-                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
-                      std::list<Races::Mutations::CNA>& CNAs,
+                      std::list<RACES::Mutations::MutationSpec<RACES::Mutations::SID>>& SIDs,
+                      std::list<RACES::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutation_json);
 
     /**
@@ -132,7 +132,7 @@ class ConfigReader
      * @param mutational_properties_json is the JSON of the properties
      */
     static void
-    add_mutational_properties(Races::Mutations::MutationalProperties& mutational_properties,
+    add_mutational_properties(RACES::Mutations::MutationalProperties& mutational_properties,
                               const nlohmann::json& mutational_properties_json);
 
 public:
@@ -144,7 +144,7 @@ public:
      * @return a map associating to a set of SBS signatures their percentage
      *          in the default mutational configuration
      */
-    static Races::Mutations::MutationalExposure
+    static RACES::Mutations::MutationalExposure
     get_default_exposure(const std::string& mutation_name,
                          const nlohmann::json& exposures_json);
 
@@ -154,7 +154,7 @@ public:
      * @param mutation_name is the mutation type name (i.e., either "indel" or "SBS")
      * @param exposures_json is the JSON of the exposures
      */
-    static std::map<double, Races::Mutations::MutationalExposure>
+    static std::map<double, RACES::Mutations::MutationalExposure>
     get_timed_exposures(const std::string& mutation_name,
                         const nlohmann::json& exposures_json);
 
@@ -190,8 +190,8 @@ public:
      */
     static void
     collect_mutations(const std::string& mutant_name,
-                      std::list<Races::Mutations::MutationSpec<Races::Mutations::SID>>& SIDs,
-                      std::list<Races::Mutations::CNA>& CNAs,
+                      std::list<RACES::Mutations::MutationSpec<RACES::Mutations::SID>>& SIDs,
+                      std::list<RACES::Mutations::CNA>& CNAs,
                       const nlohmann::json& mutations_json);
 
     /**
@@ -200,7 +200,7 @@ public:
      * @param configuration_json is the JSON of the simulation configuration
      * @return the species mutational properties
      */
-    static Races::Mutations::MutationalProperties
+    static RACES::Mutations::MutationalProperties
     get_mutational_properties(const nlohmann::json& configuration_json);
 
     /**
@@ -211,9 +211,9 @@ public:
      * @param timed_event_json is the JSON of the timed event
      * @return the time event described in `timed_event_json`
      */
-    static Races::Mutants::Evolutions::TimedEvent
-    get_timed_event(const Races::Mutants::Evolutions::Simulation& simulation,
-                    const std::map<std::string, Races::Mutants::MutantProperties> name2mutant,
+    static RACES::Mutants::Evolutions::TimedEvent
+    get_timed_event(const RACES::Mutants::Evolutions::Simulation& simulation,
+                    const std::map<std::string, RACES::Mutants::MutantProperties> name2mutant,
                     const nlohmann::json& timed_event_json);
 
     /**
@@ -266,7 +266,7 @@ public:
      * @return a map associating a set of SBS signature to their percentage
      *          in the exposure
      */
-    static Races::Mutations::MutationalExposure
+    static RACES::Mutations::MutationalExposure
     get_exposure(const nlohmann::json& exposure_json);
 
     /**
@@ -300,6 +300,6 @@ public:
     }
 };
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_JSON_CONFIG__

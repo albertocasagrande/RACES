@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 0.13
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 
 #include "genome_mutations.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -405,6 +405,6 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_PHYLOGENETIC_TREE__

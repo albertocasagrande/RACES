@@ -2,8 +2,8 @@
  * @file mutants_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the mutants simulator
- * @version 0.5
- * @date 2024-05-02
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -48,8 +48,8 @@
 #endif
 
 
-Races::Mutants::Evolutions::Simulation simulation;
-Races::UI::ProgressBar *bar;
+RACES::Mutants::Evolutions::Simulation simulation;
+RACES::UI::ProgressBar *bar;
 
 void termination_handling(int signal_num)
 {
@@ -61,7 +61,7 @@ void termination_handling(int signal_num)
         delete bar;
     }
 
-    Races::UI::ProgressBar::show_console_cursor();
+    RACES::UI::ProgressBar::show_console_cursor();
     exit(signal_num);
 }
 
@@ -112,9 +112,9 @@ class DriverSimulator : public BasicExecutable
         throw std::domain_error(oss.str());
     }
 
-    static Races::Mutants::MutantProperties create_mutant(const nlohmann::json& mutant_json)
+    static RACES::Mutants::MutantProperties create_mutant(const nlohmann::json& mutant_json)
     {
-        using namespace Races::Mutants;
+        using namespace RACES::Mutants;
         std::vector<EpigeneticRates> epigenetic_rates;
 
         if (!mutant_json.is_object()) {
@@ -172,7 +172,7 @@ class DriverSimulator : public BasicExecutable
 
     static void configure_tissue(const nlohmann::json& tissue_json)
     {
-        using namespace Races::Mutants::Evolutions;
+        using namespace RACES::Mutants::Evolutions;
 
         if (!tissue_json.contains("size")) {
             throw std::domain_error("The tissue specification must contain a \"size\" field");
@@ -199,10 +199,10 @@ class DriverSimulator : public BasicExecutable
         throw std::domain_error("tissue is either a 2D or a 3D space");
     }
 
-    static Races::Mutants::Evolutions::PositionInTissue
+    static RACES::Mutants::Evolutions::PositionInTissue
     get_position(const nlohmann::json& position_json)
     {
-        using namespace Races::Mutants::Evolutions;
+        using namespace RACES::Mutants::Evolutions;
 
         if (!position_json.is_array()) {
             throw std::domain_error("The \"position\" field must be an array of Natural values");
@@ -224,7 +224,7 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_initial_cells(const nlohmann::json& initial_cells_json,
-                                        const std::map<std::string, Races::Mutants::MutantProperties>& mutants)
+                                        const std::map<std::string, RACES::Mutants::MutantProperties>& mutants)
     {
         if (!initial_cells_json.is_array()) {
             throw std::domain_error("The \"initial cells\" field must contain an array");
@@ -268,10 +268,10 @@ class DriverSimulator : public BasicExecutable
     }
 
     static void configure_timed_events(const nlohmann::json& timed_events_json,
-                                       const std::map<std::string, Races::Mutants::MutantProperties>& mutants)
+                                       const std::map<std::string, RACES::Mutants::MutantProperties>& mutants)
     {
-        using namespace Races;
-        using namespace Races::Mutants;
+        using namespace RACES;
+        using namespace RACES::Mutants;
 
         if (!timed_events_json.is_array()) {
             throw std::domain_error("The \"timed events\" field must contain an array");
@@ -291,7 +291,7 @@ class DriverSimulator : public BasicExecutable
 
     static void configure_simulation(const std::string& simulation_filename)
     {
-        using namespace Races::Mutants;
+        using namespace RACES::Mutants;
 
         std::ifstream f(simulation_filename);
         nlohmann::json simulation_cfg = nlohmann::json::parse(f);
@@ -337,7 +337,7 @@ class DriverSimulator : public BasicExecutable
 
     void init_simulation()
     {
-        using namespace Races;
+        using namespace RACES;
 
         configure_simulation(simulation_filename);
 
@@ -419,8 +419,8 @@ public:
 
     void run()
     {
-        using namespace Races;
-        using namespace Races::Mutants::Evolutions;
+        using namespace RACES;
+        using namespace RACES::Mutants::Evolutions;
 
         if (!quiet) {
             UI::ProgressBar::hide_console_cursor();

@@ -2,8 +2,8 @@
  * @file sid.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SNV, Insertion, and Deletion mutations
- * @version 0.4
- * @date 2024-05-16
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 #include "mutation.hpp"
 #include "genomic_region.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -61,8 +61,8 @@ struct SID : public Mutation
      *
      * @param chromosome_id is the id of the chromosome in which the mutation occurs
      * @param chromosomic_position is the position in the chromosome of the mutation
-     * @param ref is the reference sequence
-     * @param alt is the altered sequence
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param nature is the nature of the mutation
      * @throw std::domain_error reference and altered sequence are the same
      */
@@ -75,8 +75,8 @@ struct SID : public Mutation
      *
      * @param chromosome_id is the id of the chromosome in which the mutation occurs
      * @param chromosomic_position is the position in the chromosome of the mutation
-     * @param ref is the reference sequence
-     * @param alt is the altered sequence
+     * @param ref_base is the reference base
+     * @param alt_base is the altered base
      * @param cause is the cause of the mutation
      * @param nature is the nature of the mutation
      * @throw std::domain_error reference and altered sequence are the same
@@ -240,16 +240,16 @@ struct SID : public Mutation
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
 template<>
-struct less<Races::Mutations::SID>
+struct less<RACES::Mutations::SID>
 {
-    bool operator()(const Races::Mutations::SID &lhs,
-                    const Races::Mutations::SID &rhs) const;
+    bool operator()(const RACES::Mutations::SID &lhs,
+                    const RACES::Mutations::SID &rhs) const;
 };
 
 /**
@@ -259,7 +259,7 @@ struct less<Races::Mutations::SID>
  * @param sid is the SID to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::SID& sid);
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::SID& sid);
 
 }   // std
 

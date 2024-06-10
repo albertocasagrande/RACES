@@ -2,23 +2,23 @@
  * @file rate_update.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines liveness rate updates
- * @version 0.5
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@
 #include "cell_event.hpp"
 #include "simulation_event.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -57,17 +57,17 @@ struct RateUpdate : public SimulationEvent
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param species_id is the identifier of the species whose rate is changed by the event
      * @param event_type is the event type whose rate is changed by the event
      * @param new_rate is the new rate for `event_type` in the species `species_id`
      */
-    RateUpdate(const SpeciesId& species_id, 
+    RateUpdate(const SpeciesId& species_id,
                const CellEventType& event_type, const double& new_rate);
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param species is the species whose rate is changed by the event
      * @param event_type is the event type whose rate is changed by the event
      * @param new_rate is the new rate for `event_type` in the species `species_id`
@@ -77,7 +77,7 @@ struct RateUpdate : public SimulationEvent
 
     /**
      * @brief Save a timed genomic mutation in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -91,7 +91,7 @@ struct RateUpdate : public SimulationEvent
 
     /**
      * @brief Load a timed genomic mutation from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded timed genomic mutation
@@ -112,26 +112,26 @@ struct RateUpdate : public SimulationEvent
 
     inline Type type() const {
         return Type::LIVENESS_RATE_UPDATE;
-    } 
+    }
 };
 
 }   // Evolutions
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 
 /**
  * @brief Test the equivalence between two liveness rate updates
- * 
+ *
  * @param lhs is the left-hand side of the equivalence
  * @param rhs is the right-hand side of the equivalence
  * @return `true` if and only if the two liveness rate updates represent
  *      the same event
  */
-inline bool operator==(const Races::Mutants::Evolutions::RateUpdate& lhs, 
-                       const Races::Mutants::Evolutions::RateUpdate& rhs)
+inline bool operator==(const RACES::Mutants::Evolutions::RateUpdate& lhs,
+                       const RACES::Mutants::Evolutions::RateUpdate& rhs)
 {
     return (lhs.species_id == rhs.species_id)
             && (lhs.event_type == rhs.event_type)

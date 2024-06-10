@@ -2,8 +2,8 @@
  * @file build_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the context index
- * @version 0.11
- * @date 2024-05-15
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -53,10 +53,10 @@ class ContextIndexBuilder : public BasicExecutable
     bool quiet;
 
     template<typename GENOME_WIDE_POSITION>
-    std::list<Races::Mutations::GenomicRegion> build_and_save_context_index() const
+    std::list<RACES::Mutations::GenomicRegion> build_and_save_context_index() const
     {
-        using namespace Races;
-        using namespace Races::Mutations;
+        using namespace RACES;
+        using namespace RACES::Mutations;
 
         std::list<GenomicRegion> chr_regions;
         std::set<GenomicRegion> regions_to_avoid;
@@ -194,9 +194,9 @@ public:
         }
     }
 
-    std::list<Races::Mutations::GenomicRegion> run() const
+    std::list<RACES::Mutations::GenomicRegion> run() const
     {
-        using namespace Races::IO::FASTA;
+        using namespace RACES::IO::FASTA;
 
         switch (byte_per_abs_position) {
             case 2:

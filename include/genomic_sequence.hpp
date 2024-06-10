@@ -2,8 +2,8 @@
  * @file genomic_sequence.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a structure to handle genomic sequence
- * @version 0.4
- * @date 2024-04-04
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -35,7 +35,7 @@
 #include <vector>
 #include <algorithm>
 
-namespace Races
+namespace RACES
 {
 
 /**
@@ -127,6 +127,6 @@ struct GenomicSequence
     static bool is_a_DNA_base(const char& symbol);
 };
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_GENOMIC_SEQUENCE__

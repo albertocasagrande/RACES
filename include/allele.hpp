@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 0.17
- * @date 2024-04-27
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 #include "sid.hpp"
 #include "genomic_region.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -49,7 +49,7 @@ namespace Mutations
 typedef size_t AlleleId;
 
 // define a random allele identifier
-#define RANDOM_ALLELE std::numeric_limits<Races::Mutations::AlleleId>::max()
+#define RANDOM_ALLELE std::numeric_limits<RACES::Mutations::AlleleId>::max()
 
 /**
  * @brief A class to represent a fragment of an allele
@@ -373,7 +373,7 @@ public:
      * This method tries to insert a new SID mutation. It succeeds
      * if no other SIDs are contained in the context.
      *
-     * @param snv is the SID to insert
+     * @param mutation is the SID to insert
      * @return `true` if and only if the SID insertion
      *          has succeeded
      */
@@ -447,7 +447,7 @@ public:
      * @param allele_id is the allele identifier to be formatted
      * @return the string representation of `allele_id`
      */
-    static std::string format_id(const Races::Mutations::AlleleId& allele_id);
+    static std::string format_id(const RACES::Mutations::AlleleId& allele_id);
 
     /**
      * @brief Duplicate genomic structure
@@ -495,7 +495,7 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
@@ -507,7 +507,7 @@ namespace std
  * @param allele_fragment is the allele fragment to be written
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragment& allele_fragment);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::AlleleFragment& allele_fragment);
 
 
 /**
@@ -517,7 +517,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragmen
  * @param allele is the allele to be written
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::Allele& allele);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::Allele& allele);
 
 } // std
 

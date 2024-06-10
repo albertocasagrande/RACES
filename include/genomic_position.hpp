@@ -2,10 +2,10 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic position and related functions
- * @version 0.8
- * @date 2023-12-17
+ * @version 1.0
+ * @date 2024-06-10
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -37,7 +37,7 @@
 
 #include "archive.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -165,17 +165,17 @@ struct GenomicPosition
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
 
 template<>
-struct less<Races::Mutations::GenomicPosition>
+struct less<RACES::Mutations::GenomicPosition>
 {
-    inline bool operator()(const Races::Mutations::GenomicPosition &lhs,
-                           const Races::Mutations::GenomicPosition &rhs) const
+    inline bool operator()(const RACES::Mutations::GenomicPosition &lhs,
+                           const RACES::Mutations::GenomicPosition &rhs) const
     {
         return ((lhs.chr_id<rhs.chr_id) ||
                 ((lhs.chr_id==rhs.chr_id) && (lhs.position<rhs.position)));
@@ -189,7 +189,7 @@ struct less<Races::Mutations::GenomicPosition>
  * @param genomic_position is the position to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicPosition& genomic_position);
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::GenomicPosition& genomic_position);
 
 }   // std
 

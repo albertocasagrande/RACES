@@ -2,23 +2,23 @@
  * @file event_wrapper.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a simulation event wrapper
- * @version 0.4
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,7 @@
 
 #include "event_wrapper.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -58,13 +58,13 @@ SimulationEventWrapper::SimulationEventWrapper(const Sampling& sampling):
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 
-bool operator==(const Races::Mutants::Evolutions::SimulationEventWrapper& lhs, 
-                const Races::Mutants::Evolutions::SimulationEventWrapper& rhs)
+bool operator==(const RACES::Mutants::Evolutions::SimulationEventWrapper& lhs,
+                const RACES::Mutants::Evolutions::SimulationEventWrapper& rhs)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     if (lhs.type != rhs.type) {
         return false;

@@ -2,8 +2,8 @@
  * @file rs_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to compute the repeated substring index
- * @version 0.3
- * @date 2024-05-18
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 #include "basic_IO.hpp"
 #include "fasta_chr_reader.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -145,7 +145,7 @@ bool RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
                   const uint8_t index,
                   const RepetitionType& num_of_repetitions,
                   const char*& unit, const uint8_t& unit_size,
-                  const char& previous_character)
+                  const char& previous_base)
 {
     auto r_it = r_map.find(index);
 
@@ -157,7 +157,7 @@ bool RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
 
     if (r_storage.total_number < max_stored_repetitions) {
         r_storage.push_back({chr_id, begin, num_of_repetitions, unit, unit_size,
-                                previous_character});
+                                previous_base});
         return true;
     } else {
         std::uniform_int_distribution<size_t> dist(0, ++r_storage.total_number);
@@ -168,7 +168,7 @@ bool RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
             r_storage[pos] = Repetition<RepetitionType>(chr_id, begin,
                                                         num_of_repetitions,
                                                         unit, unit_size,
-                                                        previous_character);
+                                                        previous_base);
             return true;
         }
     }
@@ -627,7 +627,7 @@ RSIndex RSIndex::build_index(const std::filesystem::path& genome_fasta,
         throw std::runtime_error(oss.str());
     }
 
-    auto streamsize = Races::IO::get_stream_size(genome_fasta_stream);
+    auto streamsize = RACES::IO::get_stream_size(genome_fasta_stream);
 
     ChromosomeData<Sequence> chr;
     while (ChromosomeData<Sequence>::read(genome_fasta_stream, chr)) {
@@ -668,4 +668,4 @@ void RSIndex::restore()
 
 }   // Mutations
 
-}   // Races
+}   // RACES

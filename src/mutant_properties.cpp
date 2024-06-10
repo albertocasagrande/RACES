@@ -2,23 +2,23 @@
  * @file mutant_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the mutant properties
- * @version 0.2
- * @date 2024-03-26
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,7 @@
 #include "mutant_properties.hpp"
 #include "cell_event.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -161,17 +161,17 @@ MutantProperties::MutantProperties(const std::string& name,
     for (auto& l_species: species) {
         auto e_signature = l_species.get_methylation_signature();
         auto& e_rates = l_species.epigenetic_rates;
-        
+
         for (size_t i=0; i<epigenetic_event_rates.size(); ++i) {
-            // get the signature of the mutant reachable by 
+            // get the signature of the mutant reachable by
             // methylating/demethylating the i-th promoter
             e_signature[i] = !e_signature[i];
 
-            // get the index of the mutant reachable by 
+            // get the index of the mutant reachable by
             // methylating/demethylating the i-th promoter
             size_t index = signature_to_index(e_signature);
 
-            // get the identifier of the mutant reachable by 
+            // get the identifier of the mutant reachable by
             // methylating/demethylating the i-th promoter
             SpeciesId dst_id = species[index].get_id();
 
@@ -286,26 +286,26 @@ MethylationSignature MutantProperties::index_to_signature(const size_t& index, c
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutants::EpigeneticRates& epigentic_rates)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutants::EpigeneticRates& epigentic_rates)
 {
-    out << "{\"on\": " << epigentic_rates.get_methylation_rate() 
+    out << "{\"on\": " << epigentic_rates.get_methylation_rate()
             << ",\"off\": " << epigentic_rates.get_demethylation_rate() << "}";
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutants::SpeciesProperties& species)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutants::SpeciesProperties& species)
 {
-    out << "{name: \""<< species.get_name() << "\", id: " << species.get_id() 
+    out << "{name: \""<< species.get_name() << "\", id: " << species.get_id()
         << ", event_rates: {";
 
     std::string sep="";
     for (const auto& [event, rate]: species.get_rates()) {
-        out << sep << Races::Mutants::cell_event_names[event] << ": " << rate;
+        out << sep << RACES::Mutants::cell_event_names[event] << ": " << rate;
         sep = ", ";
     }
 
@@ -325,11 +325,11 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutants::SpeciesPropert
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutants::MutantProperties& mutant)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutants::MutantProperties& mutant)
 {
-    out << "{name: \"" << mutant.get_name() << "\", id: " 
+    out << "{name: \"" << mutant.get_name() << "\", id: "
         << mutant.get_id() << ", species=[";
-    
+
     std::string sep = "";
     if (mutant.get_species().size()>1) {
         sep = "\n";
@@ -341,7 +341,7 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutants::MutantProperti
     }
 
     out << "]}";
-    return out; 
+    return out;
 }
 
 }  // std

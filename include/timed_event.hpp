@@ -2,23 +2,23 @@
  * @file timed_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines timed events
- * @version 0.3
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,7 +39,7 @@
 #include "archive.hpp"
 #include "event_wrapper.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -56,10 +56,10 @@ struct TimedEvent : public SimulationEventWrapper
     using Type = SimulationEvent::Type;
 
     Time time;  //!< The event time
-    
+
     /**
      * @brief A constructor
-     * 
+     *
      * @param time is the simulation time of the event
      * @param event is the event
      */
@@ -67,7 +67,7 @@ struct TimedEvent : public SimulationEventWrapper
 
     /**
      * @brief Save a timed event in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -80,7 +80,7 @@ struct TimedEvent : public SimulationEventWrapper
 
     /**
      * @brief Load a timed event from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded timed event
@@ -100,13 +100,13 @@ struct TimedEvent : public SimulationEventWrapper
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 
 template<>
-struct std::greater<Races::Mutants::Evolutions::TimedEvent> {
-    inline constexpr bool operator()(const Races::Mutants::Evolutions::TimedEvent &lhs, 
-                                     const Races::Mutants::Evolutions::TimedEvent &rhs) const 
+struct std::greater<RACES::Mutants::Evolutions::TimedEvent> {
+    inline constexpr bool operator()(const RACES::Mutants::Evolutions::TimedEvent &lhs,
+                                     const RACES::Mutants::Evolutions::TimedEvent &rhs) const
     {
         return lhs.time > rhs.time;
     }
@@ -114,18 +114,18 @@ struct std::greater<Races::Mutants::Evolutions::TimedEvent> {
 
 /**
  * @brief Test the equivalence between two timed events
- * 
+ *
  * @param lhs is the left-hand side of the equivalence
  * @param rhs is the right-hand side of the equivalence
  * @return `true` if and only if the two timed events represent
  *      the same event
  */
-inline bool operator==(const Races::Mutants::Evolutions::TimedEvent& lhs, 
-                       const Races::Mutants::Evolutions::TimedEvent& rhs)
+inline bool operator==(const RACES::Mutants::Evolutions::TimedEvent& lhs,
+                       const RACES::Mutants::Evolutions::TimedEvent& rhs)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
-    return (lhs.time == rhs.time) 
+    return (lhs.time == rhs.time)
             && (static_cast<const SimulationEventWrapper&>(lhs)
                 ==static_cast<const SimulationEventWrapper&>(rhs));
 }

@@ -2,8 +2,8 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 0.22
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -49,7 +49,7 @@
 #include "progress_bar.hpp"
 
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -288,7 +288,7 @@ protected:
             throw std::domain_error("The sampling rate must be positive");
         }
 
-        auto streamsize = Races::IO::get_stream_size(fasta_stream);
+        auto streamsize = RACES::IO::get_stream_size(fasta_stream);
 
         initialize_context2pos();
         abs_pos2chr.clear();
@@ -376,7 +376,7 @@ public:
      * @param[in] genome_fasta is the path of a FASTA file
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the contexts that lay in the sequences corresponding to a
-     *          chromosome according to `Races::IO::FASTA::seq_name_decoders`
+     *          chromosome according to `RACES::IO::FASTA::seq_name_decoders`
      */
     static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
                                            UI::ProgressBar* progress_bar=nullptr)
@@ -392,7 +392,7 @@ public:
      *          in the index
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the contexts that lay in the sequences corresponding to a
-     *          chromosome according to `Races::IO::FASTA::seq_name_decoders`
+     *          chromosome according to `RACES::IO::FASTA::seq_name_decoders`
      */
     static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
                                            const size_t& sampling_rate,
@@ -408,7 +408,7 @@ public:
      * @param[in] regions_to_avoid is a set of regions to avoid
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the contexts that lay in the sequences corresponding
-     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`,
+     *      to a chromosome according to `RACES::IO::FASTA::seq_name_decoders`,
      *      but that are located outside the regions in `regions_to_avoid`
      */
     static inline ContextIndex build_index(const std::filesystem::path& genome_fasta,
@@ -427,7 +427,7 @@ public:
      *          in the index
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the contexts that lay in the sequences corresponding
-     *      to a chromosome according to `Races::IO::FASTA::seq_name_decoders`,
+     *      to a chromosome according to `RACES::IO::FASTA::seq_name_decoders`,
      *      but that are located outside the regions in `regions_to_avoid`
      */
     static ContextIndex build_index(const std::filesystem::path& genome_fasta,
@@ -681,7 +681,7 @@ public:
     }
 };
 
-}   // Races
+}   // RACES
 
 }   // Mutations
 

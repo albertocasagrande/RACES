@@ -2,23 +2,23 @@
  * @file mutant.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `MutantProperties`
- * @version 0.1
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 0.2
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,10 +35,10 @@
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-std::shared_ptr<Races::Mutants::MutantProperties>
+std::shared_ptr<RACES::Mutants::MutantProperties>
 CloneWrapper::create(std::string const& name, boost::python::list const& epigenetic_rates)
 {
-    using namespace Races::Mutants;
+    using namespace RACES::Mutants;
 
     namespace bp = boost::python;
 
@@ -63,11 +63,11 @@ CloneWrapper::create(std::string const& name, boost::python::list const& epigene
     return std::make_shared<MutantProperties>(name, c_epigenetic_rates);
 }
 
-void CloneWrapper::set_rates(Races::Mutants::MutantProperties *mutant, 
+void CloneWrapper::set_rates(RACES::Mutants::MutantProperties *mutant,
                                 const std::string& methylation_signature,
                                 boost::python::dict const& rates)
 {
-    using namespace Races::Mutants;
+    using namespace RACES::Mutants;
 
     namespace bp = boost::python;
 
@@ -79,6 +79,6 @@ void CloneWrapper::set_rates(Races::Mutants::MutantProperties *mutant,
         const CellEventType event_type_id = static_cast<CellEventType>(event_type_num);
         c_rates[event_type_id] = bp::extract<double>(rates_list[i][1]);
     }
-    
+
     (*mutant)[methylation_signature].set_rates(c_rates);
 }

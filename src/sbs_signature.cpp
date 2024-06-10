@@ -2,8 +2,8 @@
  * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SBS signature
- * @version 0.18
- * @date 2024-05-13
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 #include "sbs_signature.hpp"
 
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -156,13 +156,13 @@ SBSType::SBSType(const std::string& type)
 
 }  // Mutations
 
-}  // Races
+}  // RACES
 
 namespace std
 {
 
-bool less<Races::Mutations::SBSType>::operator()(const Races::Mutations::SBSType &lhs,
-                                                         const Races::Mutations::SBSType &rhs) const
+bool less<RACES::Mutations::SBSType>::operator()(const RACES::Mutations::SBSType &lhs,
+                                                         const RACES::Mutations::SBSType &rhs) const
 {
     const auto& lhs_code = lhs.get_context().get_code();
     const auto& rhs_code = rhs.get_context().get_code();
@@ -171,7 +171,7 @@ bool less<Races::Mutations::SBSType>::operator()(const Races::Mutations::SBSType
             ((lhs_code == rhs_code) && (lhs.get_replace_base()<rhs.get_replace_base())));
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSType& type)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::SBSType& type)
 {
     std::string type_sequence = type.get_context().get_sequence();
 
@@ -182,9 +182,9 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSType& typ
     return out;
 }
 
-std::istream& operator>>(std::istream& in, Races::Mutations::SBSType& type)
+std::istream& operator>>(std::istream& in, RACES::Mutations::SBSType& type)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     std::string seq;
     char replace_base;

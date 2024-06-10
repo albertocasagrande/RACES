@@ -2,23 +2,23 @@
  * @file statistics.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation statistics
- * @version 0.21
- * @date 2024-03-19
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,7 +37,7 @@
 #include "cell_event.hpp"
 
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -51,9 +51,9 @@ class TissueStatistics;
 /**
  * @brief A class for accounting simulation species statistics
  */
-struct SpeciesStatistics 
+struct SpeciesStatistics
 {
-    Time rise_time;         //!< the time of the first appearance 
+    Time rise_time;         //!< the time of the first appearance
     Time extinction_time;   //!< the time of the last appearance
 
     size_t total_cells;     //!< the number of cells that have been in the species
@@ -70,31 +70,31 @@ struct SpeciesStatistics
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param num_of_cells is the number of cells in the species
      */
     explicit SpeciesStatistics(const size_t& num_of_cells);
 
     /**
      * @brief Compute the number of epigenetic event from the species
-     * 
-     * @return the number of epigenetic event from the species 
+     *
+     * @return the number of epigenetic event from the species
      */
     size_t num_of_epigenetic_events() const;
 
     /**
      * @brief Compute the number of epigenetic event leading to a species
-     * 
+     *
      * @param dst_id is the identifier of the species reached by the epigenetic
      *      events that must be counted
      * @return the number of epigenetic event leading to the species having
-     *      `dst_id` as identifier 
+     *      `dst_id` as identifier
      */
     size_t num_of_epigenetic_events(const SpeciesId& dst_id) const;
 
     /**
      * @brief Save species statistics in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -110,10 +110,10 @@ struct SpeciesStatistics
                 & num_duplications
                 & epigenetic_events;
     }
-    
+
     /**
      * @brief Load species statistics from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded species statistics
@@ -154,9 +154,9 @@ class TissueStatistics
     Time history_delta;                     //!< The history sampling delta
 
     SpeciesMap s_statistics;                //!< The current species statistics
-    
+
     std::list<Time> sim_times;              //!< The simulated times of the last recorded events
-    std::list<time_point> real_times;       //!< The recording times of the last events 
+    std::list<time_point> real_times;       //!< The recording times of the last events
 
     size_t max_stored_times;                //!< The maximum number of times to store
 
@@ -165,14 +165,14 @@ class TissueStatistics
 
     /**
      * @brief Record a cell duplication and avoid history saving
-     * 
+     *
      * @param species_id is the species id of the duplicating cell
      */
     void record_duplication_no_save(const SpeciesId& species_id);
 
     /**
      * @brief Record a species change
-     * 
+     *
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
@@ -182,14 +182,14 @@ class TissueStatistics
 
     /**
      * @brief Record a duplication and a species change
-     * 
+     *
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic event time
      */
-    inline 
+    inline
     void record_duplication_and_species_change(const SpeciesId& src_species,
-                                               const SpeciesId& dst_species, 
+                                               const SpeciesId& dst_species,
                                                const Time &time)
     {
         record_duplication(src_species, time);
@@ -198,7 +198,7 @@ class TissueStatistics
 
     /**
      * @brief Save the current statistics if it is needed
-     * 
+     *
      * @param time is the time of the to-be-recorded event
      */
     void save_in_history_if_needed(const Time &time);
@@ -212,16 +212,16 @@ public:
 
     /**
      * @brief Construct a new Tissue Statistics
-     * 
+     *
      * @param delta is the history sampling time
      */
     TissueStatistics(const Time& delta);
 
     /**
      * @brief Get the statistics of a species
-     * 
+     *
      * @param species is the species whose statistics are aimed
-     * @return a non-constant reference to the statistics of `species` 
+     * @return a non-constant reference to the statistics of `species`
      */
     inline SpeciesStatistics& operator[](const Species& species)
     {
@@ -230,10 +230,10 @@ public:
 
     /**
      * @brief Get the statistics of a species
-     * 
+     *
      * @param species_id is the identifier of the species whose statistics are aimed
-     * @return a non-constant reference to the statistics of species having 
-     *      `species_id` as identifier 
+     * @return a non-constant reference to the statistics of species having
+     *      `species_id` as identifier
      */
     inline SpeciesStatistics& operator[](const SpeciesId& species_id)
     {
@@ -242,9 +242,9 @@ public:
 
     /**
      * @brief Get the statistics of a species
-     * 
+     *
      * @param species is the species whose statistics are aimed
-     * @return a non-constant reference to the statistics of `species` 
+     * @return a non-constant reference to the statistics of `species`
      */
     inline const SpeciesStatistics& at(const Species& species) const
     {
@@ -253,10 +253,10 @@ public:
 
     /**
      * @brief Get the statistics of a species
-     * 
+     *
      * @param species_id is the identifier of the species whose statistics are aimed
-     * @return a constant reference to the statistics of species having 
-     *      `species_id` as identifier 
+     * @return a constant reference to the statistics of species having
+     *      `species_id` as identifier
      */
     inline const SpeciesStatistics& at(const SpeciesId& species_id) const
     {
@@ -265,9 +265,9 @@ public:
 
     /**
      * @brief Test whether the object contains statistics for a species
-     * 
+     *
      * @param species_id is the identifier of the species whose statistics are aimed
-     * @return `true` if and only if the object contains statistics for the 
+     * @return `true` if and only if the object contains statistics for the
      *          specified species
      */
     inline bool contains_data_for(const SpeciesId& species_id) const
@@ -277,9 +277,9 @@ public:
 
     /**
      * @brief Test whether the object contains statistics for a species
-     * 
+     *
      * @param species is the species whose statistics are aimed
-     * @return `true` if and only if the object contains statistics for the 
+     * @return `true` if and only if the object contains statistics for the
      *          specified species
      */
     inline bool contains_data_for(const Species& species) const
@@ -289,7 +289,7 @@ public:
 
     /**
      * @brief Record a death
-     * 
+     *
      * @param species_id is the species id of the dying cell
      * @param time is the death time
      */
@@ -297,23 +297,23 @@ public:
 
     /**
      * @brief Record a lost cell
-     * 
-     * A cell is lost whenever it is pushed outside the tissue border. 
+     *
+     * A cell is lost whenever it is pushed outside the tissue border.
      * This method record in the statistics that a cell is lost.
-     * 
+     *
      * @param species_id is the species id of the lost cell
-     * @param time is the time in which the lost cell has been pushed 
+     * @param time is the time in which the lost cell has been pushed
      *       outside the tissue border
      */
     void record_lost(const SpeciesId& species_id, const Time &time);
 
     /**
      * @brief Record a cell duplication
-     * 
+     *
      * @param species_id is the species id of the duplicating cell
      * @param time is the duplication time
      */
-    inline 
+    inline
     void record_duplication(const SpeciesId& species_id, const Time &time)
     {
         record_duplication_no_save(species_id);
@@ -323,13 +323,13 @@ public:
 
     /**
      * @brief Record a mutation
-     * 
+     *
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic switch time
      */
     inline
-    void record_mutation(const SpeciesId& src_species, 
+    void record_mutation(const SpeciesId& src_species,
                          const SpeciesId& dst_species,
                          const Time &time)
     {
@@ -340,7 +340,7 @@ public:
 
     /**
      * @brief Record an epigenetic switch
-     * 
+     *
      * @param src_species is the source species identifier
      * @param dst_species is the destination species identifier
      * @param time is the epigenetic switch time
@@ -350,9 +350,9 @@ public:
 
     /**
      * @brief Record placed cell
-     * 
-     * This method records a placed cell 
-     * 
+     *
+     * This method records a placed cell
+     *
      * @param species_id is the species of the placed cell
      * @param time is the placing d time
      */
@@ -360,11 +360,11 @@ public:
 
     /**
      * @brief Record the last event
-     * 
-     * This method records a new event and, whenever the 
-     * queues of the recorded times overlaps the maximum size, 
+     *
+     * This method records a new event and, whenever the
+     * queues of the recorded times overlaps the maximum size,
      * deletes the oldest recorded times.
-     * 
+     *
      * @param event is the event to record
      * @param time is the event time
      */
@@ -372,14 +372,14 @@ public:
 
     /**
      * @brief Get the number of recorded times
-     * 
+     *
      * @return the number of recorded times
      */
     const size_t& get_recorded_time_number() const;
 
     /**
      * @brief Get the elapsed time
-     * 
+     *
      * @return the elapsed time
      */
     inline std::chrono::steady_clock::duration get_elapsed_time() const
@@ -389,7 +389,7 @@ public:
 
     /**
      * @brief Get the simulated time
-     * 
+     *
      * @return the simulated time
      */
     inline Time get_simulated_time() const
@@ -399,10 +399,10 @@ public:
 
     /**
      * @brief Get the number of the last recorded events over time
-     * 
+     *
      * @return the number of the last recorded events over time
      */
-    template<class ToDuration> 
+    template<class ToDuration>
     double get_last_recorded_events_over_time() const
     {
         using namespace std::chrono;
@@ -411,10 +411,10 @@ public:
 
         return static_cast<double>(real_times.size())/time;
     }
-    
+
     /**
      * @brief Store current statistical data in history
-     * 
+     *
      * @param time is the current simulation time
      */
     inline void store_current_in_history(const Time &time)
@@ -432,7 +432,7 @@ public:
 
     /**
      * @brief Get the statistical history
-     * 
+     *
      * @return return a constant reference to the statistics history
      */
     inline const std::map<Time, std::map<SpeciesId, SpeciesStatistics>>&
@@ -443,14 +443,14 @@ public:
 
     /**
      * @brief Get the last sample time
-     * 
+     *
      * @return the last sample time
      */
     Time get_last_time_in_history() const;
 
     /**
      * @brief Get the history time delta
-     * 
+     *
      * @return a constant reference to the the history time delta
      */
     inline const Time& get_history_delta() const
@@ -460,7 +460,7 @@ public:
 
     /**
      * @brief Set the history time delta
-     * 
+     *
      * @param delta is the non-negative value to be set as history time delta
      */
     inline void set_history_delta(const Time& delta)
@@ -486,7 +486,7 @@ public:
 
     /**
      * @brief Save tissue statistics in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -502,10 +502,10 @@ public:
                 & total_events
                 & first_event_time;
     }
-    
+
     /**
      * @brief Load tissue statistics from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded tissue statistics
@@ -532,7 +532,7 @@ public:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 
 #endif // __RACES_STATISTICS__

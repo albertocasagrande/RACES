@@ -1,24 +1,24 @@
 /**
  * @file simulation_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Define the Python wrapper class and functions for `Races::Simulation`
- * @version 0.15
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @brief Define the Python wrapper class and functions for `RACES::Simulation`
+ * @version 0.16
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,20 +42,20 @@
 using namespace boost::python;
 
 /**
- * @brief A wrapper structure for `Races::Simulation`
- * 
- * The `Races::Simulation` class cannot be used directly 
- * because it cannot be copied by design. This class 
- * wraps `Races::Simulation` by maintaining a shared 
- * pointer to a `Races::Simulation` object and 
- * synchronizing all the accesses to it by using a 
+ * @brief A wrapper structure for `RACES::Simulation`
+ *
+ * The `RACES::Simulation` class cannot be used directly
+ * because it cannot be copied by design. This class
+ * wraps `RACES::Simulation` by maintaining a shared
+ * pointer to a `RACES::Simulation` object and
+ * synchronizing all the accesses to it by using a
  * mutex.
  */
-class SimulationWrapper 
+class SimulationWrapper
 {
     struct _SimulationWrapper
     {
-        using Simulation = Races::Mutants::Evolutions::Simulation;
+        using Simulation = RACES::Mutants::Evolutions::Simulation;
 
         Simulation simulation;         //!< the c++ simulation object
 
@@ -69,71 +69,71 @@ class SimulationWrapper
 public:
     /**
      * @brief The basic simulation constructor
-     * 
+     *
      * @param random_seed is the simulation random seed
      */
     explicit SimulationWrapper(int random_seed=0);
 
     /**
      * @brief Simulate a tissue up to a given time
-     * 
-     * This method simulates a tissue up to a given 
-     * simulated time. If the user provide a pointer 
+     *
+     * This method simulates a tissue up to a given
+     * simulated time. If the user provide a pointer
      * to a plotter, then the simulation is also plotted
      * in a graphical window.
-     * 
+     *
      * @param final_time is the final simulation time
      * @param quiet is a flag to enable/disable the progress bar
      * @param plot is a flag to enable/disable plotting
      * @return a reference to the updated simulation
      */
-    void run_up_to(const Races::Time& final_time, const bool quiet = false,
+    void run_up_to(const RACES::Time& final_time, const bool quiet = false,
                    const bool plot = false);
 
     /**
      * @brief Get the current simulation time
-     * 
+     *
      * @return a constant reference to the simulation time
      */
-    const Races::Time& get_time() const;
+    const RACES::Time& get_time() const;
 
     /**
      * @brief Add a timed mutation
-     * 
+     *
      * @param src is the source mutant
      * @param dst is the destination mutant
      * @param time is the mutation timing
      * @return a reference to the updated simulation
      */
-    void schedule_mutation(const Races::Mutants::MutantProperties& src,
-                           const Races::Mutants::MutantProperties& dst,
-                           const Races::Time time);
+    void schedule_mutation(const RACES::Mutants::MutantProperties& src,
+                           const RACES::Mutants::MutantProperties& dst,
+                           const RACES::Time time);
 
     /**
      * @brief Add a mutant to the tissue
-     * 
+     *
      * @param mutant_properties is the mutant properties of the mutant
      * @return a reference to the updated object
      */
-    void add_mutant(const Races::Mutants::MutantProperties& mutant);
+    void add_mutant(const RACES::Mutants::MutantProperties& mutant);
 
     /**
      * @brief Place a cell in the simulated tissue
-     * 
+     *
      * @param mutant is the mutant of the new cell
      * @param methylation_signature is the methylation signature of the new cell
      * @param position is the cell position in the tissue
      * @return a reference to the updated object
      */
-    void place_cell(const Races::Mutants::MutantProperties& mutant, const std::string& methylation_signature, 
+    void place_cell(const RACES::Mutants::MutantProperties& mutant, const std::string& methylation_signature,
                     boost::python::list const& position);
 
     /**
      * @brief Set a new simulation tissue
-     * 
-     * This method resets the simulation and sets a 
+     *
+     * This method resets the simulation and sets a
      * new simulation tissue.
-     * 
+     *
      * @param name is the tissue name
      * @param sizes_list are the sizes of the tissue
      * @return a reference to the updated object
@@ -142,7 +142,7 @@ public:
 
     /**
      * @brief Get the death activation level
-     * 
+     *
      * @return the death activation level
      */
     inline size_t get_death_activation_level() const
@@ -152,8 +152,8 @@ public:
 
     /**
      * @brief Set the death activation level
-     * 
-     * @param death_activation_level is the new death activation level 
+     *
+     * @param death_activation_level is the new death activation level
      */
     inline void set_death_activation_level(const size_t& death_activation_level)
     {
@@ -162,7 +162,7 @@ public:
 
     /**
      * @brief Rename the log directory
-     * 
+     *
      * @param log_directory_name is the new log directory name
      */
     inline void rename_log_directory(const std::string& log_directory_name)
@@ -172,7 +172,7 @@ public:
 
     /**
      * @brief Establish whether the storage is enabled
-     * 
+     *
      * @return `true` if and only if the storage is enabled
      */
     inline bool get_storage_enabled() const
@@ -182,7 +182,7 @@ public:
 
     /**
      * @brief Enable/disabled the storage
-     * 
+     *
      * @param storage_enabled is a Boolean flag to enable/disable the storage
      */
     inline void set_storage_enabled(const bool& storage_enabled)
@@ -192,10 +192,10 @@ public:
 
     /**
      * @brief Create a new `SimulationWrapper` object
-     * 
+     *
      * @param minutes_between_snapshots is the number of minutes between snapshots
      * @param random_seed is the simulation random seed
-     * @return a shared pointer to the newly created 
+     * @return a shared pointer to the newly created
      *        `SimulationWrapper` object
      */
     inline static std::shared_ptr<SimulationWrapper> create(const unsigned int minutes_between_snapshots=5, int random_seed=0)
@@ -211,19 +211,19 @@ public:
 
     /**
      * @brief Simulate a tissue up to a given time
-     * 
-     * This method simulates a tissue up to a given 
-     * simulated time. If the user provide a pointer 
+     *
+     * This method simulates a tissue up to a given
+     * simulated time. If the user provide a pointer
      * to a plotter, then the simulation is also plotted
      * in a graphical window.
-     * 
-     * @param wrapper is the simulation wrapper on which the 
+     *
+     * @param wrapper is the simulation wrapper on which the
      *                  computation is performed
      * @param final_time is the final simulation time
      * @param quiet is a flag to enable/disable the progress bar
      * @param plot is a flag to enable/disable plotting
      */
-    inline static void static_run_up_to(SimulationWrapper *wrapper, const Races::Time& final_time, 
+    inline static void static_run_up_to(SimulationWrapper *wrapper, const RACES::Time& final_time,
                                  const bool quiet = false, const bool plot = false)
     {
         wrapper->run_up_to(final_time, quiet, plot);

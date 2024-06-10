@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 0.11
- * @date 2024-05-23
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,7 +39,7 @@
 #include "cell.hpp"
 #include "time.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -58,7 +58,7 @@ class TissueSample
     static TissueSampleId counter;   //!< A counter for the non-null samples
 
     TissueSampleId  id;         //!< The sample identifier
-    Races::Time time;           //!< The sampling time
+    RACES::Time time;           //!< The sampling time
     RectangleSet bounding_box;  //!< The sample bounding box
     size_t tumour_cells_in_bbox; //!< The number of tumour cells in the bounding box
     std::list<CellId> cell_ids; //!< The list of cell identifier
@@ -79,8 +79,8 @@ public:
      * @param tumour_cells_in_bbox is the number of tumeral cells in
      *      the bounding box
      */
-    TissueSample(const Races::Time& time,
-                 const Races::Mutants::RectangleSet& bounding_box,
+    TissueSample(const RACES::Time& time,
+                 const RACES::Mutants::RectangleSet& bounding_box,
                  const size_t& tumour_cells_in_bbox);
 
     /**
@@ -92,8 +92,8 @@ public:
      * @param tumour_cells_in_bbox is the number of tumeral cells in
      *      the bounding box
      */
-    TissueSample(const std::string& name, const Races::Time& time,
-                 const Races::Mutants::RectangleSet& bounding_box,
+    TissueSample(const std::string& name, const RACES::Time& time,
+                 const RACES::Mutants::RectangleSet& bounding_box,
                  const size_t& tumour_cells_in_bbox);
 
     /**
@@ -105,10 +105,10 @@ public:
      *      the bounding box
      * @param cell_ids is a list of the identifiers of the sample cells
      */
-    TissueSample(const Races::Time& time,
-                 const Races::Mutants::RectangleSet& bounding_box,
+    TissueSample(const RACES::Time& time,
+                 const RACES::Mutants::RectangleSet& bounding_box,
                  const size_t& tumour_cells_in_bbox,
-                 const std::list<Races::Mutants::CellId>& cell_ids);
+                 const std::list<RACES::Mutants::CellId>& cell_ids);
 
     /**
      * @brief Construct a new cell sample
@@ -120,17 +120,17 @@ public:
      *      the bounding box
      * @param cell_ids is a list of the identifiers of the sample cells
      */
-    TissueSample(const std::string& name, const Races::Time& time,
-                 const Races::Mutants::RectangleSet& bounding_box,
+    TissueSample(const std::string& name, const RACES::Time& time,
+                 const RACES::Mutants::RectangleSet& bounding_box,
                  const size_t& tumour_cells_in_bbox,
-                 const std::list<Races::Mutants::CellId>& cell_ids);
+                 const std::list<RACES::Mutants::CellId>& cell_ids);
 
     /**
      * @brief Add a cell id among those in the sample
      *
      * @param cell_id is the cell id to be added in the sample
      */
-    void add_cell_id(const Races::Mutants::CellId& cell_id);
+    void add_cell_id(const RACES::Mutants::CellId& cell_id);
 
     /**
      * @brief Set the sample name
@@ -168,7 +168,7 @@ public:
      *
      * @return a constant reference to the sampling time
      */
-    inline const Races::Time& get_time() const
+    inline const RACES::Time& get_time() const
     {
         return time;
     }
@@ -178,7 +178,7 @@ public:
      *
      * @return a constant reference to the sample bounding box
      */
-    inline const Races::Mutants::RectangleSet& get_bounding_box() const
+    inline const RACES::Mutants::RectangleSet& get_bounding_box() const
     {
         return bounding_box;
     }
@@ -199,7 +199,7 @@ public:
      *
      * @return a constant reference to the list of the sampled cell identifiers
      */
-    inline const std::list<Races::Mutants::CellId>& get_cell_ids() const
+    inline const std::list<RACES::Mutants::CellId>& get_cell_ids() const
     {
         return cell_ids;
     }
@@ -259,7 +259,7 @@ public:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 /**
  * @brief Write the tissue sample in an output stream
@@ -268,6 +268,6 @@ public:
  * @param tissue_sample is the cell sample to be streamed
  * @return a reference to the updated output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::TissueSample& tissue_sample);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::TissueSample& tissue_sample);
 
 #endif // __RACES_TISSUE_SAMPLE__

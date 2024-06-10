@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 0.24
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -48,7 +48,8 @@
 /**
  * @brief The RACES namespace
  */
-namespace Races {
+namespace RACES
+{
 
 /**
  * @brief The Archive module namespace
@@ -129,8 +130,8 @@ struct WrongFileFormatDescr : public std::exception
     /**
      * @brief Construct a new wrong file format descriptor exception
      *
-     * @param expected_description is the expected descriptor
-     * @param read_description is the read descriptor
+     * @param expected_descriptor is the expected descriptor
+     * @param read_descriptor is the read descriptor
      * @param filepath is the file path
      */
     WrongFileFormatDescr(const std::string& expected_descriptor,
@@ -481,7 +482,7 @@ struct In : public Basic
  */
 class ProgressViewer
 {
-    Races::UI::ProgressBar* progress_bar;   //!< the viewer progress bar
+    RACES::UI::ProgressBar* progress_bar;   //!< the viewer progress bar
     size_t total_steps;                     //!< number of steps to be performed
     size_t next_percentage;                 //!< number of steps to increase bar percentage
     size_t performed_steps;                 //!< performed steps
@@ -497,7 +498,7 @@ public:
      * @param progress_bar is the progress bar
      * @param total_steps is the number of steps to be performed
      */
-    void initialize(Races::UI::ProgressBar* progress_bar, const size_t total_steps);
+    void initialize(RACES::UI::ProgressBar* progress_bar, const size_t total_steps);
 
     /**
      * @brief Increase the number of performed steps
@@ -713,7 +714,7 @@ public:
      * @brief Get the number of bytes required by an object
      *
      * This method computes the number of bytes required to
-     * store a `Races::Archive::Binary::Out` instance.
+     * store a `RACES::Archive::Binary::Out` instance.
      *
      * @tparam T is the type of the object to store
      * @param object is the object to store
@@ -838,7 +839,7 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
 
 }   // Archive
 
-}   // Races
+}   // RACES
 
 
 /**
@@ -854,8 +855,8 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
  * @param value is the object in which the value is loaded
  * @return a reference to the updated archive
  */
-template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<Races::Archive::has_load<VALUE_TYPE, ARCHIVE>::value &&
-                                                           std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<RACES::Archive::has_load<VALUE_TYPE, ARCHIVE>::value &&
+                                                           std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE>, bool> = true>
 inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& value)
 {
     value = VALUE_TYPE::load(archive);
@@ -876,8 +877,8 @@ inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& value)
  * @param value is the value to save
  * @return a reference to the updated archive
  */
-template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<Races::Archive::has_save<VALUE_TYPE, ARCHIVE>::value &&
-                                                           std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<RACES::Archive::has_save<VALUE_TYPE, ARCHIVE>::value &&
+                                                           std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
 inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
 {
     value.save(archive);
@@ -890,13 +891,14 @@ inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
  * @brief Save an `std::chrono::time_point` object
  *
  * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::Out`
- * @tparam VALUE_TYPE is the type of the value to save
+ * @tparam CLOCK is a clock type
+ * @tparam DURATION is a duration type
  * @param archive is an output archive
- * @param value is the value to save
+ * @param time_point is the time_point to save
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class CLOCK, class DURATION,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
 inline ARCHIVE&
 operator&(ARCHIVE& archive, const std::chrono::time_point<CLOCK,DURATION>& time_point)
 {
@@ -913,13 +915,14 @@ operator&(ARCHIVE& archive, const std::chrono::time_point<CLOCK,DURATION>& time_
  * @brief Load an `std::chrono::time_point` object
  *
  * @tparam ARCHIVE is the archive type and it is derived from `Archive::Basic::Out`
- * @tparam VALUE_TYPE is the type of the value to save
+ * @tparam CLOCK is a clock type
+ * @tparam DURATION is a duration type
  * @param archive is an output archive
- * @param value is the value to save
+ * @param time_point is the time_point to load
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class CLOCK, class DURATION,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE>, bool> = true>
 inline ARCHIVE&
 operator&(ARCHIVE& archive, std::chrono::time_point<CLOCK,DURATION>& time_point)
 {
@@ -945,7 +948,7 @@ operator&(ARCHIVE& archive, std::chrono::time_point<CLOCK,DURATION>& time_point)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<std::is_enum_v<VALUE_TYPE> &&
-                                                           std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+                                                           std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
 inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
 {
     archive & static_cast<typename std::underlying_type<VALUE_TYPE>::type>(value);
@@ -963,7 +966,7 @@ inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class VALUE_TYPE, std::enable_if_t<std::is_enum_v<VALUE_TYPE> &&
-                                                           std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+                                                           std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE>, bool> = true>
 inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& value)
 {
     typename std::underlying_type<VALUE_TYPE>::type value_type;
@@ -990,10 +993,10 @@ inline ARCHIVE& operator&(ARCHIVE& archive, VALUE_TYPE& value)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, template<class,class> class CONTAINER, class T, class Alloc,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
                             (std::is_same_v<CONTAINER<T,Alloc>, std::list<T,Alloc>> ||
                              std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>) &&
-                          Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+                          RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
 {
     size_t size;
@@ -1028,10 +1031,10 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, template<typename,typename> class CONTAINER, class T, class Alloc,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
                             (std::is_same_v<CONTAINER<T,Alloc>, std::list<T,Alloc>> ||
                              std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>) &&
-                          !Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+                          !RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
 {
     size_t size;
@@ -1070,8 +1073,8 @@ ARCHIVE& operator&(ARCHIVE& archive, CONTAINER<T,Alloc>& container)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class T, class Compare, class Alloc,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                          Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
+                          RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
 {
     size_t size;
@@ -1102,8 +1105,8 @@ ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class T, class Compare, class Alloc,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                          !Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
+                          !RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
 {
     size_t size;
@@ -1136,9 +1139,9 @@ ARCHIVE& operator&(ARCHIVE& archive, std::set<T,Compare,Alloc>& S)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator,
-            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                             !Races::Archive::has_load<Key, ARCHIVE>::value &&
-                             Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+            std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
+                             !RACES::Archive::has_load<Key, ARCHIVE>::value &&
+                             RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 {
     size_t size;
@@ -1171,9 +1174,9 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator,
-            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                             !Races::Archive::has_load<Key, ARCHIVE>::value &&
-                             !Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+            std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
+                             !RACES::Archive::has_load<Key, ARCHIVE>::value &&
+                             !RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 {
     size_t size;
@@ -1207,9 +1210,9 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator,
-            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                             Races::Archive::has_load<Key, ARCHIVE>::value &&
-                             !Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+            std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
+                             RACES::Archive::has_load<Key, ARCHIVE>::value &&
+                             !RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 {
     size_t size;
@@ -1243,9 +1246,9 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator,
-            std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE> &&
-                             Races::Archive::has_load<Key, ARCHIVE>::value &&
-                             Races::Archive::has_load<T, ARCHIVE>::value, bool> = true>
+            std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE> &&
+                             RACES::Archive::has_load<Key, ARCHIVE>::value &&
+                             RACES::Archive::has_load<T, ARCHIVE>::value, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
 {
     size_t size;
@@ -1274,7 +1277,7 @@ ARCHIVE& operator&(ARCHIVE& archive, std::map<Key,T,Compare,Allocator>& m)
  * @param queue is the object in which the priority queue is loaded
  * @return a reference to the updated archive
  */
-template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::In, ARCHIVE>, bool> = true>
+template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE>, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, std::priority_queue<T,std::vector<T>,Compare>& queue)
 {
     std::vector<T> queue_v;
@@ -1300,12 +1303,12 @@ ARCHIVE& operator&(ARCHIVE& archive, std::priority_queue<T,std::vector<T>,Compar
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, template<class,class> class CONTAINER, class T, class Alloc,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE> &&
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE> &&
                             (std::is_same_v<CONTAINER<T,Alloc>, std::list<T,Alloc>> ||
                              std::is_same_v<CONTAINER<T,Alloc>, std::vector<T,Alloc>>), bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, const CONTAINER<T,Alloc>& container)
 {
-    using namespace Races::Archive::Binary;
+    using namespace RACES::Archive::Binary;
 
     archive & container.size();
 
@@ -1335,10 +1338,10 @@ ARCHIVE& operator&(ARCHIVE& archive, const CONTAINER<T,Alloc>& container)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class T, class Compare, class Alloc,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, const std::set<T,Compare,Alloc>& S)
 {
-    using namespace Races::Archive::Binary;
+    using namespace RACES::Archive::Binary;
 
     archive & S.size();
 
@@ -1368,10 +1371,10 @@ ARCHIVE& operator&(ARCHIVE& archive, const std::set<T,Compare,Alloc>& S)
  * @return a reference to the updated archive
  */
 template<class ARCHIVE, class Key, class T, class Compare, class Allocator,
-         std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+         std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, const std::map<Key,T,Compare,Allocator>& m)
 {
-    using namespace Races::Archive::Binary;
+    using namespace RACES::Archive::Binary;
 
     archive & m.size();
 
@@ -1400,10 +1403,10 @@ ARCHIVE& operator&(ARCHIVE& archive, const std::map<Key,T,Compare,Allocator>& m)
  * @param queue is the priority queue to save
  * @return a reference to the updated archive
  */
-template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<Races::Archive::Basic::Out, ARCHIVE>, bool> = true>
+template<class ARCHIVE, class T, class Compare, std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
 ARCHIVE& operator&(ARCHIVE& archive, const std::priority_queue<T,std::vector<T>,Compare>& queue)
 {
-    using namespace Races::Archive::Binary;
+    using namespace RACES::Archive::Binary;
 
     archive & queue.size();
 
@@ -1424,7 +1427,7 @@ ARCHIVE& operator&(ARCHIVE& archive, const std::priority_queue<T,std::vector<T>,
     return archive;
 }
 
-namespace Races
+namespace RACES
 {
 
 namespace Archive
@@ -1439,7 +1442,7 @@ void Out::save(const T& object, const std::string& description,
 {
     UI::ProgressBar::hide_console_cursor();
 
-    Races::UI::ProgressBar bar(progress_bar_stream);
+    RACES::UI::ProgressBar bar(progress_bar_stream);
 
     if (description=="") {
         bar.set_message("Saving...");
@@ -1472,7 +1475,7 @@ void In::load(T& object, const std::string& description,
 {
     UI::ProgressBar::hide_console_cursor();
 
-    Races::UI::ProgressBar bar(progress_bar_stream);
+    RACES::UI::ProgressBar bar(progress_bar_stream);
 
     if (description=="") {
         bar.set_message("Loading...");
@@ -1512,6 +1515,6 @@ size_t ByteCounter::bytes_required_by(const T& object) {
 
 }   // Archive
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_ARCHIVE__

@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 0.3
- * @date 2024-05-04
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 #include "sid.hpp"
 #include "genomic_position.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -380,7 +380,6 @@ public:
      * [1] "Sequence Alignment/Map Format Specification", The SAM/BAM Format Specification
      *     Working Group, 22 August 2022, http://samtools.github.io/hts-specs/SAMv1.pdf
      *
-     * @param[in] mismatch_vector is a mismatch vector
      * @return the CIGAR code corresponding to the mismatch vector
      */
     std::string get_CIGAR() const;
@@ -429,7 +428,7 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 
 #endif // __RACES_READ__

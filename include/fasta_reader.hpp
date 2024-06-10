@@ -2,23 +2,23 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 0.8
- * @date 2024-03-11
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,7 +37,7 @@
 
 #include "progress_bar.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace IO
@@ -51,30 +51,30 @@ namespace FASTA
 
 /**
  * @brief A class to filter FASTA sequences
- * 
- * The objects of this class filter FASTA sequences according to 
- * their sequence headers. The class offers the method 
- * `operator()(const std::string& header)` that returns `true` 
+ *
+ * The objects of this class filter FASTA sequences according to
+ * their sequence headers. The class offers the method
+ * `operator()(const std::string& header)` that returns `true`
  * when the sequence must be filtered and `false` otherwise.
  */
 struct SequenceFilter
 {
     /**
      * @brief The filtering method
-     * 
-     * This method returns `true` when the sequence must be 
+     *
+     * This method returns `true` when the sequence must be
      * filtered and `false` otherwise according to the sequence
      * header.
-     * 
+     *
      * @param header is the FASTA sequence header
      * @return `true` if and only if the sequence must be filtered
      */
     inline constexpr bool operator()(const std::string& header) const
     {
         (void)header;
-        
+
         return false;
-    } 
+    }
 };
 
 /**
@@ -84,7 +84,7 @@ class SequenceInfo
 {
     /**
      * @brief Read the next content of the stream up-to a new sequence
-     * 
+     *
      * @param fasta_stream is an input stream referring to a FASTA file
      * @param progress_bar is a progress bar
      */
@@ -93,7 +93,7 @@ class SequenceInfo
 protected:
     /**
      * @brief Read FASTA sequence information from a stream
-     * 
+     *
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] seq_info is the object that will be filled by the read information
@@ -102,8 +102,8 @@ protected:
      *              according to their headers
      * @param[in,out] progress_bar is a progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
-     *           has been read from `fasta_stream`. If the method returns `true`, 
-     *           then `seq_info` and, whenever `nucleotides` is not `nullptr`, 
+     *           has been read from `fasta_stream`. If the method returns `true`,
+     *           then `seq_info` and, whenever `nucleotides` is not `nullptr`,
      *           `*nucleotides` are updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
@@ -175,11 +175,11 @@ public:
 
     /**
      * @brief Read FASTA sequence information from a stream
-     * 
+     *
      * @param fasta_stream is a stream referring to a FASTA file
      * @param seq_info is the object that will be filled by the read information
      * @param progress_bar is a progress bar
-     * @return `true` if and only if a sequence has been read from `fasta_stream`. 
+     * @return `true` if and only if a sequence has been read from `fasta_stream`.
      *           If the method returns `true`, then `seq_info` is updated
      *           according to the read values
      */
@@ -187,7 +187,7 @@ public:
 
     /**
      * @brief Read FASTA sequence information from a stream
-     * 
+     *
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] seq_info is the object that will be filled by the read information
@@ -195,7 +195,7 @@ public:
      *              according to their headers
      * @param[in,out] progress_bar is a progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
-     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           has been read from `fasta_stream`. If the method returns `true`,
      *           then `seq_info` is updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
@@ -207,13 +207,13 @@ public:
 
     /**
      * @brief Read FASTA sequence information from a stream
-     * 
+     *
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] seq_info is the object that will be filled by the read information
      * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence has been read from `fasta_stream`.
-     *           If the method returns `true`, then `seq_info` is updated 
+     *           If the method returns `true`, then `seq_info` is updated
      *           according to the read values
      */
     static bool read(std::istream& fasta_stream, SequenceInfo& seq_info,
@@ -221,7 +221,7 @@ public:
 
     /**
      * @brief Read FASTA sequence information from a stream
-     * 
+     *
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] seq_info is the object that will be filled by the read information
@@ -229,7 +229,7 @@ public:
      *              according to their headers
      * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
-     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           has been read from `fasta_stream`. If the method returns `true`,
      *           then `seq_info` is updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
@@ -251,11 +251,11 @@ struct Sequence : public SequenceInfo
 
     /**
      * @brief Read FASTA sequence from a stream
-     * 
+     *
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] sequence is the object that will be filled by the read sequence
      * @param[in,out] progress_bar is a progress bar
-     * @return `true` if and only if a sequence has been read from `fasta_stream`. 
+     * @return `true` if and only if a sequence has been read from `fasta_stream`.
      *           If the method returns `true`, then `sequence` is updated
      *           according to the read values
      */
@@ -263,7 +263,7 @@ struct Sequence : public SequenceInfo
 
     /**
      * @brief Read FASTA sequence from a stream
-     * 
+     *
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] sequence is the object that will be filled by the read sequence
@@ -271,7 +271,7 @@ struct Sequence : public SequenceInfo
      *              according to their headers
      * @param[in,out] progress_bar is a progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
-     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           has been read from `fasta_stream`. If the method returns `true`,
      *           then `seq_info` is updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
@@ -283,11 +283,11 @@ struct Sequence : public SequenceInfo
 
     /**
      * @brief Read FASTA sequence from a stream
-     * 
+     *
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] sequence is the object that will be filled by the read sequence
      * @param progress_bar_stream is the output stream for the progress bar
-     * @return `true` if and only if a sequence has been read from `fasta_stream`. 
+     * @return `true` if and only if a sequence has been read from `fasta_stream`.
      *           If the method returns `true`, then `sequence` is updated
      *           according to the read values
      */
@@ -296,7 +296,7 @@ struct Sequence : public SequenceInfo
 
     /**
      * @brief Read FASTA sequence from a stream
-     * 
+     *
      * @tparam FILTER is the type of sequence filter
      * @param[in,out] fasta_stream is a stream referring to a FASTA file
      * @param[out] sequence is the object that will be filled by the read sequence
@@ -304,7 +304,7 @@ struct Sequence : public SequenceInfo
      *              according to their headers
      * @param progress_bar_stream is the output stream for the progress bar
      * @return `true` if and only if a sequence that is not filtered by `filter`
-     *           has been read from `fasta_stream`. If the method returns `true`, 
+     *           has been read from `fasta_stream`. If the method returns `true`,
      *           then `seq_info` is updated according to the read values
      */
     template<typename FILTER, std::enable_if_t<std::is_base_of_v<SequenceFilter, FILTER>,bool> = true>
@@ -321,6 +321,6 @@ struct Sequence : public SequenceInfo
 
 }   // IO
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_FASTA_READER__

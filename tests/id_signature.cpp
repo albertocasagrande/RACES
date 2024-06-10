@@ -45,7 +45,7 @@
 
 BOOST_AUTO_TEST_CASE(ID_type_create)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     BOOST_CHECK_NO_THROW(IDType());
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ID_type_create)
 
 BOOST_AUTO_TEST_CASE(ID_type_read)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     struct IDTypeData
     {
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ID_type_read)
 
 BOOST_AUTO_TEST_CASE(ID_type_read_error)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     std::list<std::string> errors{
         "2:Del:R:0:", "2:Dela:R:0", "-2:Del:R:0", "2:Del:R:-10",
@@ -142,7 +142,7 @@ std::ostream& operator<<(std::ostream& out, const std::set<T>& S)
 
 BOOST_AUTO_TEST_CASE(ID_signature_load)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     std::set<std::string> signature_names;
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(ID_signature_load)
 
 BOOST_AUTO_TEST_CASE(selective_ID_signature_load)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     std::set<std::string> signature_names{"ID3","ID20","ID1"};
 
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(selective_ID_signature_load)
 
 BOOST_AUTO_TEST_CASE(ID_signature_expression)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     std::map<std::string, IDSignature> signatures;
     {

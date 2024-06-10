@@ -2,23 +2,23 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 0.25
- * @date 2024-03-09
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,20 +37,20 @@
 
 #include "logger.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 /**
  * @brief A binary logger
- * 
- * The objects of this class record cell duplications and 
- * tissue status in binary files 
+ *
+ * The objects of this class record cell duplications and
+ * tissue status in binary files
  */
 struct BinaryLogger : public BasicLogger
 {
@@ -61,21 +61,21 @@ struct BinaryLogger : public BasicLogger
 
     /**
      * @brief Get a new snapshot file full path
-     * 
+     *
      * @return a new snapshot file full path
      */
     std::filesystem::path get_snapshot_path() const;
 
     /**
      * @brief Open a new cell file
-     * 
+     *
      * This method close the last opened cell file and open a new one.
      */
     void rotate_cell_file();
 
     /**
      * @brief Record a cell
-     * 
+     *
      * @param cell is the cell on which event has been occurred
      */
     void record_cell(const CellInTissue& cell);
@@ -96,9 +96,9 @@ public:
 
         /**
          * @brief Get the position in the archives
-         * 
-         * @param cell_id 
-         * @return std::streampos 
+         *
+         * @param cell_id
+         * @return std::streampos
          */
         inline std::streampos get_cell_pos(const CellId& cell_id) const
         {
@@ -108,25 +108,25 @@ public:
     public:
         /**
          * @brief The cell reader constructor
-         * 
+         *
          * @param directory is the directory containing the cell files
          */
         explicit CellReader(const std::filesystem::path& directory);
 
         /**
          * @brief Get a timed-labelled cell from the directory
-         * 
+         *
          * @param cell_id is the identifier of the aimed cell
-         * @return the cell in the `cell_id`-th position of the 
+         * @return the cell in the `cell_id`-th position of the
          *      cell archives
          */
         Cell operator[](const CellId& cell_id);
 
         /**
          * @brief Get a timed-labelled cell from the directory
-         * 
+         *
          * @param cell_id is the identifier of the aimed cell
-         * @return the cell in the `cell_id`-th position of the 
+         * @return the cell in the `cell_id`-th position of the
          *      cell archives
          */
         inline Cell at(const CellId& cell_id)
@@ -136,7 +136,7 @@ public:
 
         /**
          * @brief Get the number of cells
-         * 
+         *
          * @return the number of cells
          */
         inline uint64_t get_number_of_cells() const {
@@ -146,7 +146,7 @@ public:
 
     /**
      * @brief Get the next cell file full path
-     * 
+     *
      * @return the next cell file full path
      */
     static std::filesystem::path get_cell_archive_path(const std::filesystem::path& directory, const uint16_t& file_number);
@@ -158,7 +158,7 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param simulation_dir is the simulation logger directory name
      * @param cells_per_file is the number of cells per file
      */
@@ -166,14 +166,14 @@ public:
 
     /**
      * @brief The copy-constructor
-     * 
+     *
      * @param orig is the template for the new object
      */
     BinaryLogger(const BinaryLogger& orig);
 
     /**
      * @brief The copy operator
-     * 
+     *
      * @param orig is the template for the new object
      * @return a reference to the updated object
      */
@@ -181,7 +181,7 @@ public:
 
     /**
      * @brief Record an event
-     * 
+     *
      * @param type is the event type
      * @param cell is the cell on which event has been occurred
      * @param time it the event time
@@ -190,14 +190,14 @@ public:
 
     /**
      * @brief Record an initial cell
-     * 
-     * @param cell is the initial cell to record 
+     *
+     * @param cell is the initial cell to record
      */
     void record_initial_cell(const CellInTissue& cell);
 
     /**
      * @brief Save a simulation snapshot
-     * 
+     *
      * @param simulation is the simulation whose snapshot is requested
      */
     void snapshot(const Simulation& simulation);
@@ -224,10 +224,10 @@ public:
 
     /**
      * @brief Reset the logger
-     * 
+     *
      * @param output_directory is the output directory name
      */
-    void reset(const std::filesystem::path& directory);
+    void reset(const std::filesystem::path& output_directory);
 
     /**
      * @brief Reset the logger
@@ -239,7 +239,7 @@ public:
 
     /**
      * @brief Save a `BinaryLogger` in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -260,7 +260,7 @@ public:
 
     /**
      * @brief Load a `BinaryLogger` from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded `BinaryLogger` object
@@ -288,7 +288,7 @@ public:
 
     /**
      * @brief Find the path of the last snapshot in a directory
-     * 
+     *
      * @param directory is the path of the directory in which the snapshot is searched
      * @return the path of the the last snapshot in `directory`
      */
@@ -304,6 +304,6 @@ public:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_BINARY_LOGGER__

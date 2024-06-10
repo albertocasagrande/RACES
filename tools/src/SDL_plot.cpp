@@ -2,23 +2,23 @@
  * @file SDL_plot.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a 2D plot window by using SDL2
- * @version 0.7
- * @date 2023-10-02
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,10 +34,10 @@
 #include "roboto_regular.hpp"
 #include "races_icon.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace UI 
+namespace UI
 {
 
 SDLWindow::SDLWindow(const unsigned int width, const unsigned int height, const std::string& name):
@@ -93,26 +93,26 @@ void SDLWindow::draw_rectangle(const unsigned int upper_left_x, const unsigned i
 	auto lower_left_x = top_left_x+static_cast<int>(width+thickness);
 	auto lower_left_y = top_left_y+static_cast<int>(height+thickness);
 
-	SDL_Rect outer  = { top_left_x, top_left_y, 
-					    static_cast<int>(width+2*thickness), 
+	SDL_Rect outer  = { top_left_x, top_left_y,
+					    static_cast<int>(width+2*thickness),
 					    static_cast<int>(thickness) };
 
 	SDL_RenderFillRect( renderer, &outer );
 
-	outer  = { top_left_x, top_left_y, 
-			   static_cast<int>(thickness), 
+	outer  = { top_left_x, top_left_y,
+			   static_cast<int>(thickness),
 			   static_cast<int>(height+2*thickness) };
 			
 	SDL_RenderFillRect( renderer, &outer );
 
-	outer  = { top_left_x, lower_left_y, 
-			   static_cast<int>(width+2*thickness), 
+	outer  = { top_left_x, lower_left_y,
+			   static_cast<int>(width+2*thickness),
 			   static_cast<int>(thickness) };
 
 	SDL_RenderFillRect( renderer, &outer );
 
-	outer  = { lower_left_x, top_left_y, 
-			   static_cast<int>(thickness), 
+	outer  = { lower_left_x, top_left_y,
+			   static_cast<int>(thickness),
 			   static_cast<int>(height+2*thickness) };
 
 	SDL_RenderFillRect( renderer, &outer );
@@ -121,9 +121,9 @@ void SDLWindow::draw_rectangle(const unsigned int upper_left_x, const unsigned i
 void SDLWindow::draw_filled_rectangle(const unsigned int upper_left_x, const unsigned int upper_left_y,
 							          const unsigned int width, const unsigned int height)
 {
-	SDL_Rect rect  = { static_cast<int>(upper_left_x), 
-						static_cast<int>(upper_left_y), 
-					    static_cast<int>(width), 
+	SDL_Rect rect  = { static_cast<int>(upper_left_x),
+						static_cast<int>(upper_left_y),
+					    static_cast<int>(width),
 					    static_cast<int>(height) };
 
 	SDL_RenderFillRect( renderer, &rect );
@@ -133,7 +133,7 @@ void SDLWindow::delete_point(const unsigned int x, const unsigned int y)
 {
 	Color color = get_color();
 	
-	// set background color 
+	// set background color
 	use_color(this->background_color);
 
 	// plot the point
@@ -151,14 +151,14 @@ void SDLWindow::get_text_size(const std::string& text, unsigned int& width, unsi
 	height = static_cast<unsigned int>(h);
 }
 
-void SDLWindow::draw_text(const std::string& text, 
+void SDLWindow::draw_text(const std::string& text,
 						  const unsigned int upper_left_x, const unsigned int upper_left_y)
 {
 	Color color = get_color();
 
 	SDL_Surface* msg_sfc = TTF_RenderText_Blended(font, text.c_str(),
-												  {color.red, color.green, 
-												   color.blue, color.alpha}); 
+												  {color.red, color.green,
+												   color.blue, color.alpha});
 
 	// now you can convert it into a texture
 	SDL_Texture* msg = SDL_CreateTextureFromSurface(renderer, msg_sfc);
@@ -167,9 +167,9 @@ void SDLWindow::draw_text(const std::string& text,
 
 	get_text_size(text, width, height);
 
-	SDL_Rect msg_rect  = { static_cast<int>(upper_left_x), 
-						   static_cast<int>(upper_left_y), 
-					       static_cast<int>(width), 
+	SDL_Rect msg_rect  = { static_cast<int>(upper_left_x),
+						   static_cast<int>(upper_left_y),
+					       static_cast<int>(width),
 					       static_cast<int>(height) };
 
 	SDL_RenderCopy(renderer, msg, NULL, &msg_rect);

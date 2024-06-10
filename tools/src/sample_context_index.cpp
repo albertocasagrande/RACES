@@ -2,23 +2,23 @@
  * @file sample_context_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief The main source file for context index sampler
- * @version 0.10
- * @date 2024-03-11
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
  * SOFTWARE.
  */
 
-#include <iostream> 
+#include <iostream>
 #include <string>
 #include <filesystem>
 #include <random>
@@ -53,15 +53,15 @@ class ContextSampler
     template<typename GENOME_WIDE_POSITION>
     void sample_context_index() const
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
-        Races::UI::ProgressBar* bar{nullptr};
+        RACES::UI::ProgressBar* bar{nullptr};
 
         {
             ContextIndex<GENOME_WIDE_POSITION> context_index;
 
             {
-                Races::Archive::Binary::In archive(context_index_filename);
+                RACES::Archive::Binary::In archive(context_index_filename);
                 if (quiet) {
                     archive & context_index;
                 } else {
@@ -70,9 +70,9 @@ class ContextSampler
             }
 
             if (!quiet) {
-                Races::UI::ProgressBar::hide_console_cursor();
+                RACES::UI::ProgressBar::hide_console_cursor();
 
-                bar = new Races::UI::ProgressBar(std::cout);
+                bar = new RACES::UI::ProgressBar(std::cout);
                 bar->set_message("Sampling context index");
             }
 
@@ -99,7 +99,7 @@ class ContextSampler
                 }
             }
 
-            Races::Archive::Binary::Out archive(output_filename);
+            RACES::Archive::Binary::Out archive(output_filename);
 
             if (quiet) {
                 archive & context_index;
@@ -108,7 +108,7 @@ class ContextSampler
 
                 delete bar;
 
-                Races::UI::ProgressBar::show_console_cursor();
+                RACES::UI::ProgressBar::show_console_cursor();
 
                 archive.save(context_index, "sampled index");
 
@@ -126,14 +126,14 @@ public:
     std::ostream& print_help(std::ostream& os) const
     {
         os << "Syntax: " << program_name;
-        
+
         for (unsigned int i=0;i<positional_options.max_total_count(); ++i) {
-            os << " <" << positional_options.name_for_position(i) << ">"; 
+            os << " <" << positional_options.name_for_position(i) << ">";
         }
 
         os << std::endl << visible_options << std::endl;
 
-        return os;   
+        return os;
     }
 
     ContextSampler(const int argc, const char* argv[]):
@@ -150,11 +150,11 @@ public:
 
         po::options_description hidden("Hidden options");
         hidden.add_options()
-            ("context index filename", po::value<std::string>(&context_index_filename), 
+            ("context index filename", po::value<std::string>(&context_index_filename),
             "the genome context index filename")
-            ("output filename", po::value<std::string>(&output_filename), 
+            ("output filename", po::value<std::string>(&output_filename),
             "the resulting genome context index filename")
-            ("sampling ratio", po::value<unsigned int>(&sampling_ratio), 
+            ("sampling ratio", po::value<unsigned int>(&sampling_ratio),
             "the genome context index filename")
         ;
 
@@ -203,9 +203,9 @@ public:
         }
 
         try {
-            using namespace Races::Mutations;
+            using namespace RACES::Mutations;
 
-            Races::Archive::Binary::In archive(context_index_filename);
+            RACES::Archive::Binary::In archive(context_index_filename);
 
             bytes_per_abs_position = ContextIndex<>::read_bytes_per_absolute_position(archive);
 
@@ -224,7 +224,7 @@ public:
         }
 
         if (std::filesystem::exists(output_filename) && !vm.count("force-overwrite")) {
-            std::cerr << "The output file \"" << output_filename << "\" already exists. " 
+            std::cerr << "The output file \"" << output_filename << "\" already exists. "
                     << "Use \"--force-overwrite\" to overwrite it." << std::endl<< std::endl;
             print_help(std::cerr);
             exit(1);

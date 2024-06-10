@@ -2,23 +2,23 @@
  * @file plot_2D.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a 2D plot window
- * @version 0.8
- * @date 2023-10-02
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,10 +36,10 @@
 
 #include "palette.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace UI 
+namespace UI
 {
 
 /**
@@ -54,7 +54,7 @@ protected:
 public:
 	/**
 	 * @brief The constructor
-	 * 
+	 *
 	 * @param width is the width of the plot window
 	 * @param height is the height of the plot window
 	 * @param name is the name of the plot window
@@ -68,59 +68,59 @@ public:
 
 	/**
 	 * @brief Get the selected color
-	 * 
+	 *
 	 * @return the selected color
 	 */
 	Color get_color() const;
 
 	/**
 	 * @brief Use a color
-	 * 
+	 *
 	 * @param color is the color to be used
 	 */
 	void use_color(const Color& color);
 
 	/**
 	 * @brief Get the background color
-	 * 
+	 *
 	 * @return the background color
 	 */
 	Color get_font_color() const;
 
 	/**
 	 * @brief Set the font color
-	 * 
+	 *
 	 * @param color is the color to be set a font color
 	 */
 	void set_font_color(const Color& color);
 
 	/**
 	 * @brief Get the background color
-	 * 
+	 *
 	 * @return the background color
 	 */
 	Color get_background_color() const;
 
 	/**
 	 * @brief Set the background color
-	 * 
+	 *
 	 * @param color is the color to be set a background color
 	 */
 	void set_background_color(const Color& color);
 
 	/**
 	 * @brief Draw a point
-	 * 
+	 *
 	 * @param x is the x-axis position of the point
-	 * @param y is the y-axis position of the point 
+	 * @param y is the y-axis position of the point
 	 */
 	void draw_point(const unsigned int x, const unsigned int y);
 
 	/**
 	 * @brief Draw a rectangle
-	 * 
-	 * @param upper_left_x is the x-axis position of the rectangle upper left corner 
-	 * @param upper_left_y is the y-axis position of the rectangle upper left corner 
+	 *
+	 * @param upper_left_x is the x-axis position of the rectangle upper left corner
+	 * @param upper_left_y is the y-axis position of the rectangle upper left corner
 	 * @param width is the rectangle width
 	 * @param height is the rectangle height
 	 * @param thickness is the rectangle thickness
@@ -130,9 +130,9 @@ public:
 
 	/**
 	 * @brief Draw a filled rectangle
-	 * 
-	 * @param upper_left_x is the x-axis position of the rectangle upper left corner 
-	 * @param upper_left_y is the y-axis position of the rectangle upper left corner 
+	 *
+	 * @param upper_left_x is the x-axis position of the rectangle upper left corner
+	 * @param upper_left_y is the y-axis position of the rectangle upper left corner
 	 * @param width is the rectangle width
 	 * @param height is the rectangle height
 	 */
@@ -140,8 +140,8 @@ public:
 							   const unsigned int width, const unsigned int height);
 
 	/**
-	 * @brief Get the size of the a string 
-	 * 
+	 * @brief Get the size of the a string
+	 *
 	 * @param[in] text is the string to be drawn
 	 * @param[out] width is the width of the string
 	 * @param[out] height is the height of the string
@@ -150,7 +150,7 @@ public:
 
 	/**
 	 * @brief Draw a string
-	 * 
+	 *
 	 * @param text is the string to be drawn
 	 * @param upper_left_x is the x-axis position of the string upper left corner
 	 * @param upper_left_y is the y-axis position of the string upper left corner
@@ -159,10 +159,10 @@ public:
 
 	/**
 	 * @brief Delete a point
-	 * 
-	 * This method delete a point in the plot by drawing over it a point 
+	 *
+	 * This method delete a point in the plot by drawing over it a point
 	 * whose color is the set background color.
-	 * 
+	 *
 	 * @param x is the x-axis position of the point
 	 * @param y is the y-axis position of the point
 	 */
@@ -175,22 +175,22 @@ public:
 
 	/**
 	 * @brief Test whenever the plotting window has been closed
-	 * 
+	 *
 	 * @return `true` if and only if the plotting window has been closed
 	 */
 	const bool& closed() const;
 
 	/**
 	 * @brief Test whenever the plotting window is waiting for any event
-	 * 
+	 *
 	 * @return `false`
 	 */
 	bool waiting_end() const;
 
 	/**
 	 * @brief Get the number of dimensions plotted
-	 * 
-	 * @return the number of dimensions supported by 
+	 *
+	 * @return the number of dimensions supported by
 	 *    this class, i.e., 2
 	 */
 	static constexpr uint8_t dimensions();
@@ -296,6 +296,6 @@ inline bool Plot2DWindow::waiting_end() const
 
 }  // UI
 
-}  // Races
+}  // RACES
 
 #endif // __RACES_PLOT_2D__

@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 0.4
- * @date 2024-06-03
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -40,7 +40,7 @@
 #include "genomic_sequence.hpp"
 #include "read.hpp"
 
-namespace Races
+namespace RACES
 {
 
 /**
@@ -403,6 +403,6 @@ public:
 
 }   // Sequencers
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_SEQUENCER__

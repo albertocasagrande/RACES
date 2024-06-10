@@ -2,8 +2,8 @@
  * @file rs_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to compute the repeated substring index
- * @version 0.6
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -46,7 +46,7 @@
 
 #include "id_signature.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -90,9 +90,9 @@ struct Repetition
     Repetition(const ChromosomeId& chr_id, const ChrPosition begin,
                const REPETITION_TYPE num_of_repetitions,
                const char* unit, const uint8_t unit_size,
-               const char previous_character):
+               const char previous_base):
         begin(chr_id, begin), num_of_repetitions(num_of_repetitions),
-        unit(unit, unit+unit_size), prev_base(previous_character)
+        unit(unit, unit+unit_size), prev_base(previous_base)
     {
         if (unit_size==0) {
             throw std::domain_error("Unit size must be greater than 0.");
@@ -137,13 +137,13 @@ struct Repetition
 
 }   // Mutations
 
-}   //  Races
+}   //  RACES
 
 
 namespace std
 {
     template<typename RepetitionType>
-    std::ostream& operator<<(std::ostream& os, const Races::Mutations::Repetition<RepetitionType>& repetition)
+    std::ostream& operator<<(std::ostream& os, const RACES::Mutations::Repetition<RepetitionType>& repetition)
     {
         os << "[" << std::string(1, repetition.prev_base) << "]" << repetition.unit << " ("
             << repetition.begin << ":" << static_cast<size_t>(repetition.num_of_repetitions) << ")";
@@ -152,7 +152,7 @@ namespace std
     }
 }
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -431,7 +431,7 @@ struct RSIndex
              const uint8_t index,
              const RepetitionType& num_of_repetitions,
              const char*& unit, const uint8_t& unit_size,
-             const char& previous_character);
+             const char& previous_base);
 
     /**
      * @brief Add a repeated sequence to the index
@@ -861,7 +861,7 @@ public:
      * @param[in] max_stored_repetitions is the maximum number of stored repetitions
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the repetitions that lay in the sequences corresponding
-     *          to a chromosome according to `Races::IO::FASTA::seq_name_decoders`
+     *          to a chromosome according to `RACES::IO::FASTA::seq_name_decoders`
      */
     static inline RSIndex build_index(const std::filesystem::path& genome_fasta,
                                       const size_t max_unit_size,
@@ -881,7 +881,7 @@ public:
      * @param[in] seed is the random generator seed
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the repetitions that lay in the sequences corresponding
-     *          to a chromosome according to `Races::IO::FASTA::seq_name_decoders`
+     *          to a chromosome according to `RACES::IO::FASTA::seq_name_decoders`
      */
     static inline RSIndex build_index(const std::filesystem::path& genome_fasta,
                                       const size_t max_unit_size,
@@ -898,11 +898,12 @@ public:
      *
      * @param[in] genome_fasta is the path of a FASTA file
      * @param[in] regions_to_avoid is a set of regions to avoid
-     * @param[in] sampling_rate is the number of contexts to be found in order to record a context
-     *          in the index
+     * @param[in] max_unit_size is the maximum considered size of the repetition unit
+     * @param[in] max_stored_repetitions is the maximum number of stored repetitions
+     * @param[in] seed is the random generator seed
      * @param[in,out] progress_bar is the progress bar
      * @return the index of the repetitions that lay in the sequences corresponding
-     *          to a chromosome according to `Races::IO::FASTA::seq_name_decoders`,
+     *          to a chromosome according to `RACES::IO::FASTA::seq_name_decoders`,
      *          but that are located outside the regions in `regions_to_avoid`
      */
     static RSIndex build_index(const std::filesystem::path& genome_fasta,
@@ -974,6 +975,6 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_RS_INDEX__

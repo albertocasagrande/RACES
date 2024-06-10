@@ -2,8 +2,8 @@
  * @file logics.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a logic about the simulation
- * @version 0.3
- * @date 2024-03-19
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -32,7 +32,7 @@
 
 struct Context;
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -139,7 +139,7 @@ std::ostream& operator<<(std::ostream& os, const Expression& expression)
             }
             break;
         default:
-            throw std::runtime_error("Unknown expression type code " 
+            throw std::runtime_error("Unknown expression type code "
                                      + std::to_string(static_cast<unsigned int>(expression.type)));
     }
 
@@ -171,7 +171,7 @@ std::ostream& operator<<(std::ostream& os, const Relation& relation)
             os << "!=";
             break;
         default:
-            throw std::runtime_error("Unknown relation type code " 
+            throw std::runtime_error("Unknown relation type code "
                                      + std::to_string(static_cast<unsigned int>(relation.type)));
     }
     os << relation.rhs;
@@ -283,7 +283,7 @@ std::ostream& operator<<(std::ostream& os, const Formula& formula)
             print_with_parenthesis(os,  *(formula.rhs), Formula::Type::AND);
             break;
         default:
-            throw std::runtime_error("Unknown formula type code " 
+            throw std::runtime_error("Unknown formula type code "
                                      + std::to_string(static_cast<unsigned int>(formula.type)));
     }
 
@@ -295,4 +295,4 @@ std::ostream& operator<<(std::ostream& os, const Formula& formula)
 
 }   // Mutants
 
-}   // Races
+}   // RACES

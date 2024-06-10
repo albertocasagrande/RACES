@@ -2,8 +2,8 @@
  * @file tissue.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue class
- * @version 0.43
- * @date 2024-05-21
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -44,7 +44,7 @@
 #include "cell.hpp"
 #include "logics.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -810,7 +810,7 @@ public:
      *      `from_position` towards `directions`
      */
     size_t count_mutated_cells_from(const PositionInTissue position,
-                                    const Direction& directions) const;
+                                    const Direction& direction) const;
 
     /**
      * @brief Push contiguous mutated cells in a direction
@@ -954,6 +954,6 @@ inline bool operator!=(const Tissue::SpeciesView::const_iterator& a, const Tissu
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_TISSUE__

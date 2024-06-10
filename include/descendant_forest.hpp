@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 0.11
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -42,7 +42,7 @@
 #include "binary_logger.hpp"
 #include "tissue_sample.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -778,6 +778,6 @@ public:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_DESCENDANT_FOREST__

@@ -2,23 +2,23 @@
  * @file genomic_position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic position and related functions
- * @version 0.5
- * @date 2023-12-09
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,7 @@
 
 #include "genomic_position.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutations
@@ -79,14 +79,14 @@ std::string GenomicPosition::chrtos(const ChromosomeId& chr_id)
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicPosition& genomic_position)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::GenomicPosition& genomic_position)
 {
-    out << "chr" <<  Races::Mutations::GenomicPosition::chrtos(genomic_position.chr_id) << "(" 
+    out << "chr" <<  RACES::Mutations::GenomicPosition::chrtos(genomic_position.chr_id) << "("
         << genomic_position.position << ")";
 
     return out;

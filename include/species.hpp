@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 0.30
- * @date 2024-04-18
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -44,7 +44,7 @@
 #include "mutant_properties.hpp"
 
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -367,7 +367,7 @@ public:
     /**
      * @brief Switch on/off the duplication of a cell
      *
-     * @param cell is the identifier of the cell on which
+     * @param cell_id is the identifier of the cell on which
      *          the duplication will be enabled/disabled
      * @param duplication_on is a Boolean flag to enable
      *          (True)/disable(False) duplication on `cell`
@@ -378,7 +378,7 @@ public:
     /**
      * @brief Enable the duplication of a cell
      *
-     * @param cell is the identifier of the cell to be enabled
+     * @param cell_id is the identifier of the cell to be enabled
      *          for the duplication
      */
     void enable_duplication_for(const CellId& cell_id);
@@ -386,7 +386,7 @@ public:
     /**
      * @brief Disable the duplication of a cell
      *
-     * @param cell is the identifier of the cell to be disabled
+     * @param cell_id is the identifier of the cell to be disabled
      *          for the duplication
      */
     void disable_duplication_for(const CellId& cell_id);
@@ -507,20 +507,6 @@ void swap(Species& a, Species& b);
 
 }   // Mutants
 
-}   // Races
-
-namespace std
-{
-
-/**
- * @brief Write the information about a species in an output stream
- *
- * @param out is the output stream
- * @param species is the species to be streamed
- * @return a reference to the output stream
- */
-std::ostream& operator<<(std::ostream& out, const Races::Mutants::SpeciesProperties& species);
-
-}   // std
+}   // RACES
 
 #endif // __RACES_SPECIES__

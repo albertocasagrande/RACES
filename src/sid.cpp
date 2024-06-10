@@ -2,8 +2,8 @@
  * @file sid.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SNV, Insertion, and Deletion mutations
- * @version 0.2
- * @date 2024-04-27
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,7 +30,7 @@
 
 #include "sid.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -117,16 +117,16 @@ SID::SID(GenomicPosition&& genomic_position,
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-bool less<Races::Mutations::SID>::operator()(const Races::Mutations::SID &lhs,
-                                             const Races::Mutations::SID &rhs) const
+bool less<RACES::Mutations::SID>::operator()(const RACES::Mutations::SID &lhs,
+                                             const RACES::Mutations::SID &rhs) const
 {
     {
-        less<Races::Mutations::GenomicPosition> gp_op;
+        less<RACES::Mutations::GenomicPosition> gp_op;
 
         if (gp_op(lhs, rhs)) {
             return true;
@@ -150,9 +150,9 @@ bool less<Races::Mutations::SID>::operator()(const Races::Mutations::SID &lhs,
     return lhs.alt.compare(rhs.alt) < 0;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::SID& sid)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::SID& sid)
 {
-      out << static_cast<Races::Mutations::GenomicPosition>(sid)
+      out << static_cast<RACES::Mutations::GenomicPosition>(sid)
         << "[" << sid.ref << ">" <<  sid.alt << "]";
 
     return out;

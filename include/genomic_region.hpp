@@ -2,8 +2,8 @@
  * @file genomic_region.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic region
- * @version 0.6
- * @date 2024-04-27
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -35,7 +35,7 @@
 
 #include "genomic_position.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -498,16 +498,16 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
 template<>
-struct less<Races::Mutations::GenomicRegion>
+struct less<RACES::Mutations::GenomicRegion>
 {
-    inline bool operator()(const Races::Mutations::GenomicRegion &lhs,
-                           const Races::Mutations::GenomicRegion &rhs) const
+    inline bool operator()(const RACES::Mutations::GenomicRegion &lhs,
+                           const RACES::Mutations::GenomicRegion &rhs) const
     {
         return ((lhs.get_chromosome_id()<rhs.get_chromosome_id())
                 || ((lhs.get_chromosome_id()==rhs.get_chromosome_id())
@@ -525,7 +525,7 @@ struct less<Races::Mutations::GenomicRegion>
  * @param genomic_region is the genomic region to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::GenomicRegion& genomic_region);
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::GenomicRegion& genomic_region);
 
 }
 

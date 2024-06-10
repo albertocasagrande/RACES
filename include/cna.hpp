@@ -2,8 +2,8 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 0.10
- * @date 2024-03-12
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -35,7 +35,7 @@
 #include "mutation.hpp"
 #include "genomic_region.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -131,7 +131,6 @@ struct CNA : public Mutation
      * @param initial_position is the CNA initial position
      * @param length is the CNA length
      * @param source is the allele from which the region is copied
-     * @param destination is the allele in which the region is copied
      * @param nature is the nature of the CNA
      */
     static inline CNA new_amplification(const GenomicPosition& initial_position,
@@ -148,8 +147,6 @@ struct CNA : public Mutation
      *
      * @param initial_position is the CNA initial position
      * @param length is the CNA length
-     * @param source is the allele from which the region is copied
-     * @param destination is the allele in which the region is copied
      * @param nature is the nature of the CNA
      */
     static inline CNA new_amplification(const GenomicPosition& initial_position,
@@ -181,7 +178,6 @@ struct CNA : public Mutation
      *
      * @param initial_position is the CNA initial position
      * @param length is the CNA length
-     * @param allele is the allele from which the region is removed
      * @param nature is the nature of the CNA
      */
     static inline CNA new_deletion(const GenomicPosition& initial_position,
@@ -193,8 +189,8 @@ struct CNA : public Mutation
 
     /**
      * @brief Get the CNA region
-     * 
-     * @return the CNA region 
+     *
+     * @return the CNA region
      */
     inline GenomicRegion get_region() const
     {
@@ -203,7 +199,7 @@ struct CNA : public Mutation
 
     /**
      * @brief Get the CNA inital position
-     * 
+     *
      * @return a constant reference to the CNA initial position
      */
     const ChrPosition& get_initial_position() const
@@ -213,7 +209,7 @@ struct CNA : public Mutation
 
     /**
      * @brief Get the CNA final position
-     * 
+     *
      * @return a constant reference to the CNA initial position
      */
     inline ChrPosition get_final_position() const
@@ -285,16 +281,16 @@ struct CNA : public Mutation
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
 template<>
-struct less<Races::Mutations::CNA>
+struct less<RACES::Mutations::CNA>
 {
-    bool operator()(const Races::Mutations::CNA &lhs,
-                    const Races::Mutations::CNA &rhs) const;
+    bool operator()(const RACES::Mutations::CNA &lhs,
+                    const RACES::Mutations::CNA &rhs) const;
 };
 
 /**
@@ -304,7 +300,7 @@ struct less<Races::Mutations::CNA>
  * @param cna is the CNA to stream
  * @return a reference of the updated stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna);
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::CNA& cna);
 
 };
 

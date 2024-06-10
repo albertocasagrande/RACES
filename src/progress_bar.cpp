@@ -2,23 +2,23 @@
  * @file progress_bar.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a progress bar
- * @version 0.11
- * @date 2024-03-11
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,7 @@
 
 #include "progress_bar.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace UI
@@ -82,14 +82,14 @@ ProgressBar& ProgressBar::set_message(const std::string& message)
     using namespace indicators;
 
     if (indicator!=nullptr && (percentage != 100 || !updated)) {
-        // the following line is a temporary fix for indicators 
+        // the following line is a temporary fix for indicators
         // issue #126 (https://github.com/p-ranav/indicators/issues/126)
         std::string curLocale = setlocale(LC_ALL, nullptr);
 
         indicator->set_option(option::PostfixText{message});
         indicator->set_progress(percentage);
 
-        // the following line is a temporary fix for indicators 
+        // the following line is a temporary fix for indicators
         // issue #126 (https://github.com/p-ranav/indicators/issues/126)
         setlocale(LC_ALL, curLocale.c_str());
     }
@@ -182,4 +182,4 @@ ProgressBar::~ProgressBar()
 
 }  // UI
 
-} // Races
+} // RACES

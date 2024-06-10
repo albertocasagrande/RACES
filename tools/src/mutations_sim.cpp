@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 0.28
- * @date 2024-05-21
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -55,9 +55,9 @@
 
 template<>
 std::string
-boost::lexical_cast<std::string, Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode>(const Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode& mode)
+boost::lexical_cast<std::string, RACES::Mutations::SequencingSimulations::ReadSimulator<>::Mode>(const RACES::Mutations::SequencingSimulations::ReadSimulator<>::Mode& mode)
 {
-    using namespace Races::Mutations::SequencingSimulations;
+    using namespace RACES::Mutations::SequencingSimulations;
     switch (mode) {
         case ReadSimulator<>::Mode::CREATE:
             return "create";
@@ -71,15 +71,15 @@ boost::lexical_cast<std::string, Races::Mutations::SequencingSimulations::ReadSi
 }
 
 template<>
-Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode
-boost::lexical_cast<Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode, std::string>(const std::string& mode)
+RACES::Mutations::SequencingSimulations::ReadSimulator<>::Mode
+boost::lexical_cast<RACES::Mutations::SequencingSimulations::ReadSimulator<>::Mode, std::string>(const std::string& mode)
 {
     std::string upper_token = mode;
     for (auto& t_char: upper_token) {
         t_char = toupper(t_char);
     }
 
-    using namespace Races::Mutations::SequencingSimulations;
+    using namespace RACES::Mutations::SequencingSimulations;
 
     if (upper_token == "CREATE") {
         return ReadSimulator<>::Mode::CREATE;
@@ -119,7 +119,7 @@ class MutationsSimulator : public BasicExecutable
     double coverage;
     double purity;
     std::string seq_output_directory;
-    Races::Mutations::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
+    RACES::Mutations::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
     bool paired_read;
     size_t read_size;
     size_t insert_size;
@@ -137,13 +137,13 @@ class MutationsSimulator : public BasicExecutable
     size_t bytes_per_abs_position;
     bool quiet;
 
-    std::list<Races::Mutants::Evolutions::TissueSample>
-    get_samples(Races::Mutants::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
+    std::list<RACES::Mutants::Evolutions::TissueSample>
+    get_samples(RACES::Mutants::Evolutions::Simulation& simulation, const nlohmann::json& simulation_cfg) const
     {
-        using namespace Races::Mutants;
-        using namespace Races::Mutants::Evolutions;
+        using namespace RACES::Mutants;
+        using namespace RACES::Mutants::Evolutions;
 
-        std::list<Races::Mutants::Evolutions::TissueSample> samples;
+        std::list<RACES::Mutants::Evolutions::TissueSample> samples;
 
         if (simulation_cfg.contains("sample regions")) {
             const auto& sample_regions_json = simulation_cfg["sample regions"];
@@ -152,7 +152,7 @@ class MutationsSimulator : public BasicExecutable
             }
 
             for (const auto& sample_region_json: sample_regions_json) {
-                auto sample_specification = Races::ConfigReader::get_sample_specification(sample_region_json);
+                auto sample_specification = RACES::ConfigReader::get_sample_specification(sample_region_json);
                 samples.push_back(simulation.simulate_sampling(sample_specification));
             }
 
@@ -163,11 +163,11 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename ABSOLUTE_GENOTYPE_POSITION = uint32_t>
-    Races::Mutations::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> load_context_index(const std::string& filename) const
+    RACES::Mutations::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> load_context_index(const std::string& filename) const
     {
-        Races::Archive::Binary::In archive(filename);
+        RACES::Archive::Binary::In archive(filename);
 
-        Races::Mutations::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> context_index;
+        RACES::Mutations::ContextIndex<ABSOLUTE_GENOTYPE_POSITION> context_index;
 
         if (quiet) {
             archive & context_index;
@@ -178,11 +178,11 @@ class MutationsSimulator : public BasicExecutable
         return context_index;
     }
 
-    Races::Mutations::RSIndex load_rs_index(const std::string& filename) const
+    RACES::Mutations::RSIndex load_rs_index(const std::string& filename) const
     {
-        Races::Archive::Binary::In archive(filename);
+        RACES::Archive::Binary::In archive(filename);
 
-        Races::Mutations::RSIndex rs_index;
+        RACES::Mutations::RSIndex rs_index;
 
         if (quiet) {
             archive & rs_index;
@@ -194,18 +194,18 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename MUTATION_TYPE>
-    static std::map<std::string, Races::Mutations::Signature<MUTATION_TYPE>>
+    static std::map<std::string, RACES::Mutations::Signature<MUTATION_TYPE>>
     load_signatures(const std::string filename)
     {
         std::ifstream is(filename);
 
-        return Races::Mutations::Signature<MUTATION_TYPE>::read_from_stream(is);
+        return RACES::Mutations::Signature<MUTATION_TYPE>::read_from_stream(is);
     }
 
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
-    Races::Mutations::PhylogeneticForest
-    place_mutations(Races::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
-                    const Races::Mutants::DescendantsForest& forest,
+    RACES::Mutations::PhylogeneticForest
+    place_mutations(RACES::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
+                    const RACES::Mutants::DescendantsForest& forest,
                     const size_t& num_of_preneoplastic_SNVs,
                     const size_t& num_of_preneoplastic_IDs,
                     const std::string& preneoplatic_SNV_signature,
@@ -218,7 +218,7 @@ class MutationsSimulator : public BasicExecutable
                                           preneoplatic_indel_signature);
         }
 
-        Races::UI::ProgressBar progress_bar(std::cout);
+        RACES::UI::ProgressBar progress_bar(std::cout);
 
         progress_bar.set_message("Placing mutations");
 
@@ -239,10 +239,10 @@ class MutationsSimulator : public BasicExecutable
         return nlohmann::json::parse(simulation_stream);
     }
 
-    void process_statistics(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list) const
+    void process_statistics(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list) const
     {
-        using namespace Races::UI;
-        using namespace Races::Mutations;
+        using namespace RACES::UI;
+        using namespace RACES::Mutations;
 
         if ((SIDs_csv_filename != "") || (CNAs_csv_filename != "")) {
 
@@ -267,13 +267,13 @@ class MutationsSimulator : public BasicExecutable
     }
 
     static void
-    split_by_epigenetic_status(std::list<Races::Mutations::SampleGenomeMutations>& FACS_samples,
-                               const Races::Mutations::SampleGenomeMutations& sample_mutations,
-                               std::map<Races::Mutants::SpeciesId, std::string> methylation_map)
+    split_by_epigenetic_status(std::list<RACES::Mutations::SampleGenomeMutations>& FACS_samples,
+                               const RACES::Mutations::SampleGenomeMutations& sample_mutations,
+                               std::map<RACES::Mutants::SpeciesId, std::string> methylation_map)
     {
-        using namespace Races::Mutants;
-        using namespace Races::Mutants::Evolutions;
-        using namespace Races::Mutations;
+        using namespace RACES::Mutants;
+        using namespace RACES::Mutants::Evolutions;
+        using namespace RACES::Mutations;
 
         std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
 
@@ -295,14 +295,14 @@ class MutationsSimulator : public BasicExecutable
         }
     }
 
-    static std::list<Races::Mutations::SampleGenomeMutations>
-    split_by_epigenetic_status(const std::list<Races::Mutations::SampleGenomeMutations>& sample_mutations_list,
-                               const std::map<Races::Mutants::SpeciesId, std::string>& methylation_map)
+    static std::list<RACES::Mutations::SampleGenomeMutations>
+    split_by_epigenetic_status(const std::list<RACES::Mutations::SampleGenomeMutations>& sample_mutations_list,
+                               const std::map<RACES::Mutants::SpeciesId, std::string>& methylation_map)
     {
-        using namespace Races::Mutants;
-        using namespace Races::Mutants::Evolutions;
+        using namespace RACES::Mutants;
+        using namespace RACES::Mutants::Evolutions;
 
-        std::list<Races::Mutations::SampleGenomeMutations> FACS_samples;
+        std::list<RACES::Mutations::SampleGenomeMutations> FACS_samples;
 
         for (const auto& sample_mutations : sample_mutations_list) {
             split_by_epigenetic_status(FACS_samples, sample_mutations, methylation_map);
@@ -312,11 +312,11 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename TISSUE_SAMPLE,
-             std::enable_if_t<std::is_base_of_v<Races::Mutants::Evolutions::TissueSample, TISSUE_SAMPLE>, bool> = true>
-    static std::map<Races::Time, std::list<TISSUE_SAMPLE>>
+             std::enable_if_t<std::is_base_of_v<RACES::Mutants::Evolutions::TissueSample, TISSUE_SAMPLE>, bool> = true>
+    static std::map<RACES::Time, std::list<TISSUE_SAMPLE>>
     split_list_by_time(const std::list<TISSUE_SAMPLE>& sample_list)
     {
-        std::map<Races::Time, std::list<TISSUE_SAMPLE>> time_map;
+        std::map<RACES::Time, std::list<TISSUE_SAMPLE>> time_map;
 
         for (const auto& sample : sample_list) {
             time_map[sample.get_time()].push_back(sample);
@@ -326,19 +326,19 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename GENOME_WIDE_POSITION>
-    static std::map<Races::Mutations::ChromosomeId, size_t>
-    get_number_of_alleles(const Races::Mutations::ContextIndex<GENOME_WIDE_POSITION>&context_index,
+    static std::map<RACES::Mutations::ChromosomeId, size_t>
+    get_number_of_alleles(const RACES::Mutations::ContextIndex<GENOME_WIDE_POSITION>&context_index,
                           const nlohmann::json& simulation_cfg)
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         auto chromosome_ids = context_index.get_chromosome_ids();
-        return Races::ConfigReader::get_number_of_alleles(simulation_cfg, chromosome_ids);
+        return RACES::ConfigReader::get_number_of_alleles(simulation_cfg, chromosome_ids);
     }
 
-    static Races::Mutations::GenomicRegion get_CNA_region(const Races::IO::CSVReader::CSVRow& row, const size_t& row_num)
+    static RACES::Mutations::GenomicRegion get_CNA_region(const RACES::IO::CSVReader::CSVRow& row, const size_t& row_num)
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         if (row.size()<5) {
             throw std::runtime_error("The CNA CSV must contains at least 5 columns");
@@ -381,7 +381,7 @@ class MutationsSimulator : public BasicExecutable
         return {pos, end_pos+1-begin_pos};
     }
 
-    void saving_statistics_data_and_images(const Races::Mutations::SequencingSimulations::SampleSetStatistics& statistics,
+    void saving_statistics_data_and_images(const RACES::Mutations::SequencingSimulations::SampleSetStatistics& statistics,
                                            const std::string& base_name="chr_") const
     {
         statistics.save_VAF_CSVs(base_name, std::cout, quiet);
@@ -392,10 +392,10 @@ class MutationsSimulator : public BasicExecutable
     }
 
     template<typename GENOME_WIDE_POSITION>
-    static void add_exposures(Races::Mutations::MutationEngine<GENOME_WIDE_POSITION>& engine,
+    static void add_exposures(RACES::Mutations::MutationEngine<GENOME_WIDE_POSITION>& engine,
                               const nlohmann::json& exposures_json, const std::string& mutation_name)
     {
-        using namespace Races;
+        using namespace RACES;
 
         ConfigReader::expecting(mutation_name, exposures_json,
                                 "The elements of the \"exposures\" field");
@@ -416,10 +416,10 @@ class MutationsSimulator : public BasicExecutable
     template<typename GENOME_WIDE_POSITION>
     void run_abs_position() const
     {
-        using namespace Races;
-        using namespace Races::Mutants;
-        using namespace Races::Mutations;
-        using namespace Races::Mutations::SequencingSimulations;
+        using namespace RACES;
+        using namespace RACES::Mutants;
+        using namespace RACES::Mutations;
+        using namespace RACES::Mutations::SequencingSimulations;
 
         nlohmann::json simulation_cfg = get_simulation_json();
 
@@ -519,7 +519,7 @@ class MutationsSimulator : public BasicExecutable
         if (coverage>0) {
             read_simulator.enable_SAM_writing(write_SAM);
 
-            Races::Sequencers::Illumina::BasicSequencer sequencer(sequencer_error_rate);
+            RACES::Sequencers::Illumina::BasicSequencer sequencer(sequencer_error_rate);
 
             const auto statistics = read_simulator(sequencer, mutations_list, coverage, purity);
 
@@ -642,13 +642,13 @@ class MutationsSimulator : public BasicExecutable
     }
 
 public:
-    static std::vector<Races::Mutations::CNA> load_passenger_CNAs(const std::filesystem::path& CNAs_csv)
+    static std::vector<RACES::Mutations::CNA> load_passenger_CNAs(const std::filesystem::path& CNAs_csv)
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         std::vector<CNA> CNAs;
 
-        Races::IO::CSVReader csv_reader(CNAs_csv, true, '\t');
+        RACES::IO::CSVReader csv_reader(CNAs_csv, true, '\t');
 
         size_t row_num{2};
         for (const auto& row : csv_reader) {
@@ -693,7 +693,7 @@ public:
     {
         namespace po = boost::program_options;
 
-        using namespace Races::Mutations::SequencingSimulations;
+        using namespace RACES::Mutations::SequencingSimulations;
 
         visible_options.at("mutations").add_options()
             ("germline-file,G", po::value<std::string>(&germline_csv_filename),
@@ -800,7 +800,7 @@ public:
         }
 
         {
-            using namespace Races::Mutations::SequencingSimulations;
+            using namespace RACES::Mutations::SequencingSimulations;
 
             read_simulator_output_mode = ((vm.count("overwrite")>0)?
                                           ReadSimulator<>::Mode::OVERWRITE:
@@ -813,9 +813,9 @@ public:
         write_SAM = vm.count("write-SAM")>0;
 
         try {
-            using namespace Races::Mutations;
+            using namespace RACES::Mutations;
 
-            Races::Archive::Binary::In archive(context_index_filename);
+            RACES::Archive::Binary::In archive(context_index_filename);
 
             bytes_per_abs_position = ContextIndex<>::read_bytes_per_absolute_position(archive);
 

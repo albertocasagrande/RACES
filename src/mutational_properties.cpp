@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 0.20
- * @date 2024-05-16
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -32,7 +32,7 @@
 
 #include "mutational_properties.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -108,4 +108,4 @@ MutationalProperties::add_mutant(const std::string& mutant_name,
 
 }   // Mutations
 
-}   // Races
+}   // RACES

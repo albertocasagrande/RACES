@@ -2,8 +2,8 @@
  * @file genomic_sequence.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a structure to handle genomic sequence
- * @version 0.3
- * @date 2024-03-30
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -32,7 +32,7 @@
 
 #include "genomic_sequence.hpp"
 
-namespace Races
+namespace RACES
 {
 
 std::vector<char> GenomicSequence::DNA_bases = {'A', 'C', 'G', 'T'};
@@ -138,4 +138,4 @@ std::string GenomicSequence::get_reverse_complemented(const std::string& sequenc
     return new_seq;
 }
 
-}   // Races
+}   // RACES

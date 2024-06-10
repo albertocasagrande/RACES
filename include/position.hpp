@@ -2,23 +2,23 @@
  * @file position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.12
- * @date 2024-03-29
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,13 +38,13 @@
 
 
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 struct Direction;
@@ -60,22 +60,22 @@ namespace std
 
 /**
  * @brief Write a direction in an output stream
- * 
+ *
  * @param os is the output stream
  * @param direction is the direction to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Direction& direction);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::Direction& direction);
 
 };
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 class Tissue;
@@ -106,7 +106,7 @@ struct Direction {
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param value is a direction obtained by composing `Value`'s
      */
     Direction(const uint8_t value);
@@ -427,7 +427,7 @@ struct PositionDelta {
 
     /**
      * @brief Create a new position delta
-     * 
+     *
      * @param x is the x-axis delta
      * @param y is the y-axis delta
      * @param z is the z-axis delta
@@ -435,15 +435,15 @@ struct PositionDelta {
     PositionDelta(const int x, const int y, const int z);
 
     /**
-     * @brief Create a new position delta towards a direction 
-     * 
-     * @param direction 
+     * @brief Create a new position delta towards a direction
+     *
+     * @param direction
      */
     explicit PositionDelta(const Direction& direction);
 
     /**
      * @brief Negate position delta;
-     * 
+     *
      */
     PositionDelta operator-() const;
 };
@@ -468,7 +468,7 @@ struct PositionInTissue {
 
     /**
      * @brief A new constructor
-     * 
+     *
      * @param x is the x-axis position
      * @param y is the y-axis position
      * @param z is the z-axis position
@@ -477,15 +477,15 @@ struct PositionInTissue {
 
     /**
      * @brief Add a delta to the position
-     * 
+     *
      * @param delta is the delta to be added
      * @return a reference to the updated position
      */
     PositionInTissue& operator+=(const PositionDelta delta);
 
     /**
-     * @brief Subtract a delta from a position 
-     * 
+     * @brief Subtract a delta from a position
+     *
      * @param delta is the delta to be subtracted to
      * @return a reference to the updated position
      */
@@ -493,7 +493,7 @@ struct PositionInTissue {
 
     /**
      * @brief Save a position in tissue in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -505,7 +505,7 @@ struct PositionInTissue {
 
     /**
      * @brief Load a timed genomic mutation from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded timed genomic mutation
@@ -522,8 +522,8 @@ struct PositionInTissue {
 };
 
 /**
- * @brief Add a delta to a position 
- * 
+ * @brief Add a delta to a position
+ *
  * @param position is the position to which a delta should be added to
  * @param delta is the delta to be added to
  * @return the position reachable from `position` adding `delta`
@@ -531,8 +531,8 @@ struct PositionInTissue {
 PositionInTissue operator+(const PositionInTissue& position, const PositionDelta delta);
 
 /**
- * @brief Subtract a delta from a position 
- * 
+ * @brief Subtract a delta from a position
+ *
  * @param position is the position to which a delta should be subtracted to
  * @param delta is the delta to be subtracted to
  * @return the position reachable from `position` subtracting `delta`
@@ -541,7 +541,7 @@ PositionInTissue operator-(const PositionInTissue& position, const PositionDelta
 
 /**
  * @brief Check whether two positions are the same
- * 
+ *
  * @param p1 is a position
  * @param p2 is a position
  * @return true if and only if the two positions have the same coordinates
@@ -550,7 +550,7 @@ bool operator==(const PositionInTissue& p1, const PositionInTissue& p2);
 
 /**
  * @brief Check whether two positions differ
- * 
+ *
  * @param p1 is a position
  * @param p2 is a position
  * @return true if and only if the two positions have different coordinates
@@ -559,7 +559,7 @@ bool operator!=(const PositionInTissue& p1, const PositionInTissue& p2);
 
 /**
  * @brief Compute the Manhattan distance between two positions
- * 
+ *
  * @param p1 is a position
  * @param p2 is a position
  * @return the Manhattan distance
@@ -580,7 +580,7 @@ struct Position : public PositionInTissue
 
     /**
      * @brief Construct a new Position object
-     * 
+     *
      * @param tissue is the tissue referred by the position
      * @param x is the x axis position in the tissue
      * @param y is the y axis position in the tissue
@@ -590,7 +590,7 @@ struct Position : public PositionInTissue
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param tissue is the tissue referred by the position
      * @param position is the position in the tissue
      */
@@ -602,7 +602,7 @@ struct Position : public PositionInTissue
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 
 namespace std
@@ -610,30 +610,30 @@ namespace std
 
 /**
  * @brief Write a position delta in an output stream
- * 
+ *
  * @param os is the output stream
  * @param delta is the position delta to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionDelta& delta);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::PositionDelta& delta);
 
 /**
  * @brief Write a position in a tissue in an output stream
- * 
+ *
  * @param os is the output stream
  * @param position is the position in a tissue to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionInTissue& position);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::PositionInTissue& position);
 
 /**
  * @brief Write a position in an output stream
- * 
+ *
  * @param os is the output stream
  * @param position is the position to be streamed
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Position& position);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::Position& position);
 
 }   // std
 

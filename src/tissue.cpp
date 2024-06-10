@@ -2,8 +2,8 @@
  * @file tissue.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define tissue class
- * @version 0.36
- * @date 2024-05-21
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -33,7 +33,7 @@
 #include "tissue.hpp"
 #include "mutant_properties.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -472,4 +472,4 @@ std::vector<AxisSize> Tissue::size() const
 
 }   // Mutants
 
-}   // Races
+}   // RACES

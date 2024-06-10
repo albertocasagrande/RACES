@@ -2,8 +2,8 @@
  * @file imap.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indexed map
- * @version 0.1
- * @date 2024-04-18
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2024
  *
@@ -33,7 +33,7 @@
 
 #include "irb_tree.hpp"
 
-namespace Races
+namespace RACES
 {
 
 /**
@@ -89,7 +89,7 @@ public:
     /**
      * @brief The copy constructor
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @param orig is the original map
      */
@@ -100,7 +100,7 @@ public:
     /**
      * @brief The move constructor
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @param orig is the original map
      */
@@ -111,7 +111,7 @@ public:
     /**
      * @brief The copy operator
      *
-     * The time complexity of this method is \$O(\texttt{size()})\$.
+     * The time complexity of this method is \f$O(\texttt{size()})\f$.
      *
      * @param orig is the original map
      * @return a reference to the updated object
@@ -126,7 +126,7 @@ public:
     /**
      * @brief The move operator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @param orig is the original map
      * @return a reference to the updated object
@@ -141,7 +141,7 @@ public:
     /**
      * @brief The size of the map
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return The number of keys in the map
      */
@@ -153,7 +153,7 @@ public:
     /**
      * @brief Count how many key are stored in the map
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is the key whose node number is aimed
      * @return the number of nodes whose key is `key`
@@ -168,7 +168,7 @@ public:
     /**
      * @brief Insert a pair in the map
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param p is the pair to be inserted
      * @return a pair whose first value is an iterator to a node whose
@@ -185,7 +185,7 @@ public:
     /**
      * @brief Find a the pair whose first value is the searched key
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key
      * @return a constant iterator refering to the node whose first
@@ -201,7 +201,7 @@ public:
     /**
      * @brief Find a the pair whose first value is the searched key
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key
      * @return an iterator refering to the pair whose first value is
@@ -217,7 +217,7 @@ public:
     /**
      * @brief Get the value associated to a key
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key
      * @return a reference to the value associated to `key`
@@ -237,7 +237,7 @@ public:
     /**
      * @brief Get an iterator to the n-th pair in the map
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is an index
      * @return an iterator to the n-th pair in key-in-order
@@ -251,7 +251,7 @@ public:
     /**
      * @brief Get an iterator to the n-th pair in the map
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is an index
      * @return a constant iterator to the n-th pair in key-in-order
@@ -265,7 +265,7 @@ public:
     /**
      * @brief Delete a pair from the map
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is the first value in the pair to be removed
      * @return the number of key removed: 1 if key has been removed,
@@ -292,7 +292,7 @@ public:
     /**
      * @brief Get the first in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return a constant in-order iterator refering to the
      *      first pair in the map
@@ -305,7 +305,7 @@ public:
     /**
      * @brief Get the first in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return a constant in-order iterator refering to the
      *      first pair in the map
@@ -318,7 +318,7 @@ public:
     /**
      * @brief Get the first in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return an in-order iterator refering to the first
      *      pair in the map
@@ -331,7 +331,7 @@ public:
     /**
      * @brief Get the last in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the last in-order iterator
      */
@@ -343,7 +343,7 @@ public:
     /**
      * @brief Get the last in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the last in-order iterator
      */
@@ -355,7 +355,7 @@ public:
     /**
      * @brief Get the last in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the last in-order iterator
      */
@@ -367,7 +367,7 @@ public:
     /**
      * @brief Clean the map
      *
-     * The time complexity of this method is \$O(\texttt{size()})\$.
+     * The time complexity of this method is \f$O(\texttt{size()})\f$.
      */
     inline void clear()
     {
@@ -377,7 +377,7 @@ public:
     /**
      * @brief Destroy the imap object
      *
-     * The time complexity of this method is \$\Theta(\texttt{size()})\$.
+     * The time complexity of this method is \f$\Theta(\texttt{size()})\f$.
      */
     ~imap()
     {

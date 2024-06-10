@@ -2,23 +2,23 @@
  * @file event_wrapper.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a simulation event wrapper
- * @version 0.6
- * @date 2024-05-21
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,7 +38,7 @@
 #include "rate_update.hpp"
 #include "sampling.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -59,28 +59,28 @@ struct SimulationEventWrapper
 
     /**
      * @brief A constructor that wraps a mutation event
-     * 
+     *
      * @param mutation is the event to wrap
      */
     SimulationEventWrapper(const Mutation& mutation);
 
     /**
      * @brief A constructor that wraps a liveness rate event
-     * 
+     *
      * @param rate_update is the event to wrap
      */
     SimulationEventWrapper(const RateUpdate& rate_update);
 
     /**
      * @brief A constructor that wraps a sampling event
-     * 
+     *
      * @param sampling is the event to wrap
      */
     SimulationEventWrapper(const Sampling& sampling);
 
     /**
      * @brief Get the wrapped event
-     * 
+     *
      * @tparam EVENT_TYPE is the type of the wrapped event
      * @return a reference to the wrapped event
      */
@@ -92,9 +92,9 @@ struct SimulationEventWrapper
 
     /**
      * @brief Get the wrapped event
-     * 
+     *
      * @tparam EVENT_TYPE is the type of the wrapped event
-     * @return a constant reference to the wrapped event 
+     * @return a constant reference to the wrapped event
      */
     template<typename EVENT_TYPE>
     const EVENT_TYPE& get_event() const
@@ -104,7 +104,7 @@ struct SimulationEventWrapper
 
     /**
      * @brief Save a simulation event in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -130,7 +130,7 @@ struct SimulationEventWrapper
 
     /**
      * @brief Load a timed event from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded timed event
@@ -171,17 +171,17 @@ struct SimulationEventWrapper
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 /**
  * @brief Test the equivalence between two event wrappers
- * 
+ *
  * @param lhs is the left-hand side of the equivalence
  * @param rhs is the right-hand side of the equivalence
  * @return `true` if and only if the two wrappers represent
  *      the same event
  */
-bool operator==(const Races::Mutants::Evolutions::SimulationEventWrapper& lhs, 
-                const Races::Mutants::Evolutions::SimulationEventWrapper& rhs);
+bool operator==(const RACES::Mutants::Evolutions::SimulationEventWrapper& lhs,
+                const RACES::Mutants::Evolutions::SimulationEventWrapper& rhs);
 
 #endif // __RACES_EVENT_WRAPPER__

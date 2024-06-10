@@ -2,23 +2,23 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 0.29
- * @date 2024-03-10
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,13 +40,13 @@
 #include "simulation.hpp"
 #include "utils.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 std::string snapshot_prefix = "snapshot";
@@ -57,14 +57,14 @@ BinaryLogger::BinaryLogger():
 }
 
 BinaryLogger::BinaryLogger(const std::filesystem::path& simulation_dir, const size_t& cells_per_file):
-    BasicLogger(simulation_dir), cell_archive(), 
+    BasicLogger(simulation_dir), cell_archive(),
     cells_per_file(cells_per_file), cell_in_current_file(0), current_file_number(0)
 {
 }
 
 BinaryLogger::BinaryLogger(const BinaryLogger& orig):
     BasicLogger(orig),  cell_archive(),
-    cells_per_file(orig.cells_per_file), cell_in_current_file(orig.cell_in_current_file), 
+    cells_per_file(orig.cells_per_file), cell_in_current_file(orig.cell_in_current_file),
     current_file_number(orig.current_file_number)
 {
 }
@@ -148,20 +148,20 @@ BinaryLogger& BinaryLogger::operator=(const BinaryLogger& orig)
 }
 
 inline std::streampos compute_bytes_per_cell()
-{ 
+{
     Cell cell;
 
     return Archive::Binary::ByteCounter::bytes_required_by(cell);
 }
 
 BinaryLogger::CellReader::CellReader(const std::filesystem::path& directory):
-    directory(directory), bytes_per_cell(1), number_of_cells(0), cell_archive_id(0), 
+    directory(directory), bytes_per_cell(1), number_of_cells(0), cell_archive_id(0),
     cell_archive(get_cell_archive_path(directory, 0))
 {
     std::ifstream cell_file(directory / "cell_file_info.txt", std::fstream::in);
     cell_file >> cells_per_archive >> last_file_number;
 
-    // if no cell was saved 
+    // if no cell was saved
     if (cell_archive.size()==0) {
         return;
     }
@@ -178,7 +178,7 @@ BinaryLogger::CellReader::CellReader(const std::filesystem::path& directory):
     }
 }
 
-Cell BinaryLogger::CellReader::operator[](const CellId& cell_id) 
+Cell BinaryLogger::CellReader::operator[](const CellId& cell_id)
 {
     if (cell_id >= number_of_cells) {
         throw std::out_of_range("The cell has not been created");
@@ -190,7 +190,7 @@ Cell BinaryLogger::CellReader::operator[](const CellId& cell_id)
         if (cell_archive_id!=aimed_id) {
             cell_archive.close();
         }
-        
+
         auto filename = get_cell_archive_path(directory, last_file_number);
 
         cell_archive.open(filename);
@@ -202,7 +202,7 @@ Cell BinaryLogger::CellReader::operator[](const CellId& cell_id)
     auto cell = Cell::load(cell_archive);
 
     if (cell.get_id()!=cell_id) {
-        std::cerr << "Aiming cell id " << cell_id << " read " 
+        std::cerr << "Aiming cell id " << cell_id << " read "
                   << cell << std::endl;
         throw std::runtime_error("Wrong cell file format.");
     }
@@ -219,7 +219,7 @@ void BinaryLogger::rotate_cell_file()
     {
         // save the number of cells per file and the next file number to be used
         std::ofstream cell_file(directory / "cell_file_info.txt", std::fstream::out);
-        cell_file << cells_per_file << " " << ++current_file_number << std::endl; 
+        cell_file << cells_per_file << " " << ++current_file_number << std::endl;
     }
 
     auto filename = get_cell_archive_path(directory, current_file_number);
@@ -246,14 +246,14 @@ void BinaryLogger::record_cell(const CellInTissue& cell)
 
     if (++cell_in_current_file>=cells_per_file) {
         rotate_cell_file();
-    } 
+    }
 }
 
 void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, const Time& time)
 {
     (void)time;
 
-    if (type==CellEventType::DUPLICATION || 
+    if (type==CellEventType::DUPLICATION ||
             type==CellEventType::EPIGENETIC_SWITCH ||
             type==CellEventType::MUTATION) {
 
@@ -261,7 +261,7 @@ void BinaryLogger::record(const CellEventType& type, const CellInTissue& cell, c
     }
 }
 
-void BinaryLogger::record_initial_cell(const CellInTissue& cell) 
+void BinaryLogger::record_initial_cell(const CellInTissue& cell)
 {
     if (cell.get_id() != cell.get_parent_id()) {
         throw std::domain_error("The provided cell is not an initial cell");
@@ -296,4 +296,4 @@ BinaryLogger::~BinaryLogger()
 
 }   // Mutants
 
-}   // Races
+}   // RACES

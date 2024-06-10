@@ -1,7 +1,7 @@
 /**
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Testing Races::Mutations::GenomeMutations class
+ * @brief Testing RACES::Mutations::GenomeMutations class
  * @version 0.11
  * @date 2024-06-09
  *
@@ -40,7 +40,7 @@
 
 BOOST_AUTO_TEST_CASE(chromosome_mutations_creation)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     BOOST_CHECK_NO_THROW(ChromosomeMutations());
     BOOST_CHECK_NO_THROW(ChromosomeMutations(1, 100, 3));
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(chromosome_mutations_creation)
 
 BOOST_AUTO_TEST_CASE(genome_mutations_creation)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     BOOST_CHECK_NO_THROW(GenomeMutations());
     BOOST_CHECK_NO_THROW(GenomeMutations({{1, 100, 3}, {2, 100, 2}}));
@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(genome_mutations_creation)
 
 struct GenomeMutationsFixture
 {
-    Races::Mutations::GenomeMutations genome_mutations;
+    RACES::Mutations::GenomeMutations genome_mutations;
 
     GenomeMutationsFixture()
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         auto index = ContextIndex<>::build_index(FASTA_FILE);
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(genome_sizes)
 
 BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     SID snv0(1, 32, 'A', 'G');  // chromosome 1, position 32
 
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 
 BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     SID snv0(1, 32, 'A', 'G');
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
 
 BOOST_AUTO_TEST_CASE(genome_amplify_region)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     SID snv0(1, 32, 'A', 'G');
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
 
 BOOST_AUTO_TEST_CASE(genome_remove_region)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     SID snv0(1, 32, 'A', 'G');
 

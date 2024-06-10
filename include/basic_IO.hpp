@@ -2,23 +2,23 @@
  * @file basic_IO.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines basic IO functions
- * @version 0.2
- * @date 2023-10-02
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,20 +33,21 @@
 
 #include <istream>
 
-namespace Races {
+namespace RACES
+{
 
 namespace IO {
 
 /**
  * @brief Get the input stream size
- * 
+ *
  * @param is is the input stream
- * @return std::streampos 
+ * @return std::streampos
  */
 std::streampos get_stream_size(std::istream& is);
 
 }   // IO
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_BASIC_IO___

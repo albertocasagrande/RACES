@@ -2,8 +2,8 @@
  * @file cna.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class for copy number alterations
- * @version 0.11
- * @date 2024-04-19
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,7 +30,7 @@
 
 #include "cna.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -53,22 +53,22 @@ CNA::CNA(const GenomicPosition& initial_position, const CNA::Length& length,
 CNA::CNA(const GenomicPosition& initial_position, const CNA::Length& length,
          const CNA::Type& type, const AlleleId& source, const AlleleId& destination,
          const Mutation::Nature& nature):
-    Mutation(initial_position, nature), length(length), 
+    Mutation(initial_position, nature), length(length),
     source(source), dest(destination), type(type)
 {}
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 
 namespace std
 {
 
-bool less<Races::Mutations::CNA>::operator()(const Races::Mutations::CNA &lhs,
-                                             const Races::Mutations::CNA &rhs) const
+bool less<RACES::Mutations::CNA>::operator()(const RACES::Mutations::CNA &lhs,
+                                             const RACES::Mutations::CNA &rhs) const
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     // differences in initial position
     {
@@ -125,14 +125,14 @@ bool less<Races::Mutations::CNA>::operator()(const Races::Mutations::CNA &lhs,
     return false;
 }
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::CNA& cna)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::CNA& cna)
 {
     out << "CNA(";
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
     switch(cna.type) {
         case CNA::Type::AMPLIFICATION:
             out << "\"A\"," << static_cast<const GenomicPosition&>(cna)
-                << ", len: " << cna.length; 
+                << ", len: " << cna.length;
             if (cna.source != RANDOM_ALLELE) {
                 out << ", src allele: "<< Allele::format_id(cna.source);
             }

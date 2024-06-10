@@ -2,8 +2,8 @@
  * @file signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational signatures
- * @version 0.1
- * @date 2024-05-13
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -37,7 +37,7 @@
 #include <istream>
 #include <sstream>
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -446,6 +446,6 @@ inline SignatureExprResult<MUTATION_TYPE> operator*(const T& value, const Signat
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_SIGNATURE__

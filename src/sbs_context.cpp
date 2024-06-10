@@ -2,8 +2,8 @@
  * @file sbs_context.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SBS contexts and extended context automata
- * @version 0.10
- * @date 2024-05-11
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -35,7 +35,7 @@
 
 #include "archive.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -261,5 +261,5 @@ ExtendedContextAutomaton& ExtendedContextAutomaton::reset()
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 

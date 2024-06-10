@@ -2,23 +2,23 @@
  * @file common.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines auxiliary classes and functions for executables
- * @version 0.9
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -51,7 +51,7 @@ protected:
 public:
     /**
      * @brief Print the program help message and exit
-     * 
+     *
      * @param message is the message to print before the help message
      * @param err_code is the exit code
      */
@@ -59,23 +59,23 @@ public:
 
     /**
      * @brief Print the program help message and exit
-     * 
+     *
      * @param err_code is the exit code
      */
     void print_help_and_exit(const int& err_code) const;
 
     /**
      * @brief Construct a new BasicExecutable object
-     * 
+     *
      * @param program_name is the program name
      * @param option_section_names is a list of pairs section name-description
      */
-    BasicExecutable(const std::string& program_name, 
+    BasicExecutable(const std::string& program_name,
                     const std::vector<std::pair<std::string,std::string>>& option_sections);
 
     /**
      * @brief Find the last species simulation snapshot path
-     * 
+     *
      * @param simulation_dir is the simulation path provided as an executable parameter
      * @param parameter_name is the executable parameter name
      * @return the last simulation snapshot in the directory `simulation_dir`
@@ -85,11 +85,11 @@ public:
 
     /**
      * @brief Load a species simulation snapshot
-     * 
+     *
      * @param snapshot_path is the path to the snapshot to be loaded
      * @param quiet is a Boolean flag to switch on/off (false/true) descriptive messages
      * @return the loaded simulation snapshot
      */
-    static Races::Mutants::Evolutions::Simulation 
+    static RACES::Mutants::Evolutions::Simulation
     load_species_simulation(const std::filesystem::path snapshot_path, const bool quiet=false);
 };

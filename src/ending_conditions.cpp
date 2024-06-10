@@ -2,23 +2,23 @@
  * @file ending_conditions.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements simulation ending conditions
- * @version 0.12
- * @date 2024-03-19
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,7 @@
 
 #include "ending_conditions.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -79,9 +79,9 @@ uint8_t CloneCountTest::percentage(const Simulation& simulation)
     return static_cast<uint8_t>((100*mutant_species.num_of_cells()/threshold));
 }
 
-EventCountTest::EventCountTest(const CellEventType& event_type, 
+EventCountTest::EventCountTest(const CellEventType& event_type,
                                const SpeciesId& species_id, const size_t& threshold):
-    event_type(event_type), species_id(species_id), 
+    event_type(event_type), species_id(species_id),
     dst_id(std::numeric_limits<SpeciesId>::max()), threshold(threshold)
 {
     switch(event_type) {
@@ -97,7 +97,7 @@ EventCountTest::EventCountTest(const CellEventType& event_type,
 
 EventCountTest::EventCountTest(const SpeciesId& src_id, const SpeciesId& dst_id,
                                const size_t& threshold):
-    event_type(CellEventType::EPIGENETIC_SWITCH), species_id(src_id), dst_id(dst_id), 
+    event_type(CellEventType::EPIGENETIC_SWITCH), species_id(src_id), dst_id(dst_id),
     threshold(threshold)
 {}
 
@@ -172,5 +172,5 @@ uint8_t FormulaTest::percentage(const Simulation& simulation)
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 

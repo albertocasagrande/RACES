@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements some archive classes and their methods
- * @version 0.9
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,7 +30,8 @@
 
 #include "archive.hpp"
 
-namespace Races {
+namespace RACES
+{
 
 namespace Archive {
 
@@ -108,7 +109,7 @@ ProgressViewer::ProgressViewer():
     progress_bar(nullptr), total_steps{0}, next_percentage{0}, performed_steps{0}
 {}
 
-void ProgressViewer::initialize(Races::UI::ProgressBar* progress_bar, const size_t total_steps)
+void ProgressViewer::initialize(RACES::UI::ProgressBar* progress_bar, const size_t total_steps)
 {
     this->progress_bar = progress_bar;
     this->total_steps = total_steps;

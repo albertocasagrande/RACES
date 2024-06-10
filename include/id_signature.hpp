@@ -2,8 +2,8 @@
  * @file id_signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indel signature
- * @version 0.2
- * @date 2024-05-16
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -39,7 +39,7 @@
 #include "mutation.hpp"
 #include "signature.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -194,17 +194,17 @@ private:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 
 namespace std
 {
 
 template<>
-struct less<Races::Mutations::IDType>
+struct less<RACES::Mutations::IDType>
 {
-    bool operator()(const Races::Mutations::IDType &lhs,
-                    const Races::Mutations::IDType &rhs) const;
+    bool operator()(const RACES::Mutations::IDType &lhs,
+                    const RACES::Mutations::IDType &rhs) const;
 };
 
 /**
@@ -214,7 +214,7 @@ struct less<Races::Mutations::IDType>
  * @param type is the ID type to stream
  * @return a reference to the output stream
  */
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::IDType& type);
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::IDType& type);
 
 /**
  * @brief Stream the ID type from a stream
@@ -223,11 +223,11 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::IDType& type
  * @param type is the object where the streamed ID type will be placed
  * @return a reference to the input stream
  */
-std::istream& operator>>(std::istream& in, Races::Mutations::IDType& type);
+std::istream& operator>>(std::istream& in, RACES::Mutations::IDType& type);
 
 }  // std
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -237,7 +237,7 @@ using IDSignature = Signature<IDType>;
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 
 #endif // __RACES_ID_SIGNATURE__

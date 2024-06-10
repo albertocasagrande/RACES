@@ -2,10 +2,10 @@
  * @file sampling.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samplings
- * @version 0.7
- * @date 2024-05-21
+ * @version 1.0
+ * @date 2024-06-10
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -35,7 +35,7 @@
 #include "simulation_event.hpp"
 #include "sample_specification.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -100,6 +100,6 @@ struct Sampling : public SampleSpecification, public SimulationEvent
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_RATE_UPDATE__

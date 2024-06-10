@@ -2,8 +2,8 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a general class for mutations
- * @version 0.1
- * @date 2024-03-12
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,7 +30,7 @@
 
 #include "mutation.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -69,4 +69,4 @@ std::string Mutation::get_nature_description(const Mutation::Nature& nature)
 
 }   // Mutations
 
-}   // Races
+}   // RACES

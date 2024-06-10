@@ -2,8 +2,8 @@
  * @file mutation_spec.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a wrapper class to specify mutation allele
- * @version 0.2
- * @date 2024-04-20
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 #include "allele.hpp"
 #include "mutation.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -111,17 +111,17 @@ struct MutationSpec : public MUTATION_TYPE
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 
 namespace std
 {
 
 template<typename MUTATION_TYPE>
-struct less<Races::Mutations::MutationSpec<MUTATION_TYPE>>
+struct less<RACES::Mutations::MutationSpec<MUTATION_TYPE>>
 {
-    inline bool operator()(const Races::Mutations::MutationSpec<MUTATION_TYPE> &lhs,
-                           const Races::Mutations::MutationSpec<MUTATION_TYPE> &rhs) const
+    inline bool operator()(const RACES::Mutations::MutationSpec<MUTATION_TYPE> &lhs,
+                           const RACES::Mutations::MutationSpec<MUTATION_TYPE> &rhs) const
     {
         less<MUTATION_TYPE> cmp;
 
@@ -138,7 +138,7 @@ struct less<Races::Mutations::MutationSpec<MUTATION_TYPE>>
 };
 
 template<typename MUTATION_TYPE>
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::MutationSpec<MUTATION_TYPE>& specification)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::MutationSpec<MUTATION_TYPE>& specification)
 {
     os << static_cast<const MUTATION_TYPE&>(specification) << "(allele: ";
 

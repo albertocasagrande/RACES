@@ -2,8 +2,8 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumour evolution simulation
- * @version 0.51
- * @date 2024-05-31
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -51,7 +51,7 @@
 
 #include "progress_bar.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -267,7 +267,7 @@ protected:
     /**
      * @brief Apply a rate update
      *
-     * @param time_rate_update is the timed rate update to be applied
+     * @param timed_rate_update is the timed rate update to be applied
      */
     void handle_timed_rate_update(const TimedEvent& timed_rate_update);
 
@@ -322,7 +322,7 @@ protected:
      *      in the tissue region bounded by the rectangle
      */
     std::vector<Tissue::CellInTissueConstantProxy>
-    collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle) const;
+    collect_cell_proxies_in(const RACES::Mutants::RectangleSet& rectangle) const;
 
     /**
      * @brief Collect proxies of cells in a rectangle
@@ -333,7 +333,7 @@ protected:
      *      tissue region bounded by the rectangle
      */
     std::vector<Tissue::CellInTissueProxy>
-    collect_cell_proxies_in(const Races::Mutants::RectangleSet& rectangle);
+    collect_cell_proxies_in(const RACES::Mutants::RectangleSet& rectangle);
 public:
     /**
      * @brief Simulation test
@@ -745,12 +745,14 @@ public:
      * having a specified mutant and laying in a tissue rectangle.
      *
      * @param mutant_name is the name of the mutant that must contain
-     *          the selected cell
+     *      the selected cell
      * @param rectangle is the tissue rectangle in which the cell must be selected
+     * @param event_type is the type of the event that should be applied to the
+     *      selected cell
      * @return whenever the set of tissue cells that have `mutant_name` as mutant
-     *         name and lay in one the positions specified by `rectangle` is not empty,
-     *         a randomly selected cell in it. Otherwise, if the set is empty, a
-     *         domain error is thrown.
+     *      name and lay in one the positions specified by `rectangle` is not empty,
+     *      a randomly selected cell in it. Otherwise, if the set is empty, a
+     *      domain error is thrown.
      */
     const CellInTissue& choose_cell_in(const std::string& mutant_name,
                                        const RectangleSet& rectangle,
@@ -1286,6 +1288,6 @@ Simulation& Simulation::simulate(const CellEvent& event, UI::TissuePlotter<PLOT_
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_SIMULATOR__

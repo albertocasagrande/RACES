@@ -2,8 +2,8 @@
  * @file build_repetition_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the repetition index
- * @version 0.2
- * @date 2024-05-18
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -56,8 +56,8 @@ class RepetitionIndexBuilder: public BasicExecutable
     template<typename GENOME_WIDE_POSITION>
     void build_and_save_rs_index() const
     {
-        using namespace Races;
-        using namespace Races::Mutations;
+        using namespace RACES;
+        using namespace RACES::Mutations;
 
         std::list<GenomicRegion> chr_regions;
         std::set<GenomicRegion> regions_to_avoid;

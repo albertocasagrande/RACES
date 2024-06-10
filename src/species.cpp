@@ -2,23 +2,23 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 0.19
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,7 @@
 
 #include "species.hpp"
 
-namespace Races 
+namespace RACES
 {
 
 namespace Mutants
@@ -135,7 +135,7 @@ void Species::erase(const CellId& cell_id)
 }
 
 CellInTissue* Species::add(CellInTissue* cell)
-{   
+{
     // update the species id
     cell->species_id = get_id();
 
@@ -230,14 +230,14 @@ Species::const_iterator::const_iterator(const Species::CellIdToCell::const_itera
 Species::const_iterator::const_iterator(): it()
 {}
 
-Species::const_iterator Species::const_iterator::operator++(int) 
+Species::const_iterator Species::const_iterator::operator++(int)
 {
     const_iterator copy = *this;
     ++(*this);
     return copy;
 }
 
-Species::const_iterator Species::const_iterator::operator--(int) 
+Species::const_iterator Species::const_iterator::operator--(int)
 {
     const_iterator copy = *this;
     --(*this);
@@ -258,14 +258,14 @@ void swap(Species& a, Species& b)
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutants::Evolutions::Species& species)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutants::Evolutions::Species& species)
 {
-    out << "{species_properties: " << static_cast<Races::Mutants::SpeciesProperties>(species) 
+    out << "{species_properties: " << static_cast<RACES::Mutants::SpeciesProperties>(species)
         << ", cells: {";
     std::string sep{""};
     for (const auto& cell: species) {

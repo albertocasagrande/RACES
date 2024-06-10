@@ -3,22 +3,22 @@
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the Python wrapper class and functions for `Simulation`
  * @version 0.17
- * @date 2024-03-11
- * 
- * @copyright Copyright (c) 2023-2024
- * 
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,47 +47,47 @@ SimulationWrapper::SimulationWrapper(int random_seed):
     obj_ptr(std::make_shared<SimulationWrapper::_SimulationWrapper>(random_seed))
 {}
 
-void SimulationWrapper::schedule_mutation(const Races::Mutants::MutantProperties& src,
-                                          const Races::Mutants::MutantProperties& dst,
-                                          const Races::Time time)
+void SimulationWrapper::schedule_mutation(const RACES::Mutants::MutantProperties& src,
+                                          const RACES::Mutants::MutantProperties& dst,
+                                          const RACES::Time time)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
     obj_ptr->simulation.schedule_mutation(src, dst, time);
 }
 
-struct PythonEndTest : public Races::Mutants::Evolutions::TimeTest
+struct PythonEndTest : public RACES::Mutants::Evolutions::TimeTest
 {
     /**
      * @brief The empty constructor
      */
-    explicit PythonEndTest(const Races::Time& time):
-        Races::Mutants::Evolutions::TimeTest(time)
+    explicit PythonEndTest(const RACES::Time& time):
+        RACES::Mutants::Evolutions::TimeTest(time)
     {}
 
     /**
      * @brief Establish whether the simulation must end
-     * 
+     *
      * @param simulation is the considered simulation
      * @return `true` if and only if a signal has been sent to the Python process
      */
-    inline bool operator()(const Races::Mutants::Evolutions::Simulation& simulation)
+    inline bool operator()(const RACES::Mutants::Evolutions::Simulation& simulation)
     {
-        return Races::Mutants::Evolutions::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
+        return RACES::Mutants::Evolutions::TimeTest::operator()(simulation) || PyErr_CheckSignals() == -1;
     }
 };
 
-void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool quiet, 
+void SimulationWrapper::run_up_to(const RACES::Time& final_time, const bool quiet,
                                   const bool plot)
 {
-    using namespace Races::UI;
+    using namespace RACES::UI;
 
     std::unique_lock lock(obj_ptr->s_mutex);
 
 #ifdef WITH_SDL2
 
     TissuePlotter<SDLWindow>* plotter{nullptr};
-    
+
     if (plot) {
         plotter = new TissuePlotter<SDLWindow>(obj_ptr->simulation.tissue());
         plotter->set_frames_per_second(1);
@@ -95,7 +95,7 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool quie
 #else
     (void)plot;
 
-    TissuePlotter<Plot2DWindow>* plotter{nullptr}; 
+    TissuePlotter<Plot2DWindow>* plotter{nullptr};
 #endif
 
     ProgressBar* bar{nullptr};
@@ -121,25 +121,25 @@ void SimulationWrapper::run_up_to(const Races::Time& final_time, const bool quie
     }
 }
 
-const Races::Time& SimulationWrapper::get_time() const
+const RACES::Time& SimulationWrapper::get_time() const
 {
     std::shared_lock lock(obj_ptr->s_mutex);
 
     return obj_ptr->simulation.get_time();
 }
 
-void SimulationWrapper::add_mutant(const Races::Mutants::MutantProperties& mutant)
+void SimulationWrapper::add_mutant(const RACES::Mutants::MutantProperties& mutant)
 {
     std::unique_lock lock(obj_ptr->s_mutex);
 
     obj_ptr->simulation.add_mutant(mutant);
 }
 
-Races::Mutants::Evolutions::PositionInTissue 
+RACES::Mutants::Evolutions::PositionInTissue
 from_Python_list_to_position(boost::python::list const& position, const uint8_t num_of_dimensions)
 {
     namespace bp = boost::python;
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     std::vector<AxisPosition> c_position;
     try {
@@ -158,7 +158,7 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
     }
 
     PositionInTissue pos;
-    
+
     if (num_of_dimensions==2) {
         return PositionInTissue(c_position[0], c_position[1]);
     }
@@ -167,7 +167,7 @@ from_Python_list_to_position(boost::python::list const& position, const uint8_t 
 }
 
 
-void SimulationWrapper::place_cell(const Races::Mutants::MutantProperties& mutant, 
+void SimulationWrapper::place_cell(const RACES::Mutants::MutantProperties& mutant,
                                    const std::string& methylation_signature,
                                    boost::python::list const& position)
 {
@@ -184,7 +184,7 @@ void SimulationWrapper::place_cell(const Races::Mutants::MutantProperties& mutan
 void SimulationWrapper::set_tissue(const std::string& name, boost::python::list const& sizes_list)
 {
     namespace bp = boost::python;
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     std::vector<AxisSize> c_sizes;
     try {
@@ -198,6 +198,6 @@ void SimulationWrapper::set_tissue(const std::string& name, boost::python::list 
 
     {
         std::unique_lock lock(obj_ptr->s_mutex);
-        obj_ptr->simulation.set_tissue(name, c_sizes);  
+        obj_ptr->simulation.set_tissue(name, c_sizes);
     }
 }

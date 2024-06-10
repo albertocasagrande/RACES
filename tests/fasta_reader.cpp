@@ -1,24 +1,24 @@
 /**
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Testing Races::IO::FASTA::Reader class
+ * @brief Testing RACES::IO::FASTA::Reader class
  * @version 0.4
  * @date 2023-10-02
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@
 
 BOOST_AUTO_TEST_CASE(reader_creation)
 {
-    using namespace Races::IO::FASTA;
+    using namespace RACES::IO::FASTA;
 
     BOOST_CHECK_NO_THROW(Sequence sequence);
     BOOST_CHECK_NO_THROW(SequenceInfo seq_info);
@@ -63,7 +63,7 @@ BOOST_FIXTURE_TEST_SUITE( FASTA_test, FASTAFixture )
 
 BOOST_AUTO_TEST_CASE(read_sequence_infos)
 {
-    using namespace Races::IO::FASTA;
+    using namespace RACES::IO::FASTA;
 
     std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(read_sequence_infos)
 
 BOOST_AUTO_TEST_CASE(read_sequences)
 {
-    using namespace Races::IO::FASTA;
+    using namespace RACES::IO::FASTA;
 
     std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(read_sequences)
     BOOST_CHECK(!Sequence::read(fasta_stream, sequence));
 }
 
-struct SequenceFilterBySize: public Races::IO::FASTA::SequenceFilter
+struct SequenceFilterBySize: public RACES::IO::FASTA::SequenceFilter
 {
     size_t size;
 
@@ -112,13 +112,13 @@ struct SequenceFilterBySize: public Races::IO::FASTA::SequenceFilter
 
 BOOST_AUTO_TEST_CASE(read_filtered_sequences)
 {
-    using namespace Races::IO::FASTA;
+    using namespace RACES::IO::FASTA;
 
     std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
 
     SequenceFilterBySize filter(strlen("2 another test"));
     Sequence sequence;
-    
+
     for (const auto& [header, nucleotides]: sequences) {
         if (!filter(header)) {
             BOOST_CHECK(Sequence::read(fasta_stream, sequence, filter));

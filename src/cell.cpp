@@ -2,23 +2,23 @@
  * @file cell.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell representation
- * @version 0.19
- * @date 2024-03-12
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@
 #include "tissue.hpp"
 #include "mutant_properties.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -112,12 +112,12 @@ CellInTissue& CellInTissue::operator=(const PositionInTissue& position)
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Cell& cell)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Cell& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
@@ -128,13 +128,13 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutants::Cell& cell)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::CellInTissue& cell)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::CellInTissue& cell)
 {
     os << "Cell{id: "<< cell.get_id()
        << ", parent_id: "<< cell.get_parent_id()
        << ", birth_time: "<< cell.get_birth_time()
        << ", species_id: " << cell.get_species_id()
-       << ", position: " << static_cast<Races::Mutants::Evolutions::PositionInTissue>(cell)
+       << ", position: " << static_cast<RACES::Mutants::Evolutions::PositionInTissue>(cell)
        << "}";
 
     return os;

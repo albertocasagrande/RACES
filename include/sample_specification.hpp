@@ -2,10 +2,10 @@
  * @file sample_specification.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sample specification
- * @version 0.5
- * @date 2024-05-21
+ * @version 1.0
+ * @date 2024-06-10
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2024
  *
  * MIT License
  *
@@ -33,7 +33,7 @@
 
 #include "position_set.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -178,7 +178,7 @@ protected:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 
 /**
@@ -191,8 +191,8 @@ protected:
  *      of cells to be sampled
  */
 inline
-bool operator==(const Races::Mutants::Evolutions::SampleSpecification& lhs,
-                const Races::Mutants::Evolutions::SampleSpecification& rhs)
+bool operator==(const RACES::Mutants::Evolutions::SampleSpecification& lhs,
+                const RACES::Mutants::Evolutions::SampleSpecification& rhs)
 {
     return (lhs.get_name() == rhs.get_name() && lhs.get_bounding_box() == rhs.get_bounding_box()
                 && lhs.get_num_of_cells() == rhs.get_num_of_cells());

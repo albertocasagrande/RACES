@@ -2,8 +2,8 @@
  * @file id_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SBS signature
- * @version 0.1
- * @date 2024-05-13
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -33,7 +33,7 @@
 #include "id_signature.hpp"
 
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -126,15 +126,15 @@ IDType::IDType(const std::string& type):
 
 }  // Mutations
 
-}  // Races
+}  // RACES
 
 namespace std
 {
 
-bool less<Races::Mutations::IDType>::operator()(const Races::Mutations::IDType &lhs,
-                                                const Races::Mutations::IDType &rhs) const
+bool less<RACES::Mutations::IDType>::operator()(const RACES::Mutations::IDType &lhs,
+                                                const RACES::Mutations::IDType &rhs) const
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
 
     if (!lhs.insertion && rhs.insertion) {
         return true;
@@ -160,16 +160,16 @@ bool less<Races::Mutations::IDType>::operator()(const Races::Mutations::IDType &
         return false;
     }
 
-    using Type = Races::Mutations::IDType::FragmentType;
+    using Type = RACES::Mutations::IDType::FragmentType;
 
     return (lhs.ftype == Type::HOMOPOLYMER && rhs.ftype != Type::HOMOPOLYMER)
             || (lhs.ftype == Type::HETEROPOLYMER && rhs.ftype == Type::MICROHOMOLOGY);
 }
 
 
-std::ostream& operator<<(std::ostream& out, const Races::Mutations::IDType& type)
+std::ostream& operator<<(std::ostream& out, const RACES::Mutations::IDType& type)
 {
-    using namespace Races::Mutations;
+    using namespace RACES::Mutations;
     using FragmentType = IDType::FragmentType;
 
     if (type.ftype == FragmentType::HOMOPOLYMER) {
@@ -190,13 +190,13 @@ std::ostream& operator<<(std::ostream& out, const Races::Mutations::IDType& type
     return out;
 }
 
-std::istream& operator>>(std::istream& in, Races::Mutations::IDType& type)
+std::istream& operator>>(std::istream& in, RACES::Mutations::IDType& type)
 {
     std::string str_type;
 
     in >> str_type;
 
-    type = Races::Mutations::IDType(str_type);
+    type = RACES::Mutations::IDType(str_type);
 
     return in;
 }

@@ -2,23 +2,23 @@
  * @file lineage_graph.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines lineage graphs
- * @version 0.3
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,18 +38,18 @@
 
 #include "archive.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 /**
  * @brief Lineage of a species
- * 
+ *
  * This class represents the descendance of a species
  * from another species.
  */
@@ -65,7 +65,7 @@ public:
 
     /**
      * @brief Construct a new lineage edge
-     * 
+     *
      * @param ancestor is the identifier of the ancestor species
      * @param progeny is the identifier of the progeny species
      */
@@ -73,7 +73,7 @@ public:
 
     /**
      * @brief Get the ancestor of the lineage edge
-     * 
+     *
      * @return a constant reference to the ancestor identifier
      */
     inline const SpeciesId& get_ancestor() const
@@ -83,7 +83,7 @@ public:
 
     /**
      * @brief Get the progeny of the lineage edge
-     * 
+     *
      * @return a constant reference to the progeny identifier
      */
     inline const SpeciesId& get_progeny() const
@@ -93,7 +93,7 @@ public:
 
     /**
      * @brief Save a lineage edge in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -105,7 +105,7 @@ public:
 
     /**
      * @brief Load a lineage edge from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded lineage edge
@@ -115,7 +115,7 @@ public:
     {
         LineageEdge lineage_edge;
 
-        archive & lineage_edge.ancestor 
+        archive & lineage_edge.ancestor
                 & lineage_edge.progeny;
 
         return lineage_edge;
@@ -125,8 +125,8 @@ public:
 
 /**
  * @brief A class to represent lineage between species
- * 
- * This class represents lineage 
+ *
+ * This class represents lineage
  */
 class LineageGraph
 {
@@ -156,7 +156,7 @@ public:
 
     /**
      * @brief Test whether the graph contains an edge
-     * 
+     *
      * @param ancestor is the lineage edge ancestor
      * @param progeny is the lineage edge progeny
      * @return `true` if and only if the graph contains the edge
@@ -169,7 +169,7 @@ public:
 
     /**
      * @brief Test whether the graph contains an edge
-     * 
+     *
      * @param edge is the lineage edge
      * @return `true` if and only if the graph contains the edge
      *          `edge`.
@@ -181,13 +181,13 @@ public:
 
     /**
      * @brief Add a lineage edge to the graph and label it
-     * 
+     *
      * @param ancestor is the lineage edge ancestor
      * @param progeny is the lineage edge progeny
      * @param time is the the time of first occurrence for the edge
      * @return a reference to the updated lineage graph
      */
-    inline LineageGraph& add_edge(const SpeciesId& ancestor, const SpeciesId& progeny, 
+    inline LineageGraph& add_edge(const SpeciesId& ancestor, const SpeciesId& progeny,
                                   const Time& time)
     {
         return add_edge({ancestor, progeny}, time);
@@ -195,7 +195,7 @@ public:
 
     /**
      * @brief Add a lineage edge to the graph and label it
-     * 
+     *
      * @param edge is the lineage edge
      * @param time is the the time of first occurrence for the edge
      * @return a reference to the updated lineage graph
@@ -204,7 +204,7 @@ public:
 
     /**
      * @brief Get the number of graph edges
-     * 
+     *
      * @return the number of graph edges
      */
     inline size_t num_of_edges() const
@@ -214,7 +214,7 @@ public:
 
     /**
      * @brief Get the initial constant iterator over the edges
-     * 
+     *
      * @return the initial constant iterator
      */
     inline const_iterator begin() const
@@ -224,7 +224,7 @@ public:
 
     /**
      * @brief Get the final constant iterator over the edges
-     * 
+     *
      * @return the final constant iterator
      */
     inline const_iterator end() const
@@ -234,7 +234,7 @@ public:
 
     /**
      * @brief Save a lineage graph in an archive
-     * 
+     *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
      */
@@ -246,7 +246,7 @@ public:
 
     /**
      * @brief Load a lineage graph from an archive
-     * 
+     *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
      * @return the loaded lineage graph
@@ -266,6 +266,6 @@ public:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_LINEAGE_GRAPH__

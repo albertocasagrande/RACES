@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 0.15
- * @date 2024-05-16
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -41,7 +41,7 @@
 
 #include "utils.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -137,7 +137,7 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
                             const int& seed, std::ostream& progress_bar_stream,
                             const bool quiet)
 {
-    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
+    RACES::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     progress_bar.set_message("Generating germline");
 
@@ -153,7 +153,7 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
     GermlineMutations generator(germline.size(), mutations_per_ref_kbase,
                                 seed);
 
-    using namespace Races::IO::FASTA;
+    using namespace RACES::IO::FASTA;
 
     auto driver_positions = get_mutation_position_set(driver_storage);
 
@@ -205,7 +205,7 @@ load_germline_chr_map(const std::filesystem::path& germline_data_file)
 {
     std::map<ChromosomeId, std::filesystem::path> germline_chr_map;
 
-    Races::IO::CSVReader germline_data(germline_data_file, true, '\t');
+    RACES::IO::CSVReader germline_data(germline_data_file, true, '\t');
 
     auto germline_path = germline_data_file.parent_path();
 
@@ -534,7 +534,7 @@ inline size_t get_file_size(const std::filesystem::path& filename)
 void add_VCF_mutations(GenomeMutations& mutations, const std::filesystem::path& VCF_file,
                        const size_t& num_of_alleles, const std::string& subject,
                        const size_t& total_VCF_size, size_t& processed_VCF_size,
-                       Races::UI::ProgressBar& progress_bar)
+                       RACES::UI::ProgressBar& progress_bar)
 {
     if (num_of_alleles==0) {
         return;
@@ -619,7 +619,7 @@ GermlineMutations::load(const std::filesystem::path& germline_data_file,
                         const std::string& subject, std::ostream& progress_bar_stream,
                         const bool quiet)
 {
-    Races::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
+    RACES::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     progress_bar.set_message("Loading germline");
 
@@ -645,4 +645,4 @@ GermlineMutations::load(const std::filesystem::path& germline_data_file,
 
 }   // Mutations
 
-}   // Races
+}   // RACES

@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 0.12
- * @date 2024-04-27
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,7 +30,7 @@
 
 #include "allele.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -375,7 +375,7 @@ Allele::Length Allele::size() const
     return total_size;
 }
 
-std::string Allele::format_id(const Races::Mutations::AlleleId& allele_id)
+std::string Allele::format_id(const RACES::Mutations::AlleleId& allele_id)
 {
     if (allele_id == RANDOM_ALLELE) {
         return "NA";
@@ -400,12 +400,12 @@ Allele Allele::duplicate_structure() const
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragment& allele_fragment)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::AlleleFragment& allele_fragment)
 {
     os << "["<< allele_fragment.get_initial_position() << "-"
        << allele_fragment.get_final_position() << "]{";
@@ -421,7 +421,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutations::AlleleFragmen
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::Allele& allele)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::Allele& allele)
 {
     std::string sep;
     for (const auto& [pos, fragment]: allele.get_fragments()) {

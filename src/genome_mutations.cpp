@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 0.30
- * @date 2024-06-04
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 
 #include "genome_mutations.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -521,23 +521,23 @@ SampleGenomeMutations::SampleGenomeMutations(const std::string& name,
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::ChromosomeMutations& chromosome_mutations)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::ChromosomeMutations& chromosome_mutations)
 {
-    os << "Chromosome " << Races::Mutations::GenomicPosition::chrtos(chromosome_mutations.id()) << std::endl;
+    os << "Chromosome " << RACES::Mutations::GenomicPosition::chrtos(chromosome_mutations.id()) << std::endl;
 
     for (const auto& [allele_id, allele]: chromosome_mutations.get_alleles()) {
-        os << "  " << Races::Mutations::Allele::format_id(allele_id) << ": " << allele << std::endl;
+        os << "  " << RACES::Mutations::Allele::format_id(allele_id) << ": " << allele << std::endl;
     }
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::GenomeMutations& genome_mutations)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::GenomeMutations& genome_mutations)
 {
     for (const auto& [chr_id, chr_mutations]: genome_mutations.get_chromosomes()) {
         os << chr_mutations << std::endl;

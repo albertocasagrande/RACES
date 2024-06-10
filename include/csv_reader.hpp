@@ -2,8 +2,8 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 0.5
- * @date 2024-02-20
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,7 +36,7 @@
 #include <fstream>
 #include <filesystem>
 
-namespace Races
+namespace RACES
 {
 
 namespace IO
@@ -79,15 +79,15 @@ public:
 
         /**
          * @brief Get a field by index
-         * 
+         *
          * @param index is the index of the field
-         * @return the value of the field 
+         * @return the value of the field
          */
         const std::string& get_field(const size_t& index) const;
 
         /**
          * @brief Get the vector of the row fields
-         * 
+         *
          * @return a constant reference to the vector of the fields
          */
         inline const std::vector<std::string>& get_fields() const
@@ -112,7 +112,7 @@ public:
 
         /**
          * @brief Get the reading position on the CSV file stream
-         * 
+         *
          * @return the reading position on the CSV file stream
          */
         inline std::streampos tellg()
@@ -122,15 +122,15 @@ public:
 
         /**
          * @brief Read a CSV row
-         * 
+         *
          * @param row is the object in which the read row must be stored
-         * @return `true` if and only if the operation succeeds 
+         * @return `true` if and only if the operation succeeds
          */
         bool get_row(CSVRow& row);
 
         /**
          * @brief The constructor
-         * 
+         *
          * @param reader is a constant pointer to the reader
          * @param off is the offset from the `way` position
          * @param way is the file position from which the offset `off`
@@ -138,19 +138,19 @@ public:
          */
         const_iterator(const CSVReader* reader, const std::streamoff& off=0,
                        const std::ios_base::seekdir& way=std::ios_base::beg);
-    
+
     public:
 
         /**
          * @brief Move to the next row
-         * 
+         *
          * @return a reference to the updated object
          */
         const_iterator& operator++();
 
         /**
          * @brief Dereference the iterator
-         * 
+         *
          * @return a constant reference to the referenced CSV row
          */
         inline const CSVRow& operator*() const
@@ -163,7 +163,7 @@ public:
 
         /**
          * @brief Get the pointer to the object referenced by the iterator
-         * 
+         *
          * @return a constant pointer to the referenced CSV row
          */
         inline const CSVRow* operator->() const
@@ -176,26 +176,26 @@ public:
 
         /**
          * @brief Check whether two iterator refer to the same row
-         * 
+         *
          * @param other is a constant iterator over a CSV reader
-         * @return `true` if and only if the current iterator and 
+         * @return `true` if and only if the current iterator and
          *           `other` are refering to the same CSV row
          */
-        inline bool operator==(const_iterator& other) 
-        { 
+        inline bool operator==(const_iterator& other)
+        {
             return reader == other.reader && ifs.tellg() == other.ifs.tellg()
                     && eof == other.eof;
         }
 
         /**
          * @brief Check whether two iterator refer to different rows
-         * 
+         *
          * @param other is a constant iterator over a CSV reader
-         * @return `false` if and only if the current iterator and 
+         * @return `false` if and only if the current iterator and
          *           `other` are refering to the same CSV row
          */
-        inline bool operator!=(const_iterator& other) 
-        { 
+        inline bool operator!=(const_iterator& other)
+        {
             return !(*this == other);
         }
 
@@ -204,7 +204,7 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param filename is the path of the CSV file to be read
      * @param has_header is a Boolean flag to enable/disable header in CSV file
      * @param column_separator is the character used to separate columns
@@ -214,8 +214,8 @@ public:
 
     /**
      * @brief Get an iterator refering to the first data row in the CSV
-     * 
-     * @return an iterator refering to the first data row in the CSV 
+     *
+     * @return an iterator refering to the first data row in the CSV
      */
     inline const_iterator begin() const
     {
@@ -224,7 +224,7 @@ public:
 
     /**
      * @brief Get an iterator refering to the end of the CSV
-     * 
+     *
      * @return an iterator refering to the end of the CSV
      */
     inline const_iterator end() const
@@ -234,7 +234,7 @@ public:
 
     /**
      * @brief Get the CSV header vector
-     * 
+     *
      * @return the CSV header vector
      */
     inline const std::vector<std::string>& get_header() const
@@ -244,7 +244,7 @@ public:
 
     /**
      * @brief Get the position of a column by name
-     * 
+     *
      * @param column_name is the name of the column whose position is request
      * @return the position of the column whose name is `column_name`
      */
@@ -253,9 +253,9 @@ public:
         auto found = columns.find(column_name);
 
         if (found == columns.end()) {
-            throw std::domain_error("Unknown column name \"" 
+            throw std::domain_error("Unknown column name \""
                                     + column_name + "\".");
-        }        
+        }
 
         return found->second;
     }
@@ -265,6 +265,6 @@ public:
 
 }   // IO
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_CSV_READER__

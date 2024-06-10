@@ -2,8 +2,8 @@
  * @file irb_tree.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indexed red-black trees
- * @version 0.2
- * @date 2024-05-02
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2024
  *
@@ -35,7 +35,7 @@
 #include <utility>
 #include <functional>
 
-namespace Races
+namespace RACES
 {
 
 /**
@@ -45,7 +45,7 @@ namespace Races
  * indexing by adding the field `subtree_size` to each node in the tree. This
  * field accounts the number of nodes in the subtree rooted in the specific node.
  * Finding the i-th key in the tree can be achieved by using the `subtree_size`
- * fields in time \$O(\log \texttt{size()})\$.
+ * fields in time \f$O(\log \texttt{size()})\f$.
  *
  * @tparam KEY is the type of the RB tree keys
  * @tparam COMPARE is the order among keys
@@ -106,7 +106,7 @@ class IRBTree
          *
          * This method updates the size of the subtree rooted on a
          * node and all its ancestors. The complexity of this method
-         * is \$O(h)\$ where \$h\$ is the height of the tree.
+         * is \f$O(h)\f$ where \f$h\f$ is the height of the tree.
          *
          * @param delta is the difference between the new size
          *      and the previous size of the subtree rooted on
@@ -138,7 +138,7 @@ class IRBTree
         /**
          * @brief Set a node as one of the children of a node
          *
-         * The complexity of the method is \$O(1)\$.
+         * The complexity of the method is \f$O(1)\f$.
          *
          * @param new_child is a pointer to the new child
          * @param side is the side of the new child
@@ -269,7 +269,7 @@ class IRBTree
         /**
          * @brief Get the left/right-most node in the subtree
          *
-         * The complexity of this method is \$O(h)\$ where \$h\$
+         * The complexity of this method is \f$O(h)\f$ where \f$h\f$
          * is the height of the tree.
          *
          * @param side is a side
@@ -289,7 +289,7 @@ class IRBTree
         /**
          * @brief Get the maximum-key node on the subtree
          *
-         * The complexity of this method is \$O(h)\$ where \$h\$
+         * The complexity of this method is \f$O(h)\f$ where \f$h\f$
          * is the height of the tree.
          *
          * @return a constant pointer to the node containing
@@ -304,7 +304,7 @@ class IRBTree
         /**
          * @brief Get the minimum-key node on the subtree
          *
-         * The complexity of this method is \$O(h)\$ where \$h\$
+         * The complexity of this method is \f$O(h)\f$ where \f$h\f$
          * is the height of the tree.
          *
          * @return a constant pointer to the node containing
@@ -319,7 +319,7 @@ class IRBTree
         /**
          * @brief Get the left/right-most node in the subtree
          *
-         * The complexity of this method is \$O(h)\$ where \$h\$
+         * The complexity of this method is \f$O(h)\f$ where \f$h\f$
          * is the height of the tree.
          *
          * @param side is a side
@@ -339,7 +339,7 @@ class IRBTree
         /**
          * @brief Get the maximum-key node on the subtree
          *
-         * The complexity of this method is \$O(h)\$ where \$h\$
+         * The complexity of this method is \f$O(h)\f$ where \f$h\f$
          * is the height of the tree.
          *
          * @return a pointer to the node containing the maximum
@@ -354,7 +354,7 @@ class IRBTree
         /**
          * @brief Get the minumum-key node on the subtree
          *
-         * The complexity of this method is \$O(h)\$ where \$h\$
+         * The complexity of this method is \f$O(h)\f$ where \f$h\f$
          * is the height of the tree.
          *
          * @return a pointer to the node containing the minumum
@@ -370,7 +370,7 @@ class IRBTree
          * @brief Get the next node in the visit
          *
          * This method generalizes the algorithm `Tree-Successor` Chapter 12,
-         * pp 292, [1]. Its complexity is \$O(h)\$ where \$h\$ is the height
+         * pp 292, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is the height
          * of the tree.
          *
          * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -401,7 +401,7 @@ class IRBTree
          * @brief Get the successor
          *
          * This method implements the algorithm `Tree-Successor` Chapter 12,
-         * pp 292, [1]. Its complexity is \$O(h)\$ where \$h\$ is the height
+         * pp 292, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is the height
          * of the tree.
          *
          * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -419,7 +419,7 @@ class IRBTree
          * @brief Get the predecessor
          *
          * This method generalizes the algorithm `Tree-Successor` Chapter 12,
-         * pp 292, [1]. Its complexity is \$O(h)\$ where \$h\$ is the height
+         * pp 292, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is the height
          * of the tree.
          *
          * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -438,7 +438,7 @@ class IRBTree
          * @brief Get the next node in the visit
          *
          * This method generalizes the algorithm `Tree-Successor` Chapter 12,
-         * pp 292, [1]. Its complexity is \$O(h)\$ where \$h\$ is the height
+         * pp 292, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is the height
          * of the tree.
          *
          * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -469,7 +469,7 @@ class IRBTree
          * @brief Get the successor
          *
          * This method implements the algorithm `Tree-Successor` Chapter 12,
-         * pp 292, [1]. Its complexity is \$O(h)\$ where \$h\$ is the height
+         * pp 292, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is the height
          * of the tree.
          *
          * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -487,7 +487,7 @@ class IRBTree
          * @brief Get the predecessor
          *
          * This method generalizes the algorithm `Tree-Successor` Chapter 12,
-         * pp 292, [1]. Its complexity is \$O(h)\$ where \$h\$ is the height
+         * pp 292, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is the height
          * of the tree.
          *
          * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -504,8 +504,8 @@ class IRBTree
         /**
          * @brief Clone a subtree rooted in the this node
          *
-         * The complexity of this method is \$\Theta(n)\$ where
-         * \$n\$ is the size of the subtree to be cloned.
+         * The complexity of this method is \f$\Theta(n)\f$ where
+         * \f$n\f$ is the size of the subtree to be cloned.
          *
          * @param parent is the parent of the new subtree root
          * @return the root of the clone of the subtree rooted
@@ -530,8 +530,8 @@ class IRBTree
         /**
          * @brief Destroy the subtree rooted on this node
          *
-         * The complexity of this method is \$\Theta(n)\$ where
-         * \$n\$ is the number of nodes in the subtree.
+         * The complexity of this method is \f$\Theta(n)\f$ where
+         * \f$n\f$ is the number of nodes in the subtree.
          */
         void destroy_subtree()
         {
@@ -565,7 +565,7 @@ class IRBTree
      * @brief Find a node by key
      *
      * This method implements the algorithm `Iterative-Tree-Search`
-     * Chapter 12, pp 291, [1]. Its complexity is \$O(h)\$ where \$h\$ is
+     * Chapter 12, pp 291, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is
      * the height of the tree.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -598,26 +598,26 @@ class IRBTree
     }
 
     /**
-     * @brief Find the \$i\$-th node in the tree
+     * @brief Find the \f$i\f$-th node in the tree
      *
-     * This method find the \$i\$-th node in the in-order visit by using the
+     * This method find the \f$i\f$-th node in the in-order visit by using the
      * node's field `subtree_size`.
      *
-     * Let \$n.\textrm{T}\$ be the subtree rooted in the node \$n\$. Moreover, let
-     * \$n.\textrm{left}\$ and \$n.\textrm{right}\$ be the left and right children
-     * of \$n\$, respectively. Finally, let \$|n|\$ be the number of nodes in the
-     * subtree rooted in \$n\$.
-     * If \$i<|n|\$, then \$i\$-th node of \$n.T\$ is:
-     * - the \$i\$-th node of \$n.\textrm{left}.\textrm{T}\$ if and only if that
-     *   \$i < |n.\textrm{left}|\$;
-     * - \$n\$ if and only if \$i = |n.\textrm{left}|\$;
-     * - the \$(i-|n.\textrm{left}|)\$-th node of \$n.\textrm{right}.\textrm{T}\$
-     *   if and only if \$i > |n.\textrm{left}|\$.
+     * Let \f$n.\textrm{T}\f$ be the subtree rooted in the node \f$n\f$. Moreover, let
+     * \f$n.\textrm{left}\f$ and \f$n.\textrm{right}\f$ be the left and right children
+     * of \f$n\f$, respectively. Finally, let \f$|n|\f$ be the number of nodes in the
+     * subtree rooted in \f$n\f$.
+     * If \f$i<|n|\f$, then \f$i\f$-th node of \f$n.T\f$ is:
+     * - the \f$i\f$-th node of \f$n.\textrm{left}.\textrm{T}\f$ if and only if that
+     *   \f$i < |n.\textrm{left}|\f$;
+     * - \f$n\f$ if and only if \f$i = |n.\textrm{left}|\f$;
+     * - the \f$(i-|n.\textrm{left}|)\f$-th node of \f$n.\textrm{right}.\textrm{T}\f$
+     *   if and only if \f$i > |n.\textrm{left}|\f$.
      *
-     * We can identify the \$i\$-th node of the tree by successively iteratively
-     * the subtree containing it and, possibly, updating the index \$i\$. Since
-     * each subtree selection takes time \$O(1)\$ by using the `subtree_size`,
-     * the overall time costs of this method is \$O(h)\$ where \$h\$ is the
+     * We can identify the \f$i\f$-th node of the tree by successively iteratively
+     * the subtree containing it and, possibly, updating the index \f$i\f$. Since
+     * each subtree selection takes time \f$O(1)\f$ by using the `subtree_size`,
+     * the overall time costs of this method is \f$O(h)\f$ where \f$h\f$ is the
      * height of the tree.
      *
      * @param index is an index
@@ -660,7 +660,7 @@ class IRBTree
      * @brief Find a node by key
      *
      * This method implements the algorithm `Iterative-Tree-Search`
-     * Chapter 12, pp 291, [1]. Its complexity is \$O(h)\$ where \$h\$ is
+     * Chapter 12, pp 291, [1]. Its complexity is \f$O(h)\f$ where \f$h\f$ is
      * the height of the tree.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
@@ -693,26 +693,26 @@ class IRBTree
     }
 
     /**
-     * @brief Find the \$i\$-th node in the tree
+     * @brief Find the \f$i\f$-th node in the tree
      *
-     * This method find the \$i\$-th node in the in-order visit by using the
+     * This method find the \f$i\f$-th node in the in-order visit by using the
      * node's field `subtree_size`.
      *
-     * Let \$n.\textrm{T}\$ be the subtree rooted in the node \$n\$. Moreover, let
-     * \$n.\textrm{left}\$ and \$n.\textrm{right}\$ be the left and right children
-     * of \$n\$, respectively. Finally, let \$|n|\$ be the number of nodes in the
-     * subtree rooted in \$n\$.
-     * If \$i<|n|\$, then \$i\$-th node of \$n.T\$ is:
-     * - the \$i\$-th node of \$n.\textrm{left}.\textrm{T}\$ if and only if that
-     *   \$i < |n.\textrm{left}|\$;
-     * - \$m\$ if and only if \$i = |n.\textrm{left}|\$;
-     * - the \$(i-|n.\textrm{left}|-1)\$-th node of \$n.\textrm{right}.\textrm{T}\$
-     *   if and only if \$i > |n.\textrm{left}|\$.
+     * Let \f$n.\textrm{T}\f$ be the subtree rooted in the node \f$n\f$. Moreover, let
+     * \f$n.\textrm{left}\f$ and \f$n.\textrm{right}\f$ be the left and right children
+     * of \f$n\f$, respectively. Finally, let \f$|n|\f$ be the number of nodes in the
+     * subtree rooted in \f$n\f$.
+     * If \f$i<|n|\f$, then \f$i\f$-th node of \f$n.T\f$ is:
+     * - the \f$i\f$-th node of \f$n.\textrm{left}.\textrm{T}\f$ if and only if that
+     *   \f$i < |n.\textrm{left}|\f$;
+     * - \f$m\f$ if and only if \f$i = |n.\textrm{left}|\f$;
+     * - the \f$(i-|n.\textrm{left}|-1)\f$-th node of \f$n.\textrm{right}.\textrm{T}\f$
+     *   if and only if \f$i > |n.\textrm{left}|\f$.
      *
-     * We can identify the \$i\$-th node of the tree by successively iteratively
-     * the subtree containing it and, possibly, updating the index \$i\$. Since
-     * each subtree selection takes time \$O(1)\$ by using the `subtree_size`,
-     * the overall time costs of this method is \$O(\log \texttt{size()})\$.
+     * We can identify the \f$i\f$-th node of the tree by successively iteratively
+     * the subtree containing it and, possibly, updating the index \f$i\f$. Since
+     * each subtree selection takes time \f$O(1)\f$ by using the `subtree_size`,
+     * the overall time costs of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is an index
      * @return a constant pointer to the node whose key is the `index`-th in the
@@ -758,7 +758,7 @@ class IRBTree
      * also takes care of updating the `subtree_size` fields of the involved
      * nodes.
      *
-     * The complexity of this method is \$O(1)\$.
+     * The complexity of this method is \f$O(1)\f$.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
      *     Clifford Stein. 2009. Introduction to Algorithms, Third Edition
@@ -828,7 +828,7 @@ class IRBTree
      *
      * This method implements the algorithm `RB-Insert-Fixup` Chapter 13,
      * pp 316, [1]. The complexity of this method is
-     * \$O(\log \texttt{size()})\$.
+     * \f$O(\log \texttt{size()})\f$.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
      *     Clifford Stein. 2009. Introduction to Algorithms, Third Edition
@@ -878,7 +878,7 @@ class IRBTree
     /**
      * @brief Replace a node by another node
      *
-     * This method takes time \$O(1)\$.
+     * This method takes time \f$O(1)\f$.
      *
      * @param node is the node to be replaced
      * @param alternative is the node that will replace
@@ -905,7 +905,7 @@ class IRBTree
      * This method deletes a leaf from the tree and updates the
      * fields `subtree_size` of all its ancestors.
      *
-     * The complexity of this method is \$\Theta(\log \texttt{size()})$.
+     * The complexity of this method is \f$\Theta(\log \texttt{size()})$.
      *
      * @param leaf is the node to be removed
      */
@@ -928,7 +928,7 @@ class IRBTree
      * by its child. Moreover, the method updates the fields
      * `subtree_size` of all its ancestors.
      *
-     * The time complexity of this method \$O(\log \texttt{size()})\$.
+     * The time complexity of this method \f$O(\log \texttt{size()})\f$.
      *
      * @param node is the node to be delete
      * @param side is the side of the child
@@ -959,7 +959,7 @@ class IRBTree
      * Moreover, the method fixes the coloring of the tree nodes. Finally, it updates
      * the fields `subtree_size` of all its ancestors.
      *
-     * The time complexity of this method \$O(\log \texttt{size()})\$.
+     * The time complexity of this method \f$O(\log \texttt{size()})\f$.
      *
      * @param node is the node to be delete
      * @param side is the side of the child
@@ -1017,7 +1017,7 @@ class IRBTree
      * Please, notice that this method is invocated before the actual
      * removal when the node to be removed is a leaf.
      *
-     * The time complexity of this method \$O(\log \texttt{size()})\$.
+     * The time complexity of this method \f$O(\log \texttt{size()})\f$.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
      *     Clifford Stein. 2009. Introduction to Algorithms, Third Edition
@@ -1066,7 +1066,7 @@ class IRBTree
      * This method extends the algorithm `RB-Insert` Chapter 13, pp 315,
      * [1] by supporting the `subtree_size` field.
      *
-     * The time complexity of this method \$O(\log \texttt{size()})\$.
+     * The time complexity of this method \f$O(\log \texttt{size()})\f$.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
      *     Clifford Stein. 2009. Introduction to Algorithms, Third Edition
@@ -1403,7 +1403,7 @@ protected:
      * @brief Insert a new key in the tree
      *
      * This method implements the algorithm `RB-Insert` Chapter 13, pp 315,
-     * [1]. The complexity of this method is \$O(\log \texttt{size()})\$.
+     * [1]. The complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and
      *     Clifford Stein. 2009. Introduction to Algorithms, Third Edition
@@ -1462,7 +1462,7 @@ public:
     /**
      * @brief The move constructor
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @param orig is the original tree
      */
@@ -1475,7 +1475,7 @@ public:
     /**
      * @brief The copy constructor
      *
-     * The time complexity of this method is \$O(\texttt{size()})\$.
+     * The time complexity of this method is \f$O(\texttt{size()})\f$.
      *
      * @param orig is the original tree
      */
@@ -1490,7 +1490,7 @@ public:
     /**
      * @brief The move operator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @param orig is the original tree
      * @return a reference to the updated object
@@ -1505,7 +1505,7 @@ public:
     /**
      * @brief The copy operator
      *
-     * The time complexity of this method is \$O(\texttt{size()})\$.
+     * The time complexity of this method is \f$O(\texttt{size()})\f$.
      *
      * @param orig is the original tree
      * @return a reference to the updated object
@@ -1526,7 +1526,7 @@ public:
     /**
      * @brief The number of nodes in the tree
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the number of nodes in the tree
      */
@@ -1542,7 +1542,7 @@ public:
     /**
      * @brief Count how many nodes contains a key
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is the key whose node number is aimed
      * @return the number of nodes whose key is `key`
@@ -1559,7 +1559,7 @@ public:
     /**
      * @brief Insert a key
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is the key to be inserted
      * @return a pair whose first value is an iterator to a node
@@ -1575,7 +1575,7 @@ public:
     /**
      * @brief Insert a key
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is the key to be inserted
      * @return a pair whose first value is an iterator to a node
@@ -1591,7 +1591,7 @@ public:
     /**
      * @brief Find a key in the tree
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key value
      * @return a constant iterator refering to the
@@ -1606,7 +1606,7 @@ public:
     /**
      * @brief Find a key in the tree
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key value
      * @return an iterator refering to the node whose
@@ -1621,7 +1621,7 @@ public:
     /**
      * @brief Find the i-th node in the in-order visit
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is the index
      * @return a reference to the `index`-th node in the in-order visit
@@ -1635,7 +1635,7 @@ public:
     /**
      * @brief Find the i-th node in the in-order visit
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is the index
      * @return a constant reference to the `index`-th node in the in-order
@@ -1649,7 +1649,7 @@ public:
     /**
      * @brief Find the i-th node in the in-order visit
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is the index
      * @return an iterator refering to the `index`-th node in the in-order visit
@@ -1663,7 +1663,7 @@ public:
     /**
      * @brief Find the i-th node in the in-order visit
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param index is the index
      * @return a constant iterator refering to the `index`-th node in
@@ -1677,7 +1677,7 @@ public:
     /**
      * @brief Delete a key from the tree
      *
-     * The time complexity of this method is \$O(\log \texttt{size()})\$.
+     * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is the key to be removed
      * @return the number of nodes removed: 1 if a node has been removed,
@@ -1719,7 +1719,7 @@ public:
     /**
      * @brief Get the first in-order constant iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return an in-order constant iterator refering to the minimal value node
      */
@@ -1735,7 +1735,7 @@ public:
     /**
      * @brief Get the first in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return an in-order iterator refering to the minimal value node
      */
@@ -1751,7 +1751,7 @@ public:
     /**
      * @brief Get the first in-order constant iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return an in-order constant iterator refering to the minimal value node
      */
@@ -1763,7 +1763,7 @@ public:
     /**
      * @brief Get the last in-order iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the last in-order iterator
      */
@@ -1775,7 +1775,7 @@ public:
     /**
      * @brief Get the last in-order constant iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the last in-order constant iterator
      */
@@ -1787,7 +1787,7 @@ public:
     /**
      * @brief Get the last in-order constant iterator
      *
-     * The time complexity of this method is \$O(1)\$.
+     * The time complexity of this method is \f$O(1)\f$.
      *
      * @return the last in-order constant iterator
      */
@@ -1799,7 +1799,7 @@ public:
     /**
      * @brief Remove all the node from the tree
      *
-     * The time complexity of this method is \$\Theta(\texttt{size()})\$.
+     * The time complexity of this method is \f$\Theta(\texttt{size()})\f$.
      */
     void clear()
     {
@@ -1813,7 +1813,7 @@ public:
     /**
      * @brief Destroy the IRBTree object
      *
-     * The time complexity of this method is \$\Theta(\texttt{size()})\$.
+     * The time complexity of this method is \f$\Theta(\texttt{size()})\f$.
      */
     ~IRBTree()
     {
@@ -1821,6 +1821,6 @@ public:
     }
 };
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_IRB_TREE__

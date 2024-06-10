@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.36
- * @date 2024-06-09
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -45,7 +45,7 @@
 
 #include "progress_bar.hpp"
 
-namespace Races
+namespace RACES
 {
 
 /**
@@ -811,7 +811,7 @@ struct SampleGenomeMutations
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 
 namespace std
@@ -824,7 +824,7 @@ namespace std
  * @param chromosome_mutations is a chromosome mutations
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::ChromosomeMutations& chromosome_mutations);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::ChromosomeMutations& chromosome_mutations);
 
 /**
  * @brief Write genome mutations data in a stream
@@ -833,7 +833,7 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutations::ChromosomeMut
  * @param genome_mutations is a genome mutations
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const Races::Mutations::GenomeMutations& genome_mutations);
+std::ostream& operator<<(std::ostream& os, const RACES::Mutations::GenomeMutations& genome_mutations);
 
 }   // std
 

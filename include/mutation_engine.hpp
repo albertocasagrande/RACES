@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 0.64
- * @date 2024-06-04
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -51,7 +51,7 @@
 #include "utils.hpp"
 
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -118,7 +118,7 @@ public:
      * @return a reference to the updated object
      */
     MutationStatistics&
-    record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
+    record(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list,
            UI::ProgressBar* progress_bar=nullptr);
 
     /**
@@ -129,7 +129,7 @@ public:
      * @return a reference to the updated object
      */
     inline MutationStatistics&
-    record(const std::list<Races::Mutations::SampleGenomeMutations>& mutations_list,
+    record(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list,
            UI::ProgressBar& progress_bar)
     {
         return record(mutations_list, &progress_bar);
@@ -341,7 +341,7 @@ class MutationEngine
      */
     SID select_SID(const SBSType& m_type)
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         SBSContext context = m_type.get_context();
         SBSContext compl_context = context.get_complemented();
@@ -391,7 +391,7 @@ class MutationEngine
      */
     SID select_SID(const IDType& id_type)
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         if (infinite_sites_model) {
             rs_stack.push(id_type);
@@ -972,7 +972,7 @@ class MutationEngine
                          const std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
-        using namespace Races::Mutations;
+        using namespace RACES::Mutations;
 
         const size_t context_stack_size = context_stack.size();
         const size_t rs_stack_size = rs_stack.size();
@@ -1092,7 +1092,7 @@ class MutationEngine
     std::map<Mutants::SpeciesId, PassengerRates>
     get_species_rate_map(const Mutants::DescendantsForest& descendants_forest) const
     {
-        using namespace Races::Mutants;
+        using namespace RACES::Mutants;
 
         std::map<SpeciesId, PassengerRates> species_rates;
 
@@ -1126,7 +1126,7 @@ class MutationEngine
     std::map<Mutants::MutantId, DriverMutations>
     get_driver_mutation_map(const Mutants::DescendantsForest& descendants_forest) const
     {
-        using namespace Races::Mutants;
+        using namespace RACES::Mutants;
 
         std::map<MutantId, DriverMutations> driver_mutations;
 
@@ -1516,9 +1516,9 @@ public:
                     const std::string& preneoplatic_SNV_signature_name="SBS1",
                     const std::string& preneoplatic_indel_signature_name="ID1")
     {
-        using namespace Races::Mutants;
-        using namespace Races::Mutants::Evolutions;
-        using namespace Races::Mutations;
+        using namespace RACES::Mutants;
+        using namespace RACES::Mutants::Evolutions;
+        using namespace RACES::Mutations;
 
         for (const auto& [name, type]:
                 std::map<std::string, MutationType::Type>({{"SBS", MutationType::Type::SBS},
@@ -1700,6 +1700,6 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_MUTATION_ENGINE__

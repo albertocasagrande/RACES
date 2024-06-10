@@ -4,21 +4,21 @@
  * @brief Some archive tests
  * @version 0.23
  * @date 2024-03-12
- * 
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,19 +46,19 @@
 struct ArchiveFixture {
     long double time_horizon;
 
-    Races::Mutants::Evolutions::Simulation simulation;
+    RACES::Mutants::Evolutions::Simulation simulation;
 
     ArchiveFixture():
         time_horizon(70), simulation()
     {
-        using namespace Races::Mutants;
-        
+        using namespace RACES::Mutants;
+
         MutantProperties A("A",{{0.01,0.01}});
         A["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.3}});
         A["+"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.45}});
-    
+
         MutantProperties B("B",{{0.01,0.01}});
         B["-"].set_rates({{CellEventType::DEATH, 0.1},
                           {CellEventType::DUPLICATION, 0.2}});
@@ -74,7 +74,7 @@ struct ArchiveFixture {
         simulation.death_activation_level = 100;
         simulation.storage_enabled = false;
 
-        Races::Mutants::Evolutions::TimeTest done(time_horizon);
+        RACES::Mutants::Evolutions::TimeTest done(time_horizon);
 
         simulation.run(done);
     }
@@ -109,7 +109,7 @@ void basic_type_test(const std::vector<T>& to_save)
 {
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         for (const auto& value : to_save) {
             o_archive & value;
@@ -117,7 +117,7 @@ void basic_type_test(const std::vector<T>& to_save)
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         for (const auto& value : to_save) {
             T read_value;
@@ -165,22 +165,22 @@ bool operator==(const std::map<KEY,T>& a, const std::map<KEY,T>& b)
     return true;
 }
 
-bool operator==(const Races::Mutants::Cell& a, const Races::Mutants::Cell& b)
+bool operator==(const RACES::Mutants::Cell& a, const RACES::Mutants::Cell& b)
 {
-    return (a.get_id()==b.get_id() && 
+    return (a.get_id()==b.get_id() &&
             a.get_parent_id()==b.get_parent_id() &&
             a.get_species_id()==b.get_species_id());
 }
 
-bool operator==(const Races::Mutants::Evolutions::CellInTissue& a, const Races::Mutants::Evolutions::CellInTissue& b)
+bool operator==(const RACES::Mutants::Evolutions::CellInTissue& a, const RACES::Mutants::Evolutions::CellInTissue& b)
 {
-    using namespace  Races::Mutants;
+    using namespace  RACES::Mutants;
 
     return (static_cast<const Cell&>(a)==static_cast<const Cell&>(b) &&
             static_cast<const Evolutions::PositionInTissue&>(a)==static_cast<const Evolutions::PositionInTissue&>(b));
 }
 
-bool operator==(const Races::Mutants::SpeciesProperties& a, const Races::Mutants::SpeciesProperties& b)
+bool operator==(const RACES::Mutants::SpeciesProperties& a, const RACES::Mutants::SpeciesProperties& b)
 {
     return (a.get_name()==b.get_name() &&
             a.get_id()==b.get_id() &&
@@ -189,14 +189,14 @@ bool operator==(const Races::Mutants::SpeciesProperties& a, const Races::Mutants
             a.get_epigenetic_switch_rates()==b.get_epigenetic_switch_rates());
 }
 
-inline bool operator!=(const Races::Mutants::SpeciesProperties& a, const Races::Mutants::SpeciesProperties& b)
+inline bool operator!=(const RACES::Mutants::SpeciesProperties& a, const RACES::Mutants::SpeciesProperties& b)
 {
     return !(a==b);
 }
 
-bool operator==(const Races::Mutants::Evolutions::Species& a, const Races::Mutants::Evolutions::Species& b)
+bool operator==(const RACES::Mutants::Evolutions::Species& a, const RACES::Mutants::Evolutions::Species& b)
 {
-    using namespace Races::Mutants;
+    using namespace RACES::Mutants;
 
     if (static_cast<const SpeciesProperties&>(a)!=static_cast<const SpeciesProperties&>(b)) {
         return false;
@@ -213,9 +213,9 @@ bool operator==(const Races::Mutants::Evolutions::Species& a, const Races::Mutan
     return true;
 }
 
-bool operator==(const Races::Mutants::Evolutions::Tissue& a, const Races::Mutants::Evolutions::Tissue& b)
+bool operator==(const RACES::Mutants::Evolutions::Tissue& a, const RACES::Mutants::Evolutions::Tissue& b)
 {
-    using namespace Races::Mutants;
+    using namespace RACES::Mutants;
 
     if (a.get_name()!=b.get_name()) {
         return false;
@@ -250,7 +250,7 @@ bool operator==(const Races::Mutants::Evolutions::Tissue& a, const Races::Mutant
     return true;
 }
 
-bool operator==(const Races::Mutants::Evolutions::Simulation& a, const Races::Mutants::Evolutions::Simulation& b)
+bool operator==(const RACES::Mutants::Evolutions::Simulation& a, const RACES::Mutants::Evolutions::Simulation& b)
 {
     return a.get_time()==b.get_time() &&
            a.tissue()==b.tissue() &&
@@ -300,13 +300,13 @@ BOOST_AUTO_TEST_CASE(binary_map)
                                                                     {"ult\0imo", {{-3/7},{}}}};
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         o_archive & to_save;
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         std::map<std::string, std::vector<std::vector<double>>> read_value;
 
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(binary_map)
 
 BOOST_AUTO_TEST_CASE(binary_timed_mutation)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(Mutation(0,1))},
                                     {3.5,SimulationEventWrapper(Mutation(1,7))},
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_mutation)
 
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         for (const auto& value : to_save) {
             o_archive & value;
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_mutation)
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         for (auto& value : to_save) {
             TimedEvent read_value = TimedEvent::load(i_archive);
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(binary_timed_mutation)
 
 BOOST_AUTO_TEST_CASE(binary_timed_mutation_queue)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     std::vector<TimedEvent> to_save{{5,SimulationEventWrapper(Mutation(0,1))},
                                     {3.5,SimulationEventWrapper(Mutation(1,7))},
@@ -366,18 +366,18 @@ BOOST_AUTO_TEST_CASE(binary_timed_mutation_queue)
 
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         o_archive & queue;
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
-    
+        RACES::Archive::Binary::In i_archive(filename);
+
         PriorityQueue i_queue;
 
         i_archive & i_queue;
-    
+
         BOOST_CHECK(i_queue.size()==queue.size());
 
         while (!i_queue.empty() && !queue.empty()) {
@@ -395,8 +395,8 @@ BOOST_AUTO_TEST_CASE(binary_timed_mutation_queue)
 
 BOOST_AUTO_TEST_CASE(binary_epigenetic_mutant)
 {
-    using namespace Races::Mutants;
-    
+    using namespace RACES::Mutants;
+
     MutantProperties to_save("A",{{0.01,0.01},{0.01,0.01}});
     to_save["--"].set_rates({{CellEventType::DEATH, 0.1},
                              {CellEventType::DUPLICATION, 0.3}});
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_mutant)
 
     auto filename = get_a_temporary_path();
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         for (const auto& species : to_save.get_species()) {
             o_archive & species;
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(binary_epigenetic_mutant)
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         for (const auto& species : to_save.get_species()) {
             SpeciesProperties in_species =  SpeciesProperties::load(i_archive);
@@ -432,18 +432,18 @@ BOOST_FIXTURE_TEST_SUITE( simulatedData, ArchiveFixture )
 
 BOOST_AUTO_TEST_CASE(binary_tissue)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     auto filename = get_a_temporary_path();
 
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         o_archive & simulation.tissue();
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         Tissue in_tissue = Tissue::load(i_archive);
 
@@ -455,18 +455,18 @@ BOOST_AUTO_TEST_CASE(binary_tissue)
 
 BOOST_AUTO_TEST_CASE(simulation_statistics)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     auto filename = get_a_temporary_path();
 
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         o_archive & simulation.get_statistics();
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         TissueStatistics statistics = TissueStatistics::load(i_archive);
     }
@@ -476,18 +476,18 @@ BOOST_AUTO_TEST_CASE(simulation_statistics)
 
 BOOST_AUTO_TEST_CASE(simulation_tissue)
 {
-    using namespace Races::Mutants::Evolutions;
+    using namespace RACES::Mutants::Evolutions;
 
     auto filename = get_a_temporary_path();
 
     {
-        Races::Archive::Binary::Out o_archive(filename);
+        RACES::Archive::Binary::Out o_archive(filename);
 
         o_archive & simulation;
     }
 
     {
-        Races::Archive::Binary::In i_archive(filename);
+        RACES::Archive::Binary::In i_archive(filename);
 
         Simulation in_simulation = Simulation::load(i_archive);
 

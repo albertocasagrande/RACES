@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 0.20
- * @date 2024-05-16
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -42,7 +42,7 @@
 #include "mutation_spec.hpp"
 
 #include "descendant_forest.hpp"
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -119,7 +119,7 @@ public:
     /**
      * @brief Add the properties of a mutant
      *
-     * @param name is the name of the mutant
+     * @param mutant_name is the name of the mutant
      * @param epistate_passenger_rates is a map from epigenomic state to
      *          passenger rates
      * @param driver_SIDs is a list of driver SIDs
@@ -156,6 +156,6 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_MUTATIONAL_PROPERTIES__

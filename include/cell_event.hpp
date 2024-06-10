@@ -2,23 +2,23 @@
  * @file cell_event.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell events
- * @version 0.17
- * @date 2024-03-19
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,15 +38,15 @@
 #include "position.hpp"
 #include "time.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
 /**
  * @brief Supported event type
- * 
+ *
  */
 enum class CellEventType {
     DEATH,
@@ -61,7 +61,7 @@ enum class CellEventType {
  */
 extern std::map<CellEventType, std::string> cell_event_names;
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 /**
@@ -93,6 +93,6 @@ struct CellEvent
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_CELL_EVENT__

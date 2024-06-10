@@ -2,8 +2,8 @@
  * @file sampling.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements samplings
- * @version 0.7
- * @date 2024-05-21
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -30,7 +30,7 @@
 
 #include "sampling.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutants
@@ -65,4 +65,4 @@ Sampling::Sampling(const std::string& name, const RectangleSet& bounding_box,
 
 }   // Mutants
 
-}   // Races
+}   // RACES

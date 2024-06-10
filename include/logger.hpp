@@ -2,23 +2,23 @@
  * @file logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines simulation loggers
- * @version 0.14
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,13 +39,13 @@
 #include "time.hpp"
 #include "tissue_sample.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 class Simulation;
@@ -60,11 +60,11 @@ protected:
 
     /**
      * @brief Get a string representing the current time
-     * 
+     *
      * This method produces a string in the format
      *    {year}{month}{day}_{hour}{minutes}{seconds}
-     * 
-     * @return a string representing the current time 
+     *
+     * @return a string representing the current time
      */
     static std::string get_time_string();
 public:
@@ -75,14 +75,14 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param simulation_dir is the new simulation logging directory
      */
     explicit BasicLogger(const std::filesystem::path& simulation_dir);
 
     /**
      * @brief Record an event
-     * 
+     *
      * @param type is the event type
      * @param cell is the cell on which event has been occurred
      * @param time it the event time
@@ -91,14 +91,14 @@ public:
 
     /**
      * @brief Record an initial cell
-     * 
-     * @param cell is the initial cell to record 
+     *
+     * @param cell is the initial cell to record
      */
     void record_initial_cell(const CellInTissue& cell);
 
     /**
      * @brief Save a simulation snapshot
-     * 
+     *
      * @param simulation is the simulation whose snapshot is requested
      */
     void snapshot(const Simulation& simulation);
@@ -110,14 +110,14 @@ public:
     {}
 
     /**
-     * @brief Save tissue sample 
-     * 
+     * @brief Save tissue sample
+     *
      * @param simulation_dir is the path of the simulation directory
      * @param tissue_sample is the tissue sample to log
      */
-    static void 
+    static void
     save_sample(const std::filesystem::path simulation_dir,
-                const Races::Mutants::Evolutions::TissueSample& tissue_sample);
+                const RACES::Mutants::Evolutions::TissueSample& tissue_sample);
 
     /**
      * @brief Close open archives
@@ -126,21 +126,21 @@ public:
 
     /**
      * @brief Reset the logger
-     * 
+     *
      * @param new_directory is the new logger directory
      */
     void reset(const std::filesystem::path& new_directory);
 
     /**
      * @brief Rename the logger directory
-     * 
+     *
      * @param new_path is the new path of the logger directory
      */
     void rename_directory(const std::filesystem::path& new_path);
 
     /**
      * @brief Get the log directory
-     * 
+     *
      * @return the directory containing all the logs
      */
     inline const std::filesystem::path& get_directory() const
@@ -149,11 +149,11 @@ public:
     }
 
     /**
-     * @brief Save tissue sample 
-     * 
+     * @brief Save tissue sample
+     *
      * @param tissue_sample is the tissue sample to log
      */
-    inline void save_sample(const Races::Mutants::Evolutions::TissueSample& tissue_sample) const
+    inline void save_sample(const RACES::Mutants::Evolutions::TissueSample& tissue_sample) const
     {
         BasicLogger::save_sample(directory, tissue_sample);
     }
@@ -163,6 +163,6 @@ public:
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
 #endif // __RACES_LOGGER__

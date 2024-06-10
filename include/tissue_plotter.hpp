@@ -2,23 +2,23 @@
  * @file tissue_plotter.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a UI window to plot a tissue
- * @version 0.16
- * @date 2023-12-11
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
+ * @copyright Copyright (c) 2023-2024
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,10 +40,10 @@
 #include "tissue.hpp"
 #include "palette.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace UI 
+namespace UI
 {
 
 template <class Rep, std::intmax_t num, std::intmax_t denom>
@@ -69,8 +69,8 @@ std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, den
 
     std::ostringstream oss;
 
-    oss << std::setfill('0') << std::setw(2) << hrs.count() << ":" 
-		<< std::setfill('0') << std::setw(2) << mins.count() << ":" 
+    oss << std::setfill('0') << std::setw(2) << hrs.count() << ":"
+		<< std::setfill('0') << std::setw(2) << mins.count() << ":"
 		<< std::setfill('0') << std::setw(2) << secs.count();
 
     return oss.str();
@@ -78,7 +78,7 @@ std::string format_duration(const std::chrono::duration<Rep, std::ratio<num, den
 
 /**
  * @brief A tissue plotting class
- * 
+ *
  * @tparam PLOT_WINDOW is the type of plotting window
  */
 template<typename PLOT_WINDOW>
@@ -101,7 +101,7 @@ class TissuePlotter {
 
 	/**
 	 * @brief Get the total width of the plotting window
-	 * 
+	 *
 	 * @return the total width of the plotting window in pixels
 	 */
 	unsigned int total_width() const
@@ -112,7 +112,7 @@ class TissuePlotter {
 
 	/**
 	 * @brief Get the total height of the plotting window
-	 * 
+	 *
 	 * @return the total height of the plotting window in pixels
 	 */
 	unsigned int total_height() const
@@ -130,7 +130,7 @@ class TissuePlotter {
 		auto sizes(tissue.size());
 		if constexpr(PLOT_WINDOW::dimensions()==2) {
 			window->use_color(window->get_font_color());
-			window->draw_rectangle(frame_border-frame_thickness, 
+			window->draw_rectangle(frame_border-frame_thickness,
 								   legend_rectangle_height+frame_border-frame_thickness,
 							       sizes[0]+2*frame_thickness, sizes[1]+2*frame_thickness);
 		}
@@ -138,7 +138,7 @@ class TissuePlotter {
 
 	/**
 	 * @brief Draw the simulated time
-	 * 
+	 *
 	 * @param statistics are the simulation statistics
 	 */
 	void draw_time(const Mutants::Evolutions::TissueStatistics& statistics)
@@ -158,7 +158,7 @@ class TissuePlotter {
 
 	/**
 	 * @brief Draw the elapsed real time
-	 * 
+	 *
 	 * @param statistics are the simulation statistics
 	 */
 	void draw_elapsed_time(const Mutants::Evolutions::TissueStatistics& statistics)
@@ -178,7 +178,7 @@ class TissuePlotter {
 
 	/**
 	 * @brief Draw the instantaneous number of events per second
-	 * 
+	 *
 	 * @param statistics are the simulation statistics
 	 */
 	void draw_events_per_second(const Mutants::Evolutions::TissueStatistics& statistics)
@@ -233,7 +233,7 @@ class TissuePlotter {
 	}
 
 	void draw_species_legend(const Mutants::Evolutions::Species& species,
-							 const Mutants::Evolutions::SpeciesStatistics& statistics, 
+							 const Mutants::Evolutions::SpeciesStatistics& statistics,
 							 const unsigned int& x, const unsigned int& y, const Color& color)
 	{
 		window->use_color(color);
@@ -243,7 +243,7 @@ class TissuePlotter {
 
 		std::ostringstream oss;
 
-		oss << species.get_name() 
+		oss << species.get_name()
 			<< ": " << species.num_of_cells() << "/" << statistics.total_cells
 			<< "/" << statistics.killed_cells << "/" << statistics.lost_cells;
 
@@ -281,7 +281,7 @@ class TissuePlotter {
 public:
 	/**
 	 * @brief A constructor
-	 * 
+	 *
 	 * @param tissue is the tissue to plot
 	 * @param frames_per_second is the number of frames per second
 	 */
@@ -292,7 +292,7 @@ public:
 
 	/**
 	 * @brief A constructor
-	 * 
+	 *
 	 * @param tissue is the tissue to plot
 	 * @param name is the name of the plotting window
 	 * @param frames_per_second is the number of frames per second
@@ -300,7 +300,7 @@ public:
 	TissuePlotter(const Mutants::Evolutions::Tissue& tissue, const std::string& name,
 				  const unsigned int frames_per_second=10):
 		tissue(tissue), frame_border(20), frame_thickness(5), legend_rectangle_width(400),
-		legend_rectangle_height(35), legend_label_height(16), redraw_interval(1000/frames_per_second), 
+		legend_rectangle_height(35), legend_label_height(16), redraw_interval(1000/frames_per_second),
 		last_redraw_time(std::chrono::system_clock::from_time_t(0))
 	{
 		if (tissue.num_of_species()>palette.size()) {
@@ -319,7 +319,7 @@ public:
 
 	/**
 	 * @brief Plot the tissue
-	 * 
+	 *
 	 * @param statistics are the simulation statistics
 	 */
     void plot(const Mutants::Evolutions::TissueStatistics& statistics)
@@ -342,7 +342,7 @@ public:
 
 	/**
 	 * @brief Test whether the plotting window has been closed
-	 * 
+	 *
 	 * @return `true` if and only if the plotting window has been closed
 	 */
 	inline const bool& closed() const
@@ -352,8 +352,8 @@ public:
 
 	/**
 	 * @brief Test whenever the plotting window is waiting for any event
-	 * 
-	 * @return `true` if and only if the plotting window is waiting 
+	 *
+	 * @return `true` if and only if the plotting window is waiting
 	 *     for any event
 	 */
 	inline bool waiting_end() const
@@ -363,8 +363,8 @@ public:
 
 	/**
 	 * @brief Set the number of frame per second
-	 * 
-	 * @param frames_per_second is the number of frame per seconds to 
+	 *
+	 * @param frames_per_second is the number of frame per seconds to
 	 * 		be plot at most
 	 */
 	inline void set_frames_per_second(const unsigned int frames_per_second)
@@ -374,7 +374,7 @@ public:
 
 	/**
 	 * @brief Set the font color
-	 * 
+	 *
 	 * @param font_color is the new font color
 	 */
 	inline void set_font_color(const Color& font_color)
@@ -384,7 +384,7 @@ public:
 
 	/**
 	 * @brief Set the background color
-	 * 
+	 *
 	 * @param background_color is the new background color
 	 */
 	inline void set_background_color(const Color& background_color)
@@ -401,6 +401,6 @@ public:
 
 }	// UI
 
-}	// Races
+}	// RACES
 
 #endif // __RACES_TISSUE_PLOTTER__

@@ -2,8 +2,8 @@
  * @file csv_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to read CSV
- * @version 0.5
- * @date 2024-03-09
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,7 @@
 
 #include "utils.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace IO
@@ -60,7 +60,7 @@ const std::string& CSVReader::CSVRow::get_field(const size_t& index) const
         return fields[index];
     }
 
-    throw std::out_of_range("The CSV row contains " 
+    throw std::out_of_range("The CSV row contains "
                             + std::to_string(fields.size())
                             + " fields. Requested field in position "
                             + std::to_string(index));
@@ -79,7 +79,7 @@ bool CSVReader::const_iterator::get_row(CSVReader::CSVRow& row)
     return true;
 }
 
-CSVReader::const_iterator::const_iterator(const CSVReader* reader, const std::streamoff& off, 
+CSVReader::const_iterator::const_iterator(const CSVReader* reader, const std::streamoff& off,
                                           const std::ios_base::seekdir& way):
     reader(reader), ifs(reader->filename)
 {
@@ -102,9 +102,9 @@ CSVReader::CSVReader(const std::filesystem::path& filename, const bool has_heade
     if (has_header) {
         std::ifstream ifs(filename);
         std::string line;
-        
+
         if (!getline(ifs, line)) {
-            throw std::runtime_error("\"" + to_string(filename) 
+            throw std::runtime_error("\"" + to_string(filename)
                                      + "\" does not have a header row.");
         }
 
@@ -125,4 +125,4 @@ CSVReader::CSVReader(const std::filesystem::path& filename, const bool has_heade
 
 }   // IO
 
-}   // Races
+}   // RACES

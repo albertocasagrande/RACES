@@ -2,8 +2,8 @@
  * @file sbs_sbs_context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SBS contexts and extended context automata
- * @version 0.10
- * @date 2024-05-11
+ * @version 1.0
+ * @date 2024-06-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -40,7 +40,7 @@
 
 #include "archive.hpp"
 
-namespace Races
+namespace RACES
 {
 
 namespace Mutations
@@ -320,13 +320,13 @@ public:
 
 }   // Mutations
 
-}   // Races
+}   // RACES
 
 template<>
-struct std::less<Races::Mutations::SBSContext>
+struct std::less<RACES::Mutations::SBSContext>
 {
-    inline bool operator()(const Races::Mutations::SBSContext &lhs,
-                           const Races::Mutations::SBSContext &rhs) const
+    inline bool operator()(const RACES::Mutations::SBSContext &lhs,
+                           const RACES::Mutations::SBSContext &rhs) const
     {
         return lhs.get_code() < rhs.get_code();
     }
@@ -342,7 +342,7 @@ namespace std
  * @param context is the SBS context to stream
  * @return a reference to the output stream
  */
-inline std::ostream& operator<<(std::ostream& out, const Races::Mutations::SBSContext& context)
+inline std::ostream& operator<<(std::ostream& out, const RACES::Mutations::SBSContext& context)
 {
     return (out << context.get_sequence());
 }

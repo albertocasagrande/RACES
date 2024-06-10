@@ -2,23 +2,23 @@
  * @file position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a position class in a tissue
- * @version 0.11
- * @date 2024-04-04
- * 
+ * @version 1.0
+ * @date 2024-06-10
+ *
  * @copyright Copyright (c) 2023-2024
- * 
+ *
  * MIT License
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,13 +31,13 @@
 #include "position.hpp"
 #include "tissue.hpp"
 
-namespace Races 
+namespace RACES
 {
 
-namespace Mutants 
+namespace Mutants
 {
 
-namespace Evolutions 
+namespace Evolutions
 {
 
 Direction::Direction():
@@ -414,7 +414,7 @@ PositionInTissue operator-(const PositionInTissue& position, const PositionDelta
 
     res -= delta;
 
-    return res;  
+    return res;
 }
 
 bool operator==(const PositionInTissue& p1, const PositionInTissue& p2)
@@ -463,12 +463,12 @@ Position::Position(Tissue& tissue, const PositionInTissue& pos):
 
 }   // Mutants
 
-}   // Races
+}   // RACES
 
-namespace std 
+namespace std
 {
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Direction& direction)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::Direction& direction)
 {
     for (size_t i=0; i<3; ++i) {
         switch(direction.get_delta(i)) {
@@ -489,24 +489,24 @@ std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Dir
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionDelta& delta)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::PositionDelta& delta)
 {
     os << "(" << delta.x << "," << delta.y << "," << delta.z << ")";
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::PositionInTissue& position)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::PositionInTissue& position)
 {
     os << "(" << position.x <<","<< position.y <<","<< position.z <<")";
 
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Races::Mutants::Evolutions::Position& position)
+std::ostream& operator<<(std::ostream& os, const RACES::Mutants::Evolutions::Position& position)
 {
     os << "\""<< position.tissue->get_name() << "\""
-       << static_cast<Races::Mutants::Evolutions::PositionInTissue>(position);
+       << static_cast<RACES::Mutants::Evolutions::PositionInTissue>(position);
 
     return os;
 }
