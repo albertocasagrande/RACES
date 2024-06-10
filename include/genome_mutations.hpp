@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 0.35
- * @date 2024-05-31
+ * @version 0.36
+ * @date 2024-06-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -258,11 +258,11 @@ public:
      * the genomic region have the specified allele, the computation ends and the
      * method returns `false`.
      *
-     * @param genomic_region is the genomic region whose copy number must be increased
-     * @param allele_id is the identifier of the allele that must be amplified
-     * @param new_allele_id is the identifier of the new allele if amplification
+     * @param[in] genomic_region is the genomic region whose copy number must be increased
+     * @param[in] allele_id is the identifier of the allele that must be amplified
+     * @param[in,out] new_allele_id is the identifier of the new allele if amplification
      *      succeeded
-     * @param nature is the nature of the amplification
+     * @param[in] nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
@@ -270,6 +270,29 @@ public:
     bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                         AlleleId& new_allele_id,
                         const Mutation::Nature& nature=Mutation::UNDEFINED);
+
+    /**
+     * @brief Amplify a genomic region
+     *
+     * This method increases the number of copies in a genomic region by selecting
+     * the same allele in each fragment of the region. If not all the fragments touching
+     * the genomic region have the specified allele, the computation ends and the
+     * method returns `false`.
+     *
+     * @param[in] genomic_region is the genomic region whose copy number must be increased
+     * @param[in] allele_id is the identifier of the allele that must be amplified
+     * @param[in] nature is the nature of the amplification
+     * @return `true` if and only if the all the fragments touching `genomic_region`
+     *      have `allele_id` among their allele ids and the region has been amplified
+     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     */
+    inline bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                               const Mutation::Nature& nature=Mutation::UNDEFINED)
+    {
+        AlleleId new_allele_id{RANDOM_ALLELE};
+
+        return amplify_region(genomic_region, allele_id, new_allele_id, nature);
+    }
 
     /**
      * @brief Remove a genomic region
@@ -554,11 +577,11 @@ public:
      * the genomic region have the specified allele, the computation ends and the
      * method returns `false`.
      *
-     * @param genomic_region is the genomic region whose copy number must be increased
-     * @param allele_id is the identifier of the allele that must be amplified
-     * @param new_allele_id is the identifier of the new allele if amplification
+     * @param[in] genomic_region is the genomic region whose copy number must be increased
+     * @param[in] allele_id is the identifier of the allele that must be amplified
+     * @param[in,out] new_allele_id is the identifier of the new allele if amplification
      *      succeeded
-     * @param nature is the nature of the amplification
+     * @param[in] nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
      * @throw std::domain_error `genomic_region` does not lays in this chromosome
@@ -566,6 +589,29 @@ public:
     bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                         AlleleId& new_allele_id,
                         const Mutation::Nature& nature=Mutation::UNDEFINED);
+
+    /**
+     * @brief Amplify a genomic region
+     *
+     * This method increases the number of copies in a genomic region by selecting
+     * the same allele in each fragment of the region. If not all the fragments touching
+     * the genomic region have the specified allele, the computation ends and the
+     * method returns `false`.
+     *
+     * @param[in] genomic_region is the genomic region whose copy number must be increased
+     * @param[in] allele_id is the identifier of the allele that must be amplified
+     * @param[in] nature is the nature of the amplification
+     * @return `true` if and only if the all the fragments touching `genomic_region`
+     *      have `allele_id` among their allele ids and the region has been amplified
+     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     */
+    inline bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
+                               const Mutation::Nature& nature=Mutation::UNDEFINED)
+    {
+        AlleleId new_allele_id{RANDOM_ALLELE};
+
+        return amplify_region(genomic_region, allele_id, new_allele_id, nature);
+    }
 
     /**
      * @brief Remove a genomic region
