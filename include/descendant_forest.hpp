@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-06-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -718,12 +718,28 @@ public:
      * the first and the last.
      *
      * @param birth_time_threshold is the maximum birth time for a cell
-     *      associated to the returned sticks (default: `double` max)
+     *      associated to the returned sticks
      * @return a list of all the forest sticks whose associated cells have
      *      birth time smaller than or equal to `birth_time_threshold`
      */
     std::list<std::list<CellId>>
-    get_sticks(const double birth_time_threshold=std::numeric_limits<double>::max()) const;
+    get_sticks(const double birth_time_threshold) const;
+
+    /**
+     * @brief Get the forest sticks
+     *
+     * A _crucial node_ is a root of the forest, a node whose parent belongs
+     * to a different species, or the most recent common ancestor of two
+     * crucial nodes.
+     * A _stick_ is a path of the forest in which the only crucial nodes are
+     * the first and the last.
+     *
+     * @return a list of all the forest sticks
+     */
+    inline std::list<std::list<CellId>> get_sticks() const
+    {
+        return get_sticks(std::numeric_limits<double>::max());
+    }
 
     /**
      * @brief Clear the forest
