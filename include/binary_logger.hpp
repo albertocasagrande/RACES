@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-06-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -65,6 +65,35 @@ struct BinaryLogger : public BasicLogger
      * @return a new snapshot file full path
      */
     std::filesystem::path get_snapshot_path() const;
+
+    /**
+     * @brief Get the cell file information file path
+     * 
+     * @param log_directory is the log directory path
+     * @return the cell file information file path
+     */
+    static inline std::filesystem::path
+    get_cell_file_info_path(const std::filesystem::path& log_directory)
+    {
+        return log_directory / "cell_file_info.txt";
+    }
+
+    /**
+     * @brief Get the cell file information file path
+     * 
+     * @return the cell file information file path
+     */
+    inline std::filesystem::path get_cell_file_info_path() const
+    {
+        return get_cell_file_info_path(directory);
+    }
+
+    /**
+     * @brief Save the cell file infomation file
+     * 
+     * This methdo save the cell file information file
+     */
+    void save_cell_file_info() const;
 
     /**
      * @brief Open a new cell file

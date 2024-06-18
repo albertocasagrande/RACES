@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-06-18
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -158,7 +158,8 @@ BinaryLogger::CellReader::CellReader(const std::filesystem::path& directory):
     directory(directory), bytes_per_cell(1), number_of_cells(0), cell_archive_id(0),
     cell_archive(get_cell_archive_path(directory, 0))
 {
-    std::ifstream cell_file(directory / "cell_file_info.txt", std::fstream::in);
+    std::ifstream cell_file(BinaryLogger::get_cell_file_info_path(directory),
+                            std::fstream::in);
     cell_file >> cells_per_archive >> last_file_number;
 
     // if no cell was saved
@@ -210,17 +211,21 @@ Cell BinaryLogger::CellReader::operator[](const CellId& cell_id)
     return cell;
 }
 
+void BinaryLogger::save_cell_file_info() const
+{
+    // save the number of cells per file and the next file number to be used
+    std::ofstream cell_file(get_cell_file_info_path(), std::fstream::out);
+    cell_file << cells_per_file << " " << current_file_number << std::endl;
+}
+
 void BinaryLogger::rotate_cell_file()
 {
     if (cell_archive.is_open()) {
         cell_archive.close();
     }
 
-    {
-        // save the number of cells per file and the next file number to be used
-        std::ofstream cell_file(directory / "cell_file_info.txt", std::fstream::out);
-        cell_file << cells_per_file << " " << ++current_file_number << std::endl;
-    }
+    ++current_file_number;
+    save_cell_file_info();
 
     auto filename = get_cell_archive_path(directory, current_file_number);
 
@@ -235,6 +240,10 @@ void BinaryLogger::record_cell(const CellInTissue& cell)
             auto filename = get_cell_archive_path(directory, current_file_number);
 
             cell_archive.open(filename, std::fstream::binary | std::fstream::app);
+
+            if (!std::filesystem::exists(get_cell_file_info_path())) {
+                save_cell_file_info();
+            }
         } else {
             std::filesystem::create_directory(directory);
 
