@@ -2,8 +2,8 @@
  * @file irb_tree.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indexed red-black trees
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
  *
@@ -46,6 +46,10 @@ namespace RACES
  * field accounts the number of nodes in the subtree rooted in the specific node.
  * Finding the i-th key in the tree can be achieved by using the `subtree_size`
  * fields in time \f$O(\log \texttt{size()})\f$.
+ * 
+ * [1] Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein:
+ *     Introduction to Algorithms, 3rd Edition. MIT Press 2009,
+ *     ISBN 978-0-262-03384-8, pp. I-XIX, 1-1292
  *
  * @tparam KEY is the type of the RB tree keys
  * @tparam COMPARE is the order among keys
