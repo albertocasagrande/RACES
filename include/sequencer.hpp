@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-07
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -194,12 +194,15 @@ public:
                              const Mutations::GenomicPosition& read_position,
                              const unsigned int read_index) override
     {
-        (void)base;
         (void)base_position;
         (void)read_position;
         (void)read_index;
 
-        return 33 + max_phred_code;
+        if (base != 'N') {
+            return 33 + max_phred_code;
+        }
+
+        return 33;
     }
 
     /**
@@ -223,7 +226,14 @@ public:
         (void)position;
         (void)read_index;
 
-        return std::string(read.size(), 33 + max_phred_code);
+        std::string qual(read.size(), 33 + max_phred_code);
+        for (size_t i=0; i<read.size(); ++i) {
+            if (read[i] == 'N') {
+                qual[i] = 33;
+            }
+        }
+
+        return qual;
     }
 
     /**
