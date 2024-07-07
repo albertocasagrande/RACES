@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-07
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1034,6 +1034,9 @@ private:
         const size_t template_id = num_of_reads/template_read_data.size();
         const std::string template_name = get_template_name(chr_data.chr_id, template_id);
         Read read[2];
+        std::string qual[2];
+        size_t hamming_dist[2];
+        size_t over_threshold{0};
         for (size_t i=0; i<template_read_data.size(); ++i) {
             const auto& read_first_position = template_read_data[i].second;
 
@@ -1041,27 +1044,38 @@ private:
 
             read[i] = Read{chr_data.nucleotides, germlines, passengers,
                            genomic_position, read_size};
+            
+            qual[i] = sequencer.simulate_seq(read[i], genomic_position, i);
+            hamming_dist[i] = read[i].Hamming_distance();
+
+            if (hamming_dist[i] < hamming_distance_threshold) {
+                ++over_threshold;
+
+                chr_statistics.account_for(read[i]);
+            }
         }
 
-        for (size_t i=0; i<template_read_data.size(); ++i) {
-            const auto& genomic_position = read[i].get_genomic_position();
-            std::string qual = sequencer.simulate_seq(read[i], genomic_position, i);
 
-            const auto hamming_distance = read[i].Hamming_distance();
+        if (SAM_stream != nullptr) {
+            for (size_t i=0; i<template_read_data.size(); ++i) {
+                if (hamming_dist[i] < hamming_distance_threshold) {  
+                    const auto& genomic_position = read[i].get_genomic_position();
 
-            const auto mapq = 33 + 60;
+                    int flag = template_read_data[i].first;
 
-            if (hamming_distance < hamming_distance_threshold) {
-                chr_statistics.account_for(read[i]);
+                    const auto mapq = 33 + 60;
 
-                if (SAM_stream != nullptr) {
+                    if (over_threshold==1) {
+                        flag = 0x10 & flag;
+                    }
+
                     *SAM_stream << template_name                        // QNAME
-                                << '\t' << template_read_data[i].first  // FLAG
+                                << '\t' << flag                         // FLAG
                                 << '\t' << "chr" << chr_data.name       // RNAME
                                 << '\t' << genomic_position.position    // POS
                                 << '\t' << mapq                         // MAPQ
                                 << '\t' << read[i].get_CIGAR();         // CIGAR
-                    if (read_type == ReadType::PAIRED_READ) {
+                    if (read_type == ReadType::PAIRED_READ && over_threshold > 1) {
                         const auto paired_pos = read[1-i].get_genomic_position().position;
 
                         *SAM_stream << '\t' << '='               // RNEXT
@@ -1074,13 +1088,13 @@ private:
                                     << '\t' << '0';  // TLEN
                     }
                     *SAM_stream << '\t' << read[i].get_sequence()  // SEQ
-                                << '\t' << qual;                   // QUAL
+                                << '\t' << qual[i];                // QUAL
 
                     // TAGS
                     if (sample_name.size()!=0) {
                         *SAM_stream << "\tRG:Z:" << sample_name;  // The read group
                     }
-                    *SAM_stream << "\tNM:i:" << hamming_distance  // The Hamming distance
+                    *SAM_stream << "\tNM:i:" << hamming_dist[i]  // The Hamming distance
                                 << std::endl;
                 }
             }
