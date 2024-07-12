@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 1.1
- * @date 2024-07-07
+ * @version 1.2
+ * @date 2024-07-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -55,7 +55,7 @@ namespace Sequencers
 class BasicSequencer
 {
 public:
-    constexpr static uint8_t max_phred_code = 93; //!< The maximum Phred score
+    constexpr static uint8_t max_phred_code = 37; //!< The maximum Phred score
 
     /**
      * @brief Get the model name
@@ -376,7 +376,7 @@ public:
                              const Mutations::GenomicPosition& position,
                              const unsigned int read_index) override
     {
-        std::string qual(read.size(), 33 + 60);
+        std::string qual(read.size(), 33 + max_phred_code);
 
         const std::string& read_seq = read.get_sequence();
         auto qual_it = qual.begin();
