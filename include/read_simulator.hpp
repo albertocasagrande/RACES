@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.3
+ * @version 1.4
  * @date 2024-07-24
  *
  * @copyright Copyright (c) 2023-2024
@@ -950,15 +950,15 @@ private:
         std::vector<std::pair<int, ChrPosition>> template_read_data;
 
         if (read_type == ReadType::PAIRED_READ) {
-            int first_flag = 0x1 | 0x2 | 0x40;
-            int second_flag = 0x1 | 0x2 | 0x80;
+            int first_flag = 0x1 | 0x2 | 0x20;
+            int second_flag = 0x1 | 0x2 | 0x10;
 
             if (rev_comp) {
-                first_flag |= 0x10;
-                second_flag |= 0x20;
+                first_flag |= 0x80;
+                second_flag |= 0x40;
             } else {
-                first_flag |= 0x20;
-                second_flag |= 0x10;
+                first_flag |= 0x40;
+                second_flag |= 0x80;
             }
             template_read_data.push_back({first_flag, template_first_position});
 
