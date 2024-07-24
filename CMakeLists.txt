@@ -14,8 +14,9 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.30.0")
 cmake_policy(SET CMP0167 NEW)
-
+endif()
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
