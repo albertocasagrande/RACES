@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -122,7 +122,8 @@ class MutationsSimulator : public BasicExecutable
     RACES::Mutations::SequencingSimulations::ReadSimulator<>::Mode read_simulator_output_mode;
     bool paired_read;
     size_t read_size;
-    size_t insert_size;
+    double insert_size_mean;
+    double insert_size_stddev;
     double sequencer_error_rate;
     std::string SIDs_csv_filename;
     std::string CNAs_csv_filename;
@@ -454,8 +455,13 @@ class MutationsSimulator : public BasicExecutable
 
         if (coverage>0) {
             if (paired_read) {
+                double q = (insert_size_stddev*insert_size_stddev)/insert_size_mean;
+                double p = 1-q;
+                uint32_t t = static_cast<uint32_t>(insert_size_mean/p);
+
+                std::binomial_distribution<uint32_t> insert_size_dist(t,p);
                 read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size,
-                                                 insert_size, read_simulator_output_mode, true, seed);
+                                                 insert_size_dist, read_simulator_output_mode, true, seed);
             } else {
                 read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size,
                                                  read_simulator_output_mode, true, seed);
@@ -688,7 +694,8 @@ public:
                                   {"mutants", "Mutants evolution related options"},
                                   {"generic", "Generic options"}}),
         paired_read(false),
-        insert_size(0), sequencer_error_rate(0), SIDs_csv_filename(""),
+        insert_size_mean(0), insert_size_stddev(0),
+        sequencer_error_rate(0), SIDs_csv_filename(""),
         CNAs_csv_filename(""), epigenetic_FACS(false)
     {
         namespace po = boost::program_options;
@@ -722,8 +729,10 @@ public:
             ("overwrite,o", "overwrite the output directory")
             ("read-size,r", po::value<size_t>(&read_size)->default_value(150),
              "simulated read size")
-            ("insert-size,i", po::value<size_t>(&insert_size),
-             "simulated insert size (enable paired-read)")
+            ("insert-size-mean,i", po::value<double>(&insert_size_mean),
+             "insert size mean (enable paired-read)")
+            ("insert-size-stddev,d", po::value<double>(&insert_size_stddev),
+             "insert size standard deviation")
             ("sequencer-error-rate,s", po::value<double>(&sequencer_error_rate),
              "sequencer error rate per base")
             ("write-SAM,w", "write the simulated read SAM files")
@@ -807,7 +816,7 @@ public:
                                           ReadSimulator<>::Mode::CREATE);
         }
 
-        paired_read = vm.count("insert-size")>0;
+        paired_read = vm.count("insert-mean-size")>0;
 
         epigenetic_FACS = vm.count("epigenetic-FACS")>0;
         write_SAM = vm.count("write-SAM")>0;

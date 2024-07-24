@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.2
- * @date 2024-07-19
+ * @version 1.3
+ * @date 2024-07-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -887,7 +887,7 @@ public:
     ReadType read_type;     //!< The type of the produced reads
 
     size_t read_size;       //!< The produced-read size
-    size_t insert_size;     //!< The paired-read insert size
+    std::binomial_distribution<uint32_t> insert_size;     //!< The paired-read insert size distribution
 
     bool write_SAM;         //!< A Boolean flag to write SAM files
 
@@ -1130,10 +1130,13 @@ private:
                                  const size_t& total_steps, size_t& steps,
                                  RACES::UI::ProgressBar& progress_bar, std::ostream* SAM_stream)
     {
-        auto template_size = ((read_type==ReadType::PAIRED_READ)
-                              ?2*read_size+insert_size:read_size);
+        auto insert_size_mean = insert_size.p()*insert_size.t();
+        auto insert_size_stddev = (1-insert_size.p())*insert_size_mean;
+        auto threshold_template_size = ((read_type==ReadType::PAIRED_READ)
+                                          ?2*read_size+insert_size_mean-insert_size_stddev:
+                                          read_size);
 
-        if (fragment.size()>=template_size) {
+        if (fragment.size()>=threshold_template_size) {
             const double hit_probability = static_cast<double>(fragment.size())/
                                         sample_simulation_data.not_covered_allelic_size;
             std::binomial_distribution<size_t> b_dist(sample_simulation_data.missing_templates,
@@ -1149,20 +1152,26 @@ private:
             const auto& passengers = fragment.get_mutations();
 
             auto first_possible_begin = fragment.get_initial_position();
-            auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())-template_size+1;
+            auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())
+                                            -read_size+1;
 
             std::uniform_int_distribution<ChrPosition> dist(first_possible_begin, last_possible_begin);
             size_t simulated_templates = 0;
             while (simulated_templates < num_of_frag_templates) {
                 auto begin_pos = dist(random_generator);
 
-                process_template(sequencer, chr_data, germlines, passengers, begin_pos,
-                                 template_size, chr_statistics, SAM_stream, sample_name);
+                auto template_size = ((read_type==ReadType::PAIRED_READ)
+                                        ?2*read_size+insert_size(random_generator):read_size);
 
-                num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
-                ++simulated_templates;
-                --sample_simulation_data.missing_templates;
+                if (begin_pos+template_size<fragment.size()) {
 
+                    process_template(sequencer, chr_data, germlines, passengers, begin_pos,
+                                        template_size, chr_statistics, SAM_stream, sample_name);
+
+                    num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
+                    ++simulated_templates;
+                    --sample_simulation_data.missing_templates;
+                }
                 progress_bar.set_progress(current_progress+simulated_templates*fragment_progress_ratio);
             }
         }
@@ -1472,19 +1481,20 @@ private:
      * @param ref_genome_filename is reference genome filename
      * @param read_type is the type of the produced-read, i.e., single or paired-read
      * @param read_size is the size of the output reads
-     * @param insert_size is the size of the insert
+     * @param insert_size_distribution is the insert size distribution 
      * @param mode is the SAM generator output mode
      * @param save_coverage is a flag to enable/disable storage of coverage data
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::filesystem::path& output_directory,
                   const std::filesystem::path& ref_genome_filename,
-                  const ReadType read_type, const size_t& read_size, const size_t& insert_size,
+                  const ReadType read_type, const size_t& read_size,
+                  const std::binomial_distribution<uint32_t>& insert_size_distribution,
                   const Mode mode, const bool save_coverage, const int& seed):
-        read_type(read_type), read_size(read_size), insert_size(insert_size), write_SAM(false),
-        save_coverage(save_coverage), random_generator(seed), output_directory(output_directory),
-        ref_genome_filename(ref_genome_filename), num_of_reads(0),
-        hamming_distance_threshold(30)
+        read_type(read_type), read_size(read_size), insert_size(insert_size_distribution),
+        write_SAM(false), save_coverage(save_coverage), random_generator(seed),
+        output_directory(output_directory), ref_genome_filename(ref_genome_filename),
+        num_of_reads(0), hamming_distance_threshold(30)
     {
         namespace fs = std::filesystem;
 
@@ -1530,7 +1540,8 @@ public:
      * @brief The empty constructor
      */
     ReadSimulator():
-        read_type(ReadType::SINGLE_READ), read_size(0), insert_size(0), write_SAM(false),
+        read_type(ReadType::SINGLE_READ), read_size(0),
+        insert_size(std::binomial_distribution<uint32_t>(0,0)), write_SAM(false),
         save_coverage(false), random_generator(), output_directory(""), ref_genome_filename(""),
         num_of_reads(0), hamming_distance_threshold(30)
     {}
@@ -1550,7 +1561,7 @@ public:
                   const size_t& read_size, const Mode mode=Mode::CREATE,
                   const bool& save_coverage=false, const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::SINGLE_READ, read_size,
-                      0, mode, save_coverage, seed)
+                      std::binomial_distribution<uint32_t>(0, 0), mode, save_coverage, seed)
     {}
 
     /**
@@ -1559,14 +1570,15 @@ public:
      * @param output_directory is the SAM output directory
      * @param ref_genome_filename is reference genome filename
      * @param read_size is the size of the output reads
-     * @param insert_size is the size of the insert
+     * @param insert_size_distribution is the insert size distribution
      * @param mode is the SAM generator output mode
      * @param save_coverage is a flag to enable/disable storage of coverage data
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::filesystem::path& output_directory,
                   const std::filesystem::path& ref_genome_filename,
-                  const size_t& read_size, const size_t& insert_size, const Mode mode=Mode::CREATE,
+                  const size_t& read_size,
+                  const std::binomial_distribution<uint32_t>& insert_size, const Mode mode=Mode::CREATE,
                   const bool& save_coverage=false, const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::PAIRED_READ, read_size,
                       insert_size, mode, save_coverage, seed)
