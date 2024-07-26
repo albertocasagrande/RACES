@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.4
- * @date 2024-07-24
+ * @version 1.5
+ * @date 2024-07-26
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1163,7 +1163,7 @@ private:
                 auto template_size = ((read_type==ReadType::PAIRED_READ)
                                         ?2*read_size+insert_size(random_generator):read_size);
 
-                if (begin_pos+template_size<fragment.size()) {
+                if (begin_pos+template_size<=fragment.get_final_position()+1) {
 
                     process_template(sequencer, chr_data, germlines, passengers, begin_pos,
                                         template_size, chr_statistics, SAM_stream, sample_name);
