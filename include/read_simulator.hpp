@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.5
- * @date 2024-07-26
+ * @version 1.6
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1597,6 +1597,7 @@ public:
      * @param chromosome_ids is the set of chromosome identifiers whose reads will be
      *      simulated
      * @param coverage is the aimed coverage
+     * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
@@ -1612,8 +1613,9 @@ public:
     SampleSetStatistics operator()(SEQUENCER& sequencer,
                                    std::list<RACES::Mutations::SampleGenomeMutations> mutations_list,
                                    const std::set<ChromosomeId>& chromosome_ids,
-                                   const double& coverage, const double purity=1.0,
-                                   const std::string& base_name="chr_",
+                                   const double& coverage,
+                                   const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
+                                   const double purity=1.0, const std::string& base_name="chr_",
                                    std::ostream& progress_bar_stream=std::cout,
                                    const bool quiet=false)
     {
@@ -1630,6 +1632,12 @@ public:
 
         }
 
+        if (purity < 1 && normal_sample.mutations.size()==0) {
+            throw std::domain_error("The purity value is lower than 1 and "
+                                    "the normal sample does not contain cells.");
+
+        }
+
         if (read_type == ReadType::PAIRED_READ && !sequencer.supports_paired_reads()) {
             throw std::domain_error(sequencer.get_model_name()
                                     + " does not support paired reads.");
@@ -1639,25 +1647,21 @@ public:
             return SampleSetStatistics(output_directory);
         }
 
-        // if purity<1, then duplicate the structure of the germline genome
-        // (no mutations as they will be automatically added by `generate_reads`)
-        std::shared_ptr<CellGenomeMutations> normal_structure;
+        std::vector<std::shared_ptr<CellGenomeMutations>> normal_cells(normal_sample.mutations.begin(),
+                                                                       normal_sample.mutations.end());
 
-        if (purity<1) {
-            const auto& germline_mutations = mutations_list.front().germline_mutations;
-            normal_structure = std::make_shared<CellGenomeMutations>(germline_mutations.duplicate_structure());
-        }
-
+        std::uniform_int_distribution<size_t> selector(0, normal_cells.size()-1);
+        
         for (auto& mutation_list : mutations_list) {
             if (purity>0) {
                 size_t tumour_number = mutation_list.mutations.size();
                 size_t normal_number = static_cast<size_t>(tumour_number*(1-purity)/purity);
 
                 for (size_t i=0; i<normal_number; ++i) {
-                    mutation_list.mutations.push_back(normal_structure);
+                    mutation_list.mutations.push_back(normal_cells[selector(random_generator)]);
                 }
             } else {
-                mutation_list.mutations = {normal_structure};
+                mutation_list.mutations = normal_sample.mutations;
             }
         }
 
@@ -1678,6 +1682,7 @@ public:
      * @param sequencer is the sequencer
      * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
+     * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
@@ -1692,7 +1697,9 @@ public:
              std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     SampleSetStatistics operator()(SEQUENCER& sequencer,
                                    std::list<RACES::Mutations::SampleGenomeMutations> mutations_list,
-                                   const double& coverage, const double purity=1.0,
+                                   const double& coverage,
+                                   const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
+                                   const double purity=1.0,
                                    const std::string& base_name="chr_",
                                    std::ostream& progress_bar_stream=std::cout,
                                    const bool quiet=false)
@@ -1700,7 +1707,8 @@ public:
         const auto chromosome_ids = get_genome_chromosome_ids(mutations_list);
 
         return operator()(sequencer, mutations_list, chromosome_ids, coverage,
-                          purity, base_name, progress_bar_stream, quiet);
+                          normal_sample, purity, base_name, progress_bar_stream,
+                          quiet);
     }
 
     /**
@@ -1714,6 +1722,7 @@ public:
      * @param sequencer is the sequencer
      * @param mutations is a sample genome mutations
      * @param coverage is the aimed coverage
+     * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
@@ -1728,7 +1737,9 @@ public:
              std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     SampleStatistics operator()(SEQUENCER& sequencer,
                                 const RACES::Mutations::SampleGenomeMutations& mutations,
-                                const double& coverage, const double purity=1.0,
+                                const double& coverage,
+                                const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
+                                const double purity=1.0,
                                 const std::string& base_name="chr_",
                                 std::ostream& progress_bar_stream=std::cout,
                                 const bool quiet=false)
@@ -1736,8 +1747,8 @@ public:
         using namespace RACES::Mutations;
         std::list<SampleGenomeMutations> mutations_list{mutations};
 
-        auto statistics = operator()(sequencer, mutations_list, coverage, purity,
-                                     base_name, progress_bar_stream, quiet);
+        auto statistics = operator()(sequencer, mutations_list, coverage, normal_sample,
+                                     purity, base_name, progress_bar_stream, quiet);
 
         return statistics[mutations.name];
     }
@@ -1755,6 +1766,7 @@ public:
      * @param chromosome_ids is the set of chromosome identifiers whose reads will be
      *      simulated
      * @param coverage is the aimed coverage
+     * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
      *              cells which contains normal cells too (default: 1.0)
@@ -1770,7 +1782,9 @@ public:
     SampleStatistics operator()(SEQUENCER& sequencer,
                                 const RACES::Mutations::SampleGenomeMutations& mutations,
                                 const std::set<ChromosomeId>& chromosome_ids,
-                                const double& coverage, const double purity=1.0,
+                                const double& coverage,
+                                const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
+                                const double purity=1.0,
                                 const std::string& base_name="chr_",
                                 std::ostream& progress_bar_stream=std::cout,
                                 const bool quiet=false)
@@ -1778,8 +1792,9 @@ public:
         using namespace RACES::Mutations;
         std::list<SampleGenomeMutations> mutations_list{mutations};
 
-        auto statistics = operator()(sequencer, mutations_list, chromosome_ids, coverage, purity,
-                                     base_name, progress_bar_stream, quiet);
+        auto statistics = operator()(sequencer, mutations_list, chromosome_ids, coverage,
+                                     normal_sample, purity, base_name, progress_bar_stream,
+                                     quiet);
 
         return statistics[mutations.name];
     }

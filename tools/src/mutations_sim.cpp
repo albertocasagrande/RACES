@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 1.1
- * @date 2024-07-24
+ * @version 1.2
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -527,7 +527,8 @@ class MutationsSimulator : public BasicExecutable
 
             RACES::Sequencers::Illumina::BasicSequencer sequencer(sequencer_error_rate);
 
-            const auto statistics = read_simulator(sequencer, mutations_list, coverage, purity);
+            auto normal_sample = phylogenetic_forest.get_germline_sample("normale_sample", true);
+            const auto statistics = read_simulator(sequencer, mutations_list, coverage, normal_sample, purity);
 
             saving_statistics_data_and_images(statistics);
         }
