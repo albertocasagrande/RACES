@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -247,6 +247,17 @@ bool ChromosomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
     return allele.insert(mutation);
 }
 
+bool ChromosomeMutations::insert(const MutationSpec<SID>& mutation_spec)
+{
+    if (!contains(mutation_spec)) {
+        throw std::domain_error("The genomic position of the SID is not in the chromosome");
+    }
+
+    Allele& allele = get_allele(mutation_spec.allele_id);
+
+    return allele.insert(mutation_spec);
+}
+
 bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_position)
 {
     if (!contains(genomic_position)) {
@@ -464,6 +475,13 @@ bool GenomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
     auto chr_it = find_chromosome(chromosomes, mutation.chr_id);
 
     return chr_it->second.insert(mutation, allele_id);
+}
+
+bool GenomeMutations::insert(const MutationSpec<SID>& mutation_spec)
+{
+    auto chr_it = find_chromosome(chromosomes, mutation_spec.chr_id);
+
+    return chr_it->second.insert(mutation_spec);
 }
 
 bool GenomeMutations::remove_mutation(const GenomicPosition& genomic_position)

@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,6 +36,7 @@
 #include <fstream>
 
 #include "mutation.hpp"
+#include "mutation_spec.hpp"
 #include "context_index.hpp"
 
 #include "allele.hpp"
@@ -329,6 +330,22 @@ public:
      *      `allele_id` or `mutation` does not lay in the allele
      */
     bool insert(const SID& mutation, const AlleleId& allele_id);
+
+    /**
+     * @brief Insert a SID mutation in a context free position
+     *
+     * This method tries to insert a SID mutation. If the chromosome contains another
+     * SID mutation occurring in the mutational context of the specified SID, then
+     * the insertion fails.
+     *
+     * @param mutation_spec is the SID mutation to be inserted in the chromosome
+     * @return `true` if and only if the chromosome do not contain any other
+     *      SID mutations in `mutation`'s mutational context
+     * @throw std::domain_error `mutation` does not lays in the chromosome
+     * @throw std::out_of_range the chromosome has not the allele
+     *      `allele_id` or `mutation` does not lay in the allele
+     */
+    bool insert(const MutationSpec<SID>& mutation_spec);
 
     /**
      * @brief Duplicate genomic structure
@@ -647,6 +664,22 @@ public:
      *      `allele_id` or `mutation` does not lay in the allele
      */
     bool insert(const SID& mutation, const AlleleId& allele_id);
+
+    /**
+     * @brief Insert a SID mutation in a context free position
+     *
+     * This method tries to insert a SID mutation. If the chromosome contains another
+     * SID mutation occurring in the mutational context of the specified SID, then
+     * the insertion fails.
+     *
+     * @param mutation_spec is the SID mutation to be inserted in the chromosome
+     * @return `true` if and only if the chromosome do not contain any other
+     *      SID mutations in `mutation`'s mutational context
+     * @throw std::domain_error `mutation` does not lays in the chromosome
+     * @throw std::out_of_range the chromosome has not the allele
+     *      `allele_id` or `mutation` does not lay in the allele
+     */
+    bool insert(const MutationSpec<SID>& mutation_spec);
 
     /**
      * @brief Remove a SID mutation
