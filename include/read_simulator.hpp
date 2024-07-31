@@ -2,7 +2,7 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.6
+ * @version 1.7
  * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
@@ -1600,7 +1600,7 @@ public:
      * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
-     *              cells which contains normal cells too (default: 1.0)
+     *              cells which contains normal cells too
      * @param base_name is the prefix of the filename (default: "chr_")
      * @param progress_bar_stream is the output stream for the progress bar
      *              (default: std::cout)
@@ -1614,8 +1614,8 @@ public:
                                    std::list<RACES::Mutations::SampleGenomeMutations> mutations_list,
                                    const std::set<ChromosomeId>& chromosome_ids,
                                    const double& coverage,
-                                   const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
-                                   const double purity=1.0, const std::string& base_name="chr_",
+                                   const RACES::Mutations::SampleGenomeMutations& normal_sample,
+                                   const double purity, const std::string& base_name="chr_",
                                    std::ostream& progress_bar_stream=std::cout,
                                    const bool quiet=false)
     {
@@ -1681,11 +1681,45 @@ public:
      * @tparam SEQUENCER is the sequencer model type
      * @param sequencer is the sequencer
      * @param mutations_list is a list of sample mutations
+     * @param chromosome_ids is the set of chromosome identifiers whose reads will be
+     *      simulated
+     * @param coverage is the aimed coverage
+     * @param base_name is the prefix of the filename (default: "chr_")
+     * @param progress_bar_stream is the output stream for the progress bar
+     *              (default: std::cout)
+     * @param quiet is a Boolean flag to avoid progress bar and user messages
+     *              (default: false)
+     * @return the sample set statistics about the generated reads
+     */
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    inline SampleSetStatistics operator()(SEQUENCER& sequencer,
+                                          std::list<RACES::Mutations::SampleGenomeMutations> mutations_list,
+                                          const std::set<ChromosomeId>& chromosome_ids,
+                                          const double& coverage, const std::string& base_name="chr_",
+                                          std::ostream& progress_bar_stream=std::cout,
+                                          const bool quiet=false)
+    {
+        return operator()(sequencer, mutations_list, chromosome_ids, coverage,
+                          {"normal_sample", {}}, 1.0, base_name, progress_bar_stream,
+                          quiet);
+    }
+
+    /**
+     * @brief Generate simulated reads for a list of sample genome mutations
+     *
+     * This method generates simulated reads for a list of sample genome mutations and,
+     * if requested, writes the corresponding SAM alignments. The number of simulated reads
+     * depends on the specified coverage.
+     *
+     * @tparam SEQUENCER is the sequencer model type
+     * @param sequencer is the sequencer
+     * @param mutations_list is a list of sample mutations
      * @param coverage is the aimed coverage
      * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
-     *              cells which contains normal cells too (default: 1.0)
+     *              cells which contains normal cells too
      * @param base_name is the prefix of the filename (default: "chr_")
      * @param progress_bar_stream is the output stream for the progress bar
      *              (default: std::cout)
@@ -1698,8 +1732,8 @@ public:
     SampleSetStatistics operator()(SEQUENCER& sequencer,
                                    std::list<RACES::Mutations::SampleGenomeMutations> mutations_list,
                                    const double& coverage,
-                                   const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
-                                   const double purity=1.0,
+                                   const RACES::Mutations::SampleGenomeMutations& normal_sample,
+                                   const double purity,
                                    const std::string& base_name="chr_",
                                    std::ostream& progress_bar_stream=std::cout,
                                    const bool quiet=false)
@@ -1709,6 +1743,40 @@ public:
         return operator()(sequencer, mutations_list, chromosome_ids, coverage,
                           normal_sample, purity, base_name, progress_bar_stream,
                           quiet);
+    }
+
+    /**
+     * @brief Generate simulated reads for a list of sample genome mutations
+     *
+     * This method generates simulated reads for a list of sample genome mutations and,
+     * if requested, writes the corresponding SAM alignments. The number of simulated reads
+     * depends on the specified coverage.
+     *
+     * @tparam SEQUENCER is the sequencer model type
+     * @param sequencer is the sequencer
+     * @param mutations_list is a list of sample mutations
+     * @param coverage is the aimed coverage
+     * @param base_name is the prefix of the filename (default: "chr_")
+     * @param progress_bar_stream is the output stream for the progress bar
+     *              (default: std::cout)
+     * @param quiet is a Boolean flag to avoid progress bar and user messages
+     *              (default: false)
+     * @return the sample set statistics about the generated reads
+     */
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    SampleSetStatistics operator()(SEQUENCER& sequencer,
+                                   std::list<RACES::Mutations::SampleGenomeMutations> mutations_list,
+                                   const double& coverage,
+                                   const std::string& base_name="chr_",
+                                   std::ostream& progress_bar_stream=std::cout,
+                                   const bool quiet=false)
+    {
+        const auto chromosome_ids = get_genome_chromosome_ids(mutations_list);
+
+        return operator()(sequencer, mutations_list, chromosome_ids, coverage,
+                          {"normal_sample", {}}, 1.0, base_name, 
+                          progress_bar_stream, quiet);
     }
 
     /**
@@ -1725,7 +1793,7 @@ public:
      * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
-     *              cells which contains normal cells too (default: 1.0)
+     *              cells which contains normal cells too
      * @param base_name is the prefix of the filename (default: "chr_")
      * @param progress_bar_stream is the output stream for the progress bar
      *              (default: std::cout)
@@ -1738,8 +1806,8 @@ public:
     SampleStatistics operator()(SEQUENCER& sequencer,
                                 const RACES::Mutations::SampleGenomeMutations& mutations,
                                 const double& coverage,
-                                const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
-                                const double purity=1.0,
+                                const RACES::Mutations::SampleGenomeMutations& normal_sample,
+                                const double purity,
                                 const std::string& base_name="chr_",
                                 std::ostream& progress_bar_stream=std::cout,
                                 const bool quiet=false)
@@ -1751,6 +1819,38 @@ public:
                                      purity, base_name, progress_bar_stream, quiet);
 
         return statistics[mutations.name];
+    }
+
+
+    /**
+     * @brief Generate simulated reads for a sample genome mutations
+     *
+     * This method generates simulated reads for a sample genome mutations and,
+     * if requested, writes the corresponding SAM alignments. The number of simulated reads
+     * depends on the specified coverage.
+     *
+     * @tparam SEQUENCER is the sequencer model type
+     * @param sequencer is the sequencer
+     * @param mutations is a sample genome mutations
+     * @param coverage is the aimed coverage
+     * @param base_name is the prefix of the filename (default: "chr_")
+     * @param progress_bar_stream is the output stream for the progress bar
+     *              (default: std::cout)
+     * @param quiet is a Boolean flag to avoid progress bar and user messages
+     *              (default: false)
+     * @return the statistics about the generated reads
+     */
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    inline SampleStatistics operator()(SEQUENCER& sequencer,
+                                       const RACES::Mutations::SampleGenomeMutations& mutations,
+                                       const double& coverage,
+                                       const std::string& base_name="chr_",
+                                       std::ostream& progress_bar_stream=std::cout,
+                                       const bool quiet=false)
+    {
+        return operator()(sequencer, mutations, coverage, {"normal_sample", {}},
+                          1.0, base_name, progress_bar_stream, quiet);
     }
 
     /**
@@ -1769,7 +1869,7 @@ public:
      * @param normal_sample is a normal sample
      * @param purity is ratio between the number of sampled tumour cells, which are
      *              represented in the mutation list, and that of the overall sampled
-     *              cells which contains normal cells too (default: 1.0)
+     *              cells which contains normal cells too
      * @param base_name is the prefix of the filename (default: "chr_")
      * @param progress_bar_stream is the output stream for the progress bar
      *              (default: std::cout)
@@ -1783,8 +1883,8 @@ public:
                                 const RACES::Mutations::SampleGenomeMutations& mutations,
                                 const std::set<ChromosomeId>& chromosome_ids,
                                 const double& coverage,
-                                const RACES::Mutations::SampleGenomeMutations& normal_sample={"normal_sample", {}},
-                                const double purity=1.0,
+                                const RACES::Mutations::SampleGenomeMutations& normal_sample,
+                                const double purity,
                                 const std::string& base_name="chr_",
                                 std::ostream& progress_bar_stream=std::cout,
                                 const bool quiet=false)
@@ -1797,6 +1897,41 @@ public:
                                      quiet);
 
         return statistics[mutations.name];
+    }
+
+    /**
+     * @brief Generate simulated reads for a sample genome mutations
+     *
+     * This method generates simulated reads for a sample genome mutations and,
+     * if requested, writes the corresponding SAM alignments. The number of simulated reads
+     * depends on the specified coverage.
+     *
+     * @tparam SEQUENCER is the sequencer model type
+     * @param sequencer is the sequencer
+     * @param mutations is a sample genome mutations
+     * @param chromosome_ids is the set of chromosome identifiers whose reads will be
+     *      simulated
+     * @param coverage is the aimed coverage
+     * @param base_name is the prefix of the filename (default: "chr_")
+     * @param progress_bar_stream is the output stream for the progress bar
+     *              (default: std::cout)
+     * @param quiet is a Boolean flag to avoid progress bar and user messages
+     *              (default: false)
+     * @return the statistics about the generated reads
+     */
+    template<typename SEQUENCER,
+             std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
+    inline SampleStatistics operator()(SEQUENCER& sequencer,
+                                       const RACES::Mutations::SampleGenomeMutations& mutations,
+                                       const std::set<ChromosomeId>& chromosome_ids,
+                                       const double& coverage,
+                                       const std::string& base_name="chr_",
+                                       std::ostream& progress_bar_stream=std::cout,
+                                       const bool quiet=false)
+    {
+        return operator()(sequencer, mutations, chromosome_ids, coverage,
+                          {"normal_sample", {}}, 1.0, base_name, progress_bar_stream,
+                          quiet);
     }
 
     /**
