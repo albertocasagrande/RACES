@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -339,7 +339,7 @@ class MutationEngine
      * @return a SBS whose type is `m_type` and which was available in
      *          the context index
      */
-    SID select_SID(const SBSType& m_type)
+    MutationSpec<SID> select_SID(const SBSType& m_type)
     {
         using namespace RACES::Mutations;
 
@@ -374,7 +374,7 @@ class MutationEngine
         }
         auto genomic_pos = context_index.get_genomic_position(pos);
 
-        return {genomic_pos.chr_id, genomic_pos.position,
+        return {RANDOM_ALLELE, genomic_pos.chr_id, genomic_pos.position,
                 context.get_central_nucleotide(), alt_base, Mutation::UNDEFINED};
     }
 
@@ -389,7 +389,7 @@ class MutationEngine
      * @return an indel whose type is `m_type` and which was available in the
      *      repeated sequence index
      */
-    SID select_SID(const IDType& id_type)
+    MutationSpec<SID> select_SID(const IDType& id_type)
     {
         using namespace RACES::Mutations;
 
@@ -411,7 +411,7 @@ class MutationEngine
         GenomicPosition pos(repetition.begin);
         --pos.position;
 
-        return {pos, ref, alt, Mutation::UNDEFINED};
+        return {RANDOM_ALLELE, pos, ref, alt, Mutation::UNDEFINED};
     }
 
     /**
@@ -554,66 +554,31 @@ class MutationEngine
     /**
      * @brief Place a passenger SID
      *
-     * @param mutation is the SID to place
-     * @param cell_mutations are the cell mutations
-     * @param infinite_sites_model is a Boolean flag to enable/disable the infinite
-     *      sites model
+     * @param[in,out] mutation is the SID to place
+     * @param[in,out] cell_mutations are the cell mutations
+     * @param[in] infinite_sites_model is a Boolean flag to enable/disable the
+     *      infinite sites model
      * @return `true` if and only if the SID placement has succeed. This
      *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SID(const SID& mutation, GenomeMutations& cell_mutations,
-                   const bool& infinite_sites_model)
-    {
-        auto candidate_alleles = get_available_alleles(mutation, cell_mutations,
-                                                       infinite_sites_model);
-
-        if (candidate_alleles.size()==0) {
-            return false;
-        }
-
-        AlleleId allele_id = select_random_value(candidate_alleles);
-
-        // try to apply the selected SID
-        return cell_mutations.insert(mutation, allele_id);
-    }
-
-    /**
-     * @brief Place a passenger SID
-     *
-     * @param mutation is the SID to place
-     * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the SID placement has succeed. This
-     *          method returns `false` when the SID cannot be placed
-     *          because its context is not free or no allele are available
-     *          for it.
-     */
-    inline bool place_SID(const SID& mutation,
-                          GenomeMutations& cell_mutations)
-    {
-        return place_SID(mutation, cell_mutations, infinite_sites_model);
-    }
-
-    /**
-     * @brief Place a driver SID with an allele specification
-     *
-     * @param mutation is the SID to place
-     * @param cell_mutations are the cell mutations
-     * @return `true` if and only if the SID placement has succeed. This
-     *          method returns `false` when the SID cannot be placed
-     *          because its context is not free or no allele are available
-     *          for it.
-     */
-    bool place_SID(const MutationSpec<SID>& mutation,
-                   GenomeMutations& cell_mutations)
+    bool place_SID(MutationSpec<SID>& mutation, GenomeMutations& cell_mutations,
+                   const bool& infinite_sites_model = false)
     {
         if (mutation.allele_id == RANDOM_ALLELE) {
-            return place_SID(static_cast<const SID&>(mutation),
-                             cell_mutations, false);
+            auto candidate_alleles = get_available_alleles(mutation, cell_mutations,
+                                                           infinite_sites_model);
+
+            if (candidate_alleles.size()==0) {
+                return false;
+            }
+
+            mutation.allele_id = select_random_value(candidate_alleles);
         }
 
-        return cell_mutations.insert(mutation, mutation.allele_id);
+        // try to apply the selected SID
+        return cell_mutations.insert(mutation);
     }
 
     /**
@@ -695,7 +660,7 @@ class MutationEngine
 
                 // select a mutation among those having the selected mutation
                 // type and that are available in the corresponding index
-                SID sid = select_SID(it->second);
+                auto sid = select_SID(it->second);
 
                 sid.cause = signature_name;
                 sid.nature = nature;
@@ -920,7 +885,7 @@ class MutationEngine
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
             const auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
 
-            for (auto mutation : mutant_mp.SIDs) {
+            for (MutationSpec<SID> mutation : mutant_mp.SIDs) {
                 mutation.cause = mutant_mp.name;
                 mutation.nature = Mutation::DRIVER;
                 if (place_SID(mutation, cell_mutations)) {
@@ -1297,6 +1262,26 @@ class MutationEngine
 
         return false;
     }
+
+    /**
+     * @brief Place SNV and indels in normal cells
+     * 
+     * @tparam MUTATION_TYPE is the type of the SIDs
+     * @param cell_mutations is the cell genome
+     * @param signature_name is the name of the signature of the SIDs
+     * @param num_of_mutations_dist is a distribution for the number of
+     *      SIDs to be placed
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    inline void place_SIDs_in_normal(GenomeMutations& cell_mutations,
+                                     const std::string& signature_name,
+                                     std::normal_distribution<double>& num_of_mutations_dist)
+    {
+        auto num_mutations = static_cast<size_t>(std::max(0.0, num_of_mutations_dist(generator)));
+        place_SIDs<MUTATION_TYPE>(nullptr, cell_mutations, signature_name,
+                                  num_mutations, Mutation::PRENEOPLASTIC);
+    }
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
 
@@ -1593,38 +1578,76 @@ public:
     /**
      * @brief Get the a sample of wild-type cells
      *
-     * @param num_of_cells is the number of cells in the wild-type sample
-     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
-     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
-     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
-     * @return a sample of `num_of_cells` wild-type cells
+     * @param pn_mutations is a list of pre-neoplastic mutations
+     * @return a sample of a single wild-type cell
      */
-    SampleGenomeMutations
-    get_wild_type_sample(const size_t& num_of_cells,
-                         const size_t& num_of_preneoplatic_SNVs,
-                         const size_t& num_of_preneoplatic_indels,
-                         const std::string& preneoplatic_SNV_signature_name="SBS1",
-                         const std::string& preneoplatic_indel_signature_name="ID1")
+    inline SampleGenomeMutations
+    get_wild_type_sample(const std::list<MutationSpec<SID>>& pn_mutations)
+    {
+         std::binomial_distribution<size_t> bin_dist(0, 0);
+
+        return get_wild_type_sample(1, bin_dist, bin_dist, "SBS1", "ID1", pn_mutations);
+    }
+
+    /**
+     * @brief Get the a sample of wild-type cells
+     *
+     * @param forest is a phylogenetic forest
+     * @param num_of_cells is the number of cells in the wild-type samples
+     * @param SNV_dist is the distribution of the number of cell specific SNVs
+     * @param indel_dist is the distribution of the number of cell specific indels
+     * @param SNV_signature_name is the SNV signature name
+     * @param indel_signature_name is the indel signature name
+     * @param forest_preneoplastic_prob is the probability for a pre-neoplastic
+     *   mutation in the forest to be selected for a wild-type sample
+     * @return a list of wild-type samples; each of them has size `num_of_cells`.
+     */
+    std::list<SampleGenomeMutations>
+    get_wild_type_samples(const PhylogeneticForest& forest, const size_t& num_of_cells,
+                          std::normal_distribution<double>& SNV_dist,
+                          std::normal_distribution<double>& indel_dist,
+                          std::normal_distribution<double>& common_SNV_dist,
+                          std::normal_distribution<double>& common_indel_dist,
+                          const std::string& SNV_signature_name="SBS1",
+                          const std::string& indel_signature_name="ID1",
+                          const double& forest_preneoplastic_prob=1)
     {
         using namespace Mutants::Evolutions;
 
-        SampleGenomeMutations sample_mutations("wild-type", germline_mutations);
+        std::list<SampleGenomeMutations> samples;
 
-        auto germline_structure = germline_mutations.duplicate_structure();
-        for (size_t i=0; i<num_of_cells; ++i) {
-            auto mutations = std::make_shared<CellGenomeMutations>(germline_structure);
+        std::uniform_real_distribution<double> pnp_dist;
+        for (const auto& [cell_id, pnp_mutations] : forest.get_preneoplastic_mutations()) {
+            auto sample_common_mutations = germline_mutations.duplicate_structure();
+            for (const auto& sid_spec : pnp_mutations) {
+                if (pnp_dist(generator) < forest_preneoplastic_prob) {
+                    sample_common_mutations.insert(sid_spec);
+                }
+            }
 
-            // place preneoplastic mutations
-            place_SIDs<SBSType>(nullptr, *mutations, preneoplatic_SNV_signature_name,
-                                num_of_preneoplatic_SNVs, Mutation::PRENEOPLASTIC);
-            place_SIDs<IDType>(nullptr, *mutations, preneoplatic_indel_signature_name,
-                               num_of_preneoplatic_indels, Mutation::PRENEOPLASTIC);
+            place_SIDs_in_normal<SBSType>(sample_common_mutations, SNV_signature_name,
+                                          common_SNV_dist);
 
-            sample_mutations.mutations.push_back(mutations);
+            place_SIDs_in_normal<IDType>(sample_common_mutations, indel_signature_name,
+                                         common_indel_dist);
+
+            SampleGenomeMutations sample_mutations("wild-type_" + std::to_string(cell_id),
+                                                   germline_mutations);
+            for (size_t i=0; i<num_of_cells; ++i) {
+                auto mutations = std::make_shared<CellGenomeMutations>(sample_common_mutations);
+
+                place_SIDs_in_normal<SBSType>(sample_common_mutations, SNV_signature_name,
+                                              SNV_dist);
+                place_SIDs_in_normal<IDType>(sample_common_mutations, indel_signature_name,
+                                             indel_dist);
+
+                sample_mutations.mutations.push_back(mutations);
+            }
+
+            samples.push_back(std::move(sample_mutations));
         }
 
-        return sample_mutations;
+        return samples;
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -53,7 +53,7 @@ PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId
     Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id)
 {}
 
-void PhylogeneticForest::node::add_new_mutation(const SID& mutation)
+void PhylogeneticForest::node::add_new_mutation(const MutationSpec<SID>& mutation)
 {
     get_forest().novel_mutations[cell_id].SIDs.insert(mutation);
     get_forest().SID_first_cells[mutation].insert(cell_id);
@@ -204,6 +204,50 @@ SampleGenomeMutations PhylogeneticForest::get_sample_mutations(const std::string
     }
 
     return sample_mutations;
+}
+
+std::map<Mutants::CellId, std::list<MutationSpec<SID>>>
+PhylogeneticForest::get_preneoplastic_mutations() const
+{
+    std::map<Mutants::CellId, std::list<MutationSpec<SID>>> pnp_mutations;
+
+    for (const auto& root: get_roots()) {
+        auto it = novel_mutations.find(root.cell_id);
+
+        if (it != novel_mutations.end()) {
+            std::list<MutationSpec<SID>> root_mutations;
+            for (const auto& sid : it->second.SIDs) {
+                if (sid.nature == SID::PRENEOPLASTIC) {
+                    root_mutations.push_back(sid);
+                }
+            }
+
+            pnp_mutations.insert({root.cell_id, std::move(root_mutations)});
+        }
+    }
+
+    return pnp_mutations;
+}
+
+SampleGenomeMutations PhylogeneticForest::get_germline_sample(const std::string& name,
+                                                              const bool& with_preneoplastic) const
+{
+    SampleGenomeMutations sample(name, germline_mutations);
+
+    if (with_preneoplastic) {
+        for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
+            auto cell_genome = std::make_shared<CellGenomeMutations>(germline_mutations.duplicate_structure());
+            for (const auto& sid_spec : pnp_mutations) {
+                cell_genome->insert(sid_spec);
+            }
+
+            sample.mutations.push_back(std::move(cell_genome));
+        }
+    } else {
+        sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations.duplicate_structure()));
+    }
+
+    return sample;
 }
 
 void PhylogeneticForest::clear()

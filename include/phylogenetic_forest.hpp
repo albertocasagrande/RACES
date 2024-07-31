@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-07-31
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,6 +36,7 @@
 #include "descendant_forest.hpp"
 
 #include "genome_mutations.hpp"
+#include "mutation_spec.hpp"
 
 namespace RACES
 {
@@ -58,8 +59,8 @@ public:
      */
     struct NovelMutations
     {
-        std::set<SID> SIDs;    //!< The newly introduced SID mutations
-        std::set<CNA> CNAs;    //!< The newly introduced CNAs
+        std::set<MutationSpec<SID>> SIDs;    //!< The newly introduced SID mutations
+        std::set<CNA> CNAs;                  //!< The newly introduced CNAs
 
         /**
          * @brief Save novel mutations in an archive
@@ -196,7 +197,7 @@ public:
          * @param mutation is a SID mutation that was introduced in the corresponding
          *      cell and was not present in the cell parent
          */
-        void add_new_mutation(const SID& mutation);
+        void add_new_mutation(const MutationSpec<SID>& mutation);
 
         /**
          * @brief Add a newly introduced mutation
@@ -338,6 +339,32 @@ public:
     }
 
     /**
+     * @brief Get the pre-neoplastic mutations
+     *
+     * @return A map of pre-neoplastic mutations grouped by forest root cell identifier.
+     */
+    std::map<Mutants::CellId, std::list<MutationSpec<SID>>> get_preneoplastic_mutations() const;
+
+    /**
+     * @brief Build a sample containing cells whose genome contains germline mutations
+     * 
+     * This method builds a sample of different cells whose genome contains the forest
+     * germline mutations. If the pre-neoplastic mutations are also requested the sample
+     * contains one cell per forest root. In this case, the genome of each cell contains
+     * the germline mutations and the pre-neoplastic mutations of the associated root.
+     * If the pre-neoplastic mutations are not requested, the returned sample exclusively
+     * contains one cell with the germline mutations.
+     * 
+     * @param name is the name of the resulting sample
+     * @param with_preneoplastic is a Boolean flag to include the pre-neoplastic mutations
+     *   in the resulting sample
+     * @return A sample containing cells whose genomes have the forest germline 
+     *   mutations and, upon request, the pre-neoplastic mutations too
+     */
+    SampleGenomeMutations get_germline_sample(const std::string& name="sample",
+                                              const bool& with_preneoplastic=true) const;
+
+    /**
      * @brief Clear the forest
      */
     void clear();
@@ -351,7 +378,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 0);
+        ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 1);
 
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
                 & novel_mutations
@@ -375,7 +402,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static PhylogeneticForest load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES Phylogenetic Forest", 0);
+        ARCHIVE::read_header(archive, "RACES Phylogenetic Forest", 1);
 
         PhylogeneticForest forest;
 
