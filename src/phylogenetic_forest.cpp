@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.1
- * @date 2024-07-31
+ * @version 1.2
+ * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -236,7 +236,7 @@ SampleGenomeMutations PhylogeneticForest::get_germline_sample(const std::string&
 
     if (with_preneoplastic) {
         for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
-            auto cell_genome = std::make_shared<CellGenomeMutations>(germline_mutations.duplicate_structure());
+            auto cell_genome = std::make_shared<CellGenomeMutations>(germline_mutations.copy_structure());
             for (const auto& sid_spec : pnp_mutations) {
                 cell_genome->insert(sid_spec);
             }
@@ -244,7 +244,7 @@ SampleGenomeMutations PhylogeneticForest::get_germline_sample(const std::string&
             sample.mutations.push_back(std::move(cell_genome));
         }
     } else {
-        sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations.duplicate_structure()));
+        sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations.copy_structure()));
     }
 
     return sample;

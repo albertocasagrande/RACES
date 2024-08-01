@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -384,18 +384,18 @@ std::string Allele::format_id(const RACES::Mutations::AlleleId& allele_id)
     return std::to_string(allele_id);
 }
 
-Allele Allele::duplicate_structure() const
+Allele Allele::copy_structure() const
 {
-    Allele duplicate;
+    Allele copy;
 
-    duplicate.history = history;
+    copy.history = history;
 
     for (const auto& [pos, fragment] : fragments) {
         AlleleFragment d_frag(static_cast<const GenomicRegion&>(fragment));
-        duplicate.fragments.emplace(pos, std::move(d_frag));
+        copy.fragments.emplace(pos, std::move(d_frag));
     }
 
-    return duplicate;
+    return copy;
 }
 
 }   // Mutations

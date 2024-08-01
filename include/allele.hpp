@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -450,16 +450,16 @@ public:
     static std::string format_id(const RACES::Mutations::AlleleId& allele_id);
 
     /**
-     * @brief Duplicate genomic structure
+     * @brief Copy genomic structure
      *
-     * This method duplicates the genomic structure of the current objects.
+     * This method copies the genomic structure of the current objects.
      * It returns an `Allele` object that has the same fragments of the current
      * objects, but misses the original SID mutations and indels.
      *
      * @return an `Allele` object that has the same fragments of the current
      *      objects, but misses the original SID mutations
      */
-    Allele duplicate_structure() const;
+    Allele copy_structure() const;
 
     /**
      * @brief Save an allele in an archive

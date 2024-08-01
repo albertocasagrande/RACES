@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.3
+ * @version 1.4
  * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
@@ -1349,7 +1349,7 @@ public:
         generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(germline_mutations),
-        driver_mutations(germline_mutations.duplicate_structure()),
+        driver_mutations(germline_mutations.copy_structure()),
         driver_storage(driver_storage),
         infinite_sites_model(true)
     {
@@ -1543,7 +1543,7 @@ public:
 
         auto chr_regions = context_index.get_chromosome_regions();
 
-        auto wild_type_structure = germline_mutations.duplicate_structure();
+        auto wild_type_structure = germline_mutations.copy_structure();
 
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
@@ -1634,7 +1634,7 @@ public:
 
         std::uniform_real_distribution<double> pnp_dist;
         for (const auto& [cell_id, pnp_mutations] : forest.get_preneoplastic_mutations()) {
-            auto sample_common_mutations = germline_mutations.duplicate_structure();
+            auto sample_common_mutations = germline_mutations.copy_structure();
             for (const auto& sid_spec : pnp_mutations) {
                 if (pnp_dist(generator) < forest_preneoplastic_prob) {
                     sample_common_mutations.insert(sid_spec);

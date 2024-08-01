@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.1
- * @date 2024-07-31
+ * @version 1.2
+ * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -348,16 +348,16 @@ public:
     bool insert(const MutationSpec<SID>& mutation_spec);
 
     /**
-     * @brief Duplicate genomic structure
+     * @brief Copy genomic structure
      *
-     * This method duplicates the genomic structure of the current objects.
+     * This method copies the genomic structure of the current objects.
      * It returns a `ChromosomeMutations` object that has the same alleles of
      * the current objects, but misses the original SID mutations.
      *
      * @return a `ChromosomeMutations` object that has the same alleles of
      *      the current objects, but misses the original SID mutations
      */
-    ChromosomeMutations duplicate_structure() const;
+    ChromosomeMutations copy_structure() const;
 
     /**
      * @brief Remove a SID mutation
@@ -712,9 +712,9 @@ public:
     bool includes(const SID& mutation) const;
 
     /**
-     * @brief Duplicate genomic structure
+     * @brief Copy genomic structure
      *
-     * This method duplicates the genomic structure of the current objects.
+     * This method copies the genomic structure of the current objects.
      * It returns a `GenomeMutations` object that has the same chromsomes and
      * alleles of the current objects, but misses the original SNVs and indels.
      *
@@ -722,7 +722,7 @@ public:
      *      alleles of the current objects, but misses the original SNVs and
      *      indels
      */
-    GenomeMutations duplicate_structure() const;
+    GenomeMutations copy_structure() const;
 
     /**
      * @brief Save genome mutations in an archive

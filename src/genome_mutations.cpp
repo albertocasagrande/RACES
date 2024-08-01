@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.1
- * @date 2024-07-31
+ * @version 1.2
+ * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -288,21 +288,21 @@ bool ChromosomeMutations::includes(const SID& mutation) const
     return false;
 }
 
-ChromosomeMutations ChromosomeMutations::duplicate_structure() const
+ChromosomeMutations ChromosomeMutations::copy_structure() const
 {
-    ChromosomeMutations duplicate;
+    ChromosomeMutations copy;
 
-    duplicate.identifier = identifier;
-    duplicate.length = length;
-    duplicate.allelic_length = allelic_length;
-    duplicate.CNAs = CNAs;
-    duplicate.next_allele_id = next_allele_id;
+    copy.identifier = identifier;
+    copy.length = length;
+    copy.allelic_length = allelic_length;
+    copy.CNAs = CNAs;
+    copy.next_allele_id = next_allele_id;
 
     for (const auto& [allele_id, allele] : alleles) {
-        duplicate.alleles.emplace(allele_id, allele.duplicate_structure());
+        copy.alleles.emplace(allele_id, allele.copy_structure());
     }
 
-    return duplicate;
+    return copy;
 }
 
 GenomeMutations::GenomeMutations()
@@ -509,15 +509,15 @@ bool GenomeMutations::includes(const SID& mutation) const
     return chr_it->second.includes(mutation);
 }
 
-GenomeMutations GenomeMutations::duplicate_structure() const
+GenomeMutations GenomeMutations::copy_structure() const
 {
-    GenomeMutations duplicate;
+    GenomeMutations copy;
 
     for (const auto& [chr_id, chromosome] : chromosomes) {
-        duplicate.chromosomes.emplace(chr_id, chromosome.duplicate_structure());
+        copy.chromosomes.emplace(chr_id, chromosome.copy_structure());
     }
 
-    return duplicate;
+    return copy;
 }
 
 CellGenomeMutations::CellGenomeMutations():
