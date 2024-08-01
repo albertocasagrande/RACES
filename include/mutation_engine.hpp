@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.1
- * @date 2024-07-31
+ * @version 1.2
+ * @date 2024-08-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -508,13 +508,10 @@ class MutationEngine
      *
      * @param mutation is the mutation to be placed
      * @param cell_mutations are the non-germinal mutations of a cell
-     * @param infinite_sites_model is a Boolean flag to enable/disable the infinite
-     *      sites model
      * @return a list of the identifiers of the available alleles
      */
     std::list<AlleleId> get_available_alleles(const SID& mutation,
-                                              const GenomeMutations& cell_mutations,
-                                              const bool& infinite_sites_model) const
+                                              const GenomeMutations& cell_mutations) const
     {
         std::list<AlleleId> available_alleles;
 
@@ -556,19 +553,15 @@ class MutationEngine
      *
      * @param[in,out] mutation is the SID to place
      * @param[in,out] cell_mutations are the cell mutations
-     * @param[in] infinite_sites_model is a Boolean flag to enable/disable the
-     *      infinite sites model
      * @return `true` if and only if the SID placement has succeed. This
      *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SID(MutationSpec<SID>& mutation, GenomeMutations& cell_mutations,
-                   const bool& infinite_sites_model = false)
+    bool place_SID(MutationSpec<SID>& mutation, GenomeMutations& cell_mutations)
     {
         if (mutation.allele_id == RANDOM_ALLELE) {
-            auto candidate_alleles = get_available_alleles(mutation, cell_mutations,
-                                                           infinite_sites_model);
+            auto candidate_alleles = get_available_alleles(mutation, cell_mutations);
 
             if (candidate_alleles.size()==0) {
                 return false;
