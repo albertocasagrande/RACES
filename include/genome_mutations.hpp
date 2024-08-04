@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.2
- * @date 2024-08-01
+ * @version 1.3
+ * @date 2024-08-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -358,6 +358,13 @@ public:
      *      the current objects, but misses the original SID mutations
      */
     ChromosomeMutations copy_structure() const;
+
+    /**
+     * @brief Duplicate genome alleles
+     * 
+     * This method duplicate all the alleles in the genome
+     */
+    void duplicate_alleles();
 
     /**
      * @brief Remove a SID mutation
@@ -723,6 +730,13 @@ public:
      *      indels
      */
     GenomeMutations copy_structure() const;
+
+    /**
+     * @brief Duplicate genome alleles
+     * 
+     * This method duplicate all the alleles in the genome
+     */
+    void duplicate_alleles();
 
     /**
      * @brief Save genome mutations in an archive

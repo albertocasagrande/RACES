@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-08-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -73,12 +73,73 @@ std::set<MUTATION> build_mutation_set(const std::string& mutant_name,
     return mutation_set;
 }
 
+std::list<DriverMutations::MutationType>
+DriverMutations::get_default_order(const std::list<MutationSpec<SID>>& SIDs,
+                                   const std::list<CNA>& CNAs,
+                                   const bool& wg_doubling)
+{
+    std::list<DriverMutations::MutationType> application_order;
+
+    for (size_t i=0; i<SIDs.size(); ++i) {
+        application_order.push_back(DriverMutations::MutationType::SID_TURN);
+    }
+
+    for (size_t i=0; i<CNAs.size(); ++i) {
+        application_order.push_back(DriverMutations::MutationType::CNA_TURN);
+    }
+
+    if (wg_doubling) {
+        application_order.push_back(DriverMutations::MutationType::WGD_TURN);
+    }
+
+    return application_order;
+}
+
 DriverMutations::DriverMutations(const std::string& mutant_name,
                                  const std::list<MutationSpec<SID>>& SIDs,
-                                 const std::list<CNA>& CNAs):
-    name(mutant_name), SIDs(build_mutation_set(mutant_name, SIDs)),
-    CNAs(build_mutation_set(mutant_name, CNAs))
+                                 const std::list<CNA>& CNAs,
+                                 const bool& wg_doubling):
+    name{mutant_name}, SIDs{SIDs}, CNAs{CNAs},
+    application_order{DriverMutations::get_default_order(SIDs,CNAs,wg_doubling)}
 {}
+
+DriverMutations::DriverMutations(const std::string& mutant_name,
+                                 const std::list<MutationSpec<SID>>& SIDs,
+                                 const std::list<CNA>& CNAs,
+                                 const std::list<MutationType>& application_order):
+    name{mutant_name}, SIDs{SIDs}, CNAs{CNAs},
+    application_order{application_order}
+{
+    size_t SID_count{0}, CNA_count{0};
+    for (auto order_it = application_order.begin();
+         order_it != application_order.end(); ++order_it) {
+
+        switch(*order_it) {
+            case SID_TURN:
+                ++SID_count;
+                break;
+            case CNA_TURN:
+                ++CNA_count;
+                break;
+            case WGD_TURN:
+                break;
+            default:
+                throw std::domain_error("Unsupported driver mutation type.");
+        }
+    }
+
+    if (SID_count != SIDs.size()) {
+        throw std::domain_error("The number of SNVs/indels differs from "
+                                "that of the same kind of mutations "
+                                "in the application order list.");
+    }
+
+    if (CNA_count != CNAs.size()) {
+        throw std::domain_error("The number of CNAs differs from "
+                                "that of the same kind of mutations "
+                                "in the application order list.");
+    }
+}
 
 MutationalProperties::MutationalProperties()
 {}
@@ -87,15 +148,29 @@ MutationalProperties&
 MutationalProperties::add_mutant(const std::string& mutant_name,
                                  const std::map<std::string, PassengerRates>& epistate_passenger_rates,
                                  const std::list<MutationSpec<SID>>& driver_SIDs,
-                                 const std::list<CNA>& driver_CNAs)
+                                 const std::list<CNA>& driver_CNAs,
+                                 const bool& wg_doubling)
+{
+    auto application_order = DriverMutations::get_default_order(driver_SIDs, driver_CNAs, wg_doubling);
+
+    return add_mutant(mutant_name, epistate_passenger_rates, driver_SIDs,
+                      driver_CNAs, application_order);
+}
+
+MutationalProperties&
+MutationalProperties::add_mutant(const std::string& mutant_name,
+                                 const std::map<std::string, PassengerRates>& epistate_passenger_rates,
+                                 const std::list<MutationSpec<SID>>& driver_SIDs,
+                                 const std::list<CNA>& driver_CNAs,
+                                 const std::list<DriverMutations::MutationType>& application_order)
 {
     if (driver_mutations.count(mutant_name)>0) {
         throw std::domain_error("The mutational properties of mutant \""+mutant_name+
                                 "\" has been already added.");
     }
 
-    driver_mutations.insert({mutant_name, {mutant_name, driver_SIDs, driver_CNAs}});
-
+    driver_mutations.insert({mutant_name, {mutant_name, driver_SIDs,
+                                           driver_CNAs, application_order}});
 
     for (const auto& [epistate, passenger_rate] : epistate_passenger_rates) {
         auto species_name = mutant_name+epistate;

@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.4
- * @date 2024-08-01
+ * @version 1.5
+ * @date 2024-08-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -248,7 +248,7 @@ class MutationEngine
 
     GenomeMutations germline_mutations; //!< the germline mutations
 
-    GenomeMutations driver_mutations;   //!< the driver mutations
+    GenomeMutations dm_genome;          //!< the driver mutations genome
 
     DriverStorage driver_storage;       //!< the driver storage
 
@@ -510,20 +510,19 @@ class MutationEngine
      *
      * @param mutation is the mutation to be placed
      * @param cell_mutations are the non-germinal mutations of a cell
-     * @param for_driver is a Boolean flag to seach alleles for driver mutations
      * @return a list of the identifiers of the available alleles
      */
     std::list<AlleleId> get_available_alleles(const SID& mutation,
-                                              const GenomeMutations& cell_mutations,
-                                              const bool& for_driver=false) const
+                                              const GenomeMutations& cell_mutations) const
     {
         std::list<AlleleId> available_alleles;
 
         if (infinite_sites_model) {
             const auto& chr_mutations = cell_mutations.get_chromosome(mutation.chr_id);
-            if (germline_mutations.has_context_free(mutation) &&
-                    (driver_mutations.has_context_free(mutation) || for_driver) &&
-                    chr_mutations.has_context_free(mutation)) {
+            if (germline_mutations.has_context_free(mutation)
+                    && (dm_genome.has_context_free(mutation) 
+                     || (mutation.nature == Mutation::DRIVER))
+                    && chr_mutations.has_context_free(mutation)) {
 
                 for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
                     available_alleles.push_back(allele_id);
@@ -534,7 +533,7 @@ class MutationEngine
         }
 
         auto germline_alleles = germline_mutations.get_alleles_with_context_free_for(mutation);
-        auto driver_alleles = driver_mutations.get_alleles_with_context_free_for(mutation);
+        auto driver_alleles = dm_genome.get_alleles_with_context_free_for(mutation);
 
         if (germline_alleles.size()==0 || driver_alleles.size()==0) {
             return available_alleles;
@@ -549,7 +548,7 @@ class MutationEngine
             if (allele.has_context_free(mutation)
                     && germline_set.count(allele.get_history().front())>0
                     && (driver_set.count(allele.get_history().front())>0
-                        || for_driver)) {
+                        || (mutation.nature == Mutation::DRIVER))) {
                 available_alleles.push_back(allele_id);
             }
         }
@@ -562,24 +561,21 @@ class MutationEngine
      *
      * @param[in,out] mutation is the SID to place
      * @param[in,out] cell_mutations are the cell mutations
-     * @param[in] driver is a Boolean flag to place a driver mutation
      * @return `true` if and only if the SID placement has succeed. This
      *          method returns `false` when the SID cannot be placed
      *          because its context is not free or no allele are available
      *          for it.
      */
-    bool place_SID(MutationSpec<SID>& mutation, GenomeMutations& cell_mutations,
-                   const bool& driver=false)
+    bool place_SID(MutationSpec<SID>& mutation, GenomeMutations& cell_mutations)
     {
-        if (infinite_sites_model && !driver) {
-            if (!driver_mutations.has_context_free(mutation)) {
+        if (infinite_sites_model && mutation.nature != Mutation::DRIVER) {
+            if (!dm_genome.has_context_free(mutation)) {
                 return false;
             }
         }
 
         if (mutation.allele_id == RANDOM_ALLELE) {
-            auto candidate_alleles = get_available_alleles(mutation, cell_mutations,
-                                                           driver);
+            auto candidate_alleles = get_available_alleles(mutation, cell_mutations);
 
             if (candidate_alleles.size()==0) {
                 return false;
@@ -882,46 +878,99 @@ class MutationEngine
     }
 
     /**
+     * @brief Place a mutation
+     * 
+     * @tparam MUTATION_TYPE is the type of mutation to be placed
+     * @param mutation is the mutation to be placed
+     * @param cell_mutations is the cell genome where the mutation must be placed
+     * @return `true` if and only if the mutation was correctly placed
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<Mutation, MUTATION_TYPE>, bool> = true>
+    bool place_mutation(MUTATION_TYPE& mutation, GenomeMutations& cell_mutations)
+    {
+        if constexpr (std::is_base_of_v<CNA, MUTATION_TYPE>) {
+            return place_CNA(mutation, cell_mutations);
+        }
+
+        if constexpr (std::is_base_of_v<SID, MUTATION_TYPE>) {
+            return place_SID(mutation, cell_mutations);
+        }
+
+        throw std::runtime_error("Unsupported mutation type.");
+    }
+
+    /**
+     * @brief Place a driver mutation
+     * 
+     * @tparam MUTATION_TYPE is the type of mutation
+     * @param mutation is the placed mutation
+     * @param node is the node in which the mutation first occurred
+     * @param mutant_name is the name of the mutant which the mutation is
+     *   a driver of
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<Mutation, MUTATION_TYPE>, bool> = true>
+    void place_driver_mutation(MUTATION_TYPE& mutation, PhylogeneticForest::node& node,
+                               GenomeMutations& cell_mutations,
+                               const std::string& mutant_name)
+    {
+        mutation.nature = Mutation::DRIVER;
+        mutation.cause = mutant_name;
+
+        if (place_mutation(mutation, cell_mutations)) {
+            node.add_new_mutation(mutation);
+        } else {
+            std::ostringstream oss;
+
+            oss << mutant_name << "'s driver mutation "
+                << mutation << " cannot be placed.";
+
+            throw std::runtime_error(oss.str());
+        }
+    }
+
+    /**
      * @brief Place the driver mutations
      *
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
-     * @param cell_statistics are the statistics of the cell mutations
      * @param driver_mutations is the map associating mutant ids and mutations
      */
-    void place_driver_mutations(PhylogeneticForest::node& node,
-                                GenomeMutations& cell_mutations,
+    void place_driver_mutations(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
                                 const std::map<Mutants::MutantId, DriverMutations>& driver_mutations)
     {
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
             const auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
 
-            for (MutationSpec<SID> mutation : mutant_mp.SIDs) {
-                mutation.cause = mutant_mp.name;
-                mutation.nature = Mutation::DRIVER;
-                if (place_SID(mutation, cell_mutations, true)) {
-                    node.add_new_mutation(mutation);
-                } else {
-                    std::ostringstream oss;
+            auto SID_it = mutant_mp.SIDs.begin();
+            auto CNA_it = mutant_mp.CNAs.begin();
 
-                    oss << mutant_mp.name << "'s driver mutation "
-                        << mutation << " cannot be placed.";
+            for (auto order_it = mutant_mp.application_order.begin();
+                order_it != mutant_mp.application_order.end(); ++order_it) {
 
-                    throw std::runtime_error(oss.str());
-                }
-            }
+                switch(*order_it) {
+                    case DriverMutations::SID_TURN:
+                    {
+                        auto mutation = *SID_it;
+                        ++SID_it;
 
-            for (auto cna : mutant_mp.CNAs) {
-                cna.nature = Mutation::DRIVER;
-                if (place_CNA(cna, cell_mutations)) {
-                    node.add_new_mutation(cna);
-                } else {
-                    std::ostringstream oss;
+                        place_driver_mutation(mutation, node, cell_mutations, mutant_mp.name);
+                    }
+                    break;
+                    case DriverMutations::CNA_TURN:
+                    {
+                        auto mutation = *CNA_it;
+                        ++CNA_it;
 
-                    oss << mutant_mp.name << "'s driver mutation "
-                        << cna << " cannot be placed.";
-
-                    throw std::runtime_error(oss.str());
+                        place_driver_mutation(mutation, node, cell_mutations, mutant_mp.name);
+                    }
+                    break;
+                    case DriverMutations::WGD_TURN:
+                        cell_mutations.duplicate_alleles();
+                        break;
+                    default:
+                        throw std::runtime_error("Unsupported driver mutation type.");
                 }
             }
         }
@@ -1276,7 +1325,7 @@ class MutationEngine
 
     /**
      * @brief Place SNV and indels in normal cells
-     * 
+     *
      * @tparam MUTATION_TYPE is the type of the SIDs
      * @param cell_mutations is the cell genome
      * @param signature_name is the name of the signature of the SIDs
@@ -1349,7 +1398,7 @@ public:
         generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(germline_mutations),
-        driver_mutations(germline_mutations.copy_structure()),
+        dm_genome(germline_mutations.copy_structure()),
         driver_storage(driver_storage),
         infinite_sites_model(true)
     {
@@ -1377,18 +1426,49 @@ public:
      *          passenger rate
      * @param driver_SIDs is a list of driver SIDs
      * @param driver_CNAs is a list of driver CNAs
+     * @param wg_doubling is a Boolean flag to enable whole genome doubling
      * @return a reference to the updated object
      */
     MutationEngine& add_mutant(const std::string& name,
                                const std::map<std::string, PassengerRates>& epistate_passenger_rates,
                                const std::list<MutationSpec<SID>>& driver_SIDs={},
-                               const std::list<CNA>& driver_CNAs={})
+                               const std::list<CNA>& driver_CNAs={},
+                               const bool& wg_doubling=false)
+    {
+        auto application_order = DriverMutations::get_default_order(driver_SIDs, driver_CNAs,
+                                                                    wg_doubling);
+
+        return add_mutant(name, epistate_passenger_rates, driver_SIDs,
+                          driver_CNAs, application_order);
+    }
+
+    /**
+     * @brief Add the properties of a mutant
+     *
+     * This method add the properties of a mutant (i.e., its passenger rates,
+     * its driver mutations) and all its species to the mutations engine.
+     *
+     * @param name is the name of the mutant
+     * @param epistate_passenger_rates is a map from epigenomic status to
+     *          passenger rate
+     * @param driver_SIDs is a list of driver SIDs
+     * @param driver_CNAs is a list of driver CNAs
+     * @param application_order is the list of application order
+     * @return a reference to the updated object
+     */
+    MutationEngine& add_mutant(const std::string& name,
+                               const std::map<std::string, PassengerRates>& epistate_passenger_rates,
+                               const std::list<MutationSpec<SID>>& driver_SIDs,
+                               const std::list<CNA>& driver_CNAs,
+                               const std::list<DriverMutations::MutationType>& application_order)
     {
         mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SIDs,
-                                         driver_CNAs);
+                                         driver_CNAs, application_order);
 
-        for (auto mut_spec : driver_SIDs) {
-            place_SID(mut_spec, driver_mutations, true);
+        for (auto sid: driver_SIDs) {
+            sid.allele_id = RANDOM_ALLELE;
+            sid.nature = Mutation::DRIVER;
+            place_SID(sid, dm_genome);
         }
 
         return *this;

@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.2
- * @date 2024-08-01
+ * @version 1.3
+ * @date 2024-08-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -305,6 +305,23 @@ ChromosomeMutations ChromosomeMutations::copy_structure() const
     return copy;
 }
 
+void ChromosomeMutations::duplicate_alleles()
+{
+    auto it = alleles.begin();
+    auto old_allele_id = next_allele_id;
+
+    while (it != alleles.end()) {
+        if (it->first < old_allele_id) {
+            alleles.emplace(next_allele_id, it->second);
+            ++next_allele_id;
+
+            ++it;
+        } else {
+            it = alleles.end();
+        }
+    }
+}
+
 GenomeMutations::GenomeMutations()
 {}
 
@@ -518,6 +535,13 @@ GenomeMutations GenomeMutations::copy_structure() const
     }
 
     return copy;
+}
+
+void GenomeMutations::duplicate_alleles()
+{
+    for (auto& [chr_id, chromosome] : chromosomes) {
+        chromosome.duplicate_alleles();
+    }
 }
 
 CellGenomeMutations::CellGenomeMutations():
