@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.7
- * @date 2024-07-31
+ * @version 1.8
+ * @date 2024-08-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -901,7 +901,9 @@ private:
 
     size_t num_of_reads;    //!< Number of already placed reads
 
-    size_t hamming_distance_threshold;    //!< Hamming distance threshold for reads
+    size_t hamming_distance_threshold;  //!< Hamming distance threshold for reads
+
+    std::string template_name_prefix;   //!< The template name prefix
 
     /**
      * @brief A structure to maintain read simulation data
@@ -985,12 +987,13 @@ private:
      * @return the name of the template whose identifier is
      *      `template_id`.
      */
-    static std::string get_template_name(const ChromosomeId& chr_id,
-                                         const size_t& template_id)
+    std::string get_template_name(const ChromosomeId& chr_id,
+                                  const size_t& template_id) const
     {
         std::ostringstream oss_name;
 
-        oss_name << "r" << static_cast<size_t>(chr_id)
+        oss_name << template_name_prefix
+                 << static_cast<size_t>(chr_id)
                  << std::setfill('0') << std::setw(11)
                  << template_id;
 
@@ -1484,17 +1487,20 @@ private:
      * @param insert_size_distribution is the insert size distribution 
      * @param mode is the SAM generator output mode
      * @param save_coverage is a flag to enable/disable storage of coverage data
+     * @param template_name_prefix is the template name prefix
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::filesystem::path& output_directory,
                   const std::filesystem::path& ref_genome_filename,
                   const ReadType read_type, const size_t& read_size,
                   const std::binomial_distribution<uint32_t>& insert_size_distribution,
-                  const Mode mode, const bool save_coverage, const int& seed):
+                  const Mode mode, const bool save_coverage,
+                  const std::string& template_name_prefix, const int& seed):
         read_type(read_type), read_size(read_size), insert_size(insert_size_distribution),
         write_SAM(false), save_coverage(save_coverage), random_generator(seed),
         output_directory(output_directory), ref_genome_filename(ref_genome_filename),
-        num_of_reads(0), hamming_distance_threshold(30)
+        num_of_reads(0), hamming_distance_threshold(30),
+        template_name_prefix(template_name_prefix)
     {
         namespace fs = std::filesystem;
 
@@ -1543,7 +1549,7 @@ public:
         read_type(ReadType::SINGLE_READ), read_size(0),
         insert_size(std::binomial_distribution<uint32_t>(0,0)), write_SAM(false),
         save_coverage(false), random_generator(), output_directory(""), ref_genome_filename(""),
-        num_of_reads(0), hamming_distance_threshold(30)
+        num_of_reads(0), hamming_distance_threshold(30), template_name_prefix("r")
     {}
 
     /**
@@ -1554,14 +1560,17 @@ public:
      * @param read_size is the size of the output reads
      * @param mode is the SAM generator output mode
      * @param save_coverage is a flag to enable/disable storage of coverage data
+     * @param template_name_prefix is the template name prefix
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::filesystem::path& output_directory,
                   const std::filesystem::path& ref_genome_filename,
                   const size_t& read_size, const Mode mode=Mode::CREATE,
-                  const bool& save_coverage=false, const int& seed=0):
+                  const bool& save_coverage=false,
+                  const std::string& template_name_prefix="r", const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::SINGLE_READ, read_size,
-                      std::binomial_distribution<uint32_t>(0, 0), mode, save_coverage, seed)
+                      std::binomial_distribution<uint32_t>(0, 0), mode, save_coverage,
+                      template_name_prefix, seed)
     {}
 
     /**
@@ -1573,15 +1582,17 @@ public:
      * @param insert_size_distribution is the insert size distribution
      * @param mode is the SAM generator output mode
      * @param save_coverage is a flag to enable/disable storage of coverage data
+     * @param template_name_prefix is the template name prefix
      * @param seed is the random generator seed
      */
     ReadSimulator(const std::filesystem::path& output_directory,
                   const std::filesystem::path& ref_genome_filename,
                   const size_t& read_size,
                   const std::binomial_distribution<uint32_t>& insert_size, const Mode mode=Mode::CREATE,
-                  const bool& save_coverage=false, const int& seed=0):
+                  const bool& save_coverage=false,
+                  const std::string& template_name_prefix="r", const int& seed=0):
         ReadSimulator(output_directory, ref_genome_filename, ReadType::PAIRED_READ, read_size,
-                      insert_size, mode, save_coverage, seed)
+                      insert_size, mode, save_coverage, template_name_prefix, seed)
     {}
 
     /**

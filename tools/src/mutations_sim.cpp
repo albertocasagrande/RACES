@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 1.2
- * @date 2024-07-31
+ * @version 1.3
+ * @date 2024-08-04
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -461,10 +461,11 @@ class MutationsSimulator : public BasicExecutable
 
                 std::binomial_distribution<uint32_t> insert_size_dist(t,p);
                 read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size,
-                                                 insert_size_dist, read_simulator_output_mode, true, seed);
+                                                 insert_size_dist, read_simulator_output_mode, true,
+                                                 "r", seed);
             } else {
                 read_simulator = ReadSimulator<>(seq_output_directory, ref_genome_filename, read_size,
-                                                 read_simulator_output_mode, true, seed);
+                                                 read_simulator_output_mode, true, "r", seed);
             }
         }
 
