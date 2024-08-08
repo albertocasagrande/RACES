@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.3
- * @date 2024-08-04
+ * @version 1.4
+ * @date 2024-08-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -322,6 +322,50 @@ void ChromosomeMutations::duplicate_alleles()
     }
 }
 
+std::map<ChrPosition, AllelicType>
+ChromosomeMutations::get_allelic_types(const std::set<ChrPosition>& break_points,
+                                       const size_t& min_allelic_size) const
+{
+    size_t allelic_size{min_allelic_size};
+    std::map<ChrPosition, std::map<AlleleId, uint32_t>> allele_counter;
+    for (const auto& [allele_id, allele] : get_alleles()) {
+        const auto orig_allele_id = allele.get_history().front();
+        if (orig_allele_id+1>allelic_size) {
+            allelic_size = orig_allele_id+1;
+        }
+        for (const auto& [pos, fragment] : allele.get_fragments()) {
+            auto bp_it = break_points.find(pos.position);
+
+            if (bp_it == break_points.end()) {
+                std::ostringstream oss;
+
+                oss << "The breakpoint " << pos << " is not in "
+                    << "the provided breakpoint set.";
+                throw std::domain_error(oss.str());
+            }
+
+            const auto fragment_end = fragment.get_final_position();
+            while (*bp_it < fragment_end) {
+                ++(allele_counter[*bp_it][orig_allele_id]);
+                ++bp_it;
+            }
+        }
+    }
+
+    std::map<ChrPosition, AllelicType> allelic_map;
+    for (const auto& [pos, counter] : allele_counter) {
+        AllelicType atype(allelic_size, 0);
+
+        for (const auto& [allele_id, count] : counter) {
+            atype[allele_id] = count;
+        }
+
+        allelic_map[pos] = atype;
+    }
+
+    return allelic_map;
+}
+
 GenomeMutations::GenomeMutations()
 {}
 
@@ -542,6 +586,36 @@ void GenomeMutations::duplicate_alleles()
     for (auto& [chr_id, chromosome] : chromosomes) {
         chromosome.duplicate_alleles();
     }
+}
+
+std::map<ChromosomeId, std::map<ChrPosition, AllelicType>>
+GenomeMutations::get_allelic_types(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
+                                 const size_t& min_allelic_size) const
+{
+    std::map<ChromosomeId, std::map<ChrPosition, AllelicType>> allelic_map;
+    for (const auto& [chr_id, chr] : get_chromosomes()) {
+        allelic_map[chr_id] = chr.get_allelic_types(break_points.at(chr_id), min_allelic_size);
+    }
+
+    return allelic_map;
+}
+
+std::map<ChromosomeId, std::set<ChrPosition>>
+GenomeMutations::get_CNA_break_points() const
+{
+    std::map<ChromosomeId, std::set<ChrPosition>> b_points;
+
+    for (const auto& [chr_id, chr] : get_chromosomes()) {
+        auto& chr_b_points = b_points[chr_id];
+        for (const auto& [allele_id, allele] : chr.get_alleles()) {
+            for (const auto& [pos, fragment] : allele.get_fragments()) {
+                chr_b_points.insert(fragment.get_final_position());
+                chr_b_points.insert(fragment.get_final_position()+1);
+            }
+        }
+    }
+
+    return b_points;
 }
 
 CellGenomeMutations::CellGenomeMutations():
