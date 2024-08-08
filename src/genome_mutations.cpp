@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.4
+ * @version 1.5
  * @date 2024-08-08
  *
  * @copyright Copyright (c) 2023-2024
@@ -204,6 +204,8 @@ bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, con
         return false;
     }
 
+    allelic_length -= genomic_region.size();
+
     allele.remove(genomic_region);
 
     CNAs.push_back(CNA::new_deletion(genomic_region.get_begin(), genomic_region.size(),
@@ -320,6 +322,8 @@ void ChromosomeMutations::duplicate_alleles()
             it = alleles.end();
         }
     }
+
+    allelic_length *= 2;
 }
 
 std::map<ChrPosition, AllelicType>
@@ -415,7 +419,7 @@ GenomeMutations::Length GenomeMutations::size() const
 
 GenomeMutations::Length GenomeMutations::allelic_size() const
 {
-    Length allelic_size = 0;
+    Length allelic_size{0};
 
     for (const auto& [chr_id, chromosome]: chromosomes) {
         allelic_size += chromosome.allelic_size();
