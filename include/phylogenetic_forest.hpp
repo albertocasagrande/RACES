@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.1
- * @date 2024-07-31
+ * @version 1.2
+ * @date 2024-08-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -31,6 +31,7 @@
 #ifndef __RACES_PHYLOGENETIC_FOREST__
 #define __RACES_PHYLOGENETIC_FOREST__
 
+#include <map>
 #include <memory>
 
 #include "descendant_forest.hpp"
@@ -363,6 +364,40 @@ public:
      */
     SampleGenomeMutations get_germline_sample(const std::string& name="sample",
                                               const bool& with_preneoplastic=true) const;
+
+    /**
+     * @brief Get the CNA break points
+     * 
+     * @return The list of the CNA break points grouped by chromosome
+     *   identifier
+     */
+    std::map<ChromosomeId, std::set<ChrPosition>> get_CNA_break_points() const;
+
+    /**
+     * @brief Get the allelic count of a sample
+     * 
+     * @param sample_name is the sample name
+     * @param min_allelic_size is the minimum number of alleles to report
+     * @return A map that, for each chromosome and for each break point, reports 
+     *   the number of cells in the sample per allelic type
+     */
+    std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
+    get_allelic_count(const std::string& sample_name,
+                      const size_t& min_allelic_size=0) const;
+
+    /**
+     * @brief Get the allelic count of a set of cells
+     * 
+     * @param cell_ids is a list of cell identifers corresponding to leaves in
+     *   the phylogenetic forest
+     * @param min_allelic_size is the minimum number of alleles to report
+     * @return A map that, for each chromosome and for each break point, reports 
+     *   the number of cells among those in corresponding to `cell_ids` per
+     *   allelic type
+     */
+    std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
+    get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
+                      const size_t& min_allelic_size) const;
 
     /**
      * @brief Clear the forest

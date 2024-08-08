@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.2
- * @date 2024-08-01
+ * @version 1.3
+ * @date 2024-08-08
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -248,6 +248,73 @@ SampleGenomeMutations PhylogeneticForest::get_germline_sample(const std::string&
     }
 
     return sample;
+}
+
+std::map<ChromosomeId, std::set<ChrPosition>>
+PhylogeneticForest::get_CNA_break_points() const
+{
+    std::map<ChromosomeId, std::set<ChrPosition>> b_points;
+
+    for (const auto& [cell_id, cell_ptr] : get_leaves_mutations()) {
+        for (const auto& [chr_id, chr] : cell_ptr->get_chromosomes()) {
+            auto& chr_b_points = b_points[chr_id];
+            for (const auto& [allele_id, allele] : chr.get_alleles()) {
+                for (const auto& [pos, fragment] : allele.get_fragments()) {
+                    chr_b_points.insert(fragment.get_initial_position());
+                    chr_b_points.insert(fragment.get_final_position()+1);
+                }
+            }
+        }
+    }
+
+    return b_points;
+}
+
+std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
+PhylogeneticForest::get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
+                                      const size_t& min_allelic_size) const
+{
+    auto b_points = get_CNA_break_points();
+
+    std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>> allelic_count;
+
+    std::greater<uint32_t> cmp;
+
+    for (const auto& cell_id : cell_ids) {
+        auto cell_it = leaves_mutations.find(cell_id);
+        if (cell_it == leaves_mutations.end()) {
+            throw std::domain_error("The cell "+std::to_string(cell_id)
+                                    + " is not a leaf of the phylogenetic"
+                                    + "forest.");
+        }
+
+        auto allelic_map = cell_it->second->get_allelic_types(b_points, min_allelic_size);
+
+        for (const auto& [chr_id, chr_allelic_map] : allelic_map) {
+            auto& chr_allelic_count = allelic_count[chr_id];
+            for (auto [pos, atype] : chr_allelic_map) {
+                std::sort(atype.begin(), atype.end(), cmp);
+                ++(chr_allelic_count[pos][atype]);
+            }
+        }
+    }
+
+    return allelic_count;
+}
+
+
+std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
+PhylogeneticForest::get_allelic_count(const std::string& sample_name,
+                                      const size_t& min_allelic_size) const
+{
+    for (const auto& sample : get_samples()) {
+        if (sample.get_name() == sample_name) {
+            return get_allelic_count(sample.get_cell_ids(), min_allelic_size);
+        }
+    }
+
+    throw std::domain_error("\"" + sample_name +"\" is not a sample of the "
+                            + "phylogenetic forest");
 }
 
 void PhylogeneticForest::clear()
