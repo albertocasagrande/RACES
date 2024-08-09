@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 1.1
- * @date 2024-08-01
+ * @version 1.2
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -75,7 +75,7 @@ bool AlleleFragment::has_context_free(const SID& mutation) const
     return true;
 }
 
-bool AlleleFragment::insert(const SID& mutation)
+bool AlleleFragment::apply(const SID& mutation)
 {
     if (!contains(mutation)) {
         throw std::out_of_range("The allele fragment does not contain the SNV");
@@ -257,7 +257,7 @@ bool Allele::has_context_free(const SID& mutation) const
     return it->second.has_context_free(mutation);
 }
 
-bool Allele::insert(const SID& mutation)
+bool Allele::apply(const SID& mutation)
 {
     if (!has_context_free(mutation)) {
         return false;
@@ -266,7 +266,7 @@ bool Allele::insert(const SID& mutation)
     auto it = find_not_after(fragments, static_cast<const GenomicPosition&>(mutation));
 
     if (it != fragments.end() && it->second.contains(mutation)) {
-        return it->second.insert(mutation);
+        return it->second.apply(mutation);
     }
 
     return false;

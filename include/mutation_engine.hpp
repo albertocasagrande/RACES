@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.6
- * @date 2024-08-06
+ * @version 1.7
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -585,7 +585,7 @@ class MutationEngine
         }
 
         // try to apply the selected SID
-        return cell_mutations.insert(mutation);
+        return cell_mutations.apply(mutation);
     }
 
     /**
@@ -864,17 +864,9 @@ class MutationEngine
             return false;
         }
 
-        const auto cna_region = cna.get_region();
-        switch(cna.type) {
-            case CNA::Type::AMPLIFICATION:
-                return chr_mutations.amplify_region(cna_region, cna.source,
-                                                    cna.dest, cna.nature);
-            case CNA::Type::DELETION:
-                return chr_mutations.remove_region(cna_region, cna.dest,
-                                                   cna.nature);
-            default:
-                throw std::runtime_error("Unsupported CNA type");
-        }
+        const CNA& const_cna = cna;
+
+        return chr_mutations.apply(const_cna);
     }
 
     /**

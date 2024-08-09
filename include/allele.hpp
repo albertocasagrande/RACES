@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 1.1
- * @date 2024-08-01
+ * @version 1.2
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -151,16 +151,16 @@ public:
     bool has_context_free(const SID& mutation) const;
 
     /**
-     * @brief Insert a new SID mutation
+     * @brief Applied a new SID mutation
      *
-     * This method tries to insert a new SID mutation. It succeeds
+     * This method tries to apply a new SID mutation. It succeeds
      * if no other SID mutations are contained in the context.
      *
-     * @param mutation is the SID mutation to be inserted
-     * @return `true` if and only if the mutation insertion
+     * @param mutation is the SID mutation to be applied
+     * @return `true` if and only if the mutation application
      *          has succeeded
      */
-    bool insert(const SID& mutation);
+    bool apply(const SID& mutation);
 
     /**
      * @brief Remove a SID mutation
@@ -368,16 +368,16 @@ public:
     bool has_context_free(const SID& mutation) const;
 
     /**
-     * @brief Insert a new SID mutation
+     * @brief Apply a new SID mutation
      *
-     * This method tries to insert a new SID mutation. It succeeds
+     * This method tries to apply a new SID mutation. It succeeds
      * if no other SIDs are contained in the context.
      *
-     * @param mutation is the SID to insert
-     * @return `true` if and only if the SID insertion
+     * @param mutation is the SID to applied
+     * @return `true` if and only if the SID application
      *          has succeeded
      */
-    bool insert(const SID& mutation);
+    bool apply(const SID& mutation);
 
     /**
      * @brief Remove a SID mutation

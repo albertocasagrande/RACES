@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing RACES::Mutations::GenomeMutations class
- * @version 0.11
- * @date 2024-06-09
+ * @version 1.0
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(genome_sizes)
     BOOST_CHECK_EQUAL(2*genome_mutations.size(), genome_mutations.allelic_size());
 }
 
-BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
+BOOST_AUTO_TEST_CASE(genome_applied_SNVs)
 {
     using namespace RACES::Mutations;
 
@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
 
     auto test_genome_mutations = genome_mutations;
 
-    // insert snv0 in allele 0: ok
-    BOOST_CHECK(test_genome_mutations.insert(snv0, 0));
+    // apply snv0 in allele 0: ok
+    BOOST_CHECK(test_genome_mutations.apply(snv0, 0));
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
@@ -107,23 +107,23 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         // snv in a wrong position
         SID snv_err(snv0.chr_id, chr.size()+1, 'A', 'G');
 
-        BOOST_CHECK_THROW(test_genome_mutations.insert(snv_err, 0), std::domain_error);
+        BOOST_CHECK_THROW(test_genome_mutations.apply(snv_err, 0), std::domain_error);
     }
 
-    // insert snv0 in allele 1: true (free context, non-free context in a different allele)
-    BOOST_CHECK(test_genome_mutations.insert(snv0, 1));
+    // apply snv0 in allele 1: true (free context, non-free context in a different allele)
+    BOOST_CHECK(test_genome_mutations.apply(snv0, 1));
 
-    // insert snv0 in allele 1: false (non-free context)
-    BOOST_CHECK(!test_genome_mutations.insert(snv0, 0));
+    // apply snv0 in allele 1: false (non-free context)
+    BOOST_CHECK(!test_genome_mutations.apply(snv0, 0));
 
-    // insert snv1 in allele 1: false (non-free context)
-    BOOST_CHECK(!test_genome_mutations.insert(snv1, 1));
+    // apply snv1 in allele 1: false (non-free context)
+    BOOST_CHECK(!test_genome_mutations.apply(snv1, 1));
 
-    // insert snv2 in allele 1: false (non-free context)
-    BOOST_CHECK(!test_genome_mutations.insert(snv2, 1));
+    // apply snv2 in allele 1: false (non-free context)
+    BOOST_CHECK(!test_genome_mutations.apply(snv2, 1));
 
-    // insert snv3 in allele 7: ko (unknown allele)
-    BOOST_CHECK_THROW(test_genome_mutations.insert(snv3, 7), std::out_of_range);
+    // apply snv3 in allele 7: ko (unknown allele)
+    BOOST_CHECK_THROW(test_genome_mutations.apply(snv3, 7), std::out_of_range);
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv3.chr_id);
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(genome_insert_SNVs)
         BOOST_CHECK_EQUAL(chr_allele.at(1).get_mutations().size(), 0);
     }
 
-    // insert snv3 in allele 1: ok (same position, different chromosome)
-    BOOST_CHECK(test_genome_mutations.insert(snv3, 1));
+    // apply snv3 in allele 1: ok (same position, different chromosome)
+    BOOST_CHECK(test_genome_mutations.apply(snv3, 1));
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv3.chr_id);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(genome_delete_SNVs)
         BOOST_CHECK_THROW(test_genome_mutations.remove_mutation(snv_err), std::domain_error);
     }
 
-    test_genome_mutations.insert(snv0, 0);
+    test_genome_mutations.apply(snv0, 0);
 
     {
         const auto chr = test_genome_mutations.get_chromosomes().at(snv0.chr_id);
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
 
     auto test_genome_mutations = genome_mutations;
 
-    // insert snv0 (chromosome1, position 32)
-    test_genome_mutations.insert(snv0, 0);
+    // apply snv0 (chromosome1, position 32)
+    test_genome_mutations.apply(snv0, 0);
 
     // amplify allele 0 from 32 to 64: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_32_64, 0));
@@ -243,14 +243,14 @@ BOOST_AUTO_TEST_CASE(genome_amplify_region)
                           std::domain_error);
     }
 
-    // insert snv1 (chromosome1, position 64)
-    test_genome_mutations.insert(snv1, 0);
+    // apply snv1 (chromosome1, position 64)
+    test_genome_mutations.apply(snv1, 0);
 
     // amplify allele 0 from 10 to 110: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_10_110, 0));
 
-    // insert snv2 (chromosome1, position 110)
-    test_genome_mutations.insert(snv2, 0);
+    // apply snv2 (chromosome1, position 110)
+    test_genome_mutations.apply(snv2, 0);
 
     // amplify allele 0 from 60 to 80: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_60_80, 0));
@@ -290,20 +290,20 @@ BOOST_AUTO_TEST_CASE(genome_remove_region)
 
     auto test_genome_mutations = genome_mutations;
 
-    // insert snv0 (chromosome1, position 32)
-    test_genome_mutations.insert(snv0, 0);
+    // apply snv0 (chromosome1, position 32)
+    test_genome_mutations.apply(snv0, 0);
 
     // amplify from 32 to 64: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_32_64, 0));
 
-    // insert snv1 (chromosome1, position 64)
-    BOOST_CHECK(test_genome_mutations.insert(snv1, 0));
+    // apply snv1 (chromosome1, position 64)
+    BOOST_CHECK(test_genome_mutations.apply(snv1, 0));
 
     // amplify from 10 to 110: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_10_110, 0));
 
-    // insert snv2 (chromosome1, position 110)
-    test_genome_mutations.insert(snv2, 0);
+    // apply snv2 (chromosome1, position 110)
+    test_genome_mutations.apply(snv2, 0);
 
     // amplify from 60 to 80: ok (allele 0 available)
     BOOST_CHECK(test_genome_mutations.amplify_region(gr_60_80, 0));

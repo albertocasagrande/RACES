@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.4
- * @date 2024-08-08
+ * @version 1.5
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -79,6 +79,18 @@ private:
     std::list<CNA> CNAs;        //!< the occurred CNAs
 
     AlleleId next_allele_id;    //!< the identifier of the next allele
+
+    /**
+     * @brief Apply a CNA
+     * 
+     * This function applies a CNA. Whenever the `CNA::dest` member of the 
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     * the destination allele identifier.
+     * 
+     * @param[in,out] cna is the CNA to be applied
+     * @return `true` if and only if the CNA has been successfully applied
+     */
+    bool apply_CNA(CNA& cna);
 
 public:
     /**
@@ -319,13 +331,41 @@ public:
                        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
-     * @brief Insert a SID mutation in a context free position
+     * @brief Apply a CNA
+     * 
+     * This function applies a CNA. Whenever the `CNA::dest` member of the 
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     * the destination allele identifier.
+     * 
+     * @param[in,out] cna is the CNA to be applied
+     * @return `true` if and only if the CNA has been successfully applied
+     */
+    inline bool apply(CNA& cna)
+    {
+        return apply_CNA(cna);
+    }
+
+    /**
+     * @brief Apply a CNA
+     * 
+     * @param[in] cna is the CNA to be applied
+     * @return `true` if and only if the CNA has been successfully applied
+     */
+    inline bool apply(const CNA& cna)
+    {
+        auto cna_copy{cna};
+
+        return apply_CNA(cna_copy);
+    }
+
+    /**
+     * @brief Apply a SID mutation in a context free position
      *
-     * This method tries to insert a SID mutation. If the chromosome contains another
+     * This method tries to apply a SID mutation. If the chromosome contains another
      * SID mutation occurring in the mutational context of the specified SID, then
-     * the insertion fails.
+     * the application fails.
      *
-     * @param mutation is the SID mutation to be inserted in the chromosome
+     * @param mutation is the SID mutation to be applied in the chromosome
      * @param allele_id is the identifier of the allele in which the SID mutation
      *      must be placed
      * @return `true` if and only if the chromosome do not contain any other
@@ -334,23 +374,23 @@ public:
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
-    bool insert(const SID& mutation, const AlleleId& allele_id);
+    bool apply(const SID& mutation, const AlleleId& allele_id);
 
     /**
-     * @brief Insert a SID mutation in a context free position
+     * @brief Apply a SID mutation in a context free position
      *
-     * This method tries to insert a SID mutation. If the chromosome contains another
+     * This method tries to apply a SID mutation. If the chromosome contains another
      * SID mutation occurring in the mutational context of the specified SID, then
-     * the insertion fails.
+     * the application fails.
      *
-     * @param mutation_spec is the SID mutation to be inserted in the chromosome
+     * @param mutation_spec is the SID mutation to be applied in the chromosome
      * @return `true` if and only if the chromosome do not contain any other
      *      SID mutations in `mutation`'s mutational context
      * @throw std::domain_error `mutation` does not lays in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
-    bool insert(const MutationSpec<SID>& mutation_spec);
+    bool apply(const MutationSpec<SID>& mutation_spec);
 
     /**
      * @brief Copy genomic structure
@@ -457,6 +497,17 @@ class GenomeMutations
 {
     std::map<ChromosomeId, ChromosomeMutations> chromosomes;     //!< the chromosomes
 
+    /**
+     * @brief Apply a CNA
+     * 
+     * This function applies a CNA. Whenever the `CNA::dest` member of the 
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     * the destination allele identifier.
+     * 
+     * @param[in,out] cna is the CNA to be applied
+     * @return `true` if and only if the CNA has been successfully applied
+     */
+    bool apply_CNA(CNA& cna);
 public:
     /**
      * @brief The genome length type
@@ -674,13 +725,41 @@ public:
                        const Mutation::Nature& nature=Mutation::UNDEFINED);
 
     /**
-     * @brief Insert a SID mutation in a context free position
+     * @brief Apply a CNA
+     * 
+     * This function applies a CNA. Whenever the `CNA::dest` member of the 
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     * the destination allele identifier.
+     * 
+     * @param[in,out] cna is the CNA to be applied
+     * @return `true` if and only if the CNA has been successfully applied
+     */
+    inline bool apply(CNA& cna)
+    {
+        return apply_CNA(cna);
+    }
+
+    /**
+     * @brief Apply a CNA
+     * 
+     * @param[in] cna is the CNA to be applied
+     * @return `true` if and only if the CNA has been successfully applied
+     */
+    inline bool apply(const CNA& cna)
+    {
+        auto cna_copy{cna};
+
+        return apply_CNA(cna_copy);
+    }
+
+    /**
+     * @brief Apply a SID mutation in a context free position
      *
-     * This method tries to insert a SID mutation. If the chromosome contains another
+     * This method tries to apply a SID mutation. If the chromosome contains another
      * SID mutation occurring in the mutational context of the specified SID, then
-     * the insertion fails.
+     * the application fails.
      *
-     * @param mutation is the SID mutation to be inserted in the chromosome
+     * @param mutation is the SID mutation to be applied in the chromosome
      * @param allele_id is the identifier of the allele in which the SID mutation
      *      must be placed
      * @return `true` if and only if the chromosome do not contain any other
@@ -689,23 +768,23 @@ public:
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
-    bool insert(const SID& mutation, const AlleleId& allele_id);
+    bool apply(const SID& mutation, const AlleleId& allele_id);
 
     /**
-     * @brief Insert a SID mutation in a context free position
+     * @brief Apply a SID mutation in a context free position
      *
-     * This method tries to insert a SID mutation. If the chromosome contains another
+     * This method tries to apply a SID mutation. If the chromosome contains another
      * SID mutation occurring in the mutational context of the specified SID, then
-     * the insertion fails.
+     * the application fails.
      *
-     * @param mutation_spec is the SID mutation to be inserted in the chromosome
+     * @param mutation_spec is the SID mutation to be applied in the chromosome
      * @return `true` if and only if the chromosome do not contain any other
      *      SID mutations in `mutation`'s mutational context
      * @throw std::domain_error `mutation` does not lays in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
-    bool insert(const MutationSpec<SID>& mutation_spec);
+    bool apply(const MutationSpec<SID>& mutation_spec);
 
     /**
      * @brief Remove a SID mutation
@@ -741,7 +820,7 @@ public:
      * @brief Copy genomic structure
      *
      * This method copies the genomic structure of the current objects.
-     * It returns a `GenomeMutations` object that has the same chromsomes and
+     * It returns a `GenomeMutations` object that has the same chromosomes and
      * alleles of the current objects, but misses the original SNVs and indels.
      *
      * @return a `GenomeMutations` object that has the same chromsomes and

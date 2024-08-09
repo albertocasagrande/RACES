@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.5
- * @date 2024-08-08
+ * @version 1.6
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -238,7 +238,22 @@ bool ChromosomeMutations::has_context_free(const SID& mutation) const
     return some_allele_contains_pos;
 }
 
-bool ChromosomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
+bool ChromosomeMutations::apply_CNA(CNA& cna)
+{
+    const auto cna_region = cna.get_region();
+    switch(cna.type) {
+        case CNA::Type::AMPLIFICATION:
+            return amplify_region(cna_region, cna.source,
+                                  cna.dest, cna.nature);
+        case CNA::Type::DELETION:
+            return remove_region(cna_region, cna.dest,
+                                 cna.nature);
+        default:
+            throw std::runtime_error("Unsupported CNA type");
+    }
+}
+
+bool ChromosomeMutations::apply(const SID& mutation, const AlleleId& allele_id)
 {
     if (!contains(mutation)) {
         throw std::domain_error("The genomic position of the SID is not in the chromosome");
@@ -246,10 +261,10 @@ bool ChromosomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
 
     Allele& allele = get_allele(allele_id);
 
-    return allele.insert(mutation);
+    return allele.apply(mutation);
 }
 
-bool ChromosomeMutations::insert(const MutationSpec<SID>& mutation_spec)
+bool ChromosomeMutations::apply(const MutationSpec<SID>& mutation_spec)
 {
     if (!contains(mutation_spec)) {
         throw std::domain_error("The genomic position of the SID is not in the chromosome");
@@ -257,7 +272,7 @@ bool ChromosomeMutations::insert(const MutationSpec<SID>& mutation_spec)
 
     Allele& allele = get_allele(mutation_spec.allele_id);
 
-    return allele.insert(mutation_spec);
+    return allele.apply(mutation_spec);
 }
 
 bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_position)
@@ -535,18 +550,33 @@ bool GenomeMutations::remove_region(const GenomicRegion& genomic_region, const A
     return chr_it->second.remove_region(genomic_region, allele_id, nature);
 }
 
-bool GenomeMutations::insert(const SID& mutation, const AlleleId& allele_id)
+bool GenomeMutations::apply_CNA(CNA& cna)
+{
+    const auto cna_region = cna.get_region();
+    switch(cna.type) {
+        case CNA::Type::AMPLIFICATION:
+            return amplify_region(cna_region, cna.source,
+                                  cna.dest, cna.nature);
+        case CNA::Type::DELETION:
+            return remove_region(cna_region, cna.dest,
+                                 cna.nature);
+        default:
+            throw std::runtime_error("Unsupported CNA type");
+    }
+}
+
+bool GenomeMutations::apply(const SID& mutation, const AlleleId& allele_id)
 {
     auto chr_it = find_chromosome(chromosomes, mutation.chr_id);
 
-    return chr_it->second.insert(mutation, allele_id);
+    return chr_it->second.apply(mutation, allele_id);
 }
 
-bool GenomeMutations::insert(const MutationSpec<SID>& mutation_spec)
+bool GenomeMutations::apply(const MutationSpec<SID>& mutation_spec)
 {
     auto chr_it = find_chromosome(chromosomes, mutation_spec.chr_id);
 
-    return chr_it->second.insert(mutation_spec);
+    return chr_it->second.apply(mutation_spec);
 }
 
 bool GenomeMutations::remove_mutation(const GenomicPosition& genomic_position)
