@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.4
+ * @version 1.5
  * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
@@ -55,13 +55,13 @@ PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId
 
 void PhylogeneticForest::node::add_new_mutation(const MutationSpec<SID>& mutation)
 {
-    get_forest().novel_mutations[cell_id].SIDs.insert(mutation);
+    get_forest().novel_mutations[cell_id].insert(mutation);
     get_forest().SID_first_cells[mutation].insert(cell_id);
 }
 
 void PhylogeneticForest::node::add_new_mutation(const CNA& cna)
 {
-    get_forest().novel_mutations[cell_id].CNAs.insert(cna);
+    get_forest().novel_mutations[cell_id].insert(cna);
     get_forest().CNA_first_cells[cna].insert(cell_id);
 }
 
@@ -206,19 +206,41 @@ SampleGenomeMutations PhylogeneticForest::get_sample_mutations(const std::string
     return sample_mutations;
 }
 
-std::map<Mutants::CellId, std::list<MutationSpec<SID>>>
+std::map<Mutants::CellId, MutationList>
 PhylogeneticForest::get_preneoplastic_mutations() const
 {
-    std::map<Mutants::CellId, std::list<MutationSpec<SID>>> pnp_mutations;
+    std::map<Mutants::CellId, MutationList> pnp_mutations;
 
     for (const auto& root: get_roots()) {
         auto it = novel_mutations.find(root.cell_id);
 
         if (it != novel_mutations.end()) {
-            std::list<MutationSpec<SID>> root_mutations;
-            for (const auto& sid : it->second.SIDs) {
-                if (sid.nature == SID::PRENEOPLASTIC) {
-                    root_mutations.push_back(sid);
+            MutationList root_mutations;
+
+            for (auto mut_it = it->second.begin(); mut_it != it->second.end();
+                 ++mut_it) {
+
+                switch(mut_it.get_type()) {
+                    case MutationList::SID_TURN:
+                    {
+                        const auto& mutation = mut_it.get_last_SID();
+
+                        if (mutation.nature == SID::PRENEOPLASTIC) {
+                            root_mutations.insert(mutation);
+                        }
+                        break;
+                    }
+                    case MutationList::CNA_TURN:
+                    {
+                        const auto& mutation = mut_it.get_last_CNA();
+
+                        if (mutation.nature == SID::PRENEOPLASTIC) {
+                            root_mutations.insert(mutation);
+                        }
+                        break;
+                    }
+                    default:
+                        break;
                 }
             }
 
@@ -229,25 +251,71 @@ PhylogeneticForest::get_preneoplastic_mutations() const
     return pnp_mutations;
 }
 
-SampleGenomeMutations PhylogeneticForest::get_germline_sample(const std::string& name,
-                                                              const bool& with_preneoplastic) const
+SampleGenomeMutations PhylogeneticForest::get_normal_sample(const std::string& name,
+                                                            const bool& with_preneoplastic) const
 {
     SampleGenomeMutations sample(name, germline_mutations);
 
     if (with_preneoplastic) {
-        for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
-            auto cell_genome = std::make_shared<CellGenomeMutations>(germline_mutations.copy_structure());
-            for (const auto& sid_spec : pnp_mutations) {
-                cell_genome->apply(sid_spec);
-            }
+        for (auto& [cell_id, cell_genome] : get_normal_genomes(with_preneoplastic)) {
+            auto genome = std::make_shared<CellGenomeMutations>();
 
-            sample.mutations.push_back(std::move(cell_genome));
+            std::swap(cell_genome, *genome);
+
+            sample.mutations.push_back(genome);
         }
     } else {
         sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations.copy_structure()));
     }
 
     return sample;
+}
+
+std::map<Mutants::CellId, CellGenomeMutations>
+PhylogeneticForest::get_normal_genomes(const bool& with_preneoplastic) const
+{
+    std::map<Mutants::CellId, CellGenomeMutations> normal_genomes;
+    
+    if (with_preneoplastic) {
+        for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
+            auto cell_genome = CellGenomeMutations(germline_mutations.copy_structure());
+            for (auto mut_it = pnp_mutations.begin(); mut_it != pnp_mutations.end();
+                ++mut_it) {
+
+                switch(mut_it.get_type()) {
+                    case MutationList::SID_TURN:
+                    {
+                        const auto& mutation = mut_it.get_last_SID();
+
+                        cell_genome.apply(mutation);
+                        break;
+                    }
+                    case MutationList::CNA_TURN:
+                    {
+                        const auto& mutation = mut_it.get_last_CNA();
+
+                        cell_genome.apply(mutation);
+                        break;
+                    }
+                    case MutationList::WGD_TURN:
+                    {
+                        cell_genome.duplicate_alleles();
+                    }
+                    default:
+                        break;
+                }
+            }
+
+            normal_genomes.insert({cell_id, std::move(cell_genome)});
+        }
+    } else {
+        for (const auto& root : get_roots()) {
+            normal_genomes.insert({root.get_id(),
+                                   CellGenomeMutations(germline_mutations.copy_structure())});
+        }
+    }
+
+    return normal_genomes;
 }
 
 std::map<ChromosomeId, std::set<ChrPosition>>

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.2
- * @date 2024-08-08
+ * @version 1.3
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,6 +34,7 @@
 #include <map>
 #include <memory>
 
+#include "mutation_list.hpp"
 #include "descendant_forest.hpp"
 
 #include "genome_mutations.hpp"
@@ -50,57 +51,12 @@ namespace Mutations
  */
 class PhylogeneticForest : public Mutants::DescendantsForest
 {
-public:
-    /**
-     * @brief Mutations introduced in a cell
-     *
-     * This structure contains the mutations that are present
-     * in one of the cells represented in the phylogenetic forest,
-     * but not in its parent.
-     */
-    struct NovelMutations
-    {
-        std::set<MutationSpec<SID>> SIDs;    //!< The newly introduced SID mutations
-        std::set<CNA> CNAs;                  //!< The newly introduced CNAs
-
-        /**
-         * @brief Save novel mutations in an archive
-         *
-         * @tparam ARCHIVE is the output archive type
-         * @param archive is the output archive
-         */
-        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
-        inline void save(ARCHIVE& archive) const
-        {
-            archive & SIDs
-                    & CNAs;
-        }
-
-        /**
-         * @brief Load novel mutations from an archive
-         *
-         * @tparam ARCHIVE is the input archive type
-         * @param archive is the input archive
-         * @return the load novel mutations
-         */
-        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-        inline static NovelMutations load(ARCHIVE& archive)
-        {
-            NovelMutations mutations;
-
-            archive & mutations.SIDs
-                    & mutations.CNAs;
-
-            return mutations;
-        }
-    };
-private:
     using CellIdSet = std::set<Mutants::CellId>;
 
     using CellMutationsPtr = std::shared_ptr<CellGenomeMutations>;
 
     std::map<Mutants::CellId, CellMutationsPtr> leaves_mutations;   //!< The mutations of each cells represented as leaves in the forest
-    std::map<Mutants::CellId, NovelMutations> novel_mutations;      //!< The mutations introduces by each cell in the forest
+    std::map<Mutants::CellId, MutationList> novel_mutations;        //!< The mutations introduces by each cell in the forest
     std::map<SID, CellIdSet> SID_first_cells;                       //!< A map associating each SID to the first cells in which it occured
     std::map<CNA, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occured
 
@@ -344,10 +300,10 @@ public:
      *
      * @return A map of pre-neoplastic mutations grouped by forest root cell identifier.
      */
-    std::map<Mutants::CellId, std::list<MutationSpec<SID>>> get_preneoplastic_mutations() const;
+    std::map<Mutants::CellId, MutationList> get_preneoplastic_mutations() const;
 
     /**
-     * @brief Build a sample containing cells whose genome contains germline mutations
+     * @brief Build a sample containing normal cells
      * 
      * This method builds a sample of different cells whose genome contains the forest
      * germline mutations. If the pre-neoplastic mutations are also requested the sample
@@ -362,8 +318,18 @@ public:
      * @return A sample containing cells whose genomes have the forest germline 
      *   mutations and, upon request, the pre-neoplastic mutations too
      */
-    SampleGenomeMutations get_germline_sample(const std::string& name="sample",
-                                              const bool& with_preneoplastic=true) const;
+    SampleGenomeMutations get_normal_sample(const std::string& name="sample",
+                                            const bool& with_preneoplastic=true) const;
+
+    /**
+     * @brief Build the normal genomes
+     * 
+     * @param with_preneoplastic is a Boolean flag to include the pre-neoplastic mutations
+     *   in the resulting genomes
+     * @return a map that associates to each forest root the corresponding normal genome
+     */
+    std::map<Mutants::CellId, CellGenomeMutations>
+    get_normal_genomes(const bool& with_preneoplastic=true) const;
 
     /**
      * @brief Get the CNA break points
@@ -400,6 +366,14 @@ public:
                       const size_t& min_allelic_size) const;
 
     /**
+     * @brief Get the normal genome structure
+     * 
+     * @param with_preneoplastic is a Boolean flag to add preneoplastic CNAs
+     * @return the normal genome without SNVs and indels
+     */
+    GenomeMutations get_normal_genome_structure(const bool& with_preneoplastic=true) const;
+
+    /**
      * @brief Clear the forest
      */
     void clear();
@@ -413,7 +387,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 1);
+        ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 2);
 
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
                 & novel_mutations
@@ -437,7 +411,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static PhylogeneticForest load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES Phylogenetic Forest", 1);
+        ARCHIVE::read_header(archive, "RACES Phylogenetic Forest", 2);
 
         PhylogeneticForest forest;
 

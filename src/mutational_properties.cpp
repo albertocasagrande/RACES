@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 1.1
- * @date 2024-08-04
+ * @version 1.2
+ * @date 2024-08-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -46,100 +46,6 @@ PassengerRates::PassengerRates(const double& indel_rate, const double& SNV_rate,
                                const double& CNA_rate):
     indel{indel_rate}, snv{SNV_rate}, cna{CNA_rate}
 {}
-
-DriverMutations::DriverMutations()
-{}
-
-//! @private
-template<typename MUTATION>
-std::set<MUTATION> build_mutation_set(const std::string& mutant_name,
-                                      const std::list<MUTATION>& mutations)
-{
-    std::set<MUTATION> mutation_set;
-
-    for (const auto& mutation : mutations) {
-        if (mutation_set.count(mutation)>0) {
-            std::ostringstream oss;
-
-            oss << mutation << " added twice among "
-                << mutant_name << "'s driver mutations.";
-
-            throw std::domain_error(oss.str());
-        }
-
-        mutation_set.insert(mutation);
-    }
-
-    return mutation_set;
-}
-
-std::list<DriverMutations::MutationType>
-DriverMutations::get_default_order(const std::list<MutationSpec<SID>>& SIDs,
-                                   const std::list<CNA>& CNAs,
-                                   const bool& wg_doubling)
-{
-    std::list<DriverMutations::MutationType> application_order;
-
-    for (size_t i=0; i<SIDs.size(); ++i) {
-        application_order.push_back(DriverMutations::MutationType::SID_TURN);
-    }
-
-    for (size_t i=0; i<CNAs.size(); ++i) {
-        application_order.push_back(DriverMutations::MutationType::CNA_TURN);
-    }
-
-    if (wg_doubling) {
-        application_order.push_back(DriverMutations::MutationType::WGD_TURN);
-    }
-
-    return application_order;
-}
-
-DriverMutations::DriverMutations(const std::string& mutant_name,
-                                 const std::list<MutationSpec<SID>>& SIDs,
-                                 const std::list<CNA>& CNAs,
-                                 const bool& wg_doubling):
-    name{mutant_name}, SIDs{SIDs}, CNAs{CNAs},
-    application_order{DriverMutations::get_default_order(SIDs,CNAs,wg_doubling)}
-{}
-
-DriverMutations::DriverMutations(const std::string& mutant_name,
-                                 const std::list<MutationSpec<SID>>& SIDs,
-                                 const std::list<CNA>& CNAs,
-                                 const std::list<MutationType>& application_order):
-    name{mutant_name}, SIDs{SIDs}, CNAs{CNAs},
-    application_order{application_order}
-{
-    size_t SID_count{0}, CNA_count{0};
-    for (auto order_it = application_order.begin();
-         order_it != application_order.end(); ++order_it) {
-
-        switch(*order_it) {
-            case SID_TURN:
-                ++SID_count;
-                break;
-            case CNA_TURN:
-                ++CNA_count;
-                break;
-            case WGD_TURN:
-                break;
-            default:
-                throw std::domain_error("Unsupported driver mutation type.");
-        }
-    }
-
-    if (SID_count != SIDs.size()) {
-        throw std::domain_error("The number of SNVs/indels differs from "
-                                "that of the same kind of mutations "
-                                "in the application order list.");
-    }
-
-    if (CNA_count != CNAs.size()) {
-        throw std::domain_error("The number of CNAs differs from "
-                                "that of the same kind of mutations "
-                                "in the application order list.");
-    }
-}
 
 MutationalProperties::MutationalProperties()
 {}
