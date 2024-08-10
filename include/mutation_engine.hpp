@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.8
- * @date 2024-08-09
+ * @version 1.9
+ * @date 2024-08-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -519,13 +519,17 @@ class MutationEngine
 
         if (infinite_sites_model) {
             const auto& chr_mutations = cell_mutations.get_chromosome(mutation.chr_id);
-            if (germline_mutations.has_context_free(mutation)
-                    && (dm_genome.has_context_free(mutation) 
-                     || (mutation.nature == Mutation::DRIVER))
-                    && chr_mutations.has_context_free(mutation)) {
+            if ((dm_genome.has_context_free(mutation) 
+                    || (mutation.nature == Mutation::DRIVER))
+                  && chr_mutations.has_context_free(mutation)) {
 
-                for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
-                    available_alleles.push_back(allele_id);
+                for (const auto& [allele_id, allele]: chr_mutations.get_alleles()) {
+                    if (allele.strictly_contains(mutation)) {
+                        if (!allele.has_context_free(mutation)) {
+                            return std::list<AlleleId>();
+                        }
+                        available_alleles.push_back(allele_id);
+                    }
                 }
             }
 
