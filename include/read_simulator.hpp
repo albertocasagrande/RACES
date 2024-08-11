@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.8
- * @date 2024-08-04
+ * @version 1.9
+ * @date 2024-08-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1051,7 +1051,7 @@ private:
             read[i] = Read{chr_data.nucleotides, germlines, passengers,
                            genomic_position, read_size};
             
-            qual[i] = sequencer.simulate_seq(read[i], genomic_position, i);
+            qual[i] = sequencer.simulate_seq(read[i], genomic_position, i==1);
             hamming_dist[i] = read[i].Hamming_distance();
 
             if (hamming_dist[i] < hamming_distance_threshold) {
@@ -1943,6 +1943,16 @@ public:
         return operator()(sequencer, mutations, chromosome_ids, coverage,
                           {"normal_sample", {}}, 1.0, base_name, progress_bar_stream,
                           quiet);
+    }
+
+    /**
+     * @brief Get the simulated read size
+     * 
+     * @return the simulated read size 
+     */
+    inline size_t get_read_size() const
+    {
+        return read_size;
     }
 
     /**

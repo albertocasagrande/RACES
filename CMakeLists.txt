@@ -63,6 +63,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sampling.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_context.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sbs_signature.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/sequencer.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/sid.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_event.cpp
