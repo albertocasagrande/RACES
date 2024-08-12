@@ -2,8 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 1.3
- * @date 2024-08-11
+ * @version 1.4
+ * @date 2024-08-12
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -437,15 +437,14 @@ public:
     explicit BasicSequencer(const double& error_rate,
                             const QUALITY_SCORE_MODEL& quality_score_model,
                             const int& seed=0):
-        BasicSequencer(error_rate, seed),
-        quality_score_model(quality_score_model)
+        error_rate(error_rate), quality_score_model(quality_score_model),
+        number_generator(seed), error_dist(0,1)
     {}
 
     /**
      * @brief Construct a new basic Illumina sequencer object
      *
      * @param error_rate is the error probability in each base
-     * @param quality_score_model is the quality score model
      * @param seed is the random number generator seed
      */
     explicit BasicSequencer(const double& error_rate,
