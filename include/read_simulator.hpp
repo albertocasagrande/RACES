@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.9
- * @date 2024-08-11
+ * @version 1.10
+ * @date 2024-08-15
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1077,7 +1077,7 @@ private:
 
                     *SAM_stream << template_name                        // QNAME
                                 << '\t' << flag                         // FLAG
-                                << '\t' << "chr" << chr_data.name       // RNAME
+                                << '\t' << chr_data.name                // RNAME
                                 << '\t' << genomic_position.position    // POS
                                 << '\t' << mapq                         // MAPQ
                                 << '\t' << read[i].get_CIGAR();         // CIGAR
@@ -1331,8 +1331,8 @@ private:
 
         // write the SAM header
         SAM_stream << "@HD\tVN:1.6\tSO:unknown" << std::endl;
-        SAM_stream << "@SQ\tSN:chr" << chr_data.name << "\tLN:" << chr_data.length
-                << "\tAN:chromosome" << chr_str << "," << chr_str
+        SAM_stream << "@SQ\tSN:" << chr_data.name << "\tLN:" << chr_data.length
+                << "\tAN:chr"<< chr_str << ", chromosome" << chr_str
                 << ",chromosome_" << chr_str << ",chr_" << chr_str << std::endl;
         for (const auto& sample_mutations : mutations_list) {
             SAM_stream << "@RG\tID:" << sample_mutations.name
