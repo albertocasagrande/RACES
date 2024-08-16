@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.10
- * @date 2024-08-15
+ * @version 1.11
+ * @date 2024-08-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1217,7 +1217,7 @@ private:
 
         for (const auto& cell_mutations: sample_genome_mutations.mutations) {
             const auto& chr_mutations = cell_mutations->get_chromosome(chr_data.chr_id);
-            const auto& germline_chr_mut = sample_genome_mutations.germline_mutations.get_chromosome(chr_data.chr_id);
+            const auto& germline_chr_mut = sample_genome_mutations.germline_mutations->get_chromosome(chr_data.chr_id);
 
             for (const auto& [allele_id, allele] : chr_mutations.get_alleles()) {
                 const auto& germline_allele_id = allele.get_history().front();

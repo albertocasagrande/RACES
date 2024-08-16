@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.5
- * @date 2024-08-09
+ * @version 1.6
+ * @date 2024-08-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -265,7 +265,7 @@ SampleGenomeMutations PhylogeneticForest::get_normal_sample(const std::string& n
             sample.mutations.push_back(genome);
         }
     } else {
-        sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations.copy_structure()));
+        sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations->copy_structure()));
     }
 
     return sample;
@@ -278,7 +278,7 @@ PhylogeneticForest::get_normal_genomes(const bool& with_preneoplastic) const
     
     if (with_preneoplastic) {
         for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
-            auto cell_genome = CellGenomeMutations(germline_mutations.copy_structure());
+            auto cell_genome = CellGenomeMutations(germline_mutations->copy_structure());
             for (auto mut_it = pnp_mutations.begin(); mut_it != pnp_mutations.end();
                 ++mut_it) {
 
@@ -311,7 +311,7 @@ PhylogeneticForest::get_normal_genomes(const bool& with_preneoplastic) const
     } else {
         for (const auto& root : get_roots()) {
             normal_genomes.insert({root.get_id(),
-                                   CellGenomeMutations(germline_mutations.copy_structure())});
+                                   CellGenomeMutations(germline_mutations->copy_structure())});
         }
     }
 

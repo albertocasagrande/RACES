@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.3
- * @date 2024-08-09
+ * @version 1.4
+ * @date 2024-08-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -60,7 +60,7 @@ class PhylogeneticForest : public Mutants::DescendantsForest
     std::map<SID, CellIdSet> SID_first_cells;                       //!< A map associating each SID to the first cells in which it occured
     std::map<CNA, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occured
 
-    GenomeMutations germline_mutations; //!< The germline mutations
+    std::shared_ptr<GenomeMutations> germline_mutations; //!< The germline mutations
 
 public:
     /**
@@ -292,7 +292,7 @@ public:
      */
     inline const GenomeMutations& get_germline_mutations() const
     {
-        return germline_mutations;
+        return *germline_mutations;
     }
 
     /**
@@ -393,7 +393,7 @@ public:
                 & novel_mutations
                 & SID_first_cells
                 & CNA_first_cells
-                & germline_mutations;
+                & *germline_mutations;
 
         archive & leaves_mutations.size();
         for (const auto& [cell_id, ptr]: leaves_mutations) {
@@ -415,11 +415,13 @@ public:
 
         PhylogeneticForest forest;
 
+        forest.germline_mutations = std::make_shared<GenomeMutations>();
+
         archive & static_cast<Mutants::DescendantsForest&>(forest)
                 & forest.novel_mutations
                 & forest.SID_first_cells
                 & forest.CNA_first_cells
-                & forest.germline_mutations;
+                & *(forest.germline_mutations);
 
         size_t num_of_leaves;
         archive & num_of_leaves;

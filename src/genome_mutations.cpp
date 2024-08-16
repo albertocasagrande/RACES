@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.6
- * @date 2024-08-09
+ * @version 1.7
+ * @date 2024-08-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -665,7 +665,7 @@ CellGenomeMutations::CellGenomeMutations(const Mutants::Cell& cell, const Genome
 {}
 
 SampleGenomeMutations::SampleGenomeMutations(const std::string& name,
-                                             const GenomeMutations& germline_mutations):
+                                             const std::shared_ptr<GenomeMutations>& germline_mutations):
     germline_mutations(germline_mutations), mutations(), name(name)
 {}
 

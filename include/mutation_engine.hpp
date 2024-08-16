@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.9
- * @date 2024-08-10
+ * @version 1.10
+ * @date 2024-08-16
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -246,7 +246,7 @@ class MutationEngine
 
     MutationalProperties mutational_properties;  //!< the species mutational properties
 
-    GenomeMutations germline_mutations; //!< the germline mutations
+    std::shared_ptr<GenomeMutations> germline_mutations; //!< the germline mutations
 
     GenomeMutations dm_genome;          //!< the driver mutations genome
 
@@ -536,7 +536,7 @@ class MutationEngine
             return available_alleles;
         }
 
-        auto germline_alleles = germline_mutations.get_alleles_with_context_free_for(mutation);
+        auto germline_alleles = germline_mutations->get_alleles_with_context_free_for(mutation);
         auto driver_alleles = dm_genome.get_alleles_with_context_free_for(mutation);
 
         if (germline_alleles.size()==0 || driver_alleles.size()==0) {
@@ -1393,7 +1393,7 @@ public:
                    const std::vector<CNA>& passenger_CNAs={}):
         generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
-        germline_mutations(germline_mutations),
+        germline_mutations(std::make_shared<GenomeMutations>(germline_mutations)),
         dm_genome(germline_mutations.copy_structure()),
         driver_storage(driver_storage),
         infinite_sites_model(true)
@@ -1619,7 +1619,7 @@ public:
 
         auto chr_regions = context_index.get_chromosome_regions();
 
-        auto wild_type_structure = germline_mutations.copy_structure();
+        auto wild_type_structure = germline_mutations->copy_structure();
 
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
@@ -1710,7 +1710,7 @@ public:
 
         std::uniform_real_distribution<double> pnp_dist;
         for (const auto& [cell_id, pnp_mutations] : forest.get_preneoplastic_mutations()) {
-            auto sample_common_mutations = germline_mutations.copy_structure();
+            auto sample_common_mutations = germline_mutations->copy_structure();
             if (pnp_dist(generator) < forest_preneoplastic_prob) {
                 for (auto mut_it = pnp_mutations.begin(); mut_it != pnp_mutations.end();
                     ++mut_it) {
