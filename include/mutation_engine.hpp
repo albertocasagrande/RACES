@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.11
- * @date 2024-09-15
+ * @version 1.12
+ * @date 2024-09-17
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -519,7 +519,7 @@ class MutationEngine
 
         if (infinite_sites_model) {
             const auto& chr_mutations = cell_mutations.get_chromosome(mutation.chr_id);
-            if ((dm_genome.has_context_free(mutation) 
+            if ((dm_genome.has_context_free(mutation)
                     || (mutation.nature == Mutation::DRIVER))
                   && chr_mutations.has_context_free(mutation)
                   && germline_mutations->has_context_free(mutation)) {
@@ -757,6 +757,8 @@ class MutationEngine
      * @param[in] region is the region that must be contained by the found allele
      * @param[in] no_driver_mutations is a Boolean flag to establish whether
      *          alleles containing driver mutations in the region are discharged
+     * @param[in] multiple_alleles_required is a Boolean flag to require more
+     *          than one allele covering the region
      * @return `true` if and only if one of the alleles of `chr_mutations`
      *          contains the region `region`. In this case, the parameter
      *          `allele_id` is set to the identifier of such an allele.
@@ -766,7 +768,8 @@ class MutationEngine
     bool select_allele_containing(AlleleId& allele_id,
                                   const ChromosomeMutations& chr_mutations,
                                   const GenomicRegion& region,
-                                  const bool& no_driver_mutations)
+                                  const bool& no_driver_mutations,
+                                  const bool& multiple_alleles_required)
     {
         const auto& chr_alleles = chr_mutations.get_alleles();
 
@@ -776,13 +779,22 @@ class MutationEngine
 
         size_t first_idx_to_test = (generator() % chr_alleles.size());
         size_t idx{0};
+        size_t available_alleles{0};
+        bool found{false};
         for (const auto& [a_id, allele]: chr_alleles) {
-            if (idx >= first_idx_to_test) {
-                if (allele.contains(region)
-                    && !(no_driver_mutations
-                         && allele.has_driver_mutations_in(region))) {
-                    allele_id = a_id;
-                    return true;
+            if (idx >= first_idx_to_test && allele.contains(region)) {
+                ++available_alleles;
+
+                if (found) {
+                    if (!multiple_alleles_required || available_alleles>1) {
+                        return true;
+                    }
+                } else {
+                    if (!(no_driver_mutations
+                            && allele.has_driver_mutations_in(region))) {
+                        allele_id = a_id;
+                        found = true;
+                    }
                 }
             }
             ++idx;
@@ -790,18 +802,29 @@ class MutationEngine
         idx = 0;
         for (const auto& [a_id, allele]: chr_alleles) {
             if (idx >= first_idx_to_test) {
-                return false;
+                return (found && (!multiple_alleles_required
+                                  || available_alleles>1));
             }
-            if (allele.contains(region)
-                    && !(no_driver_mutations
-                         && allele.has_driver_mutations_in(region))) {
-                allele_id = a_id;
-                return true;
+            if (allele.contains(region)) {
+                ++available_alleles;
+
+                if (found) {
+                    if (!multiple_alleles_required || available_alleles>1) {
+                        return true;
+                    }
+                } else {
+                    if (!(no_driver_mutations
+                        && allele.has_driver_mutations_in(region))) {
+                        allele_id = a_id;
+                        found = true;
+                    }
+                }
             }
             ++idx;
         }
 
-        return false;
+        return (found && (!multiple_alleles_required
+                          || available_alleles>1));
     }
 
     /**
@@ -829,13 +852,15 @@ class MutationEngine
             case CNA::Type::AMPLIFICATION:
                 if (cna.source == RANDOM_ALLELE) {
                     return select_allele_containing(cna.source, chr_mutations,
-                                                    cna_region, no_driver_mutations);
+                                                    cna_region, no_driver_mutations,
+                                                    false);
                 }
                 return true;
             case CNA::Type::DELETION:
                 if (cna.dest == RANDOM_ALLELE) {
                     return select_allele_containing(cna.dest, chr_mutations,
-                                                    cna_region, no_driver_mutations);
+                                                    cna_region, no_driver_mutations,
+                                                    avoid_homozygous_losses);
                 }
                 return true;
             default:
@@ -873,7 +898,7 @@ class MutationEngine
 
     /**
      * @brief Place a mutation
-     * 
+     *
      * @tparam MUTATION_TYPE is the type of mutation to be placed
      * @param mutation is the mutation to be placed
      * @param cell_mutations is the cell genome where the mutation must be placed
@@ -896,7 +921,7 @@ class MutationEngine
 
     /**
      * @brief Place a driver mutation
-     * 
+     *
      * @tparam MUTATION_TYPE is the type of mutation
      * @param mutation is the placed mutation
      * @param node is the node in which the mutation first occurred
@@ -1339,11 +1364,13 @@ class MutationEngine
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
 
+    bool avoid_homozygous_losses;       //!< a flag to avoiding homozygous losses
+
     /**
      * @brief The empty constructor
      */
     MutationEngine():
-        infinite_sites_model(true)
+        infinite_sites_model(true), avoid_homozygous_losses(true)
     {}
 
     /**
@@ -1394,7 +1421,7 @@ public:
         germline_mutations(std::make_shared<GenomeMutations>(germline_mutations)),
         dm_genome(germline_mutations.copy_structure()),
         driver_storage(driver_storage),
-        infinite_sites_model(true)
+        infinite_sites_model(true), avoid_homozygous_losses(true)
     {
         MutationEngine::check_genomes_consistency(context_index, germline_mutations);
 
