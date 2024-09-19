@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.12
- * @date 2024-08-18
+ * @version 1.13
+ * @date 2024-09-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -245,7 +245,7 @@ struct SIDData
      *          added to the causes and types stored in the
      *          data
      */
-    void account_for(const SID& mutation);
+    void update(const SID& mutation);
 
     /**
      * @brief Update the current object
@@ -269,6 +269,14 @@ struct SIDData
 class ChrSampleStatistics : public ChrCoverage
 {
     std::map<SID, SIDData> SID_data;    //!< The SID data about the simulated reads
+
+    /**
+     * @brief Add the mutation of a chromosome to the statistics
+     * 
+     * @param chromosome is the chromosome whose mutations must be
+     *     added to the statistics
+     */
+    void account_for(const ChromosomeMutations& chromosome);
 public:
 
     /**
@@ -278,27 +286,29 @@ public:
 
     /**
      * @brief A constructor
-     *
-     * @param chromosome_id is the identifier of the chromosome whose sequencing
+     * 
+     * @param[in] chromosome_id is the identifier of the chromosome whose sequencing
      *          statistics are collected
-     * @param size is the size of the chromosome whose sequencing
+     * @param[in] size is the size of the chromosome whose sequencing
      *          statistics are collected
+     * @param[in] mutations_list is a list of sample mutations
      */
-    ChrSampleStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size);
+    ChrSampleStatistics(const ChromosomeId& chromosome_id, const GenomicRegion::Length& size,
+                        const std::list<SampleGenomeMutations>& mutations_list={});
 
     /**
      * @brief Update the data associated to an SID
      *
      * @param mutation is the SID whose data must be updated
      */
-    void account_for(const SID& mutation);
+    void update(const SID& mutation);
 
     /**
      * @brief Collect the data from a read
      *
      * @param read is a read
      */
-    void account_for(const Read& read);
+    void add(const Read& read);
 
     /**
      * @brief Get the collected SID data
@@ -343,18 +353,6 @@ public:
      * @return a reference to the updated objects
      */
     ChrSampleStatistics& operator+=(const ChrSampleStatistics& chr_stats);
-
-    /**
-     * @brief Canonize the SID data domains of a chromosome sample statistics list
-     *
-     * This method takes a list of chromosome sample statistics and  alter them so
-     * that the domain of map returned by the method `get_data()` is the
-     * union of the domains of the maps returned by the same method on each of
-     * them.
-     *
-     * @param[in, out] chr_stats_list is a list of chromosome sample statistics
-     */
-    static void canonize_data(std::list<ChrSampleStatistics>& chr_stats_list);
 };
 
 /**
@@ -1057,7 +1055,7 @@ private:
             if (hamming_dist[i] < hamming_distance_threshold) {
                 ++over_threshold;
 
-                chr_statistics.account_for(read[i]);
+                chr_statistics.add(read[i]);
             }
         }
 
@@ -1183,7 +1181,6 @@ private:
         steps += fragment.size();
     }
 
-
     /**
      * @brief Generate simulated reads on a chromosome and write their SAM alignments
      *
@@ -1196,10 +1193,12 @@ private:
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] sample_genome_mutations is a sample genome mutations
      * @param[in,out] sample_simulation_data is the read simulation data of the sample
+     * @param[in] chr_statistics are the chromosome statistics of the tissue sample
      * @param[in] total_steps is the total number of steps required to complete the overall procedure
      * @param[in,out] steps is the number of performed steps
      * @param[in,out] progress_bar is the progress bar
      * @param[in,out] SAM_stream is the SAM file output stream
+     * @return the sample statistics of the chromosome
      */
     template<typename SEQUENCER,
              std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
@@ -1208,13 +1207,11 @@ private:
                               const RACES::IO::FASTA::ChromosomeData<RACES::IO::FASTA::Sequence>& chr_data,
                               const SampleGenomeMutations& sample_genome_mutations,
                               ReadSimulationData& sample_simulation_data,
+                              ChrSampleStatistics chr_statistics,
                               const size_t& total_steps, size_t& steps,
                               RACES::UI::ProgressBar& progress_bar,
                               std::ostream* SAM_stream=nullptr)
     {
-        ChrSampleStatistics chr_stats{chr_data.chr_id,
-				                      static_cast<GenomicRegion::Length>(chr_data.length)};
-
         for (const auto& cell_mutations: sample_genome_mutations.mutations) {
             const auto& chr_mutations = cell_mutations->get_chromosome(chr_data.chr_id);
             const auto& germline_chr_mut = sample_genome_mutations.germline_mutations->get_chromosome(chr_data.chr_id);
@@ -1235,14 +1232,15 @@ private:
                     // fully contains `allele`
                     generate_fragment_reads(sequencer, chr_data, germline_it->second, fragment,
                                             sample_simulation_data, sample_genome_mutations.name,
-                                            chr_stats, total_steps, steps, progress_bar, SAM_stream);
+                                            chr_statistics, total_steps, steps, progress_bar,
+                                            SAM_stream);
                 }
 
                 progress_bar.set_progress(100*steps/total_steps);
             }
         }
 
-        return chr_stats;
+        return chr_statistics;
     }
 
     /**
@@ -1279,15 +1277,18 @@ private:
 
         auto simulation_data_it = simulation_data.begin();
 
+        ChrSampleStatistics basic_chr_stats{chr_data.chr_id,
+				                            static_cast<GenomicRegion::Length>(chr_data.length),
+                                            mutations_list};
+
         std::list<ChrSampleStatistics> chr_stats_list;
         for (const auto& mutations : mutations_list) {
             chr_stats_list.push_back(generate_chromosome_reads(sequencer, chr_data, mutations,
-                                                               *simulation_data_it, total_steps,
-                                                               steps, progress_bar, SAM_stream));
+                                                               *simulation_data_it, basic_chr_stats,
+                                                               total_steps, steps, progress_bar,
+                                                               SAM_stream));
             ++simulation_data_it;
         }
-
-        ChrSampleStatistics::canonize_data(chr_stats_list);
 
         auto chr_stats_it = chr_stats_list.cbegin();
         for (const auto& mutations : mutations_list) {

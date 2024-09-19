@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-09-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -194,7 +194,7 @@ SIDData::SIDData(const SID& mutation, const BaseCoverage num_of_occurrences):
     nature_set.insert(mutation.nature);
 }
 
-void SIDData::account_for(const SID& mutation)
+void SIDData::update(const SID& mutation)
 {
     ++num_of_occurrences;
 
@@ -225,10 +225,32 @@ ChrSampleStatistics::ChrSampleStatistics():
 {}
 
 ChrSampleStatistics::ChrSampleStatistics(const ChromosomeId& chromosome_id,
-                                         const GenomicRegion::Length& size):
+                                         const GenomicRegion::Length& size,
+                                         const std::list<SampleGenomeMutations>& mutations_list):
     ChrCoverage(chromosome_id, size)
-{}
+{
+    for (const SampleGenomeMutations& mutations : mutations_list) {
+        account_for(mutations.germline_mutations->get_chromosome(chromosome_id));
+        for (const auto& cell_genome_ptr : mutations.mutations) {
+            account_for(cell_genome_ptr->get_chromosome(chromosome_id));
+        }
+    }
+}
 
+void ChrSampleStatistics::account_for(const ChromosomeMutations& chromosome)
+{
+    for (const auto& [allele_id, allele]: chromosome.get_alleles()) {
+        for (const auto& [frag_pos, fragment]: allele.get_fragments()) {
+            for (const auto& [SID_pos, SID] : fragment.get_mutations()) {
+                auto SID_data_it = SID_data.find(SID);
+
+                if (SID_data_it == SID_data.end()) {
+                    SID_data.insert({SID, {SID, 0}});
+                }
+            }
+        }
+    }
+}
 
 void check_in(const SID& mutation, const ChromosomeId& chr_id)
 {
@@ -244,7 +266,7 @@ void check_in(const SID& mutation, const ChromosomeId& chr_id)
     }
 }
 
-void ChrSampleStatistics::account_for(const SID& mutation)
+void ChrSampleStatistics::update(const SID& mutation)
 {
     check_in(mutation, get_chr_id());
 
@@ -253,11 +275,11 @@ void ChrSampleStatistics::account_for(const SID& mutation)
     if (SID_data_it == SID_data.end()) {
         SID_data.insert({mutation, {mutation, 1}});
     } else {
-        SID_data_it->second.account_for(mutation);
+        SID_data_it->second.update(mutation);
     }
 }
 
-void ChrSampleStatistics::account_for(const Read& read)
+void ChrSampleStatistics::add(const Read& read)
 {
     for (const auto r_coverage : read.get_covered_reference_regions()) {
         increase_coverage(r_coverage.get_initial_position(),
@@ -265,7 +287,7 @@ void ChrSampleStatistics::account_for(const Read& read)
     }
 
     for (const auto& mutation: read.get_mutations()) {
-        account_for(mutation);
+        update(mutation);
     }
 }
 
@@ -339,28 +361,6 @@ ChrSampleStatistics& ChrSampleStatistics::operator+=(ChrSampleStatistics&& chr_s
     update_data(SID_data, chr_stats.SID_data);
 
     return *this;
-}
-
-void ChrSampleStatistics::canonize_data(std::list<ChrSampleStatistics>& chr_stats_list)
-{
-    std::set<SID> SIDs;
-
-    for (const auto& chr_stats : chr_stats_list) {
-        for (const auto& [mutation, data] : chr_stats.get_data()) {
-            SIDs.insert(mutation);
-        }
-    }
-
-    for (auto& chr_stats : chr_stats_list) {
-        auto& SID_data = chr_stats.SID_data;
-        for (const auto& mutation : SIDs) {
-            auto found = SID_data.find(mutation);
-
-            if (found == SID_data.end()) {
-                SID_data.insert({mutation, {mutation, 0}});
-            }
-        }
-    }
 }
 
 std::filesystem::path SampleStatistics::get_coverage_filename(const ChromosomeId& chr_id) const
