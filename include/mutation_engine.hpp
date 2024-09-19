@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.12
- * @date 2024-09-17
+ * @version 1.13
+ * @date 2024-09-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -35,6 +35,7 @@
 #include <stack>
 #include <random>
 #include <ostream>
+#include <iterator>
 
 #include "phylogenetic_forest.hpp"
 #include "mutant_id.hpp"
@@ -777,50 +778,45 @@ class MutationEngine
             return false;
         }
 
-        size_t first_idx_to_test = (generator() % chr_alleles.size());
-        size_t idx{0};
+        // choose a random element in the map
+        auto it = chr_alleles.begin();
+        std::advance(it, generator() % chr_alleles.size());
+
         size_t available_alleles{0};
         bool found{false};
-        for (const auto& [a_id, allele]: chr_alleles) {
-            if (idx >= first_idx_to_test && allele.contains(region)) {
-                ++available_alleles;
 
-                if (found) {
-                    if (!multiple_alleles_required || available_alleles>1) {
-                        return true;
-                    }
-                } else {
-                    if (!(no_driver_mutations
-                            && allele.has_driver_mutations_in(region))) {
-                        allele_id = a_id;
-                        found = true;
-                    }
-                }
+        // cyclically iterate over the map from the choosen element
+        for (size_t i=0; i<chr_alleles.size(); ++i, ++it) {
+
+            // if the map end has been reached, restart from the begin
+            if (it == chr_alleles.end()) {
+                it = chr_alleles.begin();
             }
-            ++idx;
-        }
-        idx = 0;
-        for (const auto& [a_id, allele]: chr_alleles) {
-            if (idx >= first_idx_to_test) {
-                return (found && (!multiple_alleles_required
-                                  || available_alleles>1));
-            }
+
+            const auto& allele = it->second;
+
+            // if the allele contains the region
             if (allele.contains(region)) {
                 ++available_alleles;
 
                 if (found) {
-                    if (!multiple_alleles_required || available_alleles>1) {
-                        return true;
-                    }
+                    // if an allele satisfying a the required conditions
+                    // was found, this is not the first allele containing
+                    // the region
+                    return true;
                 } else {
+                    // if either the driver mutation removal is allowed
+                    // or the region does not contain any driver mutations
                     if (!(no_driver_mutations
-                        && allele.has_driver_mutations_in(region))) {
-                        allele_id = a_id;
+                            && allele.has_driver_mutations_in(region))) {
+
+                        // if there are more than one allele containing
+                        // the region, this is the selected allele
+                        allele_id = it->first;
                         found = true;
                     }
                 }
             }
-            ++idx;
         }
 
         return (found && (!multiple_alleles_required
