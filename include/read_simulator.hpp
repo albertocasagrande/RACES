@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.13
- * @date 2024-09-19
+ * @version 1.14
+ * @date 2024-10-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1348,12 +1348,15 @@ private:
      * @brief Compute the initial read simulation data
      *
      * @param mutations_list is a list of sample mutations
+     * @param chromosome_ids is the set of chromosome identifiers whose reads will be
+     *      simulated
      * @param coverage is the aimed coverage
      * @return the list of the initial sample read simulation data. The order
      *       of the returned list matches that of `mutations_list`
      */
     std::list<ReadSimulationData>
     get_initial_read_simulation_data(const std::list<SampleGenomeMutations>& mutations_list,
+                                     const std::set<ChromosomeId>& chromosome_ids,
                                      const double& coverage) const
     {
         std::list<ReadSimulationData> read_simulation_data;
@@ -1361,13 +1364,15 @@ private:
         size_t total_read_size = (read_type==ReadType::PAIRED_READ?2:1)*read_size;
         for (const auto& sample_mutations : mutations_list) {
             ReadSimulationData sample_data;
-            if (sample_mutations.mutations.size()>0) {
-                sample_data.missing_templates =
-                                 static_cast<size_t>((sample_mutations.mutations.front()->size()*
-                                                     coverage)/total_read_size);
-            }
-            for (const auto& cell_mutations: sample_mutations.mutations) {
-                sample_data.not_covered_allelic_size += cell_mutations->allelic_size();
+            for (const auto& chr_id: chromosome_ids) {
+                const auto& germline_chr = sample_mutations.germline_mutations->get_chromosome(chr_id);
+                sample_data.missing_templates += static_cast<size_t>((germline_chr.size()
+                                                                        *coverage)/total_read_size);
+    
+                for (const auto& cell_mutations: sample_mutations.mutations) {
+                    const auto& chr_mutations = cell_mutations->get_chromosome(chr_id);
+                    sample_data.not_covered_allelic_size += chr_mutations.allelic_size();
+                }
             }
 
             read_simulation_data.push_back(std::move(sample_data));
@@ -1431,7 +1436,8 @@ private:
     {
         std::ifstream ref_stream(ref_genome_filename);
 
-        auto read_simulation_data = get_initial_read_simulation_data(mutations_list, coverage);
+        auto read_simulation_data = get_initial_read_simulation_data(mutations_list, chromosome_ids,
+                                                                     coverage);
 
         size_t steps{0};
 
