@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-10-13
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -312,6 +312,14 @@ class Read
     void copy_reference(const std::string& reference,
                         const size_t length,
                         size_t& read_idx, size_t& reference_idx);
+
+    /**
+     * @brief Remove the mutation in a read position
+     * 
+     * @param pos is the read position in which the to-be-removed
+     *    mutation lays
+     */
+    void remove_mutation(const size_t& pos);
 public:
     /**
      * @brief The empty constructor

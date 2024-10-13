@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-10-13
  *
  * @copyright Copyright (c) 2023-2024å
  *
@@ -480,24 +480,52 @@ Read::Read(const std::string& reference,
     mutation_index.resize(read_end);
 }
 
+void Read::remove_mutation(const size_t& pos)
+{
+    MutationBaseIndex& mb_index = mutation_index[pos];
+
+    for (size_t i = 0; i < mutation_index.size(); ++i) {
+        MutationBaseIndex& mb_index2 = mutation_index[i];
+        if (mb_index2.is_valid()) {
+            if (mb_index2.index == mutations.size()-1) {
+                mb_index2.index = mb_index.index;
+            }
+        }
+    }
+
+    std::swap(mutations[mb_index.index], mutations[mutations.size()-1]);
+
+    mutations.resize(mutations.size()-1);
+}
 
 void Read::alter_base(const size_t pos, const char base)
 {
     if (nucleotides[pos] != base) {
-        MutationBaseIndex mb_index = mutation_index[pos];
+        nucleotides[pos] = base;
 
-        if (mb_index.is_valid()) {
-            auto& mutation = mutations[mb_index.index];
-
-            mutation.alt[mb_index.base_pos] = base;
-        }
         auto& match_type = alignment[alignment_index[pos]];
         if (match_type == MatchingType::MATCH) {
             match_type = MatchingType::MISMATCH;
         }
-    }
 
-    nucleotides[pos] = base;
+        MutationBaseIndex mb_index = mutation_index[pos];
+        if (mb_index.is_valid()) {
+            auto& mutation = mutations[mb_index.index];
+
+            mutation.alt[mb_index.base_pos] = base;
+            if (!is_suffix_of(" + errors", mutation.cause)) {
+                mutation.cause = mutation.cause + " + errors";
+            }
+
+            if (mb_index.base_pos == 0 && base == mutation.ref[0]) {
+                alignment[alignment_index[pos]] = MatchingType::MATCH;
+
+                if (mutation.alt.size()==1) {
+                    remove_mutation(pos);
+                }
+            }
+        }
+    }
 }
 
 }   // SequencingSimulations
