@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-10-22
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -71,6 +71,8 @@ class Species: public SpeciesProperties
     CellIdToCell duplication_enabled;   //!< species cells that are duplication enabled
 
     Time last_insertion_time;     //!< the last insertion time
+
+    size_t simulated_cells;          //!< Total number of cells along the computation
 
     /**
      * @brief A constant iterator for the species cells
@@ -247,6 +249,16 @@ public:
     inline size_t num_of_cells() const
     {
         return cells.size();
+    }
+
+    /**
+     * @brief Get the total number of cells in the species along the whole computation
+     *
+     * @return the total number of cells in the species along the whole computation
+     */
+    inline const size_t& num_of_simulated_cells() const
+    {
+        return simulated_cells;
     }
 
     /**
@@ -432,9 +444,12 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES Species", 0);
+
         archive & static_cast<const SpeciesProperties &>(*this);
 
-        archive & last_insertion_time;
+        archive & last_insertion_time
+                & simulated_cells;
 
         // save species cells
         archive & cells.size();
@@ -459,10 +474,13 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static Species load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES Species", 0);
+
         auto species_properties = SpeciesProperties::load(archive);
         Species species(species_properties);
 
-        archive & species.last_insertion_time;
+        archive & species.last_insertion_time
+                & species.simulated_cells;
 
         size_t num_of_cells;
 

@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-10-22
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -56,11 +56,13 @@ void Species::reset()
 }
 
 Species::Species(const SpeciesProperties& species_properties):
-    SpeciesProperties(species_properties), last_insertion_time(0)
+    SpeciesProperties(species_properties), last_insertion_time(0),
+    simulated_cells(0)
 {}
 
 Species::Species(const Species& orig):
-    SpeciesProperties(orig), last_insertion_time(orig.last_insertion_time)
+    SpeciesProperties(orig), last_insertion_time(orig.last_insertion_time),
+    simulated_cells(orig.simulated_cells)
 {
     for (const auto& [cell_id, cell_ptr]: orig.cells) {
         this->add(*cell_ptr);
@@ -78,6 +80,7 @@ Species& Species::operator=(const Species& orig)
     static_cast<SpeciesProperties&>(*this) = static_cast<SpeciesProperties>(orig);
 
     last_insertion_time = orig.last_insertion_time;
+    simulated_cells = orig.simulated_cells;
 
     for (const auto& [cell_id, cell_ptr]: orig.cells) {
         this->add(*cell_ptr);
@@ -146,6 +149,8 @@ CellInTissue* Species::add(CellInTissue* cell)
 
     cells.insert({cell->get_id(), cell});
     duplication_enabled.insert({cell->get_id(), cell});
+
+    ++simulated_cells;
 
     return cell;
 }
@@ -252,6 +257,7 @@ void swap(Species& a, Species& b)
     std::swap(a.cells,b.cells);
     std::swap(a.duplication_enabled,b.duplication_enabled);
     std::swap(a.last_insertion_time,b.last_insertion_time);
+    std::swap(a.simulated_cells,b.simulated_cells);
 }
 
 }   // Evolutions
