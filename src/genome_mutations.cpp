@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.7
- * @date 2024-08-16
+ * @version 1.8
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -40,11 +40,12 @@ namespace RACES
 namespace Mutations
 {
 
-ChromosomeMutations::ChromosomeMutations():
+ChromosomeMutationData::ChromosomeMutationData():
     identifier(0), length(0), allelic_length(0), alleles(), next_allele_id(0)
 {}
 
-ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const Length& size, const size_t& num_of_alleles):
+ChromosomeMutationData::ChromosomeMutationData(const ChromosomeId& identifier, const Length& size,
+                                               const size_t& num_of_alleles):
     identifier(identifier), length(size), allelic_length(size*num_of_alleles), alleles(), next_allele_id(0)
 {
     for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
@@ -52,7 +53,7 @@ ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const L
     }
 }
 
-ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
+ChromosomeMutationData::ChromosomeMutationData(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
     identifier(chromosome_region.get_chromosome_id()), length(chromosome_region.size()),
     allelic_length(chromosome_region.size()*num_of_alleles), alleles(), next_allele_id(0)
 {
@@ -61,11 +62,23 @@ ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region,
     }
 }
 
+ChromosomeMutations::ChromosomeMutations():
+    _data(std::make_shared<ChromosomeMutationData>())
+{}
+
+ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const Length& size, const size_t& num_of_alleles):
+    _data(std::make_shared<ChromosomeMutationData>(identifier, size, num_of_alleles))
+{}
+
+ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
+    _data(std::make_shared<ChromosomeMutationData>(chromosome_region, num_of_alleles))
+{}
+
 std::list<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
 {
     std::list<AlleleId> allele_ids;
 
-    for (const auto& [allele_id, allele]: alleles) {
+    for (const auto& [allele_id, allele]: get_alleles()) {
         if (allele.contains(genomic_position)) {
             allele_ids.push_back(allele_id);
         }
@@ -78,7 +91,7 @@ std::list<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicReg
 {
     std::list<AlleleId> allele_ids;
 
-    for (const auto& [allele_id, allele]: alleles) {
+    for (const auto& [allele_id, allele]: get_alleles()) {
         if (allele.contains(genomic_region)) {
             allele_ids.push_back(allele_id);
         }
@@ -91,7 +104,7 @@ std::list<AlleleId> ChromosomeMutations::get_alleles_with_context_free_for(const
 {
     std::list<AlleleId> context_free_alleles;
 
-    for (const auto& [allele_id, allele]: alleles) {
+    for (const auto& [allele_id, allele]: get_alleles()) {
         if (allele.has_context_free(mutation)) {
             context_free_alleles.push_back(allele_id);
         }
@@ -102,12 +115,12 @@ std::list<AlleleId> ChromosomeMutations::get_alleles_with_context_free_for(const
 
 const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
 {
-    auto it = alleles.find(allele_id);
+    auto it = get_alleles().find(allele_id);
 
-    if (it == alleles.end()) {
+    if (it == get_alleles().end()) {
         std::ostringstream oss;
 
-        oss << "Chromosome " << GenomicPosition::chrtos(identifier)
+        oss << "Chromosome " << GenomicPosition::chrtos(id())
             <<  " has not allele " << Allele::format_id(allele_id) << ".";
         throw std::out_of_range(oss.str());
     }
@@ -115,14 +128,25 @@ const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
     return it->second;
 }
 
-Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id)
+void ChromosomeMutations::make_data_exclusive()
 {
-    auto it = alleles.find(allele_id);
+    // if the data are referenced by other ChromosomeMutations objects
+    // copy them in an exclusive object to allow the copy
+    if (_data.use_count()>1) {
+        _data = std::make_shared<ChromosomeMutationData>(*_data);
+    }
+}
 
-    if (it == alleles.end()) {
+Allele& ChromosomeMutations::get_modifiable_allele(const AlleleId& allele_id)
+{
+    make_data_exclusive();
+
+    auto it = _data->alleles.find(allele_id);
+
+    if (it == _data->alleles.end()) {
         std::ostringstream oss;
 
-        oss << "Chromosome " << GenomicPosition::chrtos(identifier)
+        oss << "Chromosome " << GenomicPosition::chrtos(_data->identifier)
             <<  " has not allele " << Allele::format_id(allele_id) << ".";
         throw std::out_of_range(oss.str());
     }
@@ -153,41 +177,61 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
         throw std::domain_error("The genomic region is not in the chromosome");
     }
 
+    // save original data pointer for possible backup
+    auto orig_data = _data;
+
     if (new_allele_id != RANDOM_ALLELE) {
-        if (alleles.find(new_allele_id) != alleles.end()) {
-            throw std::domain_error("Chromosome " + std::to_string(identifier)
+        if (get_alleles().find(new_allele_id) != get_alleles().end()) {
+            throw std::domain_error("Chromosome " + std::to_string(id())
                                     + " already contains the allele "
                                     + std::to_string(new_allele_id) + ".");
         }
 
+        make_data_exclusive();
+
+        auto& next_allele_id = _data->next_allele_id;
         if (new_allele_id > next_allele_id) {
             next_allele_id = new_allele_id + 1;
         } else if (new_allele_id == next_allele_id) {
             ++(next_allele_id);
         }
     } else {
+        make_data_exclusive();
+
+        auto& next_allele_id = _data->next_allele_id;
         new_allele_id = next_allele_id;
 
         ++(next_allele_id);
     }
 
-    while (alleles.find(next_allele_id) != alleles.end()) {
+    auto& next_allele_id = _data->next_allele_id;
+    while (get_alleles().find(next_allele_id) != get_alleles().end()) {
         ++(next_allele_id);
     }
 
     const auto& allele = get_allele(allele_id);
     if (!allele.contains(genomic_region)) {
+
+        // revert to the original data member
+        _data = orig_data;
+
         return false;
     }
 
     auto new_allele = allele.copy(new_allele_id, genomic_region);
 
-    allelic_length += new_allele.size();
+    _data->allelic_length += new_allele.size();
 
-    alleles.insert({new_allele_id, std::move(new_allele)});
+    _data->alleles.insert({new_allele_id, std::move(new_allele)});
 
-    CNAs.push_back(CNA::new_amplification(genomic_region.get_begin(), genomic_region.size(),
-                                          allele_id, new_allele_id, nature));
+    std::shared_ptr<CNA> CNA_ptr = std::make_shared<CNA>();
+
+    *CNA_ptr = CNA::new_amplification(genomic_region.get_begin(),
+                                      genomic_region.size(),
+                                      allele_id, new_allele_id,
+                                      nature);
+
+    _data->CNAs.push_back(CNA_ptr);
 
     return true;
 }
@@ -199,17 +243,27 @@ bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, con
         throw std::domain_error("The genomic region is not in the chromosome");
     }
 
-    auto& allele = get_allele(allele_id);
+    // save original data pointer for possible backup
+    auto orig_data = _data;
+    auto& allele = get_modifiable_allele(allele_id);
     if (!allele.contains(genomic_region)) {
+        // revert to the original data member
+        _data = orig_data;
+
         return false;
     }
 
-    allelic_length -= genomic_region.size();
+    _data->allelic_length -= genomic_region.size();
 
     allele.remove(genomic_region);
 
-    CNAs.push_back(CNA::new_deletion(genomic_region.get_begin(), genomic_region.size(),
-                                     allele_id, nature));
+    std::shared_ptr<CNA> CNA_ptr = std::make_shared<CNA>();
+
+    *CNA_ptr = CNA::new_deletion(genomic_region.get_begin(),
+                                 genomic_region.size(),
+                                 allele_id, nature);
+
+    _data->CNAs.push_back(CNA_ptr);
 
     return true;
 }
@@ -226,7 +280,7 @@ bool ChromosomeMutations::has_context_free(const SID& mutation) const
 
     bool some_allele_contains_pos{false};
 
-    for (const auto& [allele_id, allele]: alleles) {
+    for (const auto& [allele_id, allele]: get_alleles()) {
         if (allele.strictly_contains(mutation)) {
             some_allele_contains_pos = true;
             if (!allele.has_context_free(mutation)) {
@@ -259,20 +313,19 @@ bool ChromosomeMutations::apply(const SID& mutation, const AlleleId& allele_id)
         throw std::domain_error("The genomic position of the SID is not in the chromosome");
     }
 
-    Allele& allele = get_allele(allele_id);
+    // save original data pointer for possible backup
+    auto orig_data = _data;
 
-    return allele.apply(mutation);
-}
+    Allele& allele = get_modifiable_allele(allele_id);
 
-bool ChromosomeMutations::apply(const MutationSpec<SID>& mutation_spec)
-{
-    if (!contains(mutation_spec)) {
-        throw std::domain_error("The genomic position of the SID is not in the chromosome");
+    if (!allele.apply(mutation)) {
+        // revert to the original data member
+        _data = orig_data;
+
+        return false;
     }
 
-    Allele& allele = get_allele(mutation_spec.allele_id);
-
-    return allele.apply(mutation_spec);
+    return true;
 }
 
 bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_position)
@@ -281,22 +334,30 @@ bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_positio
         throw std::domain_error("The genomic position of the SID is not in the chromosome");
     }
 
-    for (auto& [allele_id, allele]: alleles) {
+    // save original data pointer for possible backup
+    auto orig_data = _data;
+
+    make_data_exclusive();
+
+    for (auto& [allele_id, allele]: _data->alleles) {
         if (allele.remove_mutation(genomic_position)) {
             return true;
         }
     }
+
+    // revert to the original data member since nothing has changed
+    _data = orig_data;
 
     return false;
 }
 
 bool ChromosomeMutations::includes(const SID& mutation) const
 {
-    if (mutation.chr_id != identifier) {
+    if (mutation.chr_id != id()) {
         return false;
     }
 
-    for (auto& [allele_id, allele]: alleles) {
+    for (const auto& [allele_id, allele]: get_alleles()) {
         if (allele.includes(mutation)) {
             return true;
         }
@@ -309,14 +370,14 @@ ChromosomeMutations ChromosomeMutations::copy_structure() const
 {
     ChromosomeMutations copy;
 
-    copy.identifier = identifier;
-    copy.length = length;
-    copy.allelic_length = allelic_length;
-    copy.CNAs = CNAs;
-    copy.next_allele_id = next_allele_id;
+    copy._data->identifier = id();
+    copy._data->length = size();
+    copy._data->allelic_length = allelic_size();
+    copy._data->CNAs = _data->CNAs;
+    copy._data->next_allele_id = _data->next_allele_id;
 
-    for (const auto& [allele_id, allele] : alleles) {
-        copy.alleles.emplace(allele_id, allele.copy_structure());
+    for (const auto& [allele_id, allele] : get_alleles()) {
+        copy._data->alleles.emplace(allele_id, allele.copy_structure());
     }
 
     return copy;
@@ -324,8 +385,13 @@ ChromosomeMutations ChromosomeMutations::copy_structure() const
 
 void ChromosomeMutations::duplicate_alleles()
 {
-    auto it = alleles.begin();
-    auto old_allele_id = next_allele_id;
+    make_data_exclusive();
+
+    auto it = _data->alleles.begin();
+    auto old_allele_id = _data->next_allele_id;
+
+    auto& alleles = _data->alleles;
+    auto& next_allele_id = _data->next_allele_id;
 
     while (it != alleles.end()) {
         if (it->first < old_allele_id) {
@@ -338,7 +404,7 @@ void ChromosomeMutations::duplicate_alleles()
         }
     }
 
-    allelic_length *= 2;
+    _data->allelic_length *= 2;
 }
 
 std::map<ChrPosition, AllelicType>

@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.6
- * @date 2024-08-16
+ * @version 1.7
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -64,12 +64,24 @@ using AllelicType = std::vector<uint32_t>;
 /**
  * @brief A class to represent the mutations in a chromosome
  */
-class ChromosomeMutations
+class ChromosomeMutations;
+
+/**
+ * @brief A structure for `ChromosomeMutations` data
+ *
+ * The class `ChromosomeMutations` implements copy-of-write
+ * by storing all its data in a `ChromosomeMutationData`
+ * object pointed by one of its members.
+ */
+class ChromosomeMutationData
 {
+
+public:
     /**
      * @brief The chromosome length type
      */
     using Length = GenomicRegion::Length;
+
 private:
     ChromosomeId identifier;    //!< the chromosome identifier
     Length length;              //!< the chromosome length
@@ -77,22 +89,121 @@ private:
 
     std::map<AlleleId, Allele> alleles;  //!< the chromosome alleles
 
-    std::list<CNA> CNAs;        //!< the occurred CNAs
+    std::list<std::shared_ptr<CNA>> CNAs;        //!< the occurred CNAs
 
     AlleleId next_allele_id;    //!< the identifier of the next allele
 
+public:
+    /**
+     * @brief The empty constructor
+     */
+    ChromosomeMutationData();
+
+    /**
+     * @brief A constructor
+     *
+     * @param identifier is the chromosome identifier
+     * @param size is the chromosome size
+     * @param num_of_alleles is the initial number of alleles
+     */
+    ChromosomeMutationData(const ChromosomeId& identifier,
+                           const Length& size,
+                           const size_t& num_of_alleles);
+
+    /**
+     * @brief A constructor
+     *
+     * @param chromosome_region is the chromosome region
+     * @param num_of_alleles is the initial number of alleles
+     */
+    ChromosomeMutationData(const GenomicRegion& chromosome_region,
+                           const size_t& num_of_alleles);
+
+    /**
+     * @brief Save chromosome mutation data in an archive
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & identifier
+                & length
+                & allelic_length
+                & alleles
+                & CNAs
+                & next_allele_id;
+    }
+
+    /**
+     * @brief Load chromosome mutation data from an archive
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the loaded chromosome mutation data
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static ChromosomeMutationData load(ARCHIVE& archive)
+    {
+        ChromosomeMutationData data;
+
+        archive & data.identifier
+                & data.length
+                & data.allelic_length
+                & data.alleles
+                & data.CNAs
+                & data.next_allele_id;
+
+        return data;
+    }
+
+    friend ChromosomeMutations;
+};
+
+class ChromosomeMutations
+{
+    /**
+     * @brief The chromosome length type
+     */
+    using Length = ChromosomeMutationData::Length;
+private:
+
+    std::shared_ptr<ChromosomeMutationData> _data;   //!< The chromosome mutation data
+
     /**
      * @brief Apply a CNA
-     * 
-     * This function applies a CNA. Whenever the `CNA::dest` member of the 
-     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     *
+     * This function applies a CNA. Whenever the `CNA::dest` member of the
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to
      * the destination allele identifier.
-     * 
+     *
      * @param[in,out] cna is the CNA to be applied
      * @return `true` if and only if the CNA has been successfully applied
      */
     bool apply_CNA(CNA& cna);
 
+    /**
+     * @brief Make data exclusive
+     *
+     * When the data pointer is not exclusive and is referenced by many different
+     * chromosomes, the method copy of the original data member into a data
+     * object exclusively pointed by the current `ChromosomeMutations` object.
+     */
+    void make_data_exclusive();
+
+    /**
+     * @brief Get an allele private reference in the chromosome
+     *
+     * This method is meant to be used to retrieve an allele that is going
+     * to be changed. It guarantees that the data member is exclusive.
+     *
+     * @param allele_id is the identifier of the allele to find
+     * @return a non-constant private reference to the allele
+     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
+     *          chromosome
+     */
+    Allele& get_modifiable_allele(const AlleleId& allele_id);
 public:
     /**
      * @brief The empty constructor
@@ -121,9 +232,9 @@ public:
      *
      * @return the chromosome identifier
      */
-    inline ChromosomeId id() const
+    inline const ChromosomeId& id() const
     {
-        return identifier;
+        return _data->identifier;
     }
 
     /**
@@ -133,7 +244,7 @@ public:
      */
     inline const ChromosomeMutations::Length& size() const
     {
-        return length;
+        return _data->length;
     }
 
     /**
@@ -143,7 +254,7 @@ public:
      */
     inline const ChromosomeMutations::Length& allelic_size() const
     {
-        return allelic_length;
+        return _data->allelic_length;
     }
 
     /**
@@ -153,7 +264,7 @@ public:
      */
     inline const std::map<AlleleId, Allele>& get_alleles() const
     {
-        return alleles;
+        return _data->alleles;
     }
 
     /**
@@ -171,9 +282,9 @@ public:
      *
      * @return the list of the CNAs occurred in the chromosome
      */
-    inline const std::list<CNA>& get_CNAs() const
+    inline const std::list<std::shared_ptr<CNA>>& get_CNAs() const
     {
-        return CNAs;
+        return _data->CNAs;
     }
 
     /**
@@ -200,16 +311,6 @@ public:
      *      is free
      */
     std::list<AlleleId> get_alleles_with_context_free_for(const SID& mutation) const;
-
-    /**
-     * @brief Get an allele in the chromosome
-     *
-     * @param allele_id is the identifier of the allele to find
-     * @return a non-constant reference to the allele
-     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
-     *          chromosome
-     */
-    Allele& get_allele(const AlleleId& allele_id);
 
     /**
      * @brief Check whether an allele contains a chromosomic region
@@ -333,11 +434,11 @@ public:
 
     /**
      * @brief Apply a CNA
-     * 
-     * This function applies a CNA. Whenever the `CNA::dest` member of the 
-     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     *
+     * This function applies a CNA. Whenever the `CNA::dest` member of the
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to
      * the destination allele identifier.
-     * 
+     *
      * @param[in,out] cna is the CNA to be applied
      * @return `true` if and only if the CNA has been successfully applied
      */
@@ -348,7 +449,7 @@ public:
 
     /**
      * @brief Apply a CNA
-     * 
+     *
      * @param[in] cna is the CNA to be applied
      * @return `true` if and only if the CNA has been successfully applied
      */
@@ -391,7 +492,10 @@ public:
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
-    bool apply(const MutationSpec<SID>& mutation_spec);
+    inline bool apply(const MutationSpec<SID>& mutation_spec)
+    {
+        return apply(static_cast<const SID&>(mutation_spec), mutation_spec.allele_id);
+    }
 
     /**
      * @brief Copy genomic structure
@@ -407,20 +511,20 @@ public:
 
     /**
      * @brief Duplicate genome alleles
-     * 
+     *
      * This method duplicate all the alleles in the genome
      */
     void duplicate_alleles();
 
     /**
      * @brief Get the allelic types of some chromosome fragments
-     * 
+     *
      * @param break_points are the fragment break points
      * @param min_allelic_size is the minimum number of alleles
      *    to report
      * @return A map that associates each break point to the
      *    allelic type of the genomic fragment beginning at the
-     *    break point and ending at the following break point 
+     *    break point and ending at the following break point
      */
     std::map<ChrPosition, AllelicType>
     get_allelic_types(const std::set<ChrPosition>& break_points,
@@ -460,12 +564,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & identifier
-                & length
-                & allelic_length
-                & alleles
-                & CNAs
-                & next_allele_id;
+        archive & _data;
     }
 
     /**
@@ -473,19 +572,14 @@ public:
      *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the load chromosome mutations
+     * @return the loaded chromosome mutations
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static ChromosomeMutations load(ARCHIVE& archive)
     {
         ChromosomeMutations chr_mutations;
 
-        archive & chr_mutations.identifier
-                & chr_mutations.length
-                & chr_mutations.allelic_length
-                & chr_mutations.alleles
-                & chr_mutations.CNAs
-                & chr_mutations.next_allele_id;
+        archive & chr_mutations._data;
 
         return chr_mutations;
     }
@@ -500,11 +594,11 @@ class GenomeMutations
 
     /**
      * @brief Apply a CNA
-     * 
-     * This function applies a CNA. Whenever the `CNA::dest` member of the 
-     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     *
+     * This function applies a CNA. Whenever the `CNA::dest` member of the
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to
      * the destination allele identifier.
-     * 
+     *
      * @param[in,out] cna is the CNA to be applied
      * @return `true` if and only if the CNA has been successfully applied
      */
@@ -727,11 +821,11 @@ public:
 
     /**
      * @brief Apply a CNA
-     * 
-     * This function applies a CNA. Whenever the `CNA::dest` member of the 
-     * parameter is set to `RANDOM_ALLELE`, the function change its value to 
+     *
+     * This function applies a CNA. Whenever the `CNA::dest` member of the
+     * parameter is set to `RANDOM_ALLELE`, the function change its value to
      * the destination allele identifier.
-     * 
+     *
      * @param[in,out] cna is the CNA to be applied
      * @return `true` if and only if the CNA has been successfully applied
      */
@@ -742,7 +836,7 @@ public:
 
     /**
      * @brief Apply a CNA
-     * 
+     *
      * @param[in] cna is the CNA to be applied
      * @return `true` if and only if the CNA has been successfully applied
      */
@@ -832,7 +926,7 @@ public:
 
     /**
      * @brief Duplicate genome alleles
-     * 
+     *
      * This method duplicate all the alleles in the genome
      */
     void duplicate_alleles();
@@ -857,7 +951,7 @@ public:
 
     /**
      * @brief Get the allelic types of the genomic fragments
-     * 
+     *
      * @param break_points is a map from the set of chromosome
      *    identifiers to the fragment break points in the
      *    corresponding chromosome
@@ -874,9 +968,9 @@ public:
 
     /**
      * @brief Get the CNA break points
-     * 
-     * @return A map that associates the chromosome identifiers 
-     *   to the set of CNA break points on the corresponding 
+     *
+     * @return A map that associates the chromosome identifiers
+     *   to the set of CNA break points on the corresponding
      */
     std::map<ChromosomeId, std::set<ChrPosition>>
     get_CNA_break_points() const;
@@ -898,7 +992,7 @@ public:
      *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the load genome mutations
+     * @return the loaded genome mutations
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static GenomeMutations load(ARCHIVE& archive)
@@ -950,7 +1044,7 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Genome Mutations", 0);
+        ARCHIVE::write_header(archive, "RACES Cell Genome Mutations", 1);
 
         archive & static_cast<const Mutants::Cell&>(*this)
                 & static_cast<const GenomeMutations&>(*this);
@@ -961,12 +1055,12 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
      *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the load cell genome mutations
+     * @return the loaded cell genome mutations
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static CellGenomeMutations load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES Genome Mutations", 0);
+        ARCHIVE::read_header(archive, "RACES Cell Genome Mutations", 1);
 
         CellGenomeMutations cg_mutations;
 

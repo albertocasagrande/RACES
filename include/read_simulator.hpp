@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.14
- * @date 2024-10-09
+ * @version 1.15
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -272,7 +272,7 @@ class ChrSampleStatistics : public ChrCoverage
 
     /**
      * @brief Add the mutation of a chromosome to the statistics
-     * 
+     *
      * @param chromosome is the chromosome whose mutations must be
      *     added to the statistics
      */
@@ -286,7 +286,7 @@ public:
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param[in] chromosome_id is the identifier of the chromosome whose sequencing
      *          statistics are collected
      * @param[in] size is the size of the chromosome whose sequencing
@@ -1027,8 +1027,8 @@ private:
              std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     void process_template(SEQUENCER& sequencer,
                           const RACES::IO::FASTA::ChromosomeData<RACES::IO::FASTA::Sequence>& chr_data,
-                          const std::map<GenomicPosition, SID>& germlines,
-                          const std::map<GenomicPosition, SID>& passengers,
+                          const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
+                          const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
                           const ChrPosition& template_begin_pos,
                           const size_t& template_size, ChrSampleStatistics& chr_statistics,
                           std::ostream* SAM_stream, const std::string& sample_name="")
@@ -1048,7 +1048,7 @@ private:
 
             read[i] = Read{chr_data.nucleotides, germlines, passengers,
                            genomic_position, read_size};
-            
+
             qual[i] = sequencer.simulate_seq(read[i], genomic_position, i==1);
             hamming_dist[i] = read[i].Hamming_distance();
 
@@ -1062,7 +1062,7 @@ private:
 
         if (SAM_stream != nullptr) {
             for (size_t i=0; i<template_read_data.size(); ++i) {
-                if (hamming_dist[i] < hamming_distance_threshold) {  
+                if (hamming_dist[i] < hamming_distance_threshold) {
                     const auto& genomic_position = read[i].get_genomic_position();
 
                     int flag = template_read_data[i].first;
@@ -1368,7 +1368,7 @@ private:
                 const auto& germline_chr = sample_mutations.germline_mutations->get_chromosome(chr_id);
                 sample_data.missing_templates += static_cast<size_t>((germline_chr.size()
                                                                         *coverage)/total_read_size);
-    
+
                 for (const auto& cell_mutations: sample_mutations.mutations) {
                     const auto& chr_mutations = cell_mutations->get_chromosome(chr_id);
                     sample_data.not_covered_allelic_size += chr_mutations.allelic_size();
@@ -1491,7 +1491,7 @@ private:
      * @param ref_genome_filename is reference genome filename
      * @param read_type is the type of the produced-read, i.e., single or paired-read
      * @param read_size is the size of the output reads
-     * @param insert_size_distribution is the insert size distribution 
+     * @param insert_size_distribution is the insert size distribution
      * @param mode is the SAM generator output mode
      * @param save_coverage is a flag to enable/disable storage of coverage data
      * @param template_name_prefix is the template name prefix
@@ -1669,7 +1669,7 @@ public:
                                                                        normal_sample.mutations.end());
 
         std::uniform_int_distribution<size_t> selector(0, normal_cells.size()-1);
-        
+
         for (auto& mutation_list : mutations_list) {
             if (purity>0) {
                 size_t tumour_number = mutation_list.mutations.size();
@@ -1793,7 +1793,7 @@ public:
         const auto chromosome_ids = get_genome_chromosome_ids(mutations_list);
 
         return operator()(sequencer, mutations_list, chromosome_ids, coverage,
-                          {"normal_sample", {}}, 1.0, base_name, 
+                          {"normal_sample", {}}, 1.0, base_name,
                           progress_bar_stream, quiet);
     }
 
@@ -1954,8 +1954,8 @@ public:
 
     /**
      * @brief Get the simulated read size
-     * 
-     * @return the simulated read size 
+     *
+     * @return the simulated read size
      */
     inline size_t get_read_size() const
     {

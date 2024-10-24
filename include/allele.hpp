@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 1.2
- * @date 2024-08-09
+ * @version 1.3
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -57,7 +57,8 @@ typedef size_t AlleleId;
  */
 class AlleleFragment : public GenomicRegion
 {
-    std::map<GenomicPosition, SID> mutations;  //!< the fragment SIDs
+    std::map<GenomicPosition,
+             std::shared_ptr<SID>> mutations;  //!< the fragment SIDs
 
     /**
      * @brief Split an allele fragment
@@ -135,7 +136,8 @@ public:
      *
      * @return a constant reference to the allele fragment SID mutations
      */
-    inline const std::map<GenomicPosition, SID>& get_mutations() const
+    inline const std::map<GenomicPosition, std::shared_ptr<SID>>&
+    get_mutations() const
     {
         return mutations;
     }
@@ -243,9 +245,9 @@ public:
  */
 class Allele
 {
-    std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
+        std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
 
-    std::list<AlleleId> history;    //!< the allele history
+        std::list<AlleleId> history;    //!< the allele history
 
     /**
      * @brief The empty constructor
@@ -432,7 +434,7 @@ public:
      *
      * @return the allele SID mutations
      */
-    std::map<GenomicPosition, SID> get_mutations() const;
+    std::map<GenomicPosition, std::shared_ptr<SID>> get_mutations() const;
 
     /**
      * @brief Get the size of the allele

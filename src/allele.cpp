@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 1.2
- * @date 2024-08-09
+ * @version 1.3
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -69,7 +69,7 @@ bool AlleleFragment::has_context_free(const SID& mutation) const
     if (it != mutations.begin()) {
         --it;
 
-        return (it->first.position+it->second.ref.size() < g_pos.position+1);
+        return (it->first.position+(it->second)->ref.size() < g_pos.position+1);
     }
 
     return true;
@@ -78,11 +78,12 @@ bool AlleleFragment::has_context_free(const SID& mutation) const
 bool AlleleFragment::apply(const SID& mutation)
 {
     if (!contains(mutation)) {
-        throw std::out_of_range("The allele fragment does not contain the SNV");
+        throw std::out_of_range("The allele fragment does not "
+                                "contain mutation region");
     }
 
     if (has_context_free(mutation)) {
-        mutations[mutation] = mutation;
+        mutations[mutation] = std::make_shared<SID>(mutation);
 
         return true;
     }
@@ -93,7 +94,8 @@ bool AlleleFragment::apply(const SID& mutation)
 bool AlleleFragment::remove_mutation(const GenomicPosition& genomic_position)
 {
     if (!contains(genomic_position)) {
-        throw std::out_of_range("The allele fragment does not contain the SNV");
+        throw std::out_of_range("The allele fragment does not "
+                                "contain mutation region");
     }
 
     auto it = mutations.find(genomic_position);
@@ -119,14 +121,15 @@ bool AlleleFragment::includes(const SID& mutation) const
         return false;
     }
 
-    return (it->second.alt == mutation.alt)
-            && (it->second.ref == mutation.ref);
+    return ((it->second)->alt == mutation.alt)
+            && ((it->second)->ref == mutation.ref);
 }
 
 AlleleFragment AlleleFragment::split(const GenomicPosition& split_point)
 {
     if (!contains(split_point)) {
-        throw std::out_of_range("The allele fragment does not contain the SNV");
+        throw std::out_of_range("The allele fragment does not "
+                                "contain mutation region");
     }
 
     if (get_initial_position() == split_point.position) {
@@ -161,7 +164,7 @@ bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region
     auto final_position = genomic_region.get_final_position();
     for (auto it = mutations.lower_bound(genomic_region.get_begin());
             it != mutations.end() && it->first.position <= final_position; ++it) {
-        if (it->second.nature == Mutation::DRIVER) {
+        if ((it->second)->nature == Mutation::DRIVER) {
             return true;
         }
     }
@@ -350,9 +353,9 @@ bool Allele::remove(const GenomicRegion& genomic_region)
     return true;
 }
 
-std::map<GenomicPosition, SID> Allele::get_mutations() const
+std::map<GenomicPosition, std::shared_ptr<SID>> Allele::get_mutations() const
 {
-    std::map<GenomicPosition, SID> mutations;
+    std::map<GenomicPosition, std::shared_ptr<SID>> mutations;
 
     for (const auto& [pos, fragment]: fragments) {
         for (const auto& [mutation_pos, mutation]: fragment.get_mutations()) {

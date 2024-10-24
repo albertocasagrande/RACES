@@ -2,8 +2,8 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -50,7 +50,7 @@ MutationStatistics::MutationStatistics()
 MutationStatistics& MutationStatistics::record(const std::string& sample_name,
                                                const CellGenomeMutations& cell_mutations)
 {
-    std::set<SID> in_cell;
+    std::set<std::shared_ptr<SID>> in_cell;
 
     auto& sample_stat = sample_statistics[sample_name];
 
@@ -69,12 +69,12 @@ MutationStatistics& MutationStatistics::record(const std::string& sample_name,
             for (const auto& [fragment_pos, fragment]: allele.get_fragments()) {
 
                 // for all SIDs in the fragment
-                for (const auto& [mutation_pos, mutation]: fragment.get_mutations()) {
+                for (const auto& [mutation_pos, mutation_ptr]: fragment.get_mutations()) {
 
-                    ++(sample_stat.SIDs[mutation].mutated_alleles);
-                    ++(overall_statistics.SIDs[mutation].mutated_alleles);
+                    ++(sample_stat.SIDs[mutation_ptr].mutated_alleles);
+                    ++(overall_statistics.SIDs[mutation_ptr].mutated_alleles);
 
-                    in_cell.insert(mutation);
+                    in_cell.insert(mutation_ptr);
                 }
             }
         }
@@ -148,19 +148,20 @@ std::ostream& MutationStatistics::write_SIDs_table(std::ostream& os, const char 
 
     os << std::endl;
 
-    for (const auto& [mutation, mutation_statistics] : overall_statistics.SIDs) {
+    for (const auto& [mutation_ptr, mutation_statistics] : overall_statistics.SIDs) {
 
-        os << GenomicPosition::chrtos(mutation.chr_id) << separator << mutation.position
-           << separator << mutation.position << separator
-           << (mutation.ref==""?"-":mutation.ref) << separator
-           << (mutation.alt==""?"-":mutation.alt) << separator
-           << (mutation.is_SBS()?"SNV":"indel") << separator
-           << mutation.cause << separator
-           << mutation.get_nature_description();
+        os << GenomicPosition::chrtos(mutation_ptr->chr_id) << separator
+           << mutation_ptr->position
+           << separator << mutation_ptr->position << separator
+           << (mutation_ptr->ref==""?"-":mutation_ptr->ref) << separator
+           << (mutation_ptr->alt==""?"-":mutation_ptr->alt) << separator
+           << (mutation_ptr->is_SBS()?"SNV":"indel") << separator
+           << mutation_ptr->cause << separator
+           << mutation_ptr->get_nature_description();
 
         if (sample_statistics.size()>1) {
             for (const auto& [sample_name, sample_stat]: sample_statistics) {
-                auto found = sample_stat.SIDs.find(mutation);
+                auto found = sample_stat.SIDs.find(mutation_ptr);
                 if (found != sample_stat.SIDs.end()) {
                     const auto &mutation_stat = found->second;
                     os << separator << mutation_stat.mutated_alleles
@@ -187,10 +188,10 @@ std::ostream& MutationStatistics::write_CNAs_table(std::ostream& os, const char 
 
     if (sample_statistics.size()>1) {
         for (const auto& cna: overall_statistics.CNAs) {
-            os << GenomicPosition::chrtos(cna.chr_id) << separator
-               << cna.get_initial_position() << separator
-               << cna.get_final_position()  << separator
-               << (cna.type == CNA::Type::AMPLIFICATION?"amplification":"deletion")
+            os << GenomicPosition::chrtos(cna->chr_id) << separator
+               << cna->get_initial_position() << separator
+               << cna->get_final_position()  << separator
+               << (cna->type == CNA::Type::AMPLIFICATION?"amplification":"deletion")
                << separator << "???" << separator << "???" << std::endl;
         }
     }

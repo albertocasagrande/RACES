@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.1
- * @date 2024-07-04
+ * @version 1.2
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -548,8 +548,11 @@ struct requires_constant_size : public std::is_arithmetic<T>
 /**
  * @brief The binary output archive
  */
-struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
+class Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
 {
+    std::map<std::shared_ptr<void>, size_t> dm_lookup;
+
+public:
     /**
      * @brief The empty constructor
      */
@@ -635,6 +638,9 @@ struct Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
 
         return *this;
     }
+
+    template<typename T>
+    Out& operator&(const std::shared_ptr<T>& obj_ptr);
 
     /**
      * @brief Save an object
@@ -745,8 +751,11 @@ public:
 /**
  * @brief The binary input archive
  */
-struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
+class In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
 {
+    std::map<size_t, std::pair<size_t, std::shared_ptr<void>>> dm_lookup;
+
+public:
     /**
      * @brief A constructor
      *
@@ -837,6 +846,9 @@ struct In : public Archive::Basic::In, private Archive::Basic::ProgressViewer
         return *this;
     }
 
+    template<typename T>
+    In& operator&(std::shared_ptr<T>& obj_ptr);
+
     /**
      * @brief Load an object
      *
@@ -922,7 +934,6 @@ inline ARCHIVE& operator&(ARCHIVE& archive, const VALUE_TYPE& value)
 
     return archive;
 }
-
 
 /**
  * @brief Save an `std::chrono::time_point` object
@@ -1474,6 +1485,32 @@ namespace Binary
 {
 
 template<typename T>
+Out& Out::operator&(const std::shared_ptr<T>& obj_ptr)
+{
+    auto it = dm_lookup.find(obj_ptr);
+    bool in_lookup = it != dm_lookup.end();
+
+    *this & static_cast<char>(in_lookup);
+    if (in_lookup) {
+        *this & it->second;
+
+        return *this;
+    }
+
+    // insert the pointer in the lookup
+    auto res = dm_lookup.insert({obj_ptr, dm_lookup.size()});
+
+    if (!res.second) {
+        // the pointer was not inserted
+        throw std::runtime_error("Error in saving a pointed object");
+    }
+
+    *this & *obj_ptr;
+    
+    return *this;
+}
+
+template<typename T>
 void Out::save(const T& object, RACES::UI::ProgressBar& progress_bar,
                const std::string& description)
 {
@@ -1502,6 +1539,48 @@ void Out::save(const T& object, RACES::UI::ProgressBar& progress_bar,
     reset();
 
     UI::ProgressBar::show_console_cursor();
+}
+
+template<typename T>
+In& In::operator&(std::shared_ptr<T>& obj_ptr)
+{
+    char in_lookup;
+    *this & in_lookup;
+
+    if (in_lookup) {
+        size_t idx;
+        *this & idx;
+
+        auto it = dm_lookup.find(idx);
+        if (it == dm_lookup.end()) {
+            throw std::runtime_error("The search object has not been loaded yet");
+        }
+
+        if (it->second.first != typeid(T).hash_code()) {
+            throw std::runtime_error("Wrong hash code for index " 
+                                        + std::to_string(idx));
+        }
+
+        obj_ptr = std::static_pointer_cast<T>(it->second.second);
+    } else {
+        obj_ptr = std::make_shared<T>();
+
+        *this & *obj_ptr;
+
+        // insert the pointer in the lookup
+        auto res = dm_lookup.insert({dm_lookup.size(), 
+                                        std::make_pair<size_t,
+                                                    std::shared_ptr<void>>(
+                                    typeid(T).hash_code(),
+                                    obj_ptr)});
+
+        if (!res.second) {
+            // the pointer was not inserted
+            throw std::runtime_error("Error in loading an object");
+        }
+    }
+
+    return *this;
 }
 
 template<typename T>

@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 1.1
- * @date 2024-09-19
+ * @version 1.2
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -241,11 +241,11 @@ void ChrSampleStatistics::account_for(const ChromosomeMutations& chromosome)
 {
     for (const auto& [allele_id, allele]: chromosome.get_alleles()) {
         for (const auto& [frag_pos, fragment]: allele.get_fragments()) {
-            for (const auto& [SID_pos, SID] : fragment.get_mutations()) {
-                auto SID_data_it = SID_data.find(SID);
+            for (const auto& [SID_pos, SID_ptr] : fragment.get_mutations()) {
+                auto SID_data_it = SID_data.find(*SID_ptr);
 
                 if (SID_data_it == SID_data.end()) {
-                    SID_data.insert({SID, {SID, 0}});
+                    SID_data.insert({*SID_ptr, {*SID_ptr, 0}});
                 }
             }
         }

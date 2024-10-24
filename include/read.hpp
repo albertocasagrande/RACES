@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 1.1
- * @date 2024-10-13
+ * @version 1.2
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -138,11 +138,11 @@ class Read
      */
     class MutationIterator
     {
-        std::map<GenomicPosition, SID> const* passengers;     //!< The passenger map
-        std::map<GenomicPosition, SID> const* germlines;      //!< The germline map
+        std::map<GenomicPosition, std::shared_ptr<SID>> const* passengers;     //!< The passenger map
+        std::map<GenomicPosition, std::shared_ptr<SID>> const* germlines;      //!< The germline map
 
-        std::map<GenomicPosition, SID>::const_iterator p_it;    //!< The passenger iterator
-        std::map<GenomicPosition, SID>::const_iterator g_it;    //!< The germline iterator
+        std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator p_it;    //!< The passenger iterator
+        std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator g_it;    //!< The germline iterator
 
         Direction direction;    //!< Iterator direction
 
@@ -166,15 +166,15 @@ class Read
          * @param germline_it is an germline SID map iterator
          * @param passenger_it is an passenger SID map iterator
          */
-        MutationIterator(const std::map<GenomicPosition, SID>& germlines,
-                            const std::map<GenomicPosition, SID>& passengers,
-                            const std::map<GenomicPosition, SID>::const_iterator& germline_it,
-                            const std::map<GenomicPosition, SID>::const_iterator& passenger_it);
+        MutationIterator(const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& germline_it,
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& passenger_it);
 
     public:
         using difference_type   =   std::ptrdiff_t;
-        using value_type        =   std::map<GenomicPosition, SID>::value_type;
-        using allocator_type	=   std::map<GenomicPosition, SID>::allocator_type;
+        using value_type        =   std::map<GenomicPosition, std::shared_ptr<SID>>::value_type;
+        using allocator_type	=   std::map<GenomicPosition, std::shared_ptr<SID>>::allocator_type;
         using pointer           =   std::allocator_traits<allocator_type>::pointer;
         using const_pointer     =   std::allocator_traits<allocator_type>::const_pointer;
         using reference         =   const value_type&;
@@ -193,8 +193,8 @@ class Read
          * @param genomic_position
          * @return MutationIterator
          */
-        static MutationIterator lower_bound(const std::map<GenomicPosition, SID>& germlines,
-                                            const std::map<GenomicPosition, SID>& passengers,
+        static MutationIterator lower_bound(const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
+                                            const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
                                             const GenomicPosition& genomic_position);
 
         /**
@@ -315,7 +315,7 @@ class Read
 
     /**
      * @brief Remove the mutation in a read position
-     * 
+     *
      * @param pos is the read position in which the to-be-removed
      *    mutation lays
      */
@@ -336,8 +336,8 @@ public:
      * @param read_size is the aimed read size
      */
     Read(const std::string& reference,
-         const std::map<GenomicPosition, SID>& germlines,
-         const std::map<GenomicPosition, SID>& passengers,
+         const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
+         const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
          const GenomicPosition& genomic_position,
          const size_t& read_size);
 

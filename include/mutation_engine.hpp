@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.13
- * @date 2024-09-19
+ * @version 1.14
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -81,8 +81,8 @@ class MutationStatistics
     {
         size_t num_of_cells;          //!< Number of recorded cells
 
-        std::map<SID, SIDStatistics> SIDs;      //!< SIDs
-        std::list<CNA> CNAs;   //!< CNAs
+        std::map<std::shared_ptr<SID>, SIDStatistics> SIDs;      //!< SIDs
+        std::list<std::shared_ptr<CNA>> CNAs;   //!< CNAs
 
         /**
          * @brief The empty constructor

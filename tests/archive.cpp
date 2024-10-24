@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 0.23
- * @date 2024-03-12
+ * @version 1.0
+ * @date 2024-10-24
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -283,6 +283,117 @@ BOOST_AUTO_TEST_CASE(binary_vector)
     basic_type_test<std::vector<double>>({{-3.3}, {}, {1/4, -0},{}, {2/3}});
     basic_type_test<std::vector<char>>({{},{},{'a', '.'}, {}, {'\n', '\0'},{}});
     basic_type_test<std::vector<std::string>>({{},{"string", ""}, {}, {"\n"}, {"\"ci\0ao\""}});
+}
+
+struct TestData
+{
+    size_t test_member[1000];
+
+    TestData()
+    {
+        for (size_t i=0; i<1000; ++i) {
+            test_member[i] = i;
+        }
+    }
+
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        for (size_t i=0; i<1000; ++i) {
+            archive & test_member[i];
+        }
+    }
+
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<RACES::Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static TestData load(ARCHIVE& archive)
+    {
+        TestData test_data;
+
+        for (size_t i=0; i<1000; ++i) {
+            archive & test_data.test_member[i];
+        }
+
+        return test_data;
+    }
+
+    bool operator==(const TestData& a) const
+    {
+        for (size_t i=0; i<1000; ++i) {
+            if (test_member[i]!=a.test_member[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    inline bool operator!=(const TestData& a) const
+    {
+        return !(*this==a);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(binary_dynamic_memory_object)
+{
+    std::filesystem::path filename = get_a_temporary_path();
+
+    std::shared_ptr<int> a=std::make_shared<int>(3);
+    std::vector<std::shared_ptr<int>> v{a, std::make_shared<int>(4)};
+    std::shared_ptr<std::vector<int>> sv=std::make_shared<std::vector<int>>(10000);
+    std::shared_ptr<TestData> a_struct=std::make_shared<TestData>();
+    std::vector<std::shared_ptr<TestData>> v_struct{a_struct, std::make_shared<TestData>()};
+    std::shared_ptr<std::vector<TestData>> sv_struct=std::make_shared<std::vector<TestData>>(10000);
+    {
+        RACES::Archive::Binary::Out o_archive(filename);
+
+        o_archive & a & a & a & a & a
+                  & v & v & sv & sv
+                  & a_struct & a_struct & a_struct & a_struct & a_struct
+                  & v_struct & v_struct & sv_struct & sv_struct;
+    }
+
+    {
+        std::shared_ptr<int> loaded_a1, loaded_a2, loaded_a3, loaded_a4, loaded_a5;
+        std::vector<std::shared_ptr<int>> loaded_v1, loaded_v2;
+        std::shared_ptr<std::vector<int>> loaded_sv1, loaded_sv2;
+        std::shared_ptr<TestData> loaded_a_struct1, loaded_a_struct2, loaded_a_struct3,
+                                  loaded_a_struct4, loaded_a_struct5;
+        std::vector<std::shared_ptr<TestData>> loaded_v_struct1, loaded_v_struct2;
+        std::shared_ptr<std::vector<TestData>> loaded_sv_struct1, loaded_sv_struct2;
+
+        RACES::Archive::Binary::In i_archive(filename);
+
+        i_archive & loaded_a1 & loaded_a2 & loaded_a3
+                  & loaded_a4 & loaded_a5 & loaded_v1
+                  & loaded_v2 & loaded_sv1 & loaded_sv2
+                  & loaded_a_struct1 & loaded_a_struct2
+                  & loaded_a_struct3 & loaded_a_struct4
+                  & loaded_a_struct5 & loaded_v_struct1
+                  & loaded_v_struct2 & loaded_sv_struct1
+                  & loaded_sv_struct2;
+
+        BOOST_CHECK(*loaded_a1==*a);
+        BOOST_CHECK(loaded_a2.get()==loaded_a1.get());
+        BOOST_CHECK(loaded_a3.get()==loaded_a1.get());
+        BOOST_CHECK(loaded_a4.get()==loaded_a1.get());
+        BOOST_CHECK(loaded_a5.get()==loaded_a1.get());
+        BOOST_CHECK(loaded_v1.size()==v.size());
+        BOOST_CHECK(loaded_v1[0].get()==loaded_a1.get());
+        BOOST_CHECK(loaded_v2[0].get()==loaded_a1.get());
+        BOOST_CHECK(loaded_sv1->size()==sv->size());
+        BOOST_CHECK(loaded_sv1.get()==loaded_sv2.get());
+        BOOST_CHECK(*loaded_a_struct1==*a_struct);
+        BOOST_CHECK(loaded_a_struct2.get()==loaded_a_struct1.get());
+        BOOST_CHECK(loaded_a_struct3.get()==loaded_a_struct1.get());
+        BOOST_CHECK(loaded_a_struct4.get()==loaded_a_struct1.get());
+        BOOST_CHECK(loaded_a_struct5.get()==loaded_a_struct1.get());
+        BOOST_CHECK(loaded_v_struct1[0].get()==loaded_a_struct1.get());
+        BOOST_CHECK(loaded_v_struct2[0].get()==loaded_a_struct1.get());
+        BOOST_CHECK(loaded_sv_struct1->size()==sv_struct->size());
+        BOOST_CHECK(loaded_sv_struct2.get()==loaded_sv_struct1.get());
+    }
+
+    std::filesystem::remove(filename);
 }
 
 BOOST_AUTO_TEST_CASE(binary_list)
