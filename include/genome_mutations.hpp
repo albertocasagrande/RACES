@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.7
- * @date 2024-10-24
+ * @version 1.8
+ * @date 2024-10-25
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -34,7 +34,8 @@
 #include <map>
 #include <list>
 #include <fstream>
-#include <memory>
+#include <memory>   // for std::shared_ptr
+#include <utility>  // for std::pair
 
 #include "mutation.hpp"
 #include "mutation_spec.hpp"
@@ -189,21 +190,36 @@ private:
      * When the data pointer is not exclusive and is referenced by many different
      * chromosomes, the method copy of the original data member into a data
      * object exclusively pointed by the current `ChromosomeMutations` object.
+     *
+     * @warning In order to avoid unneccessary and time-consuming copies of the
+     *     chromosome mutation data, the chromosome mutation data pointer should
+     *     be exclusively maintained by the `ChromosomeMutations` object during
+     *     the call to this method. For backup purpouse, the returned value.
+     * 
+     * @return the shared pointer to the original data for backup
      */
-    void make_data_exclusive();
+    std::shared_ptr<ChromosomeMutationData> make_data_exclusive();
 
     /**
      * @brief Get an allele private reference in the chromosome
      *
      * This method is meant to be used to retrieve an allele that is going
-     * to be changed. It guarantees that the data member is exclusive.
-     *
+     * to be changed. It guarantees that the data member is exclusive. 
+     * 
+     * @warning In order to avoid unneccessary and time-consuming copies of the
+     *     chromosome mutation data, the chromosome mutation data pointer should
+     *     be exclusively maintained by the `ChromosomeMutations` object during
+     *     the call to this method. For backup purpouse, use the second component
+     *     of the returned pair.
+     * 
      * @param allele_id is the identifier of the allele to find
-     * @return a non-constant private reference to the allele
+     * @return a pair whose first component is a pointer to the allele and second 
+     *     component is the shared pointer to the original data for backup
      * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
-     *          chromosome
+     *     chromosome
      */
-    Allele& get_modifiable_allele(const AlleleId& allele_id);
+    std::pair<Allele*, std::shared_ptr<ChromosomeMutationData>>
+    get_modifiable_allele(const AlleleId& allele_id);
 public:
     /**
      * @brief The empty constructor
@@ -564,6 +580,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES Genome Mutations", 0);
+
         archive & _data;
     }
 
@@ -578,6 +596,8 @@ public:
     inline static ChromosomeMutations load(ARCHIVE& archive)
     {
         ChromosomeMutations chr_mutations;
+
+        ARCHIVE::read_header(archive, "RACES Genome Mutations", 0);
 
         archive & chr_mutations._data;
 
@@ -1044,8 +1064,6 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Cell Genome Mutations", 1);
-
         archive & static_cast<const Mutants::Cell&>(*this)
                 & static_cast<const GenomeMutations&>(*this);
     }
@@ -1060,8 +1078,6 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static CellGenomeMutations load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES Cell Genome Mutations", 1);
-
         CellGenomeMutations cg_mutations;
 
         archive & static_cast<Mutants::Cell&>(cg_mutations)
