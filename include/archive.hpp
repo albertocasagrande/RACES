@@ -2,7 +2,7 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.3
+ * @version 1.4
  * @date 2024-10-25
  *
  * @copyright Copyright (c) 2023-2024
@@ -1592,19 +1592,20 @@ In& In::operator&(std::shared_ptr<T>& obj_ptr)
     } else {
         obj_ptr = std::make_shared<T>();
 
-        *this & *obj_ptr;
+        // insert an entry for the object in the lookup.
+        // We also save the type hash code to validate
+        // the next reading of the same object
 
-        // insert the pointer in the lookup
-        auto res = dm_lookup.insert({dm_lookup.size(), 
-                                        std::make_pair<size_t,
-                                                    std::shared_ptr<void>>(
-                                    typeid(T).hash_code(),
-                                    obj_ptr)});
+        auto dm_entry = std::make_pair<size_t, std::shared_ptr<void>>(
+                                typeid(T).hash_code(), obj_ptr);
+        auto res = dm_lookup.insert({dm_lookup.size(), dm_entry});
 
         if (!res.second) {
             // the pointer was not inserted
             throw std::runtime_error("Error in loading an object");
         }
+
+        *this & *obj_ptr;
     }
 
     return *this;
