@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.2
- * @date 2024-10-24
+ * @version 1.3
+ * @date 2024-10-25
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -550,7 +550,8 @@ struct requires_constant_size : public std::is_arithmetic<T>
  */
 class Out : public Archive::Basic::Out, private Archive::Basic::ProgressViewer
 {
-    std::map<std::shared_ptr<void>, size_t> dm_lookup;
+protected:
+    std::map<std::shared_ptr<void>, size_t> dm_lookup;  //!< The dynamic memory lookup table
 
 public:
     /**
@@ -639,6 +640,13 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Save an object referenced by a shared pointer
+     * 
+     * @tparam T is the type of the object to be saved
+     * @param obj_ptr a shared pointer to the object to be save
+     * @return a reference to the updated archive
+     */
     template<typename T>
     Out& operator&(const std::shared_ptr<T>& obj_ptr);
 
@@ -710,8 +718,8 @@ public:
      * @brief Measure the space required by an arithmetic value
      *
      * @tparam ARITHMETIC_TYPE is the type of the value
-     * @param value is the value whore archive required space is aimed
-     * @return a reference to the updated archive
+     * @param value is the value whose archive required space is aimed
+     * @return a reference to the updated byte counter
      */
     template<typename ARITHMETIC_TYPE, std::enable_if_t<std::is_arithmetic_v<ARITHMETIC_TYPE>, bool> = true>
     inline ByteCounter& operator&(const ARITHMETIC_TYPE& value)
@@ -722,6 +730,17 @@ public:
 
         return *this;
     }
+
+    /**
+     * @brief Measure the space required by an object in dynamic memory
+     * 
+     * @tparam T is the type of the object whose archive space is required
+     * @param obj_ptr a shared pointer to the object whose archive space
+     *    is required
+     * @return a reference to the updated byte counter
+     */
+    template<typename T>
+    ByteCounter& operator&(const std::shared_ptr<T>& obj_ptr);
 
     /**
      * @brief Record the requirement of n objects of a type
@@ -846,6 +865,14 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Load an object in dynamic memory
+     * 
+     * @tparam T is the type of the object to be loaded
+     * @param obj_ptr a shared pointer that will reference
+     *      the loaded object
+     * @return a reference to the updated archive
+     */
     template<typename T>
     In& operator&(std::shared_ptr<T>& obj_ptr);
 
@@ -1621,6 +1648,33 @@ size_t ByteCounter::bytes_required_by(const T& object) {
     bc & object;
 
     return bc.bytes;
+}
+
+
+template<typename T>
+ByteCounter& ByteCounter::operator&(const std::shared_ptr<T>& obj_ptr)
+{
+    auto it = dm_lookup.find(obj_ptr);
+    bool in_lookup = it != dm_lookup.end();
+
+    *this & static_cast<char>(in_lookup);
+    if (in_lookup) {
+        *this & it->second;
+
+        return *this;
+    }
+
+    // insert the pointer in the lookup
+    auto res = dm_lookup.insert({obj_ptr, dm_lookup.size()});
+
+    if (!res.second) {
+        // the pointer was not inserted
+        throw std::runtime_error("Error in saving a pointed object");
+    }
+
+    *this & *obj_ptr;
+    
+    return *this;
 }
 
 }   // Binary
