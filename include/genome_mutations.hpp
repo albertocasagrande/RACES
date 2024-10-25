@@ -2,7 +2,7 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.8
+ * @version 1.9
  * @date 2024-10-25
  *
  * @copyright Copyright (c) 2023-2024
@@ -67,110 +67,102 @@ using AllelicType = std::vector<uint32_t>;
  */
 class ChromosomeMutations;
 
-/**
- * @brief A structure for `ChromosomeMutations` data
- *
- * The class `ChromosomeMutations` implements copy-of-write
- * by storing all its data in a `ChromosomeMutationData`
- * object pointed by one of its members.
- */
-class ChromosomeMutationData
-{
-
-public:
-    /**
-     * @brief The chromosome length type
-     */
-    using Length = GenomicRegion::Length;
-
-private:
-    ChromosomeId identifier;    //!< the chromosome identifier
-    Length length;              //!< the chromosome length
-    Length allelic_length;      //!< the sum of the lengths of all the alleles
-
-    std::map<AlleleId, Allele> alleles;  //!< the chromosome alleles
-
-    std::list<std::shared_ptr<CNA>> CNAs;        //!< the occurred CNAs
-
-    AlleleId next_allele_id;    //!< the identifier of the next allele
-
-public:
-    /**
-     * @brief The empty constructor
-     */
-    ChromosomeMutationData();
-
-    /**
-     * @brief A constructor
-     *
-     * @param identifier is the chromosome identifier
-     * @param size is the chromosome size
-     * @param num_of_alleles is the initial number of alleles
-     */
-    ChromosomeMutationData(const ChromosomeId& identifier,
-                           const Length& size,
-                           const size_t& num_of_alleles);
-
-    /**
-     * @brief A constructor
-     *
-     * @param chromosome_region is the chromosome region
-     * @param num_of_alleles is the initial number of alleles
-     */
-    ChromosomeMutationData(const GenomicRegion& chromosome_region,
-                           const size_t& num_of_alleles);
-
-    /**
-     * @brief Save chromosome mutation data in an archive
-     *
-     * @tparam ARCHIVE is the output archive type
-     * @param archive is the output archive
-     */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
-    inline void save(ARCHIVE& archive) const
-    {
-        archive & identifier
-                & length
-                & allelic_length
-                & alleles
-                & CNAs
-                & next_allele_id;
-    }
-
-    /**
-     * @brief Load chromosome mutation data from an archive
-     *
-     * @tparam ARCHIVE is the input archive type
-     * @param archive is the input archive
-     * @return the loaded chromosome mutation data
-     */
-    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    inline static ChromosomeMutationData load(ARCHIVE& archive)
-    {
-        ChromosomeMutationData data;
-
-        archive & data.identifier
-                & data.length
-                & data.allelic_length
-                & data.alleles
-                & data.CNAs
-                & data.next_allele_id;
-
-        return data;
-    }
-
-    friend ChromosomeMutations;
-};
-
 class ChromosomeMutations
 {
     /**
      * @brief The chromosome length type
      */
-    using Length = ChromosomeMutationData::Length;
+    using Length = GenomicRegion::Length;
 private:
 
-    std::shared_ptr<ChromosomeMutationData> _data;   //!< The chromosome mutation data
+    /**
+     * @brief A structure for `ChromosomeMutations` data
+     *
+     * The class `ChromosomeMutations` implements copy-of-write
+     * by storing all its data in a `Data` object pointed by
+     * `ChromosomeMutations:_data`.
+     */
+    class Data
+    {
+        ChromosomeId identifier;    //!< the chromosome identifier
+        Length length;              //!< the chromosome length
+        Length allelic_length;      //!< the sum of the lengths of all the alleles
+
+        std::map<AlleleId, Allele> alleles;  //!< the chromosome alleles
+
+        std::list<std::shared_ptr<CNA>> CNAs;        //!< the occurred CNAs
+
+        AlleleId next_allele_id;    //!< the identifier of the next allele
+
+    public:
+        /**
+         * @brief The empty constructor
+         */
+        Data();
+
+        /**
+         * @brief A constructor
+         *
+         * @param identifier is the chromosome identifier
+         * @param size is the chromosome size
+         * @param num_of_alleles is the initial number of alleles
+         */
+        Data(const ChromosomeId& identifier,
+             const Length& size,
+             const size_t& num_of_alleles);
+
+        /**
+         * @brief A constructor
+         *
+         * @param chromosome_region is the chromosome region
+         * @param num_of_alleles is the initial number of alleles
+         */
+        Data(const GenomicRegion& chromosome_region,
+             const size_t& num_of_alleles);
+
+        /**
+         * @brief Save chromosome mutation data in an archive
+         *
+         * @tparam ARCHIVE is the output archive type
+         * @param archive is the output archive
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+        inline void save(ARCHIVE& archive) const
+        {
+            archive & identifier
+                    & length
+                    & allelic_length
+                    & alleles
+                    & CNAs
+                    & next_allele_id;
+        }
+
+        /**
+         * @brief Load chromosome mutation data from an archive
+         *
+         * @tparam ARCHIVE is the input archive type
+         * @param archive is the input archive
+         * @return the loaded chromosome mutation data
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+        inline static Data load(ARCHIVE& archive)
+        {
+            Data data;
+
+            archive & data.identifier
+                    & data.length
+                    & data.allelic_length
+                    & data.alleles
+                    & data.CNAs
+                    & data.next_allele_id;
+
+            return data;
+        }
+
+        friend ChromosomeMutations;
+    };
+
+    std::shared_ptr<Data> _data;   //!< The chromosome mutation data
 
     /**
      * @brief Apply a CNA
@@ -195,30 +187,30 @@ private:
      *     chromosome mutation data, the chromosome mutation data pointer should
      *     be exclusively maintained by the `ChromosomeMutations` object during
      *     the call to this method. For backup purpouse, the returned value.
-     * 
+     *
      * @return the shared pointer to the original data for backup
      */
-    std::shared_ptr<ChromosomeMutationData> make_data_exclusive();
+    std::shared_ptr<Data> make_data_exclusive();
 
     /**
      * @brief Get an allele private reference in the chromosome
      *
      * This method is meant to be used to retrieve an allele that is going
-     * to be changed. It guarantees that the data member is exclusive. 
-     * 
+     * to be changed. It guarantees that the data member is exclusive.
+     *
      * @warning In order to avoid unneccessary and time-consuming copies of the
      *     chromosome mutation data, the chromosome mutation data pointer should
      *     be exclusively maintained by the `ChromosomeMutations` object during
      *     the call to this method. For backup purpouse, use the second component
      *     of the returned pair.
-     * 
+     *
      * @param allele_id is the identifier of the allele to find
-     * @return a pair whose first component is a pointer to the allele and second 
+     * @return a pair whose first component is a pointer to the allele and second
      *     component is the shared pointer to the original data for backup
-     * @throw std::out_of_range `allele_id` is not a valid allele identifier for the
-     *     chromosome
+     * @throw std::out_of_range `allele_id` is not a valid allele identifier for
+     *     the chromosome
      */
-    std::pair<Allele*, std::shared_ptr<ChromosomeMutationData>>
+    std::pair<Allele*, std::shared_ptr<Data>>
     get_modifiable_allele(const AlleleId& allele_id);
 public:
     /**

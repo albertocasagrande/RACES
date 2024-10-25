@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.9
+ * @version 1.10
  * @date 2024-10-25
  *
  * @copyright Copyright (c) 2023-2024
@@ -40,12 +40,12 @@ namespace RACES
 namespace Mutations
 {
 
-ChromosomeMutationData::ChromosomeMutationData():
+ChromosomeMutations::Data::Data():
     identifier(0), length(0), allelic_length(0), alleles(), next_allele_id(0)
 {}
 
-ChromosomeMutationData::ChromosomeMutationData(const ChromosomeId& identifier, const Length& size,
-                                               const size_t& num_of_alleles):
+ChromosomeMutations::Data::Data(const ChromosomeId& identifier, const Length& size,
+                                const size_t& num_of_alleles):
     identifier(identifier), length(size), allelic_length(size*num_of_alleles), alleles(), next_allele_id(0)
 {
     for (next_allele_id=0; next_allele_id<num_of_alleles; ++next_allele_id) {
@@ -53,7 +53,7 @@ ChromosomeMutationData::ChromosomeMutationData(const ChromosomeId& identifier, c
     }
 }
 
-ChromosomeMutationData::ChromosomeMutationData(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
+ChromosomeMutations::Data::Data(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
     identifier(chromosome_region.get_chromosome_id()), length(chromosome_region.size()),
     allelic_length(chromosome_region.size()*num_of_alleles), alleles(), next_allele_id(0)
 {
@@ -63,15 +63,15 @@ ChromosomeMutationData::ChromosomeMutationData(const GenomicRegion& chromosome_r
 }
 
 ChromosomeMutations::ChromosomeMutations():
-    _data(std::make_shared<ChromosomeMutationData>())
+    _data(std::make_shared<ChromosomeMutations::Data>())
 {}
 
 ChromosomeMutations::ChromosomeMutations(const ChromosomeId& identifier, const Length& size, const size_t& num_of_alleles):
-    _data(std::make_shared<ChromosomeMutationData>(identifier, size, num_of_alleles))
+    _data(std::make_shared<ChromosomeMutations::Data>(identifier, size, num_of_alleles))
 {}
 
 ChromosomeMutations::ChromosomeMutations(const GenomicRegion& chromosome_region, const size_t& num_of_alleles):
-    _data(std::make_shared<ChromosomeMutationData>(chromosome_region, num_of_alleles))
+    _data(std::make_shared<ChromosomeMutations::Data>(chromosome_region, num_of_alleles))
 {}
 
 std::list<AlleleId> ChromosomeMutations::get_alleles_containing(const GenomicPosition& genomic_position) const
@@ -128,14 +128,14 @@ const Allele& ChromosomeMutations::get_allele(const AlleleId& allele_id) const
     return it->second;
 }
 
-std::shared_ptr<ChromosomeMutationData> ChromosomeMutations::make_data_exclusive()
+std::shared_ptr<ChromosomeMutations::Data> ChromosomeMutations::make_data_exclusive()
 {
     // if the data are referenced by other ChromosomeMutations objects
     // copy them in an exclusive object to allow the copy
     if (_data.use_count()>1) {
 
         auto backup = _data;
-        _data = std::make_shared<ChromosomeMutationData>(*_data);
+        _data = std::make_shared<ChromosomeMutations::Data>(*_data);
 
         return backup;
     }
@@ -143,7 +143,7 @@ std::shared_ptr<ChromosomeMutationData> ChromosomeMutations::make_data_exclusive
     return _data;
 }
 
-std::pair<Allele*, std::shared_ptr<ChromosomeMutationData>>
+std::pair<Allele*, std::shared_ptr<ChromosomeMutations::Data>>
 ChromosomeMutations::get_modifiable_allele(const AlleleId& allele_id)
 {
     auto data_backup = make_data_exclusive();
@@ -184,7 +184,7 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
         throw std::domain_error("The genomic region is not in the chromosome");
     }
 
-    std::shared_ptr<ChromosomeMutationData> data_backup;
+    std::shared_ptr<ChromosomeMutations::Data> data_backup;
 
     if (new_allele_id != RANDOM_ALLELE) {
         if (get_alleles().find(new_allele_id) != get_alleles().end()) {
@@ -229,7 +229,7 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
     _data->allelic_length += new_allele.size();
 
     _data->alleles.insert({new_allele_id, std::move(new_allele)});
-    
+
     auto cna = std::make_shared<CNA>(genomic_region.get_begin(),
                                      genomic_region.size(),
                                      CNA::Type::AMPLIFICATION,
