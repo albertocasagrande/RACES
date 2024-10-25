@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.10
+ * @version 1.11
  * @date 2024-10-25
  *
  * @copyright Copyright (c) 2023-2024
@@ -333,9 +333,7 @@ bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_positio
     }
 
     // save original data pointer for possible backup
-    auto orig_data = _data;
-
-    make_data_exclusive();
+    auto backup_data = make_data_exclusive();
 
     for (auto& [allele_id, allele]: _data->alleles) {
         if (allele.remove_mutation(genomic_position)) {
@@ -344,7 +342,7 @@ bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_positio
     }
 
     // revert to the original data member since nothing has changed
-    _data = orig_data;
+    _data = backup_data;
 
     return false;
 }
