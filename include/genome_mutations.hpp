@@ -186,7 +186,8 @@ private:
      * @warning In order to avoid unneccessary and time-consuming copies of the
      *     chromosome mutation data, the chromosome mutation data pointer should
      *     be exclusively maintained by the `ChromosomeMutations` object during
-     *     the call to this method. For backup purpouse, the returned value.
+     *     the call to this method. If needed, the returned pointer can be used
+     *     for backup purpouse.
      *
      * @return the shared pointer to the original data for backup
      */

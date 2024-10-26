@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 1.3
- * @date 2024-10-24
+ * @version 1.4
+ * @date 2024-10-26
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -36,17 +36,22 @@ namespace RACES
 namespace Mutations
 {
 
+AlleleFragment::Data::Data()
+{}
+
 AlleleFragment::AlleleFragment():
-    GenomicRegion()
+    GenomicRegion(), _data(std::make_shared<AlleleFragment::Data>())
 {}
 
 AlleleFragment::AlleleFragment(const ChromosomeId& chromosome_id,
                                const ChrPosition& begin, const ChrPosition& end):
-    GenomicRegion({chromosome_id, begin}, end-begin+1)
+    GenomicRegion({chromosome_id, begin}, end-begin+1),
+    _data(std::make_shared<AlleleFragment::Data>())
 {}
 
 AlleleFragment::AlleleFragment(const GenomicRegion& genomic_region):
-    GenomicRegion(genomic_region)
+    GenomicRegion(genomic_region),
+    _data(std::make_shared<AlleleFragment::Data>())
 {}
 
 bool AlleleFragment::has_context_free(const SID& mutation) const
@@ -61,12 +66,12 @@ bool AlleleFragment::has_context_free(const SID& mutation) const
     }
 
     auto end = g_pos.position + mutation.ref.size() + 3;
-    auto it = mutations.lower_bound(g_pos);
-    if (it != mutations.end() && it->first.position < end) {
+    auto it = _data->mutations.lower_bound(g_pos);
+    if (it != _data->mutations.end() && it->first.position < end) {
         return false;
     }
 
-    if (it != mutations.begin()) {
+    if (it != _data->mutations.begin()) {
         --it;
 
         return (it->first.position+(it->second)->ref.size() < g_pos.position+1);
@@ -83,7 +88,9 @@ bool AlleleFragment::apply(const SID& mutation)
     }
 
     if (has_context_free(mutation)) {
-        mutations[mutation] = std::make_shared<SID>(mutation);
+        make_data_exclusive();
+
+        (_data->mutations)[mutation] = std::make_shared<SID>(mutation);
 
         return true;
     }
@@ -98,13 +105,16 @@ bool AlleleFragment::remove_mutation(const GenomicPosition& genomic_position)
                                 "contain mutation region");
     }
 
-    auto it = mutations.find(genomic_position);
+    auto backup_data = make_data_exclusive();
 
-    if (it == mutations.end()) {
+    auto it = _data->mutations.find(genomic_position);
+    if (it == _data->mutations.end()) {
+        _data = backup_data;
+
         return false;
     }
 
-    mutations.extract(it);
+    _data->mutations.extract(it);
 
     return true;
 }
@@ -115,9 +125,8 @@ bool AlleleFragment::includes(const SID& mutation) const
         return false;
     }
 
-    auto it = mutations.find(mutation);
-
-    if (it == mutations.end()) {
+    auto it = _data->mutations.find(mutation);
+    if (it == _data->mutations.end()) {
         return false;
     }
 
@@ -133,17 +142,35 @@ AlleleFragment AlleleFragment::split(const GenomicPosition& split_point)
     }
 
     if (get_initial_position() == split_point.position) {
-        throw std::domain_error("The split point cannot be the initial position of the fragment");
+        throw std::domain_error("The split point cannot be the "
+                                "initial position of the fragment");
     }
+
+    make_data_exclusive();
 
     AlleleFragment new_fragment(GenomicRegion::split(split_point));
 
-    auto it = mutations.lower_bound(split_point);
-    while (it != mutations.end()) {
-        new_fragment.mutations.insert(mutations.extract(it++));
+    auto it = _data->mutations.lower_bound(split_point);
+    while (it != _data->mutations.end()) {
+        new_fragment._data->mutations.insert(_data->mutations.extract(it++));
     }
 
     return new_fragment;
+}
+
+std::shared_ptr<AlleleFragment::Data> AlleleFragment::make_data_exclusive()
+{
+    // if the data are referenced by other AlleleFragment objects
+    // copy them in an exclusive object to allow the copy
+    if (_data.use_count()>1) {
+
+        auto backup = _data;
+        _data = std::make_shared<AlleleFragment::Data>(*_data);
+
+        return backup;
+    }
+
+    return _data;
 }
 
 AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
@@ -151,9 +178,9 @@ AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
     AlleleFragment new_fragment(genomic_region);
 
     auto final_position = genomic_region.get_final_position();
-    for (auto it = mutations.lower_bound(genomic_region.get_begin());
-            it != mutations.end() && it->first.position <= final_position; ++it) {
-        new_fragment.mutations.insert(*it);
+    for (auto it = _data->mutations.lower_bound(genomic_region.get_begin());
+            it != _data->mutations.end() && it->first.position <= final_position; ++it) {
+        new_fragment._data->mutations.insert(*it);
     }
 
     return new_fragment;
@@ -162,8 +189,8 @@ AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
 bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 {
     auto final_position = genomic_region.get_final_position();
-    for (auto it = mutations.lower_bound(genomic_region.get_begin());
-            it != mutations.end() && it->first.position <= final_position; ++it) {
+    for (auto it = _data->mutations.lower_bound(genomic_region.get_begin());
+            it != _data->mutations.end() && it->first.position <= final_position; ++it) {
         if ((it->second)->nature == Mutation::DRIVER) {
             return true;
         }

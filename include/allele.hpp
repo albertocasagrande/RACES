@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 1.3
- * @date 2024-10-24
+ * @version 1.4
+ * @date 2024-10-26
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -57,52 +57,73 @@ typedef size_t AlleleId;
  */
 class AlleleFragment : public GenomicRegion
 {
-    std::map<GenomicPosition,
-             std::shared_ptr<SID>> mutations;  //!< the fragment SIDs
+    /**
+     * @brief A structure for `AlleleFragment` data
+     *
+     * The class `AlleleFragment` implements copy-of-write
+     * by storing its members in a `Data` object pointed by
+     * `AlleleFragment:_data`.
+     */
+    class Data
+    {    
+        std::map<GenomicPosition,
+                 std::shared_ptr<SID>> mutations;  //!< the fragment SIDs
+    public:
+        /**
+         * @brief The empty constructor
+         */
+        Data();
+
+        /**
+         * @brief Save an allele fragment data object in an archive
+         *
+         * @tparam ARCHIVE is the output archive type
+         * @param archive is the output archive
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+        inline void save(ARCHIVE& archive) const
+        {
+            archive & mutations;
+        }
+
+        /**
+         * @brief Load an allele fragment data object from an archive
+         *
+         * @tparam ARCHIVE is the input archive type
+         * @param archive is the input archive
+         * @return the load allele fragment data object
+         */
+        template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+        inline static Data load(ARCHIVE& archive)
+        {
+            Data af_data;
+
+            archive & af_data.mutations;
+
+            return af_data;
+        }
+
+        friend AlleleFragment;
+    };
+
+    std::shared_ptr<Data> _data;    //!< The allele fragment data
 
     /**
-     * @brief Split an allele fragment
+     * @brief Make data exclusive
      *
-     * This method cuts an allele fragment in a position,
-     * generates a new allele fragment beginning at the specified
-     * position, and updates the length of the original one so
-     * that the two fragments are contiguous, i.e., one of the two
-     * follows the other one.
-     * The SID mutations of the original allele fragment are
-     * distributed on the two allele fragments according to their
-     * genomic position.
+     * When the data pointer is not exclusive and is referenced by many different
+     * alleles, the method copy of the original data member into a data
+     * object exclusively pointed by the current `AlleleFragment` object.
      *
-     * @param split_point is the position of the new allele fragment
-     * @return the allele fragment originated by the split
-     * @throw std::domain_error the allele fragment does not contain
-     *          `split_point` or `split_point` and the allele
-     *          fragment initial point are the same
+     * @warning In order to avoid unneccessary and time-consuming copies of 
+     *     the allele fragment data, the allele fragment data pointer should
+     *     be exclusively maintained by the `AlleleFragment` object during
+     *     the call to this method. If needed, the returned pointer can be 
+     *     used for backup purpouse.
+     *
+     * @return the shared pointer to the original data for backup
      */
-    AlleleFragment split(const GenomicPosition& split_point);
-
-    /**
-     * @brief Split an allele fragment
-     *
-     * This method cuts an allele fragment in a position,
-     * generates a new allele fragment beginning at the specified
-     * position, and updates the length of the original one so
-     * that the two fragments are contiguous, i.e., one of the two
-     * follows the other one.
-     * The SID mutations of the original allele fragment are
-     * distributed on the two allele fragments according to their
-     * genomic position.
-     *
-     * @param split_point is the position of the new allele fragment
-     * @return the allele fragment originated by the split
-     * @throw std::domain_error the allele fragment does not contain
-     *          `split_point` or `split_point` and the allele
-     *          fragment initial point are the same
-     */
-    inline AlleleFragment split(GenomicPosition&& split_point)
-    {
-        return split(split_point);
-    }
-
+    std::shared_ptr<Data> make_data_exclusive();
 public:
     /**
      * @brief The allele fragment length
@@ -139,7 +160,7 @@ public:
     inline const std::map<GenomicPosition, std::shared_ptr<SID>>&
     get_mutations() const
     {
-        return mutations;
+        return _data->mutations;
     }
 
     /**
@@ -198,6 +219,49 @@ public:
     AlleleFragment copy(const GenomicRegion& genomic_region) const;
 
     /**
+     * @brief Split an allele fragment
+     *
+     * This method cuts an allele fragment in a position,
+     * generates a new allele fragment beginning at the specified
+     * position, and updates the length of the original one so
+     * that the two fragments are contiguous, i.e., one of the two
+     * follows the other one.
+     * The SID mutations of the original allele fragment are
+     * distributed on the two allele fragments according to their
+     * genomic position.
+     *
+     * @param split_point is the position of the new allele fragment
+     * @return the allele fragment originated by the split
+     * @throw std::domain_error the allele fragment does not contain
+     *          `split_point` or `split_point` and the allele
+     *          fragment initial point are the same
+     */
+    AlleleFragment split(const GenomicPosition& split_point);
+
+    /**
+     * @brief Split an allele fragment
+     *
+     * This method cuts an allele fragment in a position,
+     * generates a new allele fragment beginning at the specified
+     * position, and updates the length of the original one so
+     * that the two fragments are contiguous, i.e., one of the two
+     * follows the other one.
+     * The SID mutations of the original allele fragment are
+     * distributed on the two allele fragments according to their
+     * genomic position.
+     *
+     * @param split_point is the position of the new allele fragment
+     * @return the allele fragment originated by the split
+     * @throw std::domain_error the allele fragment does not contain
+     *          `split_point` or `split_point` and the allele
+     *          fragment initial point are the same
+     */
+    inline AlleleFragment split(GenomicPosition&& split_point)
+    {
+        return split(split_point);
+    }
+
+    /**
      * @brief Check whether the fragment contains driver mutations in a genomic region
      *
      * @param genomic_region is the genomic region to check
@@ -215,8 +279,10 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES AlleleFragment", 0);
+
         archive & static_cast<const GenomicRegion&>(*this)
-                & mutations;
+                & _data;
     }
 
     /**
@@ -229,15 +295,15 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static AlleleFragment load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES AlleleFragment", 0);
+
         AlleleFragment a_fragment;
 
         archive & static_cast<GenomicRegion&>(a_fragment)
-                & a_fragment.mutations;
+                & a_fragment._data;
 
         return a_fragment;
     }
-
-    friend class Allele;
 };
 
 /**
@@ -245,9 +311,9 @@ public:
  */
 class Allele
 {
-        std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
+    std::map<GenomicPosition, AlleleFragment> fragments;    //!< the sequence fragments
 
-        std::list<AlleleId> history;    //!< the allele history
+    std::list<AlleleId> history;    //!< the allele history
 
     /**
      * @brief The empty constructor
