@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(RACES VERSION 1.0.0
+project(RACES VERSION 1.1.0
               DESCRIPTION "RACES is an Advanced Cancer Evolution Simulation"
               HOMEPAGE_URL https://github.com/albertocasagrande/RACES
               LANGUAGES CXX)
