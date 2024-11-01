@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.6
- * @date 2024-08-16
+ * @version 1.7
+ * @date 2024-11-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -275,7 +275,7 @@ std::map<Mutants::CellId, CellGenomeMutations>
 PhylogeneticForest::get_normal_genomes(const bool& with_preneoplastic) const
 {
     std::map<Mutants::CellId, CellGenomeMutations> normal_genomes;
-    
+
     if (with_preneoplastic) {
         for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
             auto cell_genome = CellGenomeMutations(germline_mutations->copy_structure());
@@ -338,15 +338,43 @@ PhylogeneticForest::get_CNA_break_points() const
     return b_points;
 }
 
-std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
+void update_allelic_count_on(PhylogeneticForest::AllelicCount& allelic_count,
+                             const GenomeMutations::AllelicMap& allelic_map)
+{
+    std::greater<uint32_t> cmp;
+
+    for (const auto& [chr_id, chr_allelic_map] : allelic_map) {
+        auto& chr_allelic_count = allelic_count[chr_id];
+        for (auto [pos, atype] : chr_allelic_map) {
+            std::sort(atype.begin(), atype.end(), cmp);
+            ++(chr_allelic_count[pos][atype]);
+        }
+    }
+}
+
+PhylogeneticForest::AllelicCount
+PhylogeneticForest::get_allelic_count(const size_t& min_allelic_size) const
+{
+    auto b_points = get_CNA_break_points();
+
+    PhylogeneticForest::AllelicCount allelic_count;
+
+    for (const auto& [cell_id, mutations] : leaves_mutations) {
+        auto allelic_map = mutations->get_allelic_map(b_points, min_allelic_size);
+
+        update_allelic_count_on(allelic_count, allelic_map);
+    }
+
+    return allelic_count;
+}
+
+PhylogeneticForest::AllelicCount
 PhylogeneticForest::get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
                                       const size_t& min_allelic_size) const
 {
     auto b_points = get_CNA_break_points();
 
-    std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>> allelic_count;
-
-    std::greater<uint32_t> cmp;
+    PhylogeneticForest::AllelicCount allelic_count;
 
     for (const auto& cell_id : cell_ids) {
         auto cell_it = leaves_mutations.find(cell_id);
@@ -356,22 +384,16 @@ PhylogeneticForest::get_allelic_count(const std::list<Mutants::CellId>& cell_ids
                                     + "forest.");
         }
 
-        auto allelic_map = cell_it->second->get_allelic_types(b_points, min_allelic_size);
+        auto allelic_map = cell_it->second->get_allelic_map(b_points, min_allelic_size);
 
-        for (const auto& [chr_id, chr_allelic_map] : allelic_map) {
-            auto& chr_allelic_count = allelic_count[chr_id];
-            for (auto [pos, atype] : chr_allelic_map) {
-                std::sort(atype.begin(), atype.end(), cmp);
-                ++(chr_allelic_count[pos][atype]);
-            }
-        }
+        update_allelic_count_on(allelic_count, allelic_map);
     }
 
     return allelic_count;
 }
 
 
-std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
+PhylogeneticForest::AllelicCount
 PhylogeneticForest::get_allelic_count(const std::string& sample_name,
                                       const size_t& min_allelic_size) const
 {

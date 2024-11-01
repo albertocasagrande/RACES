@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.4
- * @date 2024-08-16
+ * @version 1.5
+ * @date 2024-11-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -63,6 +63,8 @@ class PhylogeneticForest : public Mutants::DescendantsForest
     std::shared_ptr<GenomeMutations> germline_mutations; //!< The germline mutations
 
 public:
+    using AllelicCount = std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>;
+
     /**
      * @brief A constant node of the forest
      */
@@ -304,18 +306,18 @@ public:
 
     /**
      * @brief Build a sample containing normal cells
-     * 
+     *
      * This method builds a sample of different cells whose genome contains the forest
      * germline mutations. If the pre-neoplastic mutations are also requested the sample
      * contains one cell per forest root. In this case, the genome of each cell contains
      * the germline mutations and the pre-neoplastic mutations of the associated root.
      * If the pre-neoplastic mutations are not requested, the returned sample exclusively
      * contains one cell with the germline mutations.
-     * 
+     *
      * @param name is the name of the resulting sample
      * @param with_preneoplastic is a Boolean flag to include the pre-neoplastic mutations
      *   in the resulting sample
-     * @return A sample containing cells whose genomes have the forest germline 
+     * @return A sample containing cells whose genomes have the forest germline
      *   mutations and, upon request, the pre-neoplastic mutations too
      */
     SampleGenomeMutations get_normal_sample(const std::string& name="sample",
@@ -323,7 +325,7 @@ public:
 
     /**
      * @brief Build the normal genomes
-     * 
+     *
      * @param with_preneoplastic is a Boolean flag to include the pre-neoplastic mutations
      *   in the resulting genomes
      * @return a map that associates to each forest root the corresponding normal genome
@@ -333,41 +335,48 @@ public:
 
     /**
      * @brief Get the CNA break points
-     * 
+     *
      * @return The list of the CNA break points grouped by chromosome
      *   identifier
      */
     std::map<ChromosomeId, std::set<ChrPosition>> get_CNA_break_points() const;
 
     /**
-     * @brief Get the allelic count of a sample
-     * 
-     * @param sample_name is the sample name
+     * @brief Get the allelic count of all the leaves
+     *å
      * @param min_allelic_size is the minimum number of alleles to report
-     * @return A map that, for each chromosome and for each break point, reports 
-     *   the number of cells in the sample per allelic type
+     * @return A map that, for each chromosome and for each break point, reports
+     *   the number of leaves per allelic type
      */
-    std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
-    get_allelic_count(const std::string& sample_name,
-                      const size_t& min_allelic_size=0) const;
+    AllelicCount get_allelic_count(const size_t& min_allelic_size=0) const;
 
     /**
      * @brief Get the allelic count of a set of cells
-     * 
+     *
      * @param cell_ids is a list of cell identifers corresponding to leaves in
      *   the phylogenetic forest
      * @param min_allelic_size is the minimum number of alleles to report
-     * @return A map that, for each chromosome and for each break point, reports 
+     * @return A map that, for each chromosome and for each break point, reports
      *   the number of cells among those in corresponding to `cell_ids` per
      *   allelic type
      */
-    std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>
-    get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
-                      const size_t& min_allelic_size) const;
+    AllelicCount get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
+                                   const size_t& min_allelic_size=0) const;
+
+    /**
+     * @brief Get the allelic count of a sample
+     *
+     * @param sample_name is the sample name
+     * @param min_allelic_size is the minimum number of alleles to report
+     * @return A map that, for each chromosome and for each break point, reports
+     *   the number of cells in the sample per allelic type
+     */
+    AllelicCount get_allelic_count(const std::string& sample_name,
+                                   const size_t& min_allelic_size=0) const;
 
     /**
      * @brief Get the normal genome structure
-     * 
+     *
      * @param with_preneoplastic is a Boolean flag to add preneoplastic CNAs
      * @return the normal genome without SNVs and indels
      */
