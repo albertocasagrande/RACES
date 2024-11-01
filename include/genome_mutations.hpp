@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.9
- * @date 2024-10-25
+ * @version 1.10
+ * @date 2024-11-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -526,7 +526,7 @@ public:
     void duplicate_alleles();
 
     /**
-     * @brief Get the allelic types of some chromosome fragments
+     * @brief Get the allelic map of some chromosome fragments
      *
      * @param break_points are the fragment break points
      * @param min_allelic_size is the minimum number of alleles
@@ -536,8 +536,8 @@ public:
      *    break point and ending at the following break point
      */
     std::map<ChrPosition, AllelicType>
-    get_allelic_types(const std::set<ChrPosition>& break_points,
-                      const size_t& min_allelic_size=0) const;
+    get_allelic_map(const std::set<ChrPosition>& break_points,
+                    const size_t& min_allelic_size=0) const;
 
     /**
      * @brief Remove a SID mutation
@@ -617,6 +617,8 @@ class GenomeMutations
      */
     bool apply_CNA(CNA& cna);
 public:
+    using AllelicMap = std::map<ChromosomeId, std::map<ChrPosition, AllelicType>>;
+
     /**
      * @brief The genome length type
      */
@@ -945,7 +947,7 @@ public:
     void duplicate_alleles();
 
     /**
-     * @brief Get the allelic types of the fragments
+     * @brief Get the allelic map of the fragments
      *
      * @param min_allelic_size is the minimum number of alleles
      *    to report
@@ -954,16 +956,15 @@ public:
      *    type of the genomic fragment beginning at the break point
      *    and ending at the following break point
      */
-    inline std::map<ChromosomeId, std::map<ChrPosition, AllelicType>>
-    get_allelic_types(const size_t& min_allelic_size=0) const
+    inline AllelicMap get_allelic_map(const size_t& min_allelic_size=0) const
     {
         const auto b_points = get_CNA_break_points();
 
-        return get_allelic_types(b_points, min_allelic_size);
+        return get_allelic_map(b_points, min_allelic_size);
     }
 
     /**
-     * @brief Get the allelic types of the genomic fragments
+     * @brief Get the allelic map of the genomic fragments
      *
      * @param break_points is a map from the set of chromosome
      *    identifiers to the fragment break points in the
@@ -975,15 +976,16 @@ public:
      *    genomic fragment beginning at the break point and ending
      *    at the following break point
      */
-    std::map<ChromosomeId, std::map<ChrPosition, AllelicType>>
-    get_allelic_types(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
-                      const size_t& min_allelic_size=0) const;
+    AllelicMap
+    get_allelic_map(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
+                    const size_t& min_allelic_size=0) const;
 
     /**
      * @brief Get the CNA break points
      *
-     * @return A map that associates the chromosome identifiers
+     * @return A map that associates a chromosome identifier
      *   to the set of CNA break points on the corresponding
+     *   chromosome
      */
     std::map<ChromosomeId, std::set<ChrPosition>>
     get_CNA_break_points() const;

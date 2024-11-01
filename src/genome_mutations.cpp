@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.11
- * @date 2024-10-25
+ * @version 1.12
+ * @date 2024-11-01
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -404,8 +404,8 @@ void ChromosomeMutations::duplicate_alleles()
 }
 
 std::map<ChrPosition, AllelicType>
-ChromosomeMutations::get_allelic_types(const std::set<ChrPosition>& break_points,
-                                       const size_t& min_allelic_size) const
+ChromosomeMutations::get_allelic_map(const std::set<ChrPosition>& break_points,
+                                     const size_t& min_allelic_size) const
 {
     size_t allelic_size{min_allelic_size};
     std::map<ChrPosition, std::map<AlleleId, uint32_t>> allele_counter;
@@ -684,13 +684,13 @@ void GenomeMutations::duplicate_alleles()
     }
 }
 
-std::map<ChromosomeId, std::map<ChrPosition, AllelicType>>
-GenomeMutations::get_allelic_types(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
+GenomeMutations::AllelicMap
+GenomeMutations::get_allelic_map(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
                                  const size_t& min_allelic_size) const
 {
-    std::map<ChromosomeId, std::map<ChrPosition, AllelicType>> allelic_map;
+    AllelicMap allelic_map;
     for (const auto& [chr_id, chr] : get_chromosomes()) {
-        allelic_map[chr_id] = chr.get_allelic_types(break_points.at(chr_id), min_allelic_size);
+        allelic_map[chr_id] = chr.get_allelic_map(break_points.at(chr_id), min_allelic_size);
     }
 
     return allelic_map;
@@ -705,8 +705,14 @@ GenomeMutations::get_CNA_break_points() const
         auto& chr_b_points = b_points[chr_id];
         for (const auto& [allele_id, allele] : chr.get_alleles()) {
             for (const auto& [pos, fragment] : allele.get_fragments()) {
+                if (fragment.get_initial_position() != 0) {
+                    chr_b_points.insert(fragment.get_initial_position()-1);
+                }
+                chr_b_points.insert(fragment.get_initial_position());
                 chr_b_points.insert(fragment.get_final_position());
-                chr_b_points.insert(fragment.get_final_position()+1);
+                if (fragment.get_final_position() != chr.size()) {
+                    chr_b_points.insert(fragment.get_final_position()+1);
+                }
             }
         }
     }
