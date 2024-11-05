@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.7
- * @date 2024-11-01
+ * @version 1.8
+ * @date 2024-11-05
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -324,13 +324,10 @@ PhylogeneticForest::get_CNA_break_points() const
     std::map<ChromosomeId, std::set<ChrPosition>> b_points;
 
     for (const auto& [cell_id, cell_ptr] : get_leaves_mutations()) {
-        for (const auto& [chr_id, chr] : cell_ptr->get_chromosomes()) {
+        for (const auto& [chr_id, cb_points] : cell_ptr->get_CNA_break_points()) {
             auto& chr_b_points = b_points[chr_id];
-            for (const auto& [allele_id, allele] : chr.get_alleles()) {
-                for (const auto& [pos, fragment] : allele.get_fragments()) {
-                    chr_b_points.insert(fragment.get_initial_position());
-                    chr_b_points.insert(fragment.get_final_position()+1);
-                }
+            for (const auto& cb_point : cb_points) {
+                chr_b_points.insert(cb_point);
             }
         }
     }

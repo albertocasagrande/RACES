@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.12
- * @date 2024-11-01
+ * @version 1.13
+ * @date 2024-11-05
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -703,16 +703,12 @@ GenomeMutations::get_CNA_break_points() const
 
     for (const auto& [chr_id, chr] : get_chromosomes()) {
         auto& chr_b_points = b_points[chr_id];
+        chr_b_points.insert(1);
+        chr_b_points.insert(chr.size()+1);
         for (const auto& [allele_id, allele] : chr.get_alleles()) {
             for (const auto& [pos, fragment] : allele.get_fragments()) {
-                if (fragment.get_initial_position() != 0) {
-                    chr_b_points.insert(fragment.get_initial_position()-1);
-                }
                 chr_b_points.insert(fragment.get_initial_position());
-                chr_b_points.insert(fragment.get_final_position());
-                if (fragment.get_final_position() != chr.size()) {
-                    chr_b_points.insert(fragment.get_final_position()+1);
-                }
+                chr_b_points.insert(fragment.get_final_position()+1);
             }
         }
     }
