@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.4
- * @date 2024-10-25
+ * @version 1.5
+ * @date 2024-11-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -689,14 +689,16 @@ public:
 class ByteCounter : public Out
 {
     size_t bytes;     //!< the byte counter
+    RACES::UI::ProgressBar* progress_bar;   //!< the progress bar
 
     /**
      * @brief The constructor
      *
      * This is the only constructor and it is meant to be
      * exclusively used by the static method `bytes_required_by`.
+     * @param progress_bar is the progress bar
      */
-    ByteCounter();
+    ByteCounter(RACES::UI::ProgressBar* progress_bar=nullptr);
 public:
 
     /**
@@ -710,6 +712,10 @@ public:
     {
         bytes += sizeof(size_t);
         bytes += text.size()*sizeof(charT);
+
+        if (progress_bar != nullptr) {
+            progress_bar->update_elapsed_time();
+        }
 
         return *this;
     }
@@ -728,6 +734,10 @@ public:
 
         bytes += sizeof(ARITHMETIC_TYPE);
 
+        if (progress_bar != nullptr) {
+            progress_bar->update_elapsed_time();
+        }
+    
         return *this;
     }
 
@@ -761,10 +771,12 @@ public:
      *
      * @tparam T is the type of the object to store
      * @param object is the object to store
+     * @param progress_bar is the progress bar
      * @return the number of bytes required by an object
      */
     template<typename T>
-    static size_t bytes_required_by(const T& object);
+    static size_t bytes_required_by(const T& object,
+                                    RACES::UI::ProgressBar* progress_bar=nullptr);
 };
 
 /**
@@ -1549,7 +1561,7 @@ void Out::save(const T& object, RACES::UI::ProgressBar& progress_bar,
         progress_bar.set_message("Saving "+description);
     }
 
-    initialize(&progress_bar, ByteCounter::bytes_required_by(object));
+    initialize(&progress_bar, ByteCounter::bytes_required_by(object, &progress_bar));
 
     *this & object;
 
@@ -1643,8 +1655,10 @@ void In::load(T& object, RACES::UI::ProgressBar& progress_bar,
 }
 
 template<typename T>
-size_t ByteCounter::bytes_required_by(const T& object) {
-    ByteCounter bc;
+size_t ByteCounter::bytes_required_by(const T& object,
+                                      RACES::UI::ProgressBar* progress_bar)
+{
+    ByteCounter bc(progress_bar);
 
     bc & object;
 

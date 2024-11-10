@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements some archive classes and their methods
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2024-11-10
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -150,8 +150,8 @@ Out::Out(std::filesystem::path position, std::ios_base::openmode mode):
     Archive::Basic::Out(position, mode | std::fstream::binary), ProgressViewer()
 {}
 
-ByteCounter::ByteCounter():
-    Out(), bytes(0)
+ByteCounter::ByteCounter(RACES::UI::ProgressBar* progress_bar):
+    Out(), bytes(0), progress_bar(progress_bar)
 {}
 
 In::In(std::filesystem::path position):
