@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.15
- * @date 2024-10-24
+ * @version 1.16
+ * @date 2024-11-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -908,7 +908,7 @@ private:
      */
     struct ReadSimulationData
     {
-        size_t not_covered_allelic_size;   //!< Allelic size to cover yet
+        size_t non_covered_allelic_size;   //!< Allelic size to cover yet
         size_t missing_templates;          //!< Number of templates to be placed
 
         /**
@@ -921,12 +921,12 @@ private:
         /**
          * @brief A constructor
          *
-         * @param not_covered_allelic_size is the allelic size to cover yet
+         * @param non_covered_allelic_size is the allelic size to cover yet
          * @param missing_templates is the number of templates to be placed
          */
-        ReadSimulationData(const size_t& not_covered_allelic_size,
+        ReadSimulationData(const size_t& non_covered_allelic_size,
                            const size_t& missing_templates):
-            not_covered_allelic_size(not_covered_allelic_size),
+            non_covered_allelic_size(non_covered_allelic_size),
             missing_templates(missing_templates)
         {}
     };
@@ -1139,7 +1139,7 @@ private:
 
         if (fragment.size()>=threshold_template_size) {
             const double hit_probability = static_cast<double>(fragment.size())/
-                                        sample_simulation_data.not_covered_allelic_size;
+                                        sample_simulation_data.non_covered_allelic_size;
             std::binomial_distribution<size_t> b_dist(sample_simulation_data.missing_templates,
                                                         hit_probability);
 
@@ -1177,7 +1177,7 @@ private:
             }
         }
 
-        sample_simulation_data.not_covered_allelic_size -= fragment.size();
+        sample_simulation_data.non_covered_allelic_size -= fragment.size();
         steps += fragment.size();
     }
 
@@ -1357,25 +1357,48 @@ private:
     std::list<ReadSimulationData>
     get_initial_read_simulation_data(const std::list<SampleGenomeMutations>& mutations_list,
                                      const std::set<ChromosomeId>& chromosome_ids,
-                                     const double& coverage) const
+                                     const double& coverage)
     {
         std::list<ReadSimulationData> read_simulation_data;
 
         size_t total_read_size = (read_type==ReadType::PAIRED_READ?2:1)*read_size;
         for (const auto& sample_mutations : mutations_list) {
-            ReadSimulationData sample_data;
-            for (const auto& chr_id: chromosome_ids) {
-                const auto& germline_chr = sample_mutations.germline_mutations->get_chromosome(chr_id);
-                sample_data.missing_templates += static_cast<size_t>((germline_chr.size()
-                                                                        *coverage)/total_read_size);
+            size_t missing_templates{0}, non_covered_allelic_size{0}, non_relevant_allelic_size{0};
+
+            // collect the data from all the chromosomes to evaluate the overall hit probability per
+            // allelic nucleotide
+            for (const auto& [chr_id, germline_chr]: sample_mutations.germline_mutations->get_chromosomes()) {
+                missing_templates += static_cast<size_t>((germline_chr.size()
+                                                            *coverage)/total_read_size);
+
+                const bool chr_is_non_relevant = !chromosome_ids.count(chr_id);
 
                 for (const auto& cell_mutations: sample_mutations.mutations) {
                     const auto& chr_mutations = cell_mutations->get_chromosome(chr_id);
-                    sample_data.not_covered_allelic_size += chr_mutations.allelic_size();
+                    const size_t allelic_size = chr_mutations.allelic_size();
+
+                    non_covered_allelic_size += allelic_size;
+                    if (chr_is_non_relevant) {
+                        non_relevant_allelic_size += allelic_size;
+                    }
                 }
             }
 
-            read_simulation_data.push_back(std::move(sample_data));
+            // compute the probability for a template to cover a nucleotide in an allele of 
+            // a relevant chromosome
+            const double hit_probability = 1-static_cast<double>(non_relevant_allelic_size)/
+                                                                 non_covered_allelic_size;
+
+            // get the number of templates that cover a relevant chromosome
+            std::binomial_distribution<size_t> b_dist(missing_templates, hit_probability);
+            missing_templates = b_dist(random_generator);
+
+            // remove the allelic size of non-relevant chromsomes
+            non_covered_allelic_size -= non_relevant_allelic_size;
+
+            // build a read simulation data accounting for the relevant non-covered alleles
+            // and the missing templates
+            read_simulation_data.emplace_back(non_covered_allelic_size, missing_templates);
         }
 
         return read_simulation_data;
@@ -1449,7 +1472,7 @@ private:
 
         size_t total_steps = 2*relevant_ids.size()*mutations_list.size();
         for (const auto& sample_data: read_simulation_data) {
-            total_steps += sample_data.not_covered_allelic_size;
+            total_steps += sample_data.non_covered_allelic_size;
         }
 
         SampleSetStatistics statistics(output_directory);
