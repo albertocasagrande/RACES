@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.14
- * @date 2024-10-24
+ * @version 1.15
+ * @date 2024-11-19
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -1839,6 +1839,16 @@ public:
     inline const DriverStorage& get_driver_storage() const
     {
         return driver_storage;
+    }
+
+    /**
+     * @brief Get the germline mutations
+     * 
+     * @return the germline mutations
+     */
+    inline const GenomeMutations& get_germline_mutations() const
+    {
+        return *germline_mutations;
     }
 
     /**
