@@ -2,10 +2,11 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 1.4
- * @date 2024-08-12
+ * @version 1.5
+ * @date 2025-01-13
+ * 
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -328,11 +329,11 @@ public:
      * coefficients before and after the peak, respectively.
      * The parameters were fitted to real sequencing data.
      *
-     * @param posisiton is the positon for which the mean quality score
+     * @param position is the position for which the mean quality score
      *  is requested
-     * @return The mean quality score on `posisiton`
+     * @return The mean quality score on `position`
      */
-    static double default_mean(const size_t& posisiton);
+    static double default_mean(const size_t& position);
 
     /**
      * @brief A function estimating the standard deviation quality score on a read position
@@ -344,9 +345,9 @@ public:
      * $$
      * The parameters were fitted to real sequencing data.
      * 
-     * @param posisiton is the positon for which the standard deviation 
+     * @param position is the position for which the standard deviation 
      *   quality score is requested
-     * @return The standard deviation quality score on `posisiton`
+     * @return The standard deviation quality score on `position`
      */
     static double default_stddev(const size_t& position);
 

@@ -2,10 +2,10 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.16
- * @date 2024-11-19
+ * @version 1.17
+ * @date 2025-01-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -222,7 +222,7 @@ struct SIDData
     std::set<Mutation::Nature> nature_set;  //!< The nature of the SID
 
     /**
-     * @brief The empty contructor
+     * @brief The empty constructor
      */
     SIDData();
 
@@ -459,10 +459,10 @@ public:
     SIDData get_data(const SID& mutation) const;
 
     /**
-     * @brief Get the coverage of the positions in which SIDs occurr
+     * @brief Get the coverage of the positions in which SIDs occur
      *
      * @return a constant reference to the coverage of the positions in which SIDs
-     *      occurr
+     *      occur
      */
     inline const std::map<GenomicPosition, BaseCoverage>& get_coverage() const
     {
@@ -473,7 +473,7 @@ public:
      * @brief Get the coverage of a position in which an SID occurs
      *
      * @return a constant reference to the coverage of `pos` assuming that
-     *      `pos` is a possition in which an SID occurs
+     *      `pos` is a position in which an SID occurs
      */
     const BaseCoverage& get_coverage(const GenomicPosition& pos) const;
 
