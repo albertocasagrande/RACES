@@ -2,9 +2,8 @@
  * @file sequencer.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencer models
- * @version 1.6
- * @date 2025-01-14
- * 
+ * @version 1.7
+ * @date 2025-01-15
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -131,52 +130,110 @@ public:
     {}
 };
 
-
 /**
- * @brief A namespace for Sanger
+ * @brief The Sanger quality codec
+ *
+ * This class implements the methods to encode and decode a base
+ * error probability in a from a quality code as specified by
+ * Sanger standard.
  */
-namespace Sanger
-{
-
-/**
- * @brief A basic quality score model
- * 
- * This basic quality score model simulates read quality scores, exclusively
- * taking into account the base positions in the simulated read.
- * The scores are sampled on normal distributions whose means and standard
- * deviations are estimated by using two functions whose domains are the
- * read positions.
- */
-class BasicQualityScoreModel
+class SangerQualityCodec
 {
 public:
-    constexpr static uint8_t max_phred_code = 40; //!< The maximum Phred score
-
-    using EstimatingFunctionType = std::function<double(const size_t&)>;
-
     /**
-     * @brief Get the minimum quality code
-     * 
-     * @return The minimum quality code
+     * @brief Get the base quality code
+     *
+     * @return The base quality code
      */
-    inline constexpr static uint8_t min_quality_code()
+    inline constexpr static uint8_t base_quality_code()
     {
         return 33;
     }
 
     /**
+     * @brief Get the minimum quality value
+     *
+     * @return The minimum quality value
+     */
+    inline constexpr static uint8_t min_quality_value()
+    {
+        return 0;
+    }
+
+    /**
+     * @brief Get the maximum quality value
+     *
+     * @return The maximum quality value
+     */
+    inline constexpr static uint8_t max_quality_value()
+    {
+        // the maximum quality value in phred is 40, however,
+        // the quality value never tops 37
+        return 37;
+    }
+
+    /**
+     * @brief Get the minimum quality code
+     *
+     * @return The minimum quality code
+     */
+    inline constexpr static uint8_t min_quality_code()
+    {
+        return min_quality_value() + base_quality_code();
+    }
+
+    /**
      * @brief Get the maximum quality code
-     * 
+     *
      * @return The maximum quality code
      */
     inline constexpr static uint8_t max_quality_code()
     {
-        return min_quality_code() + max_phred_code;
+        return max_quality_value() + base_quality_code();
     }
 
     /**
+     * @brief Encode an error probability into a quality value
+     *
+     * @param error_prob is the error probability to be encoded
+     * @return the quality code corresponding to `error_prob`
+     */
+    static char encode(const double error_prob);
+
+    /**
+     * @brief Decode a quality code into an error probability
+     *
+     * @param quality_code is the quality code to be decoded
+     * @return the error probability corresponding to `quality_code`
+     */
+    static double decode(const char quality_code);
+};
+
+/**
+ * @brief A statistical quality score model
+ *
+ * This statistical quality score model simulates read quality scores,
+ * exclusively taking into account the base positions in the simulated read.
+ * The scores are sampled on normal distributions whose means and standard
+ * deviations are estimated by using two functions whose domains are the
+ * read positions.
+ */
+
+template<typename QUALITY_CODEC=SangerQualityCodec>
+class QualityScoreModel
+{
+public:
+    using EstimatingFunctionType = std::function<double(const size_t&)>;
+
+private:
+    EstimatingFunctionType mean;   //!< The estimator of the mean quality score
+    EstimatingFunctionType stddev; //!< The estimator of the standard deviation quality score
+
+    std::vector<std::normal_distribution<double>> quality_dists; //!< The quality distributions
+
+    /**
      * @brief A function estimating the mean quality score on a read position
-     * 
+     *
      * The mean quality values of Illumina sequencers per position tend to
      * linearly increase from the first base reaching a peak around the 7th
      * base and, then, linearly sink. Because of this, this function models
@@ -196,47 +253,71 @@ public:
      *  is requested
      * @return The mean quality score on `position`
      */
-    static double default_mean(const size_t& position);
+    static double default_mean(const size_t& position)
+    {
+        const double library_const = static_cast<double>(100)/150;
+        constexpr double mean_a1 = 0.0845729; //!< The mean linear coefficient before the peak
+        const double mean_a2 = -0.0146604*library_const; //!< The mean linear coefficient after the peak
+        constexpr double mean_b = 35.1498051;  //!< The mean quality score in first position
+
+        constexpr uint16_t mean_peak_pos = 7; //!< The position of the mean peak
+
+        if (position<mean_peak_pos) {
+            return mean_a1 * position + mean_b;
+        }
+
+        return mean_a2*position + (mean_peak_pos*(mean_a1-mean_a2)+mean_b);
+    }
 
     /**
      * @brief A function estimating the standard deviation quality score on a read position
-     * 
+     *
      * This function models the standard deviations of the quality scores by the quadratic
      * function
      * $$
      * f_s(x) = c x^2 + d.
      * $$
      * The parameters were fitted to real sequencing data.
-     * 
-     * @param position is the position for which the standard deviation 
+     *
+     * @param position is the position for which the standard deviation
      *   quality score is requested
      * @return The standard deviation quality score on `position`
      */
-    static double default_stddev(const size_t& position);
+    static double default_stddev(const size_t& position)
+    {
+        const double library_const = static_cast<double>(100)/150;
 
-private:
-    EstimatingFunctionType mean;   //!< The estimator of the mean quality score
-    EstimatingFunctionType stddev; //!< The estimator of the standard deviation quality score
+        const double stddev_quad_coeff = 9.661484e-06 * library_const * library_const;   //!< The standard deviation quadratic coefficient
+        constexpr double stddev_base_coeff = 1.731231e-01;   //!< The standard deviation zero-degree coefficient
 
-    std::vector<std::normal_distribution<double>> quality_dists; //!< The quality distributions
+        return stddev_quad_coeff*position*position + stddev_base_coeff;
+    }
 
 public:
+    using QualityScoreCodec = QUALITY_CODEC;
+
     /**
-     * @brief Construct a new Basic Quality Model object
-     * 
+     * @brief Construct a new quality score model
+     *
      * @param mean_qual_function is the estimator of the mean quality score in a position
-     * @param stddev_qual_function 
+     * @param stddev_qual_function
      */
-    explicit BasicQualityScoreModel(const EstimatingFunctionType& mean_qual_function=default_mean,
-                                    const EstimatingFunctionType& stddev_qual_function=default_stddev);
+    explicit QualityScoreModel(const EstimatingFunctionType& mean_qual_function=default_mean,
+                               const EstimatingFunctionType& stddev_qual_function=default_stddev):
+         mean(mean_qual_function), stddev(stddev_qual_function)
+    {
+        if constexpr(!std::is_base_of_v<QUALITY_CODEC, SangerQualityCodec>) {
+            throw std::logic_error("This class only supports `SangerQualityCodec` at the moment");
+        }
+    }
 
     /**
      * @brief Simulate the quality score of a base
-     * 
+     *
      * @tparam RANDOM_GENERATOR is the type of the pseudo-random number generator
      * @param generator is a pseudo-random number generator
      * @param position is the read position of the base for which the quality
-     *   score is simulated    
+     *   score is simulated
      * @return The simulated quality score
      */
     template<typename RANDOM_GENERATOR>
@@ -247,57 +328,57 @@ public:
                                        stddev(quality_dists.size()));
         }
 
-        const uint8_t quality = static_cast<uint8_t>(quality_dists[position](generator));
+        const auto quality = quality_dists[position](generator);
 
-        if (quality > max_quality_code()) {
-            return max_quality_code();
+        if (quality > QUALITY_CODEC::max_quality_value()) {
+            return QUALITY_CODEC::max_quality_code();
         }
 
-        if (quality < min_quality_code()) {
-            return min_quality_code();
+        if (quality < QUALITY_CODEC::min_quality_value()) {
+            return QUALITY_CODEC::min_quality_code();
         }
 
-        return quality;
+        return static_cast<uint8_t>(quality) + QUALITY_CODEC::base_quality_code();
     }
 };
 
-}  // namespace Sanger
-
 /**
  * @brief A constant quality score model
- * 
+ *
  * This model assigns the same score to any base in any
  * position of a simulated read.
- * 
- * @tparam QUALITY_SCORE_MODEL is the type of the quality score model
+ *
+ * @tparam QUALITY_CODEC is the quality score codec
  */
 
-template<typename QUALITY_SCORE_MODEL=Sanger::BasicQualityScoreModel>
+template<typename QUALITY_CODEC=SangerQualityCodec>
 class ConstantQualityScoreModel
 {
     uint8_t quality_score;  //!< The constant quality score
 public:
+    using QualityScoreCodec = QUALITY_CODEC;
+
     /**
      * @brief The empty constructor
      */
     ConstantQualityScoreModel():
-        quality_score(QUALITY_SCORE_MODEL::max_quality_code())
+        quality_score(QUALITY_CODEC::max_quality_code())
     {}
 
     /**
      * @brief A constructor
-     * 
+     *
      * @param quality_score is the constant quality score
      */
     explicit ConstantQualityScoreModel(const uint8_t quality_score):
             quality_score(std::max(std::min(quality_score,
-                                   QUALITY_SCORE_MODEL::max_quality_code()),
-                          QUALITY_SCORE_MODEL::min_quality_code()))
+                                   QUALITY_CODEC::max_quality_code()),
+                          QUALITY_CODEC::min_quality_code()))
     {}
 
     /**
      * @brief Simulate the quality score of a base
-     * 
+     *
      * @tparam RANDOM_GENERATOR is the type of the pseudo-random number generator
      * @param generator is a pseudo-random number generator
      * @param position is the read position of the base for which the quality
@@ -322,13 +403,15 @@ namespace Illumina
 
 /**
  * @brief A basic error-less Illumina sequencer
- * 
- * @tparam QUALITY_SCORE_MODEL is the type of the quality score model
+ *
+ * @tparam QUALITY_CODEC is the type of the quality score codec
  */
-template<typename QUALITY_SCORE_MODEL=Sanger::BasicQualityScoreModel>
+template<typename QUALITY_CODEC = SangerQualityCodec>
 class ErrorLessSequencer : public RACES::Sequencers::BasicSequencer
 {
 public:
+    using QualityScoreCodec = QUALITY_CODEC;
+
     /**
      * @brief Construct a new error-less Illumina sequencer object
      */
@@ -387,10 +470,10 @@ public:
         (void)reverse;
 
         if (base != 'N') {
-            return QUALITY_SCORE_MODEL::max_quality_code();
+            return QUALITY_CODEC::max_quality_code();
         }
 
-        return QUALITY_SCORE_MODEL::min_quality_code();
+        return QUALITY_CODEC::min_quality_code();
     }
 
     /**
@@ -413,10 +496,10 @@ public:
         (void)position;
         (void)reverse;
 
-        std::string qual(read.size(), QUALITY_SCORE_MODEL::max_quality_code());
+        std::string qual(read.size(), QUALITY_CODEC::max_quality_code());
         for (size_t i=0; i<read.size(); ++i) {
             if (read[i] == 'N') {
-                qual[i] = QUALITY_SCORE_MODEL::min_quality_code();
+                qual[i] = QUALITY_CODEC::min_quality_code();
             }
         }
 
@@ -444,6 +527,7 @@ public:
  * @brief A basic implementation of Illumina sequencer model
  *
  * @tparam QUALITY_SCORE_MODEL is the type of the quality score model
+ * @tparam QUALITY_CODEC is the type of the quality value codec
  * @tparam RANDOM_GENERATOR is the type of the random generator
  * This class simulates the sequencing errors by using an error probability
  * that is independent from both the base position in the read and the
@@ -452,13 +536,14 @@ public:
  * the specified probability threshold a sequencing error is produced.
  * The quality score of a base is determined by using the sample value.
  */
-template<typename QUALITY_SCORE_MODEL=Sanger::BasicQualityScoreModel,
-         typename RANDOM_GENERATOR=std::mt19937_64>
-class BasicSequencer : public ErrorLessSequencer<QUALITY_SCORE_MODEL>
+template<template<class> typename QUALITY_SCORE_MODEL = QualityScoreModel,
+         typename QUALITY_CODEC = SangerQualityCodec,
+         typename RANDOM_GENERATOR = std::mt19937_64>
+class BasicSequencer : public ErrorLessSequencer<QUALITY_CODEC>
 {
     double error_rate;  //!< The error rate
 
-    QUALITY_SCORE_MODEL quality_score_model;    //!< The quality score model
+    QUALITY_SCORE_MODEL<QUALITY_CODEC> quality_score_model;    //!< The quality score model
 
     RANDOM_GENERATOR number_generator;          //!< The pseudo-random number generator
 
@@ -481,6 +566,8 @@ class BasicSequencer : public ErrorLessSequencer<QUALITY_SCORE_MODEL>
         return GenomicSequence::DNA_bases[pos];
     }
 public:
+    using QualityScoreCodec = QUALITY_CODEC;
+
     /**
      * @brief Construct a new basic Illumina sequencer object
      *
@@ -489,7 +576,7 @@ public:
      * @param seed is the random number generator seed
      */
     explicit BasicSequencer(const double& error_rate,
-                            const QUALITY_SCORE_MODEL& quality_score_model,
+                            const QUALITY_SCORE_MODEL<QUALITY_CODEC>& quality_score_model,
                             const int& seed=0):
         error_rate(error_rate), quality_score_model(quality_score_model),
         number_generator(seed), error_dist(0,1)
@@ -541,7 +628,7 @@ public:
         (void)read_position;
 
         if (base == 'N') {
-            return QUALITY_SCORE_MODEL::min_quality_code();
+            return QUALITY_CODEC::min_quality_code();
         }
 
         auto error_sample = error_dist(number_generator);
@@ -554,22 +641,7 @@ public:
 
         base = get_wrong_base(base);
 
-        // Simulating quality scores for wrongly sequenced bases
-        if (error_sample == error_rate) {
-            return QUALITY_SCORE_MODEL::min_quality_code();
-        }
-
-        const char qual = 34 - 10 * std::log10(1-error_sample/error_rate);
-
-        if (qual > QUALITY_SCORE_MODEL::max_quality_code()) {
-            return QUALITY_SCORE_MODEL::max_quality_code();
-        }
-
-        if (qual < QUALITY_SCORE_MODEL::min_quality_code()) {
-            return QUALITY_SCORE_MODEL::min_quality_code();
-        }
-
-        return qual;
+        return QUALITY_CODEC::encode(error_sample/error_rate);
     }
 
     /**
@@ -588,7 +660,7 @@ public:
                              const Mutations::GenomicPosition& position,
                              const bool& reverse=false) override
     {
-        std::string qual(read.size(), QUALITY_SCORE_MODEL::max_quality_code());
+        std::string qual(read.size(), QUALITY_CODEC::max_quality_code());
 
         const std::string& read_seq = read.get_sequence();
         auto qual_it = qual.begin();

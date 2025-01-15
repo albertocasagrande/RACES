@@ -2,8 +2,8 @@
  * @file sequencer.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencer models
- * @version 1.1
- * @date 2025-01-14
+ * @version 1.2
+ * @date 2025-01-15
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -28,6 +28,7 @@
  * SOFTWARE.
  */
 
+#include <cmath>
 
 #include "sequencer.hpp"
 
@@ -37,41 +38,48 @@ namespace RACES
 namespace Sequencers
 {
 
-namespace Sanger
+char SangerQualityCodec::encode(const double error_prob)
 {
-
-double BasicQualityScoreModel::default_mean(const size_t& position)
-{
-    const double library_const = static_cast<double>(100)/150;
-    constexpr double mean_a1 = 0.0845729; //!< The mean linear coefficient before the peak
-    const double mean_a2 = -0.0146604*library_const; //!< The mean linear coefficient after the peak
-    constexpr double mean_b = 35.1498051;  //!< The mean quality score in first position
-    
-    constexpr uint16_t mean_peak_pos = 7; //!< The position of the mean peak
-
-    if (position<mean_peak_pos) {
-        return mean_a1 * position + mean_b;
+    if ((error_prob > 1) || (error_prob < 0)) {
+        throw std::domain_error("The error probability must be a value in [0, 1]: got "
+                                + std::to_string(error_prob));
     }
 
-    return mean_a2*position + (mean_peak_pos*(mean_a1-mean_a2)+mean_b);
+    // Simulating quality scores for wrongly sequenced bases
+    if (error_prob == 0) {
+        return max_quality_code();
+    }
+
+    const int qual = - 10 * std::log10(error_prob);
+
+    if (qual > max_quality_value()) {
+        return max_quality_code();
+    }
+
+    if (qual < min_quality_value()) {
+        return min_quality_code();
+    }
+
+    return static_cast<char>(qual) + base_quality_code();
 }
 
-double BasicQualityScoreModel::default_stddev(const size_t& position)
+
+double SangerQualityCodec::decode(const char quality_code)
 {
-    const double library_const = static_cast<double>(100)/150;
+    const double quality_value = quality_code-base_quality_code();
 
-    const double stddev_quad_coeff = 9.661484e-06 * library_const * library_const;   //!< The standard deviation quadratic coefficient
-    constexpr double stddev_base_coeff = 1.731231e-01;   //!< The standard deviation zero-degree coefficient
+    if ((quality_code > max_quality_code()) || (quality_code < min_quality_code())) {
+        throw std::domain_error("The quality code must be a character in ['"
+                                + std::string(1, min_quality_code())
+                                + "' (ASCII-"+ std::to_string(min_quality_value())+"), "
+                                + std::string(1, max_quality_code())
+                                + "' (ASCII-"+ std::to_string(max_quality_value())+")]"
+                                + ": got " + std::string(1, quality_code)
+                                + "' (ASCII-"+ std::to_string(quality_value) +")");
+    }
 
-    return stddev_quad_coeff*position*position + stddev_base_coeff;
+    return std::pow(static_cast<double>(10), -quality_value/10);
 }
-
-BasicQualityScoreModel::BasicQualityScoreModel(const BasicQualityScoreModel::EstimatingFunctionType& mean_qual_function,
-                                               const BasicQualityScoreModel::EstimatingFunctionType& stddev_qual_function):
-    mean(mean_qual_function), stddev(stddev_qual_function)
-{}
-
-}   // Sanger
 
 }   // Sequencers
 
