@@ -2,10 +2,10 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-02-10
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -1141,6 +1141,8 @@ Simulation::sample_tissue(const SampleSpecification& specification)
 
     samples.push_back(sample);
     name2sample[specification.get_name()]=(samples.end()--);
+
+    make_snapshot<RACES::UI::ProgressBar>(nullptr);
 
     return sample;
 }
