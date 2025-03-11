@@ -2,10 +2,10 @@
  * @file mutation_list.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent mutation lists
- * @version 1.0
- * @date 2024-08-09
+ * @version 1.1
+ * @date 2025-03-11
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -51,7 +51,7 @@ namespace Mutations
 struct MutationList
 {
     /**
-     * @brief Define a choise among mutation type
+     * @brief Define a choice among mutation type
      */
     enum MutationType {
         SID_TURN,   //!< A SID mutation must be applied
@@ -76,18 +76,18 @@ struct MutationList
         std::list<MutationType>::const_iterator order_it;       //!< The order list iterator
 
         /**
-         * @brief Get the iterator refering to the mutation list begin
+         * @brief Get the iterator referring to the mutation list begin
          *
          * @param mutations is a mutation list
-         * @return the constant iterator refering to the first element in `mutations`
+         * @return the constant iterator referring to the first element in `mutations`
          */
         static const_iterator get_begin(const MutationList& mutations);
 
         /**
-         * @brief Get the iterator refering to the mutation list end
+         * @brief Get the iterator referring to the mutation list end
          *
          * @param mutations is a mutation list
-         * @return the constant iterator refering to the element following
+         * @return the constant iterator referring to the element following
          *   the last element in `mutations`
          */
         static const_iterator get_end(const MutationList& mutations);
@@ -241,7 +241,7 @@ struct MutationList
                       const std::list<CNA>& CNAs, const bool& wg_doubling);
 
     /**
-     * @brief Get the iterator refering to the mutation list begin
+     * @brief Get the iterator referring to the mutation list begin
      *
      * @return the constant iterator to the first element in the list
      */
@@ -251,7 +251,7 @@ struct MutationList
     }
 
     /**
-     * @brief Get the iterator refering to the mutation list end
+     * @brief Get the iterator referring to the mutation list end
      *
      * @return the constant iterator to the element following the last
      *   in the list
@@ -292,6 +292,16 @@ struct MutationList
                 & mutations.application_order;
 
         return mutations;
+    }
+
+    /**
+     * @brief Get the number of mutations
+     * 
+     * @return the number of mutations
+     */
+    inline size_t size() const
+    {
+        return application_order.size();
     }
 };
 
