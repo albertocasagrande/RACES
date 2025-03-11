@@ -2,7 +2,7 @@
  * @file mutation_list.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent mutation lists
- * @version 1.1
+ * @version 1.2
  * @date 2025-03-11
  *
  * @copyright Copyright (c) 2023-2025
@@ -348,6 +348,38 @@ struct DriverMutations : public MutationList
                     const std::list<MutationSpec<SID>>& SIDs,
                     const std::list<CNA>& CNAs,
                     const std::list<MutationType>& application_order);
+
+    /**
+     * @brief Save driver mutations
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        static_cast<const MutationList*>(this)->save(archive);
+    
+        archive & name;
+    }
+
+    /**
+     * @brief Load driver mutations
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load driver mutations object
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static DriverMutations load(ARCHIVE& archive)
+    {
+        DriverMutations d_mutations; 
+        
+        static_cast<MutationList&>(d_mutations) = MutationList::load(archive);
+        archive & d_mutations.name;
+
+        return d_mutations;
+    }
 };
 
 }   // Mutations

@@ -2,10 +2,10 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 1.2
- * @date 2024-08-09
+ * @version 1.3
+ * @date 2025-03-11
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -69,6 +69,39 @@ struct PassengerRates
      */
     PassengerRates(const double& indel_rate, const double& SNV_rate,
                    const double& CNA_rate);
+
+    /**
+     * @brief Save passenger rates
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & indel
+                & snv
+                & cna;
+    }
+
+    /**
+     * @brief Load passenger rates
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load passenger rates object
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static PassengerRates load(ARCHIVE& archive)
+    {
+        PassengerRates p_rates;
+
+        archive & p_rates.indel
+                & p_rates.snv
+                & p_rates.cna;
+        
+        return p_rates;
+    }
 };
 
 /**
@@ -142,6 +175,36 @@ public:
         return driver_mutations;
     };
 
+    /**
+     * @brief Save mutational properties
+     *
+     * @tparam ARCHIVE is the output archive type
+     * @param archive is the output archive
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
+    inline void save(ARCHIVE& archive) const
+    {
+        archive & passenger_rates
+                & driver_mutations;
+    }
+
+    /**
+     * @brief Load mutational properties
+     *
+     * @tparam ARCHIVE is the input archive type
+     * @param archive is the input archive
+     * @return the load mutational properties object
+     */
+    template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
+    inline static MutationalProperties load(ARCHIVE& archive)
+    {
+        MutationalProperties m_properties;
+
+        archive & m_properties.passenger_rates
+                & m_properties.driver_mutations;
+        
+        return m_properties;
+    }
 };
 
 }   // Mutations
