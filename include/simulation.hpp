@@ -2,10 +2,10 @@
  * @file simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumour evolution simulation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-03-11
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -1117,7 +1117,7 @@ public:
     /**
      * @brief Evaluate a variable
      *
-     * @param variable is the variable to be valutated
+     * @param variable is the variable to be valuated
      * @return the value of the variable
      */
     double evaluate(const Logics::Variable& variable) const;

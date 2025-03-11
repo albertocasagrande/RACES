@@ -9,7 +9,7 @@ RACES is framework for simulating cancer genomic evolution. It supports:
 -   sequencing simulation
 
 RACES consists in a library `libRACES` and 6 main CLI tools:
--   `species_sim` performs cell spacial simulation by using species evolutional information. It supports epigenetic switching.
+-   `species_sim` performs cell spacial simulation by using species evolutionary information. It supports epigenetic switching.
 -   `build_context_index` creates an index for the mutational contexts (i.e., consecutive triplets of nucleotides) in a genome. 
     This index is used to place passenger SNVs according to SBS signatures. In normal conditions, the context index for a
     genome must be created once for all and the resulting file can be used many times.
@@ -19,7 +19,7 @@ RACES consists in a library `libRACES` and 6 main CLI tools:
 -   `tissue_sampler` samples the results of `species_sim`.
 -   `descendants_builder` builds the descendants forest from the species simulation.
 -   `mutations_sim` builds the phylogenetic forest for the sampled cells, and places mutations (only SNVs and CNAs are supported at the moment) on the tree. It can:
-    *   produce simulated reads and generate the correspoding SAM file for them;
+    *   produce simulated reads and generate the corresponding SAM file for them;
     *   collect SNVs, indels, and CNAs statistical data and save them in CSV files.
 
 ## Required Packages
