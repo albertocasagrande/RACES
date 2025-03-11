@@ -2,8 +2,8 @@
  * @file mutation_list.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent mutation lists
- * @version 1.0
- * @date 2024-08-09
+ * @version 1.1
+ * @date 2025-03-11
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -55,9 +55,9 @@ MutationList::const_iterator::get_end(const MutationList& mutations)
 {
     const_iterator end_it;
 
-    end_it.SID_it = mutations.SIDs.begin();
-    end_it.CNA_it = mutations.CNAs.begin();
-    end_it.order_it = mutations.application_order.begin();
+    end_it.SID_it = mutations.SIDs.end();
+    end_it.CNA_it = mutations.CNAs.end();
+    end_it.order_it = mutations.application_order.end();
 
     return end_it;
 }
