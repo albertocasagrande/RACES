@@ -2,8 +2,8 @@
  * @file mutational_properties.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to represent the mutational properties
- * @version 1.3
- * @date 2025-03-11
+ * @version 1.4
+ * @date 2025-03-12
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -162,7 +162,7 @@ public:
     inline const std::map<std::string, PassengerRates>& get_passenger_rates() const
     {
         return passenger_rates;
-    };
+    }
 
     /**
      * @brief Get the driver mutation map
@@ -173,7 +173,14 @@ public:
     inline const std::map<std::string, DriverMutations>& get_driver_mutations() const
     {
         return driver_mutations;
-    };
+    }
+
+    /**
+     * @brief Set the driver mutation map
+     *
+     * @param driver_mutations is the new list of driver mutations
+     */
+    void set_mutant_drivers(const DriverMutations& mutant_drivers);
 
     /**
      * @brief Save mutational properties

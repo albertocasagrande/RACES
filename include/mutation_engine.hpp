@@ -2,10 +2,10 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.15
- * @date 2024-11-19
+ * @version 1.16
+ * @date 2025-03-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -953,32 +953,30 @@ class MutationEngine
      * @param driver_mutations is the map associating mutant ids and mutations
      */
     void place_driver_mutations(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
-                                const std::map<Mutants::MutantId, DriverMutations>& driver_mutations)
+                                std::map<Mutants::MutantId, DriverMutations>& driver_mutations)
     {
         if (node.is_root() || node.get_mutant_id()!=node.parent().get_mutant_id()) {
-            const auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
+            auto& mutant_mp = driver_mutations.at(node.get_mutant_id());
 
             auto SID_it = mutant_mp.SIDs.begin();
             auto CNA_it = mutant_mp.CNAs.begin();
 
             for (auto order_it = mutant_mp.application_order.begin();
-                order_it != mutant_mp.application_order.end(); ++order_it) {
+                 order_it != mutant_mp.application_order.end(); ++order_it) {
 
                 switch(*order_it) {
                     case DriverMutations::SID_TURN:
                     {
-                        auto mutation = *SID_it;
-                        ++SID_it;
+                        place_driver_mutation(*SID_it, node, cell_mutations, mutant_mp.name);
 
-                        place_driver_mutation(mutation, node, cell_mutations, mutant_mp.name);
+                        ++SID_it;
                     }
                     break;
                     case DriverMutations::CNA_TURN:
                     {
-                        auto mutation = *CNA_it;
-                        ++CNA_it;
+                        place_driver_mutation(*CNA_it, node, cell_mutations, mutant_mp.name);
 
-                        place_driver_mutation(mutation, node, cell_mutations, mutant_mp.name);
+                        ++CNA_it;
                     }
                     break;
                     case DriverMutations::WGD_TURN:
@@ -1009,7 +1007,7 @@ class MutationEngine
      */
     void place_mutations(PhylogeneticForest::node& node, const GenomeMutations& ancestor_mutations,
                          const std::map<Mutants::SpeciesId, PassengerRates>& passenger_rates,
-                         const std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
+                         std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
         using namespace RACES::Mutations;
@@ -1632,6 +1630,7 @@ public:
         PhylogeneticForest forest;
 
         forest.germline_mutations = germline_mutations;
+        forest.mutational_properties = mutational_properties;
 
         static_cast<DescendantsForest&>(forest) = descendants_forest;
 
@@ -1654,6 +1653,11 @@ public:
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
+        }
+
+        // save mutant driver back in mutational properties
+        for (const auto& [mutant_id, mutant_drivers] : driver_mutations) {
+            forest.mutational_properties.set_mutant_drivers(mutant_drivers);
         }
 
         // reverse index extractions

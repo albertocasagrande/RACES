@@ -2,10 +2,10 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.5
- * @date 2024-11-01
+ * @version 1.6
+ * @date 2025-03-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -35,6 +35,7 @@
 #include <memory>
 
 #include "mutation_list.hpp"
+#include "mutational_properties.hpp"
 #include "descendant_forest.hpp"
 
 #include "genome_mutations.hpp"
@@ -62,6 +63,7 @@ class PhylogeneticForest : public Mutants::DescendantsForest
 
     std::shared_ptr<GenomeMutations> germline_mutations; //!< The germline mutations
 
+    MutationalProperties mutational_properties; //!< The mutational properties used to build the forest
 public:
     using AllelicCount = std::map<ChromosomeId, std::map<ChrPosition, std::map<AllelicType, size_t>>>;
 
@@ -298,6 +300,16 @@ public:
     }
 
     /**
+     * @brief Get the forest mutational properties
+     *
+     * @return A constant reference to the forest mutational properties
+     */
+    inline const MutationalProperties& get_mutational_properties() const
+    {
+        return mutational_properties;
+    }
+
+    /**
      * @brief Get the pre-neoplastic mutations
      *
      * @return A map of pre-neoplastic mutations grouped by forest root cell identifier.
@@ -402,7 +414,8 @@ public:
                 & novel_mutations
                 & SID_first_cells
                 & CNA_first_cells
-                & *germline_mutations;
+                & *germline_mutations
+                & mutational_properties;
 
         archive & leaves_mutations.size();
         for (const auto& [cell_id, ptr]: leaves_mutations) {
@@ -430,7 +443,8 @@ public:
                 & forest.novel_mutations
                 & forest.SID_first_cells
                 & forest.CNA_first_cells
-                & *(forest.germline_mutations);
+                & *(forest.germline_mutations)
+                & forest.mutational_properties;
 
         size_t num_of_leaves;
         archive & num_of_leaves;

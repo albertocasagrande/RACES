@@ -2,10 +2,10 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 1.2
- * @date 2024-08-09
+ * @version 1.3
+ * @date 2025-03-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -85,6 +85,17 @@ MutationalProperties::add_mutant(const std::string& mutant_name,
     }
 
     return *this;
+}
+
+void MutationalProperties::set_mutant_drivers(const DriverMutations& mutant_drivers)
+{
+    auto found = this->driver_mutations.find(mutant_drivers.name);
+
+    if (found == this->driver_mutations.end()) {
+        throw std::runtime_error("Unknown mutant \"" + mutant_drivers.name + "\".");
+    }
+
+    found->second = mutant_drivers;
 }
 
 }   // Mutations
