@@ -2,10 +2,10 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 1.2
- * @date 2024-10-24
+ * @version 1.3
+ * @date 2025-05-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -370,11 +370,31 @@ public:
     }
 
     /**
-     * @brief Get the covered reference regions
+     * @brief Get the covered reference region
      *
-     * @return The list of the reference regions covered by this read
+     * This method returns the region in the reference genome that the read
+     * would cover if the latter contained no deletions.
+     *
+     * @see get_covered_reference_region()
+     * @return The reference region covered by this read
      */
-    std::list<GenomicRegion> get_covered_reference_regions() const;
+    GenomicRegion get_covered_reference_region() const;
+
+    /**
+     * @brief Get the reference regions in the read
+     *
+     * This method returns the list of regions in the reference genome with
+     * bases in the current read. The returned regions are contained in the
+     * region returned by the method `get_covered_reference_region()`.
+     * However, there may be bases that belong to the latter, but not to the
+     * output of this method, because they are missing from the read due to
+     * deletion.
+     *
+     * @see get_reference_regions_in_read()
+     * @return The list of the reference regions that are present
+     *    in this this read
+     */
+    std::list<GenomicRegion> get_reference_regions_in_read() const;
 
     /**
      * @brief Compute the CIGAR string of a genomic region potentially affected by SIDs

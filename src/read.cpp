@@ -2,10 +2,10 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 1.2
- * @date 2024-10-24
+ * @version 1.3
+ * @date 2025-05-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -254,7 +254,25 @@ size_t Read::Hamming_distance() const
     return total_mismatches;
 }
 
-std::list<GenomicRegion> Read::get_covered_reference_regions() const
+GenomicRegion Read::get_covered_reference_region() const
+{
+    if (alignment.size()==0) {
+        return {this->genomic_position, 0};
+    }
+
+    size_t seq_size{0};
+    for (const auto& matching : alignment) {
+        // if part of the sequence have been deleted
+        if (matching != MatchingType::INSERTION) { // i.e., MATCH || MISMATCH || DELETION
+            ++seq_size;
+        }
+    }
+
+    return {this->genomic_position,
+            static_cast<GenomicRegion::Length>(seq_size)};
+}
+
+std::list<GenomicRegion> Read::get_reference_regions_in_read() const
 {
     std::list<GenomicRegion> covered_list;
 

@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.17
- * @date 2025-01-13
+ * @version 1.18
+ * @date 2025-05-07
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -102,6 +102,28 @@ public:
      * @param read_size is the size of the region whose coverage must be increase
      */
     void increase_coverage(const ChrPosition& begin_pos, const size_t& read_size);
+
+    /**
+     * @brief Increase the coverage of a region
+     *
+     * @param region is the region whose coverage must be increase
+     */
+    inline void increase_coverage(const GenomicRegion& region)
+    {
+        increase_coverage(region.get_initial_position(),
+                          static_cast<const GenomicRegion::Length&>(region.size()));
+    }
+
+    /**
+     * @brief Increase the coverage of a region
+     *
+     * @param region is the region whose coverage must be increase
+     */
+    inline void increase_coverage(GenomicRegion&& region)
+    {
+        increase_coverage(region.get_initial_position(),
+                          static_cast<const GenomicRegion::Length&>(region.size()));
+    }
 
     /**
      * @brief Get the identifier of the chromosome whose coverage refer to
@@ -1384,7 +1406,7 @@ private:
                 }
             }
 
-            // compute the probability for a template to cover a nucleotide in an allele of 
+            // compute the probability for a template to cover a nucleotide in an allele of
             // a relevant chromosome
             const double hit_probability = 1-static_cast<double>(non_relevant_allelic_size)/
                                                                  non_covered_allelic_size;
