@@ -2,10 +2,10 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 1.2
- * @date 2024-10-24
+ * @version 1.3
+ * @date 2025-05-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -141,13 +141,6 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
 
     progress_bar.set_message("Generating germline");
 
-    std::ifstream fasta_stream(reference_fasta_filename);
-
-    if (!fasta_stream.good()) {
-        throw std::domain_error("The file \"" + to_string(reference_fasta_filename)
-                                + "\" cannot be read");
-    }
-
     GenomeMutations germline(chromosome_regions, alleles_per_chromosome);
 
     GermlineMutations generator(germline.size(), mutations_per_ref_kbase,
@@ -158,7 +151,8 @@ GermlineMutations::generate(const std::filesystem::path& reference_fasta_filenam
     auto driver_positions = get_mutation_position_set(driver_storage);
 
     ChromosomeData<Sequence> chr_seq;
-    while (ChromosomeData<Sequence>::read(fasta_stream, chr_seq, progress_bar)) {
+    Reader<ChromosomeData<Sequence>> chr_reader(reference_fasta_filename);
+    while (chr_reader.read(chr_seq, progress_bar)) {
         auto& chr_mutations = germline.get_chromosome(chr_seq.chr_id);
         auto mutations_in_chr = generator.get_mutations_in(chr_mutations);
 

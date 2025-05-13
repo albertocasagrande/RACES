@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.18
- * @date 2025-05-07
+ * @version 1.19
+ * @date 2025-05-13
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -1479,8 +1479,6 @@ private:
                                        const double& coverage, const std::string& base_name,
                                        UI::ProgressBar& progress_bar)
     {
-        std::ifstream ref_stream(ref_genome_filename);
-
         auto read_simulation_data = get_initial_read_simulation_data(mutations_list, chromosome_ids,
                                                                      coverage);
 
@@ -1499,12 +1497,15 @@ private:
 
         SampleSetStatistics statistics(output_directory);
 
+        progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
+
         using namespace RACES::IO::FASTA;
 
+        IndexedReader<ChromosomeData<Sequence>> chr_reader(ref_genome_filename);
         ChromosomeData<Sequence> chr_data;
-        progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
-        while (ChromosomeData<Sequence>::read(ref_stream, relevant_ids,
-                                              chr_data, progress_bar)) {
+        for (const auto& chr_id: relevant_ids) {
+            const auto chr_name = Mutations::GenomicPosition::chrtos(chr_id);
+            chr_reader.read(chr_data, chr_name, progress_bar);
             progress_bar.set_progress((100*(++steps))/total_steps);
 
             if (write_SAM) {

@@ -31,7 +31,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/driver_storage.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/ending_conditions.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/event_wrapper.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_reader.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_chr_reader.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/fasta_utils.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genome_mutations.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/genomic_position.cpp

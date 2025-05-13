@@ -2,10 +2,10 @@
  * @file context_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to build a context index
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-05-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -144,6 +144,10 @@ protected:
                 ++genome_size;
             }
         }
+
+        if (!fasta_stream.eof()) {
+            fasta_stream.unget();
+        }
     }
 
     /**
@@ -160,6 +164,10 @@ protected:
         while (in_char != '>' && !fasta_stream.eof())
         {
             fasta_stream.get(in_char);
+        }
+
+        if (!fasta_stream.eof()) {
+            fasta_stream.unget();
         }
     }
 
@@ -223,6 +231,10 @@ protected:
             if ((genome_size&0x3FFFFF)==0 && progress_bar != nullptr) {
                 progress_bar->set_progress(static_cast<uint8_t>(100*fasta_stream.tellg()/streamsize));
             }
+        }
+
+        if (!fasta_stream.eof()) {
+            fasta_stream.unget();
         }
     }
 

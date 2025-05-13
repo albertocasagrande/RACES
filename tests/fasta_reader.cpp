@@ -2,10 +2,10 @@
  * @file fasta_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Testing RACES::IO::FASTA::Reader class
- * @version 0.4
- * @date 2023-10-02
+ * @version 1.0
+ * @date 2025-05-13
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -35,7 +35,7 @@
 
 #include <fstream>
 
-#include "fasta_reader.hpp"
+#include "fasta_chr_reader.hpp"
 
 
 BOOST_AUTO_TEST_CASE(reader_creation)
@@ -46,16 +46,47 @@ BOOST_AUTO_TEST_CASE(reader_creation)
     BOOST_CHECK_NO_THROW(SequenceInfo seq_info);
 }
 
+struct NucleotideFixture
+{
+    std::string seq_name;
+    size_t offset;
+    size_t length;
+    std::string nucleotides;
+};
+
 struct FASTAFixture
 {
-    std::map<std::string, std::string> sequences;
+    std::list<std::pair<std::string, std::string>> sequences;
+    std::list<NucleotideFixture> read_nucleotides;
+    std::list<std::pair<std::string, std::string>> chromosomes;
+    std::list<NucleotideFixture> chr_read_nucleotides;
 
     FASTAFixture():
         sequences({
-        {"1 test", "AACCCTAACCCTAACCCTA"},
-        {"2 another test", "ACCCTAACCCTAAGCCCTACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"},
-        {"Test3", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"}
-    })
+        {"1", "AACCCTAACCCTAACCCTA"},
+        {"7", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"},
+        {"2", "ACCCTAACCCTAAGCCCTACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"},
+        {"Test3", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"},
+        {"NC_2321.110", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"}
+        }),
+        read_nucleotides({
+            {"7", 45, 8, "CTAACCCT"},
+            {"7", 45, 14, "CTAACCCTAACCCT"},
+            {"Test3", 45, 14, "CTAACCCTAACCCT"},
+            {"Test3", 109, 20, "CCCTAA"},
+            {"NC_2321.110", 109, 5, "CCCTA"},
+            {"NC_2321.110", 109, 20, "CCCTAA"}
+            }),
+        chromosomes({
+        {"7", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"},
+        {"13", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA"}
+        }),
+        chr_read_nucleotides({
+            {"7", 45, 8, "CTAACCCT"},
+            {"7", 45, 14, "CTAACCCTAACCCT"},
+            {"13", 109, 5, "CCCTA"},
+            {"13", 109, 20, "CCCTAA"}
+            })
     {}
 };
 
@@ -65,73 +96,152 @@ BOOST_AUTO_TEST_CASE(read_sequence_infos)
 {
     using namespace RACES::IO::FASTA;
 
-    std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
-
+    Reader<SequenceInfo> fasta_reader(FASTA_FILE);
     SequenceInfo seq_info;
-    for (const auto& [header, nucleotides]: sequences) {
-        BOOST_CHECK(SequenceInfo::read(fasta_stream, seq_info));
+    for (const auto& [name, nucleotides]: sequences) {
+        BOOST_CHECK(fasta_reader.read(seq_info));
 
-        BOOST_CHECK_EQUAL(seq_info.header, header);
+        BOOST_CHECK_EQUAL(seq_info.name, name);
         BOOST_CHECK_EQUAL(seq_info.length, nucleotides.size());
     }
 
-    BOOST_CHECK(!SequenceInfo::read(fasta_stream, seq_info));
+    BOOST_CHECK(!fasta_reader.read(seq_info));
 }
 
 BOOST_AUTO_TEST_CASE(read_sequences)
 {
     using namespace RACES::IO::FASTA;
 
-    std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
+    Reader<Sequence> fasta_reader(FASTA_FILE);
 
     Sequence sequence;
-    for (const auto& [header, nucleotides]: sequences) {
-        BOOST_CHECK(Sequence::read(fasta_stream, sequence));
+    for (const auto& [name, nucleotides]: sequences) {
+        BOOST_CHECK(fasta_reader.read(sequence));
 
-        BOOST_CHECK_EQUAL(sequence.header, header);
+        BOOST_CHECK_EQUAL(sequence.name, name);
         BOOST_CHECK_EQUAL(sequence.length, nucleotides.size());
         BOOST_CHECK_EQUAL(sequence.nucleotides, nucleotides);
     }
 
-    BOOST_CHECK(!Sequence::read(fasta_stream, sequence));
+    BOOST_CHECK(!fasta_reader.read(sequence));
 }
 
-struct SequenceFilterBySize: public RACES::IO::FASTA::SequenceFilter
-{
-    size_t size;
-
-    SequenceFilterBySize(const size_t size):
-        SequenceFilter(), size(size)
-    {}
-
-    bool operator()(const std::string& header) const
-    {
-        return header.size() >= size;
-    }
-};
-
-BOOST_AUTO_TEST_CASE(read_filtered_sequences)
+BOOST_AUTO_TEST_CASE(index_reader)
 {
     using namespace RACES::IO::FASTA;
 
-    std::ifstream fasta_stream(FASTA_FILE, std::ios_base::in);
+    std::filesystem::remove(Index<Sequence>::get_index_filename(FASTA_FILE));
 
-    SequenceFilterBySize filter(strlen("2 another test"));
-    Sequence sequence;
+    for (size_t i=0; i<2; ++i) {
+        IndexedReader<Sequence> ireader(FASTA_FILE);
 
-    for (const auto& [header, nucleotides]: sequences) {
-        if (!filter(header)) {
-            BOOST_CHECK(Sequence::read(fasta_stream, sequence, filter));
+        Sequence sequence;
+        for (auto it=sequences.rbegin(); it != sequences.rend(); ++it) {
+            const auto& name = it->first;
+            const auto& nucleotides = it->second;
+            BOOST_CHECK(ireader.read(sequence, name));
 
-            BOOST_CHECK_EQUAL(sequence.header, header);
+            BOOST_CHECK_EQUAL(sequence.name, name);
             BOOST_CHECK_EQUAL(sequence.length, nucleotides.size());
             BOOST_CHECK_EQUAL(sequence.nucleotides, nucleotides);
-        } else {
-            BOOST_CHECK_EQUAL(header, "2 another test");
         }
     }
 
-    BOOST_CHECK(!Sequence::read(fasta_stream, sequence));
+    std::filesystem::remove(Index<Sequence>::get_index_filename(FASTA_FILE));
+}
+
+BOOST_AUTO_TEST_CASE(read_chromosomes)
+{
+    using namespace RACES::IO::FASTA;
+
+    Reader<ChromosomeData<Sequence>> fasta_reader(FASTA_FILE);
+
+    ChromosomeData<Sequence> chromosome;
+    for (const auto& [name, nucleotides]: chromosomes) {
+        BOOST_CHECK(fasta_reader.read(chromosome));
+
+        BOOST_CHECK_EQUAL(chromosome.name, name);
+        BOOST_CHECK_EQUAL(chromosome.length, nucleotides.size());
+        BOOST_CHECK_EQUAL(chromosome.nucleotides, nucleotides);
+    }
+
+    BOOST_CHECK(!fasta_reader.read(chromosome));
+}
+
+BOOST_AUTO_TEST_CASE(nucleotides_reader)
+{
+    using namespace RACES::IO::FASTA;
+
+    std::filesystem::remove(Index<Sequence>::get_index_filename(FASTA_FILE));
+
+    for (size_t i=0; i<2; ++i) {
+        IndexedReader<Sequence> ireader(FASTA_FILE);
+
+        std::string nucleotides;
+        for (auto it=read_nucleotides.rbegin(); it != read_nucleotides.rend(); ++it) {
+            BOOST_CHECK(ireader.read(nucleotides, it->seq_name, it->offset, it->length));
+
+            BOOST_CHECK_EQUAL(nucleotides, it->nucleotides);
+        }
+    }
+
+    std::filesystem::remove(Index<Sequence>::get_index_filename(FASTA_FILE));
+}
+
+BOOST_AUTO_TEST_CASE(chr_index_reader)
+{
+    using namespace RACES::IO::FASTA;
+
+    std::filesystem::remove(Index<ChromosomeData<Sequence>>::get_index_filename(FASTA_FILE));
+
+    for (size_t i=0; i<2; ++i) {
+        IndexedReader<ChromosomeData<Sequence>> ireader(FASTA_FILE);
+
+        ChromosomeData<Sequence> chr;
+        for (auto it=chromosomes.rbegin(); it != chromosomes.rend(); ++it) {
+            const auto& name = it->first;
+            const auto& nucleotides = it->second;
+            BOOST_CHECK(ireader.read(chr, name));
+
+            BOOST_CHECK_EQUAL(RACES::Mutations::GenomicPosition::chrtos(chr.chr_id), name);
+            BOOST_CHECK_EQUAL(chr.length, nucleotides.size());
+            BOOST_CHECK_EQUAL(chr.nucleotides, nucleotides);
+        }
+    }
+
+    std::filesystem::remove(Index<ChromosomeData<Sequence>>::get_index_filename(FASTA_FILE));
+}
+
+BOOST_AUTO_TEST_CASE(build_index_reader_error)
+{
+    using namespace RACES::IO::FASTA;
+
+    BOOST_CHECK_NO_THROW(IndexedReader<Sequence> ireader);
+
+    IndexedReader<Sequence> ireader;
+
+    BOOST_CHECK_THROW(IndexedReader<Sequence>(FASTA_INDEX_ERR), std::domain_error);
+    BOOST_CHECK_THROW(ireader.open(FASTA_INDEX_ERR), std::domain_error);
+}
+
+BOOST_AUTO_TEST_CASE(chr_nucleotides_reader)
+{
+    using namespace RACES::IO::FASTA;
+
+    std::filesystem::remove(Index<ChromosomeData<Sequence>>::get_index_filename(FASTA_FILE));
+
+    for (size_t i=0; i<2; ++i) {
+        IndexedReader<ChromosomeData<Sequence>> ireader(FASTA_FILE);
+
+        std::string nucleotides;
+        for (auto it=chr_read_nucleotides.rbegin(); it != chr_read_nucleotides.rend(); ++it) {
+            BOOST_CHECK(ireader.read(nucleotides, it->seq_name, it->offset, it->length));
+
+            BOOST_CHECK_EQUAL(nucleotides, it->nucleotides);
+        }
+    }
+
+    std::filesystem::remove(Index<ChromosomeData<Sequence>>::get_index_filename(FASTA_FILE));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

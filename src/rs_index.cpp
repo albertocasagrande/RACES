@@ -2,10 +2,10 @@
  * @file rs_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to compute the repeated substring index
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-05-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -159,18 +159,18 @@ bool RSIndex::add(RepetitionMap& r_map, const ChromosomeId& chr_id,
         r_storage.push_back({chr_id, begin, num_of_repetitions, unit, unit_size,
                                 previous_base});
         return true;
-    } else {
-        std::uniform_int_distribution<size_t> dist(0, ++r_storage.total_number);
+    }
 
-        auto pos = dist(random_gen);
+    std::uniform_int_distribution<size_t> dist(0, ++r_storage.total_number);
 
-        if (pos<max_stored_repetitions) {
-            r_storage[pos] = Repetition<RepetitionType>(chr_id, begin,
-                                                        num_of_repetitions,
-                                                        unit, unit_size,
-                                                        previous_base);
-            return true;
-        }
+    auto pos = dist(random_gen);
+
+    if (pos<max_stored_repetitions) {
+        r_storage[pos] = Repetition<RepetitionType>(chr_id, begin,
+                                                    num_of_repetitions,
+                                                    unit, unit_size,
+                                                    previous_base);
+        return true;
     }
 
     return false;
@@ -618,22 +618,15 @@ RSIndex RSIndex::build_index(const std::filesystem::path& genome_fasta,
 
     RSIndex rs_index(max_unit_size, max_stored_repetitions, seed);
 
-    std::ifstream genome_fasta_stream(genome_fasta);
+    Reader<ChromosomeData<Sequence>> chr_reader(genome_fasta);
 
-    if (!genome_fasta_stream.good()) {
-        std::ostringstream oss;
-
-        oss << "\"" << to_string(genome_fasta) << "\" does not exist";
-        throw std::runtime_error(oss.str());
-    }
-
-    auto streamsize = RACES::IO::get_stream_size(genome_fasta_stream);
+    const auto streamsize = chr_reader.get_stream_size();
 
     ChromosomeData<Sequence> chr;
-    while (ChromosomeData<Sequence>::read(genome_fasta_stream, chr)) {
+    while (chr_reader.read(chr, *progress_bar)) {
         if (progress_bar != nullptr) {
-            progress_bar->set_message("Processing chr. " + GenomicPosition::chrtos(chr.chr_id));
-            progress_bar->set_progress(static_cast<uint8_t>(100*genome_fasta_stream.tellg()/streamsize));
+            progress_bar->set_progress(static_cast<uint8_t>(100*chr_reader.get_position()/streamsize),
+                                        "Processing chr. " + GenomicPosition::chrtos(chr.chr_id));
         }
         rs_index.collect_data_from(chr.chr_id, chr.nucleotides, progress_bar);
     }

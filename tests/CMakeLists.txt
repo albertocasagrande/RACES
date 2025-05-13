@@ -61,7 +61,8 @@ if(${Boost_unit_test_framework_FOUND})
         ADD_TEST(${TEST} test_${TEST})
     endforeach()
 
-    target_compile_definitions(test_fasta_reader PUBLIC FASTA_FILE="${ASSET_DIR}/fasta_test.fasta")
+    target_compile_definitions(test_fasta_reader PUBLIC FASTA_FILE="${ASSET_DIR}/fasta_test.fasta"
+    							                        FASTA_INDEX_ERR="${ASSET_DIR}/fasta_test_index_err.fasta")
     target_compile_definitions(test_context_index PUBLIC FASTA_FILE="${ASSET_DIR}/context_index_test.fasta")
     target_compile_definitions(test_genome_mutations PUBLIC FASTA_FILE="${ASSET_DIR}/context_index_test.fasta")
 endif()

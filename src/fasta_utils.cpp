@@ -2,10 +2,10 @@
  * @file fasta_utils.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements support utilities for FASTA files
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-05-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -48,7 +48,7 @@ bool EnsemblSeqNameDecoder::is_chromosome_header(const std::string& seq_name, Mu
 {
     using namespace Mutations;
 
-    const std::regex chr_regex("([0-9]+|X|Y) dna:chromosome chromosome:[a-zA-Z0-9]+:([0-9]+|X|Y):1:([0-9]+):1 .*");
+    const std::regex chr_regex(">([0-9]+|X|Y) dna:chromosome chromosome:[a-zA-Z0-9]+:([0-9]+|X|Y):1:([0-9]+):1 .*");
 
     std::smatch m;
 
@@ -65,7 +65,7 @@ bool NCBISeqNameDecoder::is_chromosome_header(const std::string& seq_name, Mutat
 {
     using namespace Mutations;
 
-    const std::regex chr_regex("NC_[0-9]+.[0-9]+ [A-Za-z0-9 ]+ chromosome ([0-9]+|X|Y), [.A-Za-z0-9]+ Primary Assembly");
+    const std::regex chr_regex(">NC_[0-9]+.[0-9]+ [A-Za-z0-9 ]+ chromosome ([0-9]+|X|Y), [.A-Za-z0-9]+ Primary Assembly");
 
     std::smatch m;
 
