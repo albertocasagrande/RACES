@@ -2,7 +2,7 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 1.1
+ * @version 1.2
  * @date 2025-05-13
  *
  * @copyright Copyright (c) 2023-2025
@@ -189,7 +189,7 @@ protected:
             line.erase(remove(line.begin(), line.end(), ' '), line.end());
             line.erase(remove(line.begin(), line.end(), '\t'), line.end());
             if (read_length + line.size() > length) {
-                line = line.substr(0, length-read_length);
+                line.resize(length-read_length);
             }
 
             read_length += line.size();

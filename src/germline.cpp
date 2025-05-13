@@ -2,7 +2,7 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 1.3
+ * @version 1.4
  * @date 2025-05-13
  *
  * @copyright Copyright (c) 2023-2025
@@ -440,7 +440,7 @@ SID get_SID_from_line(const std::string& line,
 
     pos = alt.find(',');
     if (pos != std::string::npos) {
-        alt = alt.substr(0, pos);
+        alt.resize(pos);
     }
 
     return {chr_id, chr_pos, ref, alt, Mutation::GERMINAL};
