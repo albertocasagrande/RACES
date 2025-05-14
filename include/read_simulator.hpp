@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.19
- * @date 2025-05-13
+ * @version 1.20
+ * @date 2025-05-14
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -1159,13 +1159,14 @@ private:
                                           ?2*read_size+insert_size_mean-insert_size_stddev:
                                           read_size);
 
-        if (fragment.size()>=threshold_template_size) {
+        if (fragment.size() >= threshold_template_size && sample_simulation_data.missing_templates > 0) {
             const double hit_probability = static_cast<double>(fragment.size())/
                                         sample_simulation_data.non_covered_allelic_size;
             std::binomial_distribution<size_t> b_dist(sample_simulation_data.missing_templates,
                                                         hit_probability);
 
-            size_t num_of_frag_templates = b_dist(random_generator);
+            const size_t num_of_frag_templates = std::min(b_dist(random_generator),
+                                                          sample_simulation_data.missing_templates);
 
             const double fragment_progress_ratio = (100*static_cast<double>(fragment.size())/num_of_frag_templates)/total_steps;
 
