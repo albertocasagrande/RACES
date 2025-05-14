@@ -33,7 +33,7 @@ RACES consists in a library `libRACES` and 6 main CLI tools:
 ### Optional Packages
 -   Boost::unit_test_framework (enabling C++ code testing)
 -   SDL_ttf and SDL_image libraries (enabling simulation plotting)
--   Boost::Python (enabling Python bindings)
+-   Boost::Python (enabling incomplete Python bindings)
 
 ## Setup
 
@@ -50,7 +50,7 @@ make -j
 
 ## Wrapper
 
--  [rRACES](https://caravagnalab.github.io/rRACES/index.html) is a R wrapper for RACES.
+-  [ProCESS](https://caravagnalab.github.io/ProCESS/index.html) is a R wrapper for RACES.
 
 ## License
 
