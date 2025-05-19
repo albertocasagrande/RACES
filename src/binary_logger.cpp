@@ -2,10 +2,10 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 1.1
- * @date 2024-06-18
+ * @version 1.2
+ * @date 2025-05-19
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -109,7 +109,7 @@ std::filesystem::path BinaryLogger::find_last_snapshot_in(const std::filesystem:
         throw std::runtime_error(oss.str());
     }
 
-    std::regex re(to_string(directory / (snapshot_prefix+"_\\d+-\\d+.dat")));
+    std::regex re = build_regex(to_string(directory / (snapshot_prefix+"_\\d+-\\d+.dat")));
 
     bool found{false};
     std::string last;

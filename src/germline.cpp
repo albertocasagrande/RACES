@@ -2,8 +2,8 @@
  * @file germline.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements the functions to generate and load germline mutations
- * @version 1.4
- * @date 2025-05-13
+ * @version 1.5
+ * @date 2025-05-19
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -214,7 +214,7 @@ load_germline_chr_map(const std::filesystem::path& germline_data_file)
 
 bool read_up_to_header(std::string& header, std::ifstream& VCF_stream)
 {
-    const std::regex header_regex("^#CHROM.*");
+    const std::regex header_regex = build_regex("^#CHROM.*");
     std::smatch matches;
 
     std::string line;
@@ -249,7 +249,7 @@ bool is_male(const std::map<ChromosomeId, std::filesystem::path>& germline_chr_m
 
     std::string header;
     if (read_up_to_header(header, VCF_X_stream)) {
-        const std::regex subject_regex(".*"+subject+".*");
+        const std::regex subject_regex = build_regex(".*"+subject+".*");
         std::smatch matches;
 
         return std::regex_match(header, matches, subject_regex);
@@ -272,8 +272,8 @@ get_chromosome_regions_from_VCF(const std::map<ChromosomeId, std::filesystem::pa
                                  + "\" is not readable.");
     }
 
-    const std::regex chr_regex("^##contig=<([0-9a-zA-Z=]+,)*ID=([0-9]+|X|Y).*");
-    const std::regex chr_length("^.*(<|,)length=([0-9]+)(,|>).*");
+    const std::regex chr_regex = build_regex("^##contig=<([0-9a-zA-Z=]+,)*ID=([0-9]+|X|Y).*");
+    const std::regex chr_length = build_regex("^.*(<|,)length=([0-9]+)(,|>).*");
     std::smatch matches;
 
     std::list<GenomicRegion> chr_regions;

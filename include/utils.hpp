@@ -2,10 +2,10 @@
  * @file utils.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines utility functions
- * @version 1.1
- * @date 2024-10-13
+ * @version 1.2
+ * @date 2025-05-19
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -28,6 +28,9 @@
  * SOFTWARE.
  */
 
+#ifndef __RACES_UTILS__
+#define __RACES_UTILS__
+
 #include <string>
 #include <filesystem>
 #include <map>
@@ -35,12 +38,55 @@
 #include <algorithm>
 #include <ostream>
 
-#ifndef __RACES_UTILS__
-#define __RACES_UTILS__
+#include<regex>
+#include<clocale>
+
+/**
+ * @brief Build a std::regex
+ *
+ * This method implements a workaround for creating `std::regex`
+ * objects in unsupported Window locales.
+ *
+ * @param regex_str is the regular expression used to build
+ *          the std::regex object.
+ */
+inline std::regex build_regex(const char* regex_str)
+{
+#if defined(__WIN32__) && defined(__GNUG__) && __GNUC__ <= 14
+    // saving current locale
+    const std::string orig_locale = std::setlocale(LC_ALL, nullptr);
+
+    // setting a temporary locale
+    std::setlocale(LC_ALL, "C");
+
+    std::regex re(regex_str);
+
+    // resetting original locale
+    std::setlocale(LC_ALL, orig_locale.c_str());
+#else
+    std::regex re(regex_str);
+#endif
+
+    return re;
+}
+
+/**
+ * @brief Build a std::regex
+ *
+ * This method implements a workaround for creating `std::regex`
+ * objects in unsupported Window locales.
+ *
+ * @param regex_str is the regular expression used to build
+ *          the std::regex object.
+ */
+inline std::regex build_regex(const std::string& regex_str)
+{
+    return build_regex(regex_str.c_str());
+}
 
 /**
  * @brief Convert a path to a string
- * 
+ *
  * @param fs_path is the path to be converted
  * @return a string representation of the path
  */
@@ -74,19 +120,19 @@ namespace std
 
 /**
  * @brief Test whether a string is a suffix of another string
- * 
+ *
  * @param suffix is the suffix to be tested
  * @param text is the test whose suffix is tested
- * @return `true` if and only if `suffix` is a suffix of `text` 
+ * @return `true` if and only if `suffix` is a suffix of `text`
  */
 inline bool is_suffix_of(const std::string& suffix, const std::string& text) {
-    return ((text.size()>=suffix.size()) 
+    return ((text.size()>=suffix.size())
             && (text.compare(text.size()-suffix.size(), suffix.size(), suffix)));
 }
 
 /**
  * @brief Get the union of two sets
- * 
+ *
  * @tparam T is the type of the set values
  * @param A is a set of T values
  * @param B is a set of T values
@@ -105,7 +151,7 @@ std::set<T> get_union(const std::set<T>& A, const std::set<T>& B)
 
 /**
  * @brief Stream a map
- * 
+ *
  * @tparam KEYS is the type of the map keys
  * @tparam VALUES is the type of the map values
  * @param os is the output stream
