@@ -2,7 +2,7 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 1.3
+ * @version 1.4
  * @date 2025-05-20
  *
  * @copyright Copyright (c) 2023-2025
@@ -451,8 +451,8 @@ public:
     {
         std::filesystem::path index_filename{fasta_filename};
 
-        std::string ext = static_cast<std::string>(index_filename.extension())
-                        + Index<SEQUENCE_TYPE>::index_extension();
+        std::string ext = to_string(index_filename.extension())
+                          + Index<SEQUENCE_TYPE>::index_extension();
 
         index_filename.replace_extension(ext);
 
