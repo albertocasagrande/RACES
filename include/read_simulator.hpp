@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.20
- * @date 2025-05-14
+ * @version 1.21
+ * @date 2025-05-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -1483,29 +1483,24 @@ private:
         auto read_simulation_data = get_initial_read_simulation_data(mutations_list, chromosome_ids,
                                                                      coverage);
 
-        size_t steps{0};
 
-        const auto chr_ids = get_genome_chromosome_ids(mutations_list);
-        std::set<ChromosomeId> relevant_ids;
-        std::set_intersection(chr_ids.begin(), chr_ids.end(),
-                              chromosome_ids.begin(), chromosome_ids.end(),
-                              std::inserter(relevant_ids, relevant_ids.begin()));
+        using namespace RACES::IO::FASTA;
 
-        size_t total_steps = 2*relevant_ids.size()*mutations_list.size();
+        IndexedReader<ChromosomeData<Sequence>> chr_reader(ref_genome_filename);
+
+        const auto relevant_chr_names = get_relevant_chr_names(chr_reader, mutations_list,
+                                                               chromosome_ids);
+
+        size_t total_steps = 2*relevant_chr_names.size()*mutations_list.size();
         for (const auto& sample_data: read_simulation_data) {
             total_steps += sample_data.non_covered_allelic_size;
         }
 
         SampleSetStatistics statistics(output_directory);
 
-        progress_bar.set_progress((100*steps)/total_steps, "Reading next chromosome");
-
-        using namespace RACES::IO::FASTA;
-
-        IndexedReader<ChromosomeData<Sequence>> chr_reader(ref_genome_filename);
+        size_t steps{0};
         ChromosomeData<Sequence> chr_data;
-        for (const auto& chr_id: relevant_ids) {
-            const auto chr_name = Mutations::GenomicPosition::chrtos(chr_id);
+        for (const auto& chr_name: relevant_chr_names) {
             chr_reader.read(chr_data, chr_name, progress_bar);
             progress_bar.set_progress((100*(++steps))/total_steps);
 
@@ -1594,6 +1589,41 @@ private:
                                     + "\" is not a FASTA file");
         }
     }
+
+    /**
+     * @brief Get the sorted list of relevant names
+     *
+     * This method identifies the chromosomes whose identifiers appear
+     * in both `mutations_list` and `chromosome_ids` and build the
+     * list of their names sorted according their position in the
+     * file indexed by `chr_reader`.
+     *
+     * @param chr_reader is the indexed reader of the FASTA file
+     *      containing the chromosome sequences
+     * @param mutations_list is a list of sample mutations
+     * @param chromosome_ids is a list of chromosome identifiers
+     * @return the list of their names sorted according their
+     *      position in the file indexed by `chr_reader`
+     */
+    std::list<std::string>
+    get_relevant_chr_names(const RACES::IO::FASTA::IndexedReader<RACES::IO::FASTA::ChromosomeData<RACES::IO::FASTA::Sequence>>& chr_reader,
+                           const std::list<SampleGenomeMutations>& mutations_list,
+                           const std::set<ChromosomeId>& chromosome_ids)
+    {
+        const auto chr_ids = get_genome_chromosome_ids(mutations_list);
+        std::set<ChromosomeId> relevant_ids;
+        std::set_intersection(chr_ids.begin(), chr_ids.end(),
+                              chromosome_ids.begin(), chromosome_ids.end(),
+                              std::inserter(relevant_ids, relevant_ids.begin()));
+
+        std::list<std::string> relevant_names;
+        for (const auto& chr_id : relevant_ids) {
+            relevant_names.push_back(GenomicPosition::chrtos(chr_id));
+        }
+
+        return chr_reader.get_index().sort_according_offset(relevant_names);
+    }
+
 public:
 
     /**

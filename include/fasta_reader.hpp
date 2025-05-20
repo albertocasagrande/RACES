@@ -2,8 +2,8 @@
  * @file fasta_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a FASTA file reader and support structures
- * @version 1.2
- * @date 2025-05-13
+ * @version 1.3
+ * @date 2025-05-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -666,6 +666,52 @@ public:
         RACES::UI::ProgressBar progress_bar(std::cout, true);
 
         return Index::build_index(fasta_filename, progress_bar);
+    }
+
+    /**
+     * @brief Sort a container of sequence names according to their index offset
+     *
+     * @tparam CONTAINER is the type of the input container
+     * @param sequence_names is a container of sequence names
+     * @return a list of the elements in `sequence_names` sorted according to
+     *      their positions in the index
+     */
+    template <typename CONTAINER, std::enable_if_t<std::is_same_v<typename CONTAINER::value_type, std::string>, bool> = true>
+    std::list<std::string> sort_according_offset(CONTAINER&& sequence_names) const
+    {
+        return sort_according_offset(sequence_names);
+    }
+
+    /**
+     * @brief Sort a container of sequence names according to their index offset
+     *
+     * @tparam CONTAINER is the type of the input container
+     * @param sequence_names is a container of sequence names
+     * @return a list of the elements in `sequence_names` sorted according to
+     *      their positions in the index
+     */
+    template <typename CONTAINER, std::enable_if_t<std::is_same_v<typename CONTAINER::value_type, std::string>, bool> = true>
+    std::list<std::string> sort_according_offset(const CONTAINER& sequence_names) const
+    {
+        std::map<size_t, std::string> offset_name_map;
+
+        for (const auto& name : sequence_names) {
+            auto found = _map.find(name);
+
+            if (found == _map.end()) {
+                throw std::domain_error("Unknown sequence \"" + name + "\"");
+            }
+
+            offset_name_map.emplace(found->second.offset, name);
+        }
+
+        std::list<std::string> sorted;
+
+        for (const auto& [offset, name]: offset_name_map) {
+            sorted.push_back(name);
+        }
+
+        return sorted;
     }
 
     /**
