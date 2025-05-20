@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 1.1
- * @date 2025-02-10
+ * @version 1.2
+ * @date 2025-02-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -253,9 +253,10 @@ const CellInTissue& Simulation::choose_cell_in(const MutantId& mutant_id,
     std::list<PositionInTissue> position_vector;
     for (const auto& position : rectangle) {
         if (tissue()(position).is_available_for(event_type)) {
-            const CellInTissue& cell = tissue()(position);
+            const auto cell_proxy = tissue()(position);
+            const auto species_id = static_cast<const CellInTissue&>(cell_proxy).get_species_id();
 
-            if (species_ids.count(cell.get_species_id())>0) {
+            if (species_ids.count(species_id)>0) {
                 position_vector.push_back(position);
             }
         }
