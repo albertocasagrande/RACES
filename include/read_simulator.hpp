@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.21
- * @date 2025-05-20
+ * @version 1.22
+ * @date 2025-06-28
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <cctype>
 #include <random>
+#include <iomanip> // std::setw and std::setfill
 
 #include "sid.hpp"
 #include "genome_mutations.hpp"
@@ -1021,6 +1022,32 @@ private:
     }
 
     /**
+     * @brief Encode cell identifier in a string
+     * 
+     * @param cell_id is the cell identifier to be encoded
+     * @param code_length is the cell code length
+     * @param alphabet is the code alphabet 
+     * @return a string that encodes the cell id by using
+     *      `alphabet` as alphabet
+     */
+    std::string
+    encode_cell_id(const RACES::Mutants::CellId& cell_id,
+                   const uint8_t code_length=8,
+                   const std::string alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    {
+        std::string code(code_length, '0');
+
+        uint64_t cell_id_value = static_cast<uint64_t>(cell_id);
+        for (auto code_it=code.rbegin(); code_it!=code.rend(); ++code_it) {
+            const uint64_t remainder = cell_id_value % alphabet.size();
+            *code_it = alphabet[remainder];
+            cell_id_value /= alphabet.size();
+        }
+
+        return code;
+    }
+
+    /**
      * @brief Write the SAM alignment line corresponding to a simulated read
      *
      * This method extracts the template from the chromosome sequence, obtains the
@@ -1032,6 +1059,7 @@ private:
      * @param[in,out] sequencer is the sequencer
      * @param[in] chr_data is the data about the chromosome from which the simulated
      *   template come from
+     * @param[in] cell_id is the identifier of the fragment cell
      * @param[in] germlines is a map from genomic positions to the corresponding
      *   germline SIDs
      * @param[in] passengers is a map from genomic positions to the corresponding
@@ -1049,6 +1077,7 @@ private:
              std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     void process_template(SEQUENCER& sequencer,
                           const RACES::IO::FASTA::ChromosomeData<RACES::IO::FASTA::Sequence>& chr_data,
+                          const RACES::Mutants::CellId& cell_id,
                           const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
                           const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
                           const ChrPosition& template_begin_pos,
@@ -1120,8 +1149,11 @@ private:
                     if (sample_name.size()!=0) {
                         *SAM_stream << "\tRG:Z:" << sample_name;  // The read group
                     }
-                    *SAM_stream << "\tNM:i:" << hamming_dist[i]  // The Hamming distance
-                                << std::endl;
+                    *SAM_stream << "\tNM:i:" << hamming_dist[i];  // The Hamming distance
+                    *SAM_stream << "\tCB:Z:" 
+                                << encode_cell_id(cell_id);       // The cell identifier
+
+                    *SAM_stream << std::endl;
                 }
             }
         }
@@ -1133,6 +1165,7 @@ private:
      * @tparam SEQUENCER is the sequencer model type
      * @param[in,out] sequencer is the sequencer
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
+     * @param[in] cell_id is the identifier of the fragment cell
      * @param[in] fragment is the allele fragment for which reads must be generated
      * @param[in,out] sample_simulation_data are the read simulation data relative to the considered `sample`
      * @param[in] sample_name is the name of the considered tissue sample
@@ -1146,6 +1179,7 @@ private:
              std::enable_if_t<std::is_base_of_v<RACES::Sequencers::BasicSequencer, SEQUENCER>, bool> = true>
     void generate_fragment_reads(SEQUENCER& sequencer,
                                  const RACES::IO::FASTA::ChromosomeData<RACES::IO::FASTA::Sequence>& chr_data,
+                                 const RACES::Mutants::CellId& cell_id,
                                  const AlleleFragment& germline_fragment,
                                  const AlleleFragment& fragment,
                                  ReadSimulationData& sample_simulation_data, const std::string& sample_name,
@@ -1189,8 +1223,8 @@ private:
 
                 if (begin_pos+template_size<=fragment.get_final_position()+1) {
 
-                    process_template(sequencer, chr_data, germlines, passengers, begin_pos,
-                                        template_size, chr_statistics, SAM_stream, sample_name);
+                    process_template(sequencer, chr_data, cell_id, germlines, passengers, begin_pos,
+                                    template_size, chr_statistics, SAM_stream, sample_name);
 
                     num_of_reads += ((read_type == ReadType::PAIRED_READ)?2:1);
                     ++simulated_templates;
@@ -1253,10 +1287,10 @@ private:
 
                     // since `cell_mutations` derives from `germline_mutations`, `germline_allele`
                     // fully contains `allele`
-                    generate_fragment_reads(sequencer, chr_data, germline_it->second, fragment,
-                                            sample_simulation_data, sample_genome_mutations.name,
-                                            chr_statistics, total_steps, steps, progress_bar,
-                                            SAM_stream);
+                    generate_fragment_reads(sequencer, chr_data, cell_mutations->get_id(),
+                                            germline_it->second, fragment, sample_simulation_data,
+                                            sample_genome_mutations.name, chr_statistics,
+                                            total_steps, steps, progress_bar, SAM_stream);
                 }
 
                 progress_bar.set_progress(100*steps/total_steps);
