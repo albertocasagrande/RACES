@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.17
+ * @version 1.18
  * @date 2025-07-07
  *
  * @copyright Copyright (c) 2023-2025
@@ -363,7 +363,7 @@ class MutationEngine
             index -= context_index[context].size();
             context = compl_context;
 
-            alt_base = GenomicSequence::get_complemented(alt_base);
+            alt_base = GenomicSequence::get_complement(alt_base);
         }
 
         GENOME_WIDE_POSITION pos;
@@ -1847,7 +1847,7 @@ public:
 
     /**
      * @brief Get the germline mutations
-     * 
+     *
      * @return the germline mutations
      */
     inline const GenomeMutations& get_germline_mutations() const

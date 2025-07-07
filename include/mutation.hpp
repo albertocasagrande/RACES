@@ -2,10 +2,10 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a general class for mutations
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -98,7 +98,7 @@ struct Mutation : public GenomicPosition
     };
 
     Nature nature;      //!< The mutation nature
-    std::string cause;  //!< The cause of the SNV
+    std::string cause;  //!< The cause of the mutation
 
     /**
      * @brief The empty constructor

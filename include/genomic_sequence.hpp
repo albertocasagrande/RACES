@@ -2,10 +2,10 @@
  * @file genomic_sequence.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a structure to handle genomic sequence
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -63,7 +63,7 @@ struct GenomicSequence
      * @param base is the base whose complement is request
      * @return the complemented base of `base`
      */
-    static char get_complemented(const char& base);
+    static char get_complement(const char& base);
 
     /**
      * @brief Complement a sequence
@@ -78,7 +78,7 @@ struct GenomicSequence
      * @param sequence is the sequence whose complement is request
      * @return the complemented sequence of `sequence`
      */
-    static std::string get_complemented(const std::string& sequence);
+    static std::string get_complement(const std::string& sequence);
 
     /**
      * @brief Reverse a sequence
@@ -115,7 +115,7 @@ struct GenomicSequence
      * @param sequence is the sequence whose reverse-complement is request
      * @return the reverse-complemented sequence of `sequence`
      */
-    static std::string get_reverse_complemented(const std::string& sequence);
+    static std::string get_reverse_complement(const std::string& sequence);
 
     /**
      * @brief Check whether a symbol represents a DNA nucleic base
