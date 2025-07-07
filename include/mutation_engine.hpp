@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.16
- * @date 2025-03-12
+ * @version 1.17
+ * @date 2025-07-07
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -347,7 +347,7 @@ class MutationEngine
         using namespace RACES::Mutations;
 
         SBSContext context = m_type.get_context();
-        SBSContext compl_context = context.get_complemented();
+        SBSContext compl_context = context.get_reverse_complement();
 
         size_t total_pos = context_index[context].size();
         total_pos += context_index[compl_context].size();

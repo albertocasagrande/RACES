@@ -2,10 +2,10 @@
  * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some SBS example
- * @version 0.10
- * @date 2024-05-13
+ * @version 0.11
+ * @date 2025-07-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(sbs_context_complement)
         {
             SBSContext context(seq);
 
-            auto c_context = context.get_complemented();
+            auto c_context = context.get_complement();
 
             BOOST_CHECK_EQUAL(c_context.get_sequence(), c_seq);
         }
@@ -166,7 +166,38 @@ BOOST_AUTO_TEST_CASE(sbs_context_complement)
         {
             SBSContext c_context(c_seq);
 
-            auto context = c_context.get_complemented();
+            auto context = c_context.get_complement();
+
+            BOOST_CHECK_EQUAL(context.get_sequence(), seq);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(sbs_context_reverse_complement)
+{
+    using namespace RACES::Mutations;
+
+    std::list<std::pair<std::string, std::string>> tests{
+            {"AAA","TTT"},
+            {"CAG","CTG"},
+            {"TGG","CCA"},
+            {"ACA","TGT"},
+            {"GCC","GGC"},
+        };
+
+    for (const auto& [seq, c_seq]: tests) {
+        {
+            SBSContext context(seq);
+
+            auto c_context = context.get_reverse_complement();
+
+            BOOST_CHECK_EQUAL(c_context.get_sequence(), c_seq);
+        }
+
+        {
+            SBSContext c_context(c_seq);
+
+            auto context = c_context.get_reverse_complement();
 
             BOOST_CHECK_EQUAL(context.get_sequence(), seq);
         }

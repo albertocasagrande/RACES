@@ -2,10 +2,10 @@
  * @file sbs_context.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SBS contexts and extended context automata
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -145,7 +145,7 @@ char SBSContext::get_central_nucleotide() const
     return static_cast<char>(decode_base((code >> 4)&0x03));
 }
 
-uint8_t SBSContext::get_complemented(const uint8_t& code)
+uint8_t SBSContext::get_complement(const uint8_t& code)
 {
     if (code == std::numeric_limits<CodeType>::max()) {
         return code;
@@ -171,11 +171,47 @@ uint8_t SBSContext::get_complemented(const uint8_t& code)
     return complementary_code;
 }
 
-SBSContext SBSContext::get_complemented() const
+uint8_t SBSContext::get_reverse_complement(const uint8_t& code)
+{
+    if (code == std::numeric_limits<CodeType>::max()) {
+        return code;
+    }
+
+    const uint8_t nucleotide_mask = 0x03;
+
+    // this is to have the central nucleotide associated
+    // to the most significant bits
+    const std::array<uint8_t, 3> shifts{0,4,2};
+
+    uint8_t revcomp_code{0};
+    for (unsigned int i=0; i<3; ++i) {
+        auto base_code = (code >> shifts[2-i])&nucleotide_mask;
+
+        // Complement base code by using this tricky feature
+        // of base encoding
+        base_code =  (base_code + 2) % 4;
+
+        revcomp_code = revcomp_code | (base_code << shifts[i]);
+    }
+
+    return revcomp_code;
+}
+
+SBSContext SBSContext::get_complement() const
 {
     SBSContext complement;
 
-    complement.code = get_complemented(code);
+    complement.code = get_complement(code);
+
+    return complement;
+}
+
+
+SBSContext SBSContext::get_reverse_complement() const
+{
+    SBSContext complement;
+
+    complement.code = get_reverse_complement(code);
 
     return complement;
 }

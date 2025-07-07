@@ -2,10 +2,10 @@
  * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SBS signature
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -112,7 +112,7 @@ SBSType::SBSType(const SBSContext& context, const char& replace_base)
     }
 
     if (central_nucleotide != 'C' && central_nucleotide != 'T') {
-        this->context = context.get_complemented();
+        this->context = context.get_reverse_complement();
         this->replace_base = GenomicSequence::get_complemented(replace_base);
     } else {
         this->context = context;
@@ -142,7 +142,7 @@ SBSType::SBSType(const std::string& context, const char& replace_base):
     }
 
     if (context[1] != 'C' &&  context[1] != 'T' && context[1] != 'c' &&  context[1] != 't') {
-        this->context = this->context.get_complemented();
+        this->context = this->context.get_reverse_complement();
         this->replace_base = GenomicSequence::get_complemented(replace_base);
     }
 }

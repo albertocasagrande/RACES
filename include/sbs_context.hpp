@@ -2,10 +2,10 @@
  * @file sbs_sbs_context.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SBS contexts and extended context automata
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-07
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -129,7 +129,14 @@ public:
      *
      * @return the complement SBS context
      */
-    SBSContext get_complemented() const;
+    SBSContext get_complement() const;
+
+    /**
+     * @brief Get the reverse complement SBS context
+     *
+     * @return the reverse complement SBS context
+     */
+    SBSContext get_reverse_complement() const;
 
     /**
      * @brief Test whether two SBS contexts are equivalent
@@ -191,7 +198,17 @@ public:
      * @return the code of the complement context of the
      *      context whose code is `code`
      */
-    static CodeType get_complemented(const CodeType& code);
+    static CodeType get_complement(const CodeType& code);
+
+    /**
+     * @brief Get the code of the reverse complement SBS context
+     *
+     * @param code is the SBS context code whose reverse complement
+     *      is request
+     * @return the code of the reverse complement context of the
+     *      context whose code is `code`
+     */
+    static CodeType get_reverse_complement(const CodeType& code);
 };
 
 
