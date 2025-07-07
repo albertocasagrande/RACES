@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.18
+ * @version 1.19
  * @date 2025-07-07
  *
  * @copyright Copyright (c) 2023-2025
@@ -233,6 +233,11 @@ class MutationEngine
      */
     using IDTypeStack = std::stack<IDType>;
 
+    /**
+     * @brief The warning function type
+     */
+    using WarningFunction = std::function<void(const std::string)>;
+
     RANDOM_GENERATOR generator; //!< the random generator
 
     ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
@@ -254,6 +259,18 @@ class MutationEngine
     DriverStorage driver_storage;       //!< the driver storage
 
     std::vector<CNA> passenger_CNAs;    //!< the admissible passenger CNAs
+
+    WarningFunction warning;            //!< the warning function
+
+    /**
+     * @brief The default warning function
+     *
+     * @param message is the warning message to be printed
+     */
+    static void default_warning(const std::string message)
+    {
+        std::cerr << "Warning: " << message << std::endl;
+    }
 
     /**
      * @brief Select a random value in a set
@@ -658,15 +675,13 @@ class MutationEngine
         std::uniform_real_distribution<> u_dist(0,1);
 
         // while some of the requested mutations have not been set
-        size_t new_mutations{0}, type_misses{0};
+        size_t new_mutations{0};
         while (new_mutations < num_of_mutations) {
             // randomly pick a mutation type according to the current signature
             auto it = inv_cum_signature.lower_bound(u_dist(generator));
 
             if ((it != inv_cum_signature.end())
                     && (count_available(it->second) > 0)) {
-
-                type_misses = 0;
 
                 // select a mutation among those having the selected mutation
                 // type and that are available in the corresponding index
@@ -685,14 +700,11 @@ class MutationEngine
                     }
                 }
             } else {
-                const size_t max_type_misses{1000};
+                std::ostringstream oss;
 
-                if (++type_misses >= max_type_misses) {
-                    throw std::runtime_error("Missed available context for \""
-                                             + signature_name + "\" for "
-                                             + std::to_string(max_type_misses)
-                                             + " in row.");
-                }
+                oss << "Missing available context for \""
+                    << it->second << "\".";
+                warning(oss.str());
             }
         }
     }
@@ -1377,6 +1389,7 @@ public:
      * @param germline_mutations are the germline mutations
      * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
+     * @param warning is the warning function
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    RSIndex& repetition_index,
@@ -1384,10 +1397,12 @@ public:
                    const std::map<std::string, IDSignature>& ID_signatures,
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
-                   const std::vector<CNA>& passenger_CNAs={}):
+                   const std::vector<CNA>& passenger_CNAs={},
+                   WarningFunction warning=MutationEngine::default_warning):
         MutationEngine(context_index, repetition_index, SBS_signatures,
                        ID_signatures, MutationalProperties(),
-                       germline_mutations, driver_storage, passenger_CNAs)
+                       germline_mutations, driver_storage, passenger_CNAs,
+                       warning)
     {}
 
     /**
@@ -1409,12 +1424,13 @@ public:
                    const MutationalProperties& mutational_properties,
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
-                   const std::vector<CNA>& passenger_CNAs={}):
+                   const std::vector<CNA>& passenger_CNAs={},
+                   WarningFunction warning=MutationEngine::default_warning):
         generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(std::make_shared<GenomeMutations>(germline_mutations)),
         dm_genome(germline_mutations.copy_structure()),
-        driver_storage(driver_storage),
+        driver_storage(driver_storage), warning(warning),
         infinite_sites_model(true), avoid_homozygous_losses(true)
     {
         MutationEngine::check_genomes_consistency(context_index, germline_mutations);
