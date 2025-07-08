@@ -2,10 +2,10 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -198,23 +198,13 @@ struct CNA : public Mutation
     }
 
     /**
-     * @brief Get the CNA inital position
-     *
-     * @return a constant reference to the CNA initial position
-     */
-    const ChrPosition& get_initial_position() const
-    {
-        return position;
-    }
-
-    /**
      * @brief Get the CNA final position
      *
-     * @return a constant reference to the CNA initial position
+     * @return a constant reference to the CNA final position
      */
-    inline ChrPosition get_final_position() const
+    inline ChrPosition end() const
     {
-        return position+length-1;
+        return begin()+length-1;
     }
 
     /**

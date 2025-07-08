@@ -2,10 +2,10 @@
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to place mutations on a descendants forest
- * @version 1.1
- * @date 2024-10-24
+ * @version 1.2
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -189,8 +189,8 @@ std::ostream& MutationStatistics::write_CNAs_table(std::ostream& os, const char 
     if (sample_statistics.size()>1) {
         for (const auto& cna: overall_statistics.CNAs) {
             os << GenomicPosition::chrtos(cna->chr_id) << separator
-               << cna->get_initial_position() << separator
-               << cna->get_final_position()  << separator
+               << cna->begin() << separator
+               << cna->end()  << separator
                << (cna->type == CNA::Type::AMPLIFICATION?"amplification":"deletion")
                << separator << "???" << separator << "???" << std::endl;
         }

@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.22
- * @date 2025-06-28
+ * @version 1.23
+ * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -111,7 +111,7 @@ public:
      */
     inline void increase_coverage(const GenomicRegion& region)
     {
-        increase_coverage(region.get_initial_position(),
+        increase_coverage(region.begin(),
                           static_cast<const GenomicRegion::Length&>(region.size()));
     }
 
@@ -122,7 +122,7 @@ public:
      */
     inline void increase_coverage(GenomicRegion&& region)
     {
-        increase_coverage(region.get_initial_position(),
+        increase_coverage(region.begin(),
                           static_cast<const GenomicRegion::Length&>(region.size()));
     }
 
@@ -1023,10 +1023,10 @@ private:
 
     /**
      * @brief Encode cell identifier in a string
-     * 
+     *
      * @param cell_id is the cell identifier to be encoded
      * @param code_length is the cell code length
-     * @param alphabet is the code alphabet 
+     * @param alphabet is the code alphabet
      * @return a string that encodes the cell id by using
      *      `alphabet` as alphabet
      */
@@ -1150,7 +1150,7 @@ private:
                         *SAM_stream << "\tRG:Z:" << sample_name;  // The read group
                     }
                     *SAM_stream << "\tNM:i:" << hamming_dist[i];  // The Hamming distance
-                    *SAM_stream << "\tCB:Z:" 
+                    *SAM_stream << "\tCB:Z:"
                                 << encode_cell_id(cell_id);       // The cell identifier
 
                     *SAM_stream << std::endl;
@@ -1209,8 +1209,8 @@ private:
             const auto& germlines = germline_fragment.get_mutations();
             const auto& passengers = fragment.get_mutations();
 
-            auto first_possible_begin = fragment.get_initial_position();
-            auto last_possible_begin = static_cast<ChrPosition>(fragment.get_final_position())
+            auto first_possible_begin = fragment.begin();
+            auto last_possible_begin = static_cast<ChrPosition>(fragment.end())
                                             -read_size+1;
 
             std::uniform_int_distribution<ChrPosition> dist(first_possible_begin, last_possible_begin);
@@ -1221,7 +1221,7 @@ private:
                 auto template_size = ((read_type==ReadType::PAIRED_READ)
                                         ?2*read_size+insert_size(random_generator):read_size);
 
-                if (begin_pos+template_size<=fragment.get_final_position()+1) {
+                if (begin_pos+template_size<=fragment.end()+1) {
 
                     process_template(sequencer, chr_data, cell_id, germlines, passengers, begin_pos,
                                     template_size, chr_statistics, SAM_stream, sample_name);

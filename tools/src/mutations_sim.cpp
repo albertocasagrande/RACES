@@ -665,7 +665,7 @@ public:
             const auto major = row.get_field(3);
             try {
                 if (major=="NA" || (stoi(major)>1)) {
-                    CNAs.emplace_back(region.get_begin(), region.size(), CNA::Type::AMPLIFICATION);
+                    CNAs.emplace_back(region.get_initial_position(), region.size(), CNA::Type::AMPLIFICATION);
                 }
             } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown major specification " + major
@@ -676,7 +676,7 @@ public:
             const auto minor = row.get_field(4);
             try {
                 if (minor=="NA" || (stoi(minor)<1)) {
-                    CNAs.emplace_back(region.get_begin(), region.size(), CNA::Type::DELETION);
+                    CNAs.emplace_back(region.get_initial_position(), region.size(), CNA::Type::DELETION);
                 }
             } catch (std::invalid_argument const&) {
                 throw std::domain_error("Unknown minor specification " + major

@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 1.3
- * @date 2025-05-07
+ * @version 1.4
+ * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -438,7 +438,7 @@ Read::Read(const std::string& reference,
         --prev;
 
         if (!prev.is_begin()) {
-            auto begin_ref = (prev->second)->get_region().get_final_position()+1;
+            auto begin_ref = (prev->second)->get_region().end()+1;
             if (begin_ref>this->genomic_position.position) {
                 this->genomic_position.position = begin_ref;
             }

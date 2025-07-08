@@ -2,10 +2,10 @@
  * @file genomic_region.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic region
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -99,7 +99,7 @@ public:
      *
      * @return a constant reference to the genomic region initial position
      */
-    inline const GenomicPosition& get_begin() const
+    inline const GenomicPosition& get_initial_position() const
     {
         return initial_pos;
     }
@@ -109,7 +109,7 @@ public:
      *
      * @return the genomic region final position
      */
-    inline GenomicPosition get_end() const
+    inline GenomicPosition get_final_position() const
     {
         return GenomicPosition(initial_pos.chr_id, initial_pos.position+length-1);
     }
@@ -119,7 +119,7 @@ public:
      *
      * @return the genomic region initial position in the chromosome
      */
-    inline const ChrPosition& get_initial_position() const
+    inline const ChrPosition& begin() const
     {
         return initial_pos.position;
     }
@@ -129,7 +129,7 @@ public:
      *
      * @return the genomic region final position in the chromosome
      */
-    inline ChrPosition get_final_position() const
+    inline ChrPosition end() const
     {
         return initial_pos.position+length-1;
     }
@@ -235,7 +235,7 @@ public:
      */
     inline bool ends_before(const GenomicRegion& genomic_region) const
     {
-        return ends_before(genomic_region.get_begin());
+        return ends_before(genomic_region.get_initial_position());
     }
 
     /**
@@ -307,8 +307,8 @@ public:
     inline bool contains(const GenomicRegion& genomic_region) const
     {
         return ((genomic_region.get_chromosome_id()==initial_pos.chr_id)
-                && (get_initial_position() <= genomic_region.get_initial_position())
-                && (genomic_region.get_final_position() <= get_final_position()));
+                && (begin() <= genomic_region.begin())
+                && (genomic_region.end() <= end()));
     }
 
     /**
@@ -347,8 +347,8 @@ public:
     inline bool strictly_contains(const GenomicRegion& genomic_region) const
     {
         return ((genomic_region.get_chromosome_id()==initial_pos.chr_id)
-                && (get_initial_position()+1 <= genomic_region.get_initial_position())
-                && (genomic_region.get_final_position()+1 <= get_final_position()));
+                && (begin()+1 <= genomic_region.begin())
+                && (genomic_region.end()+1 <= end()));
     }
 
     /**
@@ -511,9 +511,9 @@ struct less<RACES::Mutations::GenomicRegion>
     {
         return ((lhs.get_chromosome_id()<rhs.get_chromosome_id())
                 || ((lhs.get_chromosome_id()==rhs.get_chromosome_id())
-                    && (lhs.get_initial_position()<rhs.get_initial_position()))
+                    && (lhs.begin()<rhs.begin()))
                 || ((lhs.get_chromosome_id()==rhs.get_chromosome_id())
-                    && (lhs.get_initial_position()==rhs.get_initial_position())
+                    && (lhs.begin()==rhs.begin())
                     && (lhs.size()<rhs.size())));
     }
 };

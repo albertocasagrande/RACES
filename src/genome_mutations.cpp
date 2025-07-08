@@ -2,10 +2,10 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.13
- * @date 2024-11-05
+ * @version 1.14
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -230,7 +230,7 @@ bool ChromosomeMutations::amplify_region(const GenomicRegion& genomic_region, co
 
     _data->alleles.insert({new_allele_id, std::move(new_allele)});
 
-    auto cna = std::make_shared<CNA>(genomic_region.get_begin(),
+    auto cna = std::make_shared<CNA>(genomic_region.get_initial_position(),
                                      genomic_region.size(),
                                      CNA::Type::AMPLIFICATION,
                                      allele_id, new_allele_id,
@@ -260,7 +260,7 @@ bool ChromosomeMutations::remove_region(const GenomicRegion& genomic_region, con
 
     allele->remove(genomic_region);
 
-    auto cna = std::make_shared<CNA>(genomic_region.get_begin(),
+    auto cna = std::make_shared<CNA>(genomic_region.get_initial_position(),
                                      genomic_region.size(),
                                      CNA::Type::DELETION,
                                      allele_id, allele_id,
@@ -425,7 +425,7 @@ ChromosomeMutations::get_allelic_map(const std::set<ChrPosition>& break_points,
                 throw std::domain_error(oss.str());
             }
 
-            const auto fragment_end = fragment.get_final_position();
+            const auto fragment_end = fragment.end();
             while (*bp_it < fragment_end) {
                 ++(allele_counter[*bp_it][orig_allele_id]);
                 ++bp_it;
@@ -707,8 +707,8 @@ GenomeMutations::get_CNA_break_points() const
         chr_b_points.insert(chr.size()+1);
         for (const auto& [allele_id, allele] : chr.get_alleles()) {
             for (const auto& [pos, fragment] : allele.get_fragments()) {
-                chr_b_points.insert(fragment.get_initial_position());
-                chr_b_points.insert(fragment.get_final_position()+1);
+                chr_b_points.insert(fragment.begin());
+                chr_b_points.insert(fragment.end()+1);
             }
         }
     }

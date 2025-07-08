@@ -2,8 +2,8 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a general class for mutations
- * @version 1.1
- * @date 2025-07-07
+ * @version 1.2
+ * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -125,6 +125,16 @@ struct Mutation : public GenomicPosition
      */
     Mutation(const GenomicPosition& position, const Nature& nature=UNDEFINED,
              const std::string& cause="");
+
+    /**
+     * @brief Get the mutation's inital position
+     *
+     * @return a constant reference to the mutation's initial position
+     */
+    inline const ChrPosition& begin() const
+    {
+        return position;
+    }
 
     /**
      * @brief Get a string describing a mutation nature

@@ -2,10 +2,10 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 1.4
- * @date 2024-10-26
+ * @version 1.5
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -141,7 +141,7 @@ AlleleFragment AlleleFragment::split(const GenomicPosition& split_point)
                                 "contain mutation region");
     }
 
-    if (get_initial_position() == split_point.position) {
+    if (begin() == split_point.position) {
         throw std::domain_error("The split point cannot be the "
                                 "initial position of the fragment");
     }
@@ -177,8 +177,8 @@ AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
 {
     AlleleFragment new_fragment(genomic_region);
 
-    auto final_position = genomic_region.get_final_position();
-    for (auto it = _data->mutations.lower_bound(genomic_region.get_begin());
+    auto final_position = genomic_region.end();
+    for (auto it = _data->mutations.lower_bound(genomic_region.get_initial_position());
             it != _data->mutations.end() && it->first.position <= final_position; ++it) {
         new_fragment._data->mutations.insert(*it);
     }
@@ -188,8 +188,8 @@ AlleleFragment AlleleFragment::copy(const GenomicRegion& genomic_region) const
 
 bool AlleleFragment::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 {
-    auto final_position = genomic_region.get_final_position();
-    for (auto it = _data->mutations.lower_bound(genomic_region.get_begin());
+    auto final_position = genomic_region.end();
+    for (auto it = _data->mutations.lower_bound(genomic_region.get_initial_position());
             it != _data->mutations.end() && it->first.position <= final_position; ++it) {
         if ((it->second)->nature == Mutation::DRIVER) {
             return true;
@@ -218,7 +218,7 @@ Allele::Allele(const AlleleId& identifier, const ChromosomeId& chromosome_id,
 
 Allele::Allele(const AlleleId& identifier, const GenomicRegion& genomic_region,
                const std::list<AlleleId>& history):
-    fragments{{genomic_region.get_begin(), AlleleFragment(genomic_region)}}, history(history)
+    fragments{{genomic_region.get_initial_position(), AlleleFragment(genomic_region)}}, history(history)
 {
     this->history.push_back(identifier);
 }
@@ -265,7 +265,7 @@ bool Allele::contains(const GenomicPosition& genomic_position) const
 
 bool Allele::contains(const GenomicRegion& genomic_region) const
 {
-    auto it = find_not_after(fragments, genomic_region.get_begin());
+    auto it = find_not_after(fragments, genomic_region.get_initial_position());
 
     return (it != fragments.end() && it->second.contains(genomic_region));
 }
@@ -317,7 +317,7 @@ Allele Allele::copy(const AlleleId& new_allele_id, const GenomicRegion& genomic_
 {
     Allele new_sequence(new_allele_id, history);
 
-    auto it = find_not_after(fragments, genomic_region.get_begin());
+    auto it = find_not_after(fragments, genomic_region.get_initial_position());
 
     if (it == fragments.end() || !it->second.contains(genomic_region)) {
         throw std::domain_error("The allele does not fully contain the genomic region.");
@@ -325,16 +325,16 @@ Allele Allele::copy(const AlleleId& new_allele_id, const GenomicRegion& genomic_
 
     auto new_fragment = it->second.copy(genomic_region);
 
-    new_sequence.fragments[new_fragment.get_begin()] = std::move(new_fragment);
+    new_sequence.fragments[new_fragment.get_initial_position()] = std::move(new_fragment);
 
     return new_sequence;
 }
 
 bool Allele::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 {
-    auto it = find_not_after(fragments, genomic_region.get_begin());
+    auto it = find_not_after(fragments, genomic_region.get_initial_position());
 
-    while (it != fragments.end() && !it->second.begins_after(genomic_region.get_end())) {
+    while (it != fragments.end() && !it->second.begins_after(genomic_region.get_final_position())) {
         if (it->second.has_driver_mutations_in(genomic_region)) {
             return true;
         }
@@ -347,33 +347,33 @@ bool Allele::has_driver_mutations_in(const GenomicRegion& genomic_region) const
 
 bool Allele::remove(const GenomicRegion& genomic_region)
 {
-    auto it = find_not_after(fragments, genomic_region.get_begin());
+    auto it = find_not_after(fragments, genomic_region.get_initial_position());
 
     if (it == fragments.end() || !it->second.contains(genomic_region)) {
         return false;
     }
 
-    if (genomic_region.get_initial_position() > it->first.position) {
-        auto new_fragment = it->second.split(genomic_region.get_begin());
+    if (genomic_region.begin() > it->first.position) {
+        auto new_fragment = it->second.split(genomic_region.get_initial_position());
 
-        if (new_fragment.get_final_position()>genomic_region.get_final_position()) {
-            GenomicPosition g_pos(genomic_region.get_end());
+        if (new_fragment.end()>genomic_region.end()) {
+            GenomicPosition g_pos(genomic_region.get_final_position());
             g_pos.position += 1;
 
             new_fragment = new_fragment.split(g_pos);
         }
 
-        fragments[new_fragment.get_begin()] = std::move(new_fragment);
+        fragments[new_fragment.get_initial_position()] = std::move(new_fragment);
     } else {
-        if (it->second.get_final_position()>genomic_region.get_final_position()) {
-            GenomicPosition g_pos(genomic_region.get_end());
+        if (it->second.end()>genomic_region.end()) {
+            GenomicPosition g_pos(genomic_region.get_final_position());
             g_pos.position += 1;
 
             auto new_fragment = it->second.split(g_pos);
 
             fragments.extract(it);
 
-            fragments[new_fragment.get_begin()] = std::move(new_fragment);
+            fragments[new_fragment.get_initial_position()] = std::move(new_fragment);
         }
     }
 
@@ -437,8 +437,8 @@ namespace std
 
 std::ostream& operator<<(std::ostream& os, const RACES::Mutations::AlleleFragment& allele_fragment)
 {
-    os << "["<< allele_fragment.get_initial_position() << "-"
-       << allele_fragment.get_final_position() << "]{";
+    os << "["<< allele_fragment.begin() << "-"
+       << allele_fragment.end() << "]{";
 
     std::string sep;
     for (const auto& [pos, mutation]: allele_fragment.get_mutations()) {

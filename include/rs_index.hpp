@@ -2,8 +2,8 @@
  * @file rs_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to compute the repeated substring index
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -62,7 +62,7 @@ namespace Mutations
 template<typename REPETITION_TYPE>
 struct Repetition
 {
-    GenomicPosition begin;  //!< The genomic position of the repeated sequence
+    GenomicPosition g_position;  //!< The genomic position of the repeated sequence
     REPETITION_TYPE num_of_repetitions; //!< The number of repetitions of the unit
     std::string unit;   //!< The repeated subsequence
     char prev_base;     //!< The base preceding the first repetition of the unit
@@ -71,7 +71,7 @@ struct Repetition
      * @brief The empty constructor
      */
     Repetition():
-        begin(), num_of_repetitions(0), unit(""), prev_base('N')
+        g_position(), num_of_repetitions(0), unit(""), prev_base('N')
     {}
 
     /**
@@ -91,7 +91,7 @@ struct Repetition
                const REPETITION_TYPE num_of_repetitions,
                const char* unit, const uint8_t unit_size,
                const char previous_base):
-        begin(chr_id, begin), num_of_repetitions(num_of_repetitions),
+        g_position(chr_id, begin), num_of_repetitions(num_of_repetitions),
         unit(unit, unit+unit_size), prev_base(previous_base)
     {
         if (unit_size==0) {
@@ -108,7 +108,7 @@ struct Repetition
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        archive & begin
+        archive & g_position
                 & num_of_repetitions
                 & unit
                 & prev_base;
@@ -126,7 +126,7 @@ struct Repetition
     {
         Repetition<REPETITION_TYPE> repetition;
 
-        archive & repetition.begin
+        archive & repetition.g_position
                 & repetition.num_of_repetitions
                 & repetition.unit
                 & repetition.prev_base;

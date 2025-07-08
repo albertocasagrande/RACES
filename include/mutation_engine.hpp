@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.20
- * @date 2025-07-08
+ * @version 1.21
+ * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -426,7 +426,7 @@ class MutationEngine
             std::swap(alt, ref);
         }
 
-        GenomicPosition pos(repetition.begin);
+        GenomicPosition pos(repetition.g_position);
         --pos.position;
 
         return {RANDOM_ALLELE, pos, ref, alt, Mutation::UNDEFINED};

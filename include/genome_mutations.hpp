@@ -2,10 +2,10 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.10
- * @date 2024-11-01
+ * @version 1.11
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -365,8 +365,8 @@ public:
     inline bool contains(const GenomicRegion& genomic_region) const
     {
         return (genomic_region.get_chromosome_id()==id()     // same chromosome
-                && genomic_region.get_initial_position()>0   // the lays in [1, chromosome size]
-                && genomic_region.get_final_position()<=size());
+                && genomic_region.begin()>0   // it lays in [1, chromosome size]
+                && genomic_region.end()<=size());
     }
 
     /**

@@ -64,10 +64,10 @@ GenomicRegion::GenomicRegion(const GenomicPosition initial_pos, const Length len
 
 bool GenomicRegion::overlaps(const GenomicRegion& genomic_region) const
 {
-    return (this->contains(genomic_region.get_begin())
-            || genomic_region.contains(get_begin())
-            || this->contains(genomic_region.get_end())
-            || genomic_region.contains(get_end()));
+    return (this->contains(genomic_region.get_initial_position())
+            || genomic_region.contains(get_initial_position())
+            || this->contains(genomic_region.get_final_position())
+            || genomic_region.contains(get_final_position()));
 }
 
 GenomicRegion GenomicRegion::split(const GenomicPosition& split_point)
@@ -128,7 +128,7 @@ namespace std
 
 std::ostream& operator<<(std::ostream& out, const RACES::Mutations::GenomicRegion& genomic_region)
 {
-    auto begin_pos = genomic_region.get_begin();
+    auto begin_pos = genomic_region.get_initial_position();
 
     out << "GenomicRegion(chr: " << RACES::Mutations::GenomicPosition::chrtos(begin_pos.chr_id)
         << ", begin: " << begin_pos.position
