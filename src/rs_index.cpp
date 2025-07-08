@@ -2,8 +2,8 @@
  * @file rs_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to compute the repeated substring index
- * @version 1.1
- * @date 2025-05-13
+ * @version 1.2
+ * @date 2025-07-08
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -222,26 +222,24 @@ void RSIndex::add_null_heteropolymer(const char* s, const ChromosomeId& chr_id,
                                      const ChrPosition& begin,
                                      const ChrPosition& r_begin)
 {
-    const auto rep_begin = r_begin+begin;
-    if (rep_begin>1) {
-        auto& r_storage = (*hetero_map)[unit_size][0];
+    const auto rep_begin = r_begin+begin+1;
+    auto& r_storage = (*hetero_map)[unit_size][0];
 
-        if (r_storage.total_number < max_stored_repetitions) {
+    if (r_storage.total_number < max_stored_repetitions) {
+        std::string k_mer = build_k_mer(unit_size);
+        r_storage.push_back(Repetition<RepetitionType>(chr_id, rep_begin,
+                                                        0, k_mer.c_str(),
+                                                        unit_size, *(s+r_begin)));
+    } else {
+        std::uniform_int_distribution<size_t> dist(0, ++r_storage.total_number);
+
+        auto pos = dist(random_gen);
+
+        if (pos<max_stored_repetitions) {
             std::string k_mer = build_k_mer(unit_size);
-            r_storage.push_back(Repetition<RepetitionType>(chr_id, rep_begin,
+            r_storage[pos] = Repetition<RepetitionType>(chr_id, rep_begin,
                                                             0, k_mer.c_str(),
-                                                            unit_size, *(s+r_begin)));
-        } else {
-            std::uniform_int_distribution<size_t> dist(0, ++r_storage.total_number);
-
-            auto pos = dist(random_gen);
-
-            if (pos<max_stored_repetitions) {
-                std::string k_mer = build_k_mer(unit_size);
-                r_storage[pos] = Repetition<RepetitionType>(chr_id, rep_begin,
-                                                                0, k_mer.c_str(),
-                                                                unit_size, *(s+r_begin));
-            }
+                                                            unit_size, *(s+r_begin));
         }
     }
 }
@@ -250,11 +248,10 @@ void RSIndex::add_null_homopolymer(const size_t nucleotide_index, const char* s,
                                    const ChromosomeId& chr_id, const ChrPosition& begin,
                                    const ChrPosition& r_begin)
 {
-    const auto rep_begin = r_begin+begin;
-    if (rep_begin>1) {
-        add_polymer(chr_id, rep_begin, static_cast<uint8_t>(0),
-                    s+nucleotide_index, 1, *(s+r_begin));
-    }
+    const auto rep_begin = r_begin+begin+1;
+
+    add_polymer(chr_id, rep_begin, static_cast<uint8_t>(0),
+                s+nucleotide_index, 1, *(s+r_begin));
 }
 
 std::map<ChrPosition, std::map<size_t, ChrPosition>>
