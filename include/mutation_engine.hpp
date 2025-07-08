@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.19
- * @date 2025-07-07
+ * @version 1.20
+ * @date 2025-07-08
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -416,13 +416,11 @@ class MutationEngine
         if (infinite_sites_model) {
             rs_stack.push(id_type);
         }
-        auto& repetition = rs_index.select(id_type, infinite_sites_model);
+        const auto& repetition = rs_index.select(id_type, infinite_sites_model);
 
         std::string alt(1, repetition.prev_base);
         std::string ref = alt;
-        for (size_t i=0; i<repetition.num_of_repetitions; ++i) {
-            ref.append(repetition.unit);
-        }
+        ref.append(repetition.unit);
 
         if (id_type.insertion) {
             std::swap(alt, ref);
