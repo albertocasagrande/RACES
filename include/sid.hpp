@@ -2,10 +2,10 @@
  * @file sid.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SNV, Insertion, and Deletion mutations
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-09
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -191,6 +191,16 @@ struct SID : public Mutation
     {
         return (is_SBS()?MutationType::Type::SBS:
                          MutationType::Type::INDEL);
+    }
+
+    /**
+     * @brief Get the SID's size in the reference
+     *
+     * @return the SID's size in the reference
+     */
+    inline size_t size_in_ref() const
+    {
+        return ref.size();
     }
 
     /**

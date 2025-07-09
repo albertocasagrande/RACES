@@ -2,7 +2,7 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 1.1
+ * @version 1.2
  * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
@@ -205,6 +205,16 @@ struct CNA : public Mutation
     inline ChrPosition end() const
     {
         return begin()+length-1;
+    }
+
+    /**
+     * @brief Get the CNA's size in the reference
+     *
+     * @return the CNA's size in the reference
+     */
+    inline const Length& size_in_ref() const
+    {
+        return length;
     }
 
     /**

@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.21
+ * @version 1.22
  * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
@@ -259,6 +259,8 @@ class MutationEngine
     DriverStorage driver_storage;       //!< the driver storage
 
     std::vector<CNA> passenger_CNAs;    //!< the admissible passenger CNAs
+
+    unsigned int driver_CNA_min_distance;         //!< the minimum distance between a driver mutation and a passenger CNA
 
     WarningFunction warning;            //!< the warning function
 
@@ -1365,6 +1367,78 @@ class MutationEngine
         place_SIDs<MUTATION_TYPE>(nullptr, cell_mutations, signature_name,
                                   num_mutations, Mutation::PRENEOPLASTIC);
     }
+
+    /**
+     * @brief Get the region list of a list of mutations
+     *
+     * This method returns the region list of a list of mutations being
+     * either SIDs or CNAs. The returned regions are expanded by a shadow.
+     *
+     * @tparam MUTATION_TYPE is the type of mutations
+     * @param mutations is the list of mutations whose regions are aimed
+     * @param expansion_size is the region expansion size
+     * @return a list of regions of `mutations` expanded by
+     *      `expansion_size`
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<SID, MUTATION_TYPE>
+                                || std::is_base_of_v<CNA, MUTATION_TYPE> , bool> = true>
+    static std::list<GenomicRegion>
+    get_region_list(const std::list<MUTATION_TYPE>& mutations,
+                    const unsigned int& expansion_size=0)
+    {
+        std::list<GenomicRegion> region_list;
+
+        for (const auto& mutation: mutations) {
+            GenomicRegion::Length region_length(mutation.size_in_ref());
+            ChrPosition region_begin;
+
+            if (mutation.begin()<=expansion_size) {
+                region_begin = 1;
+                region_length += mutation.begin() + expansion_size;
+            } else {
+                region_begin = mutation.begin() - expansion_size;
+                region_length += 2*expansion_size;
+            }
+
+            region_list.emplace_back(GenomicPosition(mutation.chr_id, region_begin),
+                                     region_length);
+        }
+
+        return region_list;
+    }
+
+    /**
+     * @brief Filter out passenger CNAs that overlaps one region in a list
+     *
+     * @param region_filter is the list of regions that does not overlap the
+     *      valid passenger CNAs
+     */
+    inline void filter_passenger_CNAs(std::list<GenomicRegion>&& region_filter)
+    {
+        filter_passenger_CNAs(region_filter);
+    }
+
+    /**
+     * @brief Filter out passenger CNAs that overlaps one region in a list
+     *
+     * @param region_filter is the list of regions that does not overlap the
+     *      valid passenger CNAs
+     */
+    void filter_passenger_CNAs(const std::list<GenomicRegion>& region_filter)
+    {
+        auto passenger_it = passenger_CNAs.begin();
+
+        while (passenger_it != passenger_CNAs.end()) {
+            const auto cna_region{passenger_it->get_region()};
+            if (cna_region.overlaps(region_filter)) {
+                std::swap(*passenger_it, *passenger_CNAs.rbegin());
+                passenger_CNAs.pop_back();
+            } else {
+                ++passenger_it;
+            }
+        }
+    }
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
 
@@ -1374,6 +1448,7 @@ public:
      * @brief The empty constructor
      */
     MutationEngine():
+        driver_CNA_min_distance(0), warning(MutationEngine::default_warning),
         infinite_sites_model(true), avoid_homozygous_losses(true)
     {}
 
@@ -1387,6 +1462,8 @@ public:
      * @param germline_mutations are the germline mutations
      * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
+     * @param driver_CNA_min_distance is the minimum distance between a driver
+     *      mutation and a passenger CNA
      * @param warning is the warning function
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
@@ -1396,11 +1473,12 @@ public:
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={},
+                   const unsigned int& driver_CNA_min_distance=10000,
                    WarningFunction warning=MutationEngine::default_warning):
         MutationEngine(context_index, repetition_index, SBS_signatures,
                        ID_signatures, MutationalProperties(),
                        germline_mutations, driver_storage, passenger_CNAs,
-                       warning)
+                       driver_CNA_min_distance, warning)
     {}
 
     /**
@@ -1414,6 +1492,9 @@ public:
      * @param germline_mutations are the germline mutations
      * @param driver_storage is the storage of driver mutations
      * @param passenger_CNAs is the vector of the admissible passenger CNAs
+     * @param driver_CNA_min_distance is the minimum distance between a driver
+     *      mutation and a passenger CNA
+     * @param warning is the warning function
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    RSIndex& repetition_index,
@@ -1423,13 +1504,16 @@ public:
                    const GenomeMutations& germline_mutations,
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={},
+                   const unsigned int& driver_CNA_min_distance=10000,
                    WarningFunction warning=MutationEngine::default_warning):
         generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(std::make_shared<GenomeMutations>(germline_mutations)),
         dm_genome(germline_mutations.copy_structure()),
-        driver_storage(driver_storage), warning(warning),
-        infinite_sites_model(true), avoid_homozygous_losses(true)
+        driver_storage(driver_storage),
+        passenger_CNAs{filter_CNA_by_chromosome_ids(passenger_CNAs)},
+        driver_CNA_min_distance{driver_CNA_min_distance},
+        warning{warning}, infinite_sites_model{true}, avoid_homozygous_losses{true}
     {
         MutationEngine::check_genomes_consistency(context_index, germline_mutations);
 
@@ -1440,8 +1524,6 @@ public:
         for (const auto& [name, ID_signatures]: ID_signatures) {
             inv_cumulative_IDs[name] = get_inv_cumulative_signature(ID_signatures);
         }
-
-        this->passenger_CNAs = filter_CNA_by_chromosome_ids(passenger_CNAs);
     }
 
     /**
@@ -1493,6 +1575,9 @@ public:
     {
         mutational_properties.add_mutant(name, epistate_passenger_rates, driver_SIDs,
                                          driver_CNAs, application_order);
+
+        filter_passenger_CNAs(get_region_list(driver_SIDs, driver_CNA_min_distance));
+        filter_passenger_CNAs(get_region_list(driver_CNAs, driver_CNA_min_distance));
 
         for (auto sid: driver_SIDs) {
             sid.allele_id = RANDOM_ALLELE;

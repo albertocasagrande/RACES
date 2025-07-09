@@ -2,7 +2,7 @@
  * @file genomic_region.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic region
- * @version 1.1
+ * @version 1.2
  * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
@@ -213,6 +213,26 @@ public:
      *       `genomic_region`
      */
     bool overlaps(const GenomicRegion& genomic_region) const;
+
+    /**
+     * @brief Check whether a genomic region overlaps a region container
+     *
+     * @tparam Container is the container template
+     * @param regions is the container of the regions
+     * @return true iff any of the regions in `regions` overlaps the
+     *      current object
+     */
+    template <template<typename, typename> class Container>
+    bool overlaps(const Container<GenomicRegion, std::allocator<GenomicRegion>>& regions) const
+    {
+        for (const auto& region: regions) {
+            if (overlaps(region)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /**
      * @brief Check whether two genomic region overlap
