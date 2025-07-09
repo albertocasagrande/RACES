@@ -2,7 +2,7 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.22
+ * @version 1.23
  * @date 2025-07-09
  *
  * @copyright Copyright (c) 2023-2025
@@ -750,6 +750,7 @@ class MutationEngine
             return;
         }
 
+        size_t placed{0};
         // for each active SBS probability in the active exposure
         for (const auto& [signature_name, probability]:
                 get_active_exposure<MUTATION_TYPE>(node)) {
@@ -759,6 +760,18 @@ class MutationEngine
 
             place_SIDs<MUTATION_TYPE>(&node, cell_mutations, signature_name,
                                       num_of_signature_mutations, Mutation::PASSENGER);
+
+            placed += num_of_signature_mutations;
+        }
+
+        if (1.5*placed < num_of_mutations) {
+            std::ostringstream oss;
+
+            oss << "Placed " << placed 
+                << " of the requested " << num_of_mutations 
+                << " passenger mutations because of the exposure fractioning.";
+
+            warning(oss.str());
         }
     }
 
