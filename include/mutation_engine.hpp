@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.23
- * @date 2025-07-09
+ * @version 1.24
+ * @date 2025-07-11
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -743,35 +743,42 @@ class MutationEngine
     void place_passengers(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
                           const PassengerRates& rates)
     {
-        const auto num_of_mutations = number_of_mutations(cell_mutations.allelic_size(),
-                                                          get_rate<MUTATION_TYPE>(rates));
+        auto remaining_mutations = number_of_mutations(cell_mutations.allelic_size(),
+                                                       get_rate<MUTATION_TYPE>(rates));
 
-        if (num_of_mutations == 0) {
-            return;
-        }
+        const auto& exposure = get_active_exposure<MUTATION_TYPE>(node);
 
-        size_t placed{0};
-        // for each active SBS probability in the active exposure
-        for (const auto& [signature_name, probability]:
-                get_active_exposure<MUTATION_TYPE>(node)) {
+        auto exposure_it = exposure.begin();
+        double missing_signature_prob{1.0};
+        while (remaining_mutations > 0 && exposure_it != exposure.end()) {
 
-            // evaluate how many of the SNVs due to the current SBS
-            const size_t num_of_signature_mutations = probability*num_of_mutations;
+            // get name and probability of the current signature
+            const auto& signature_name = exposure_it->first;
+            const auto& signature_prob = exposure_it->second;
+            
+            // update exposure pointer
+            ++exposure_it;
+
+            // evaluate the choice probability for the current signature
+            double choice_prob;
+            if (exposure_it != exposure.end()) {
+                choice_prob = signature_prob/missing_signature_prob;
+            } else {
+
+                // this branch is to avoid numeric approximation errors
+                choice_prob = 1.0;
+            }
+
+            // evaluate the number of mutation associated to the current signature
+            std::binomial_distribution<size_t> b_dist(remaining_mutations,
+                                                      choice_prob);
+            const size_t num_of_signature_muts = b_dist(generator);
 
             place_SIDs<MUTATION_TYPE>(&node, cell_mutations, signature_name,
-                                      num_of_signature_mutations, Mutation::PASSENGER);
+                                      num_of_signature_muts, Mutation::PASSENGER);
 
-            placed += num_of_signature_mutations;
-        }
-
-        if (1.5*placed < num_of_mutations) {
-            std::ostringstream oss;
-
-            oss << "Placed " << placed 
-                << " of the requested " << num_of_mutations 
-                << " passenger mutations because of the exposure fractioning.";
-
-            warning(oss.str());
+            remaining_mutations -= num_of_signature_muts;
+            missing_signature_prob -= signature_prob;
         }
     }
 
