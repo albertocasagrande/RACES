@@ -2,10 +2,10 @@
  * @file genomic_position.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genomic position and related functions
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-11
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -50,9 +50,14 @@ GenomicPosition::GenomicPosition(const ChromosomeId& chromosome_id, const ChrPos
     chr_id(chromosome_id), position(position)
 {}
 
-
-ChromosomeId GenomicPosition::stochr(const std::string& chr_name)
+ChromosomeId GenomicPosition::stochr(std::string chr_name)
 {
+    if (chr_name.length() >= 3) {
+        if (chr_name.compare(0, 3, "chr") == 0) {
+            chr_name = chr_name.substr(3);
+        }
+    }
+
     if (chr_name=="X") {
         return std::numeric_limits<ChromosomeId>::max()-1;
     }

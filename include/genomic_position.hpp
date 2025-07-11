@@ -2,10 +2,10 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic position and related functions
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-11
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -117,7 +117,7 @@ struct GenomicPosition
      * @param chr_name is a string containing the human chromosome name
      * @return the chromosome id associated to `chr_name`
      */
-    static ChromosomeId stochr(const std::string& chr_name);
+    static ChromosomeId stochr(std::string chr_name);
 
     /**
      * @brief Turn a chromosome id into the corresponding chromosome name
