@@ -2,8 +2,8 @@
  * @file genomic_sequence.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a structure to handle genomic sequence
- * @version 1.1
- * @date 2025-07-07
+ * @version 1.2
+ * @date 2025-07-12
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -91,12 +91,12 @@ struct GenomicSequence
     }
 
     /**
-     * @brief Get the reversed sequence
+     * @brief Get the reverse sequence
      *
      * @param sequence is the sequence whose reverse is request
-     * @return the reversed sequence of `sequence`
+     * @return the reverse sequence of `sequence`
      */
-    static std::string get_reversed(const std::string& sequence);
+    static std::string get_reverse(const std::string& sequence);
 
     /**
      * @brief Reverse and complement a sequence

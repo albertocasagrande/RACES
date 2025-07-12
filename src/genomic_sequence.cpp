@@ -2,8 +2,8 @@
  * @file genomic_sequence.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a structure to handle genomic sequence
- * @version 1.1
- * @date 2025-07-07
+ * @version 1.2
+ * @date 2025-07-12
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -120,7 +120,7 @@ std::string GenomicSequence::get_complement(const std::string& sequence)
     return complemented;
 }
 
-std::string GenomicSequence::get_reversed(const std::string& sequence)
+std::string GenomicSequence::get_reverse(const std::string& sequence)
 {
     std::string reversed(sequence);
 
@@ -131,7 +131,7 @@ std::string GenomicSequence::get_reversed(const std::string& sequence)
 
 std::string GenomicSequence::get_reverse_complement(const std::string& sequence)
 {
-    std::string new_seq = GenomicSequence::get_reversed(sequence);
+    std::string new_seq = GenomicSequence::get_reverse(sequence);
 
     GenomicSequence::complement(new_seq);
 
