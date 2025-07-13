@@ -2,8 +2,8 @@
  * @file driver_storage.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines class to load and store driver mutations
- * @version 1.1
- * @date 2025-07-10
+ * @version 1.2
+ * @date 2025-07-13
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -32,6 +32,7 @@
 #define __RACES_DRIVER_STORAGE__
 
 #include <map>
+#include <set>
 #include <list>
 #include <string>
 #include <filesystem>
@@ -43,13 +44,22 @@ namespace RACES
 
 namespace Mutations
 {
-
 class DriverStorage
 {
-    std::map<std::string, SID> mutations;    //!< The code-SID map
-
-    std::filesystem::path source_path;  //!< The driver filename
 public:
+    /**
+     * @brief The mutation entry type in the code-mutation map
+     * 
+     * This class represent the co-domain in the code-mutation map.
+     * It maintains the mutation and the set of all the tumour type
+     * for which it appears as a driver mutation.
+     */
+    struct MutationEntry
+    {
+        SID mutation;                       //!< A mutation
+        std::set<std::string> tumour_types; //!< The set of tumours for which the mutation is a driver
+    };
+
     /**
      * @brief The empty constructor
      */
@@ -59,11 +69,11 @@ public:
      * @brief Get the driver SID mutations
      *
      * @return a constant reference to a map associating a driver mutation
-     *      code to the corresponding driver SID mutation
+     *      code to the corresponding driver mutation entry
      */
-    inline const std::map<std::string, SID>& get_mutations() const
+    inline const std::map<std::string, MutationEntry>& get_code2mutation_map() const
     {
-        return mutations;
+        return mutation_map;
     }
 
     /**
@@ -98,6 +108,11 @@ public:
      *      driver mutation
      */
     static DriverStorage load(const std::filesystem::path& filename);
+
+private:
+    std::map<std::string, MutationEntry> mutation_map;    //!< The code-mutation map
+
+    std::filesystem::path source_path;  //!< The driver filename
 };
 
 }   // Mutations
