@@ -2,10 +2,10 @@
  * @file sid.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements SNV, Insertion, and Deletion mutations
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -148,6 +148,14 @@ bool less<RACES::Mutations::SID>::operator()(const RACES::Mutations::SID &lhs,
     }
 
     return lhs.alt.compare(rhs.alt) < 0;
+}
+
+bool operator==(const RACES::Mutations::SID &lhs,
+                const RACES::Mutations::SID &rhs)
+{
+    return lhs.chr_id==rhs.chr_id && lhs.position==rhs.position
+            && lhs.nature==rhs.nature && lhs.cause==rhs.cause
+            && lhs.ref==rhs.ref && lhs.alt==rhs.alt;
 }
 
 std::ostream& operator<<(std::ostream& out, const RACES::Mutations::SID& sid)

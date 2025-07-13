@@ -2,8 +2,8 @@
  * @file sid.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines SNV, Insertion, and Deletion mutations
- * @version 1.1
- * @date 2025-07-09
+ * @version 1.2
+ * @date 2025-07-13
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -261,6 +261,29 @@ struct less<RACES::Mutations::SID>
     bool operator()(const RACES::Mutations::SID &lhs,
                     const RACES::Mutations::SID &rhs) const;
 };
+
+/**
+ * @brief Test if two SIDs are the same
+ * 
+ * @param lhs is the left hand side of the comparison
+ * @param rhs is the right hand side of the comparison
+ * @return true iff `lhs` and `rhs` are the same mutation
+ */
+bool operator==(const RACES::Mutations::SID &lhs,
+                const RACES::Mutations::SID &rhs);
+
+/**
+ * @brief Test if two SIDs differ
+ * 
+ * @param lhs is the left hand side of the comparison
+ * @param rhs is the right hand side of the comparison
+ * @return true iff `lhs` and `rhs` are not the same mutation
+ */
+inline bool operator!=(const RACES::Mutations::SID &lhs,
+                       const RACES::Mutations::SID &rhs)
+{
+    return !(lhs==rhs);
+}
 
 /**
  * @brief Write an SID in a output stream
