@@ -72,6 +72,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sample.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/warning.cpp
 )
 
 set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
@@ -140,6 +141,7 @@ set(RACES_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/allele.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/tissue_sample.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/variables.hpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/utils.hpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/warning.hpp
 )
 
 set(WITH_MATPLOT false)

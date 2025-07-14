@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.24
- * @date 2025-07-11
+ * @version 1.25
+ * @date 2025-07-14
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -50,6 +50,7 @@
 
 #include "filter.hpp"
 #include "utils.hpp"
+#include "warning.hpp"
 
 
 namespace RACES
@@ -233,11 +234,6 @@ class MutationEngine
      */
     using IDTypeStack = std::stack<IDType>;
 
-    /**
-     * @brief The warning function type
-     */
-    using WarningFunction = std::function<void(const std::string)>;
-
     RANDOM_GENERATOR generator; //!< the random generator
 
     ContextIndex<GENOME_WIDE_POSITION> context_index;  //!< the genome context index
@@ -263,16 +259,6 @@ class MutationEngine
     unsigned int driver_CNA_min_distance;         //!< the minimum distance between a driver mutation and a passenger CNA
 
     WarningFunction warning;            //!< the warning function
-
-    /**
-     * @brief The default warning function
-     *
-     * @param message is the warning message to be printed
-     */
-    static void default_warning(const std::string message)
-    {
-        std::cerr << "Warning: " << message << std::endl;
-    }
 
     /**
      * @brief Select a random value in a set
@@ -701,10 +687,17 @@ class MutationEngine
                 }
             } else {
                 std::ostringstream oss;
-
-                oss << "Missing available context for \""
-                    << it->second << "\".";
-                warning(oss.str());
+                if constexpr(std::is_base_of_v<SBSType, MUTATION_TYPE>) {
+                    oss << "No mutations for context \"" << it->second
+                        << "\".";
+                    warning(WarningType::NO_MUT_FOR_CONTEXT, oss.str());
+                }
+                
+                if constexpr(std::is_base_of_v<IDType, MUTATION_TYPE>) {
+                    oss << "No mutations for repetition pattern \""
+                        << it->second << "\".";
+                    warning(WarningType::NO_MUT_FOR_RPATTERN, oss.str());
+                }
             }
         }
     }
@@ -1468,7 +1461,7 @@ public:
      * @brief The empty constructor
      */
     MutationEngine():
-        driver_CNA_min_distance(0), warning(MutationEngine::default_warning),
+        driver_CNA_min_distance(0), warning(RACES::warning),
         infinite_sites_model(true), avoid_homozygous_losses(true)
     {}
 
@@ -1494,7 +1487,7 @@ public:
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={},
                    const unsigned int& driver_CNA_min_distance=10000,
-                   WarningFunction warning=MutationEngine::default_warning):
+                   WarningFunction warning=RACES::warning):
         MutationEngine(context_index, repetition_index, SBS_signatures,
                        ID_signatures, MutationalProperties(),
                        germline_mutations, driver_storage, passenger_CNAs,
@@ -1525,7 +1518,7 @@ public:
                    const DriverStorage& driver_storage,
                    const std::vector<CNA>& passenger_CNAs={},
                    const unsigned int& driver_CNA_min_distance=10000,
-                   WarningFunction warning=MutationEngine::default_warning):
+                   WarningFunction warning=RACES::warning):
         generator(), context_index(context_index), rs_index(repetition_index),
         mutational_properties(mutational_properties),
         germline_mutations(std::make_shared<GenomeMutations>(germline_mutations)),
