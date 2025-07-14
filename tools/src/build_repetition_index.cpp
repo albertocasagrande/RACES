@@ -2,10 +2,10 @@
  * @file build_repetition_index.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Builds the repetition index
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-07-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -65,9 +65,10 @@ class RepetitionIndexBuilder: public BasicExecutable
         if (driver_mutations_filename!="") {
             auto driver_storage = DriverStorage::load(driver_mutations_filename);
 
-            for (const auto& [name, mutation] : driver_storage.get_mutations()) {
-                regions_to_avoid.emplace(mutation, std::max(static_cast<size_t>(1),
-                                                            mutation.ref.size()));
+            for (const auto& [name, mutation_entry] : driver_storage.get_code2mutation_map()) {
+                regions_to_avoid.emplace(mutation_entry.mutation,
+                                         std::max(static_cast<size_t>(1),
+                                                  mutation_entry.mutation.ref.size()));
             }
         }
 
