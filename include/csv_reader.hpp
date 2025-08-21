@@ -2,10 +2,10 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-08-21
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -179,7 +179,7 @@ public:
          *
          * @param other is a constant iterator over a CSV reader
          * @return `true` if and only if the current iterator and
-         *           `other` are refering to the same CSV row
+         *           `other` are referring to the same CSV row
          */
         inline bool operator==(const_iterator& other)
         {
@@ -192,7 +192,7 @@ public:
          *
          * @param other is a constant iterator over a CSV reader
          * @return `false` if and only if the current iterator and
-         *           `other` are refering to the same CSV row
+         *           `other` are referring to the same CSV row
          */
         inline bool operator!=(const_iterator& other)
         {
@@ -213,9 +213,9 @@ public:
               const char column_separator=',');
 
     /**
-     * @brief Get an iterator refering to the first data row in the CSV
+     * @brief Get an iterator referring to the first data row in the CSV
      *
-     * @return an iterator refering to the first data row in the CSV
+     * @return an iterator referring to the first data row in the CSV
      */
     inline const_iterator begin() const
     {
@@ -223,9 +223,9 @@ public:
     }
 
     /**
-     * @brief Get an iterator refering to the end of the CSV
+     * @brief Get an iterator referring to the end of the CSV
      *
-     * @return an iterator refering to the end of the CSV
+     * @return an iterator referring to the end of the CSV
      */
     inline const_iterator end() const
     {

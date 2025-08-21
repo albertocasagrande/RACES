@@ -2,10 +2,10 @@
  * @file imap.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines indexed map
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-08-21
  *
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024-2025
  *
  * MIT License
  *
@@ -188,7 +188,7 @@ public:
      * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key
-     * @return a constant iterator refering to the node whose first
+     * @return a constant iterator referring to the node whose first
      *      value is `key` if it exists or `end()` otherwise.
      */
     inline const_iterator find(const KEY& key) const
@@ -204,7 +204,7 @@ public:
      * The time complexity of this method is \f$O(\log \texttt{size()})\f$.
      *
      * @param key is a key
-     * @return an iterator refering to the pair whose first value is
+     * @return an iterator referring to the pair whose first value is
      *      `key` if it exists or `end()` otherwise.
      */
     inline iterator find(const KEY& key)
@@ -294,7 +294,7 @@ public:
      *
      * The time complexity of this method is \f$O(1)\f$.
      *
-     * @return a constant in-order iterator refering to the
+     * @return a constant in-order iterator referring to the
      *      first pair in the map
      */
     inline const_iterator begin() const noexcept
@@ -307,7 +307,7 @@ public:
      *
      * The time complexity of this method is \f$O(1)\f$.
      *
-     * @return a constant in-order iterator refering to the
+     * @return a constant in-order iterator referring to the
      *      first pair in the map
      */
     inline const_iterator cbegin() const noexcept
@@ -320,7 +320,7 @@ public:
      *
      * The time complexity of this method is \f$O(1)\f$.
      *
-     * @return an in-order iterator refering to the first
+     * @return an in-order iterator referring to the first
      *      pair in the map
      */
     inline iterator begin() noexcept

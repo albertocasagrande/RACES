@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 1.3
- * @date 2025-05-07
+ * @version 1.4
+ * @date 2025-08-21
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -81,7 +81,7 @@ class Read
      * @brief A class for indices of bases in mutations
      *
      * Any valid object of this class refers to a base in
-     * the alterate sequence of a mutation laying a read.
+     * the altered sequence of a mutation laying a read.
      * The objects of this class may also be not valid if
      * it does not refer to any base.
      */
@@ -111,8 +111,8 @@ class Read
         /**
          * @brief Check if this mutation base index is valid
          *
-         * @return `true` if and only if this object is refering
-         *      to a base in the alterate sequence of the
+         * @return `true` if and only if this object is referring
+         *      to a base in the altered sequence of the
          *      `index`-th mutation laying in the read
          */
         inline bool is_valid() const

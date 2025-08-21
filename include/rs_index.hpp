@@ -2,10 +2,10 @@
  * @file rs_index.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to compute the repeated substring index
- * @version 1.1
- * @date 2025-07-09
+ * @version 1.2
+ * @date 2025-08-21
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -680,8 +680,8 @@ struct RSIndex
      * @param num_of_repetitions is the number of repetitions of the searched polymer
      * @param for_insertion is a Boolean flag declaring whether the polymer will be
      *      targeted for insertion
-     * @return a pair repetition storage-position in the storage refering to a polymer
-     *      satisfing the parameters
+     * @return a pair repetition storage-position in the storage referring to a polymer
+     *      satisfying the parameters
      */
     template<typename INDEX_TYPE>
     std::pair<RepetitionStorage*, size_t>
@@ -719,7 +719,7 @@ struct RSIndex
      * @param num_of_repetitions is the number of repetitions of the aimed polymer
      * @param for_insertion is a Boolean flag declaring whether the polymer will be
      *      targeted for insertion
-     * @return a pair repetition storage-position refering to a heteropolymer having
+     * @return a pair repetition storage-position referring to a heteropolymer having
      *      unit size `unit_size` and whose unit is repeated `num_of_repetitions` times,
      *      when `for_insertion` is `false` or `num_of_repetitions` is smaller than 6,
      *      or either 5 or 6 times, when `for_insertion` is `true` and
@@ -740,7 +740,7 @@ struct RSIndex
      * @param num_of_repetitions is the number of repetitions of the aimed polymer
      * @param for_insertion is a Boolean flag declaring whether the polymer will be
      *      targeted for insertion or deletion
-     * @return a pair repetition storage-position refering to a homopolymer whose
+     * @return a pair repetition storage-position referring to a homopolymer whose
      *      unit is `unit_nucleotide` and it is repeated `num_of_repetitions`
      *      times, when `for_insertion` is `false` or `num_of_repetitions` is
      *      smaller than 6, or either 5 or 6 times, when `for_insertion` is `true`
@@ -759,7 +759,7 @@ struct RSIndex
      *
      * @param homology_distance is the aimed micro-homology distance
      * @param homology_size is the aimed micro-homology size
-     * @return a pair repetition storage-position refering to a micro-homology
+     * @return a pair repetition storage-position referring to a micro-homology
      *      between sequences whose distance is `homology_distance` and whose
      *      size if `homology_size`.
      */
