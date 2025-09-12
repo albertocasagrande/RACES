@@ -2,8 +2,8 @@
  * @file csv_reader.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to read CSV
- * @version 1.1
- * @date 2025-08-21
+ * @version 1.2
+ * @date 2025-09-12
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -111,16 +111,6 @@ public:
         bool eof;                   //!< A Boolean flag to denote when eof has been reached
 
         /**
-         * @brief Get the reading position on the CSV file stream
-         *
-         * @return the reading position on the CSV file stream
-         */
-        inline std::streampos tellg()
-        {
-            return ifs.tellg();
-        }
-
-        /**
          * @brief Read a CSV row
          *
          * @param row is the object in which the read row must be stored
@@ -181,10 +171,11 @@ public:
          * @return `true` if and only if the current iterator and
          *           `other` are referring to the same CSV row
          */
-        inline bool operator==(const_iterator& other)
+        inline bool operator==(const const_iterator& other) const
         {
-            return reader == other.reader && ifs.tellg() == other.ifs.tellg()
-                    && eof == other.eof;
+            return reader == other.reader && eof == other.eof
+                    && const_cast<std::ifstream&>(ifs).tellg()
+                        == const_cast<std::ifstream&>(other.ifs).tellg();
         }
 
         /**
@@ -194,9 +185,19 @@ public:
          * @return `false` if and only if the current iterator and
          *           `other` are referring to the same CSV row
          */
-        inline bool operator!=(const_iterator& other)
+        inline bool operator!=(const const_iterator& other) const
         {
             return !(*this == other);
+        }
+
+        /**
+         * @brief Get the reading position on the CSV file stream
+         *
+         * @return the reading position on the CSV file stream
+         */
+        inline std::streampos tellg()
+        {
+            return ifs.tellg();
         }
 
         friend class CSVReader;
@@ -211,6 +212,19 @@ public:
      */
     CSVReader(const std::filesystem::path& filename, const bool has_header=true,
               const char column_separator=',');
+
+    /**
+     * @brief A constructor
+     *
+     * This constructor assumes that the CSV file has a header
+     *
+     * @param filename is the path of the CSV file to be read
+     * @param column_separator is the character used to separate columns
+     */
+    inline CSVReader(const std::filesystem::path& filename,
+                     const char column_separator):
+        CSVReader(filename, true, column_separator)
+    {}
 
     /**
      * @brief Get an iterator referring to the first data row in the CSV
@@ -258,6 +272,16 @@ public:
         }
 
         return found->second;
+    }
+
+    /**
+     * @brief Get the file size
+     *
+     * @return the file size
+     */
+    inline std::streampos size() const
+    {
+        return end().tellg();
     }
 
     friend class const_iterator;

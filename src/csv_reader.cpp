@@ -2,10 +2,10 @@
  * @file csv_reader.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to read CSV
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.2
+ * @date 2025-09-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -99,8 +99,24 @@ CSVReader::CSVReader(const std::filesystem::path& filename, const bool has_heade
                      const char column_separator):
     filename(filename), col_sep(column_separator), first_row_pos(0)
 {
+    if (!std::filesystem::exists(filename)) {
+        throw std::domain_error("\"" + to_string(filename)
+                                + "\" does not exists.");
+    }
+
+    if (!std::filesystem::is_regular_file(filename)) {
+        throw std::domain_error("\"" + to_string(filename)
+                                + "\" is not a regular file.");
+    }
+
+    std::ifstream ifs(filename);
+
+    if (!ifs.is_open()) {
+        throw std::domain_error("\"" + to_string(filename)
+                                + "\" cannot be read.");
+    }
+
     if (has_header) {
-        std::ifstream ifs(filename);
         std::string line;
 
         if (!getline(ifs, line)) {
