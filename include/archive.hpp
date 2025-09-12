@@ -2,10 +2,10 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.5
- * @date 2024-11-10
+ * @version 1.6
+ * @date 2025-09-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -253,6 +253,13 @@ struct Basic
     }
 
     /**
+     * @brief Get the archive file size
+     *
+     * @return the archive file size
+     */
+    std::streampos size();
+
+    /**
      * @brief Check whether the end of file has been reached
      *
      * @return `true` if and only if the end of file has been reached
@@ -310,6 +317,40 @@ struct Out : public Basic
     inline void open(std::filesystem::path filename, std::ios_base::openmode mode)
     {
         Basic::open(filename, mode | std::fstream::out);
+    }
+
+    /**
+     * @brief Set the archive position
+     *
+     * This method sets the position of the archive stream to the
+     * specified position
+     *
+     * @param pos is the aimed position in the archive stream
+     * @return a reference to the updated object
+     */
+    inline Out& seekp(std::streampos pos)
+    {
+        fs.seekp(pos);
+
+        return *this;
+    }
+
+    /**
+     * @brief Set the archive position
+     *
+     * This method sets the position of the archive stream to the
+     * specified position
+     *
+     * @param offset relative position to set the input position
+     * @param dir defines base position to apply the relative offset to
+     * @return a reference to the updated object
+     */
+    inline Out& seekp(std::streamoff offset,
+                      std::ios_base::seekdir dir)
+    {
+        fs.seekp(offset, dir);
+
+        return *this;
     }
 
     /**
@@ -409,6 +450,24 @@ struct In : public Basic
     }
 
     /**
+     * @brief Set the archive position
+     *
+     * This method sets the position of the archive stream to the
+     * specified position
+     *
+     * @param offset relative position to set the input position
+     * @param dir defines base position to apply the relative offset to
+     * @return a reference to the updated object
+     */
+    inline In& seekg(std::streamoff offset,
+                     std::ios_base::seekdir dir)
+    {
+        fs.seekg(offset, dir);
+
+        return *this;
+    }
+
+    /**
      * @brief Test whether end of the archive has been reached
      *
      * @return `true` if and only if the end of the input archive
@@ -418,13 +477,6 @@ struct In : public Basic
     {
         return (fs && fs.peek() == EOF);
     }
-
-    /**
-     * @brief Get the archive file size
-     *
-     * @return the archive file size
-     */
-    std::streampos size();
 
     /**
      * @brief Read a file header

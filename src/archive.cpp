@@ -2,10 +2,10 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements some archive classes and their methods
- * @version 1.1
- * @date 2024-11-10
+ * @version 1.2
+ * @date 2025-09-12
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -61,6 +61,23 @@ Basic::Basic(std::filesystem::path position, std::ios_base::openmode mode):
     fs(position, mode), filepath(position)
 {}
 
+std::streampos Basic::size()
+{
+    // store current position
+    const auto pos = fs.tellg();
+
+    // seek the end
+    fs.seekg(0, std::ios::end);
+
+    // read the number of bytes from the beginning
+    const auto file_bytes = fs.tellg();
+
+    // move to the original position
+    fs.seekg(pos);
+
+    return file_bytes;
+}
+
 Basic::~Basic()
 {
     if (is_open()) {
@@ -87,23 +104,6 @@ In::In(std::filesystem::path position):
 In::In(std::filesystem::path position, std::ios_base::openmode mode):
     Basic(position, mode | std::fstream::in)
 {}
-
-std::streampos In::size()
-{
-    // store current position
-    const auto pos = fs.tellg();
-
-    // seek the end
-    fs.seekg(0, std::ios::end);
-
-    // read the number of bytes from the beginning
-    const auto file_bytes = fs.tellg();
-
-    // move to the original position
-    fs.seekg(pos, std::ios::beg);
-
-    return file_bytes;
-}
 
 ProgressViewer::ProgressViewer():
     progress_bar(nullptr), total_steps{0}, next_percentage{0}, performed_steps{0}
