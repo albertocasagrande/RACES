@@ -2,7 +2,7 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.6
+ * @version 1.7
  * @date 2025-09-12
  *
  * @copyright Copyright (c) 2023-2025
@@ -115,6 +115,54 @@ private:
 
 public:
     static constexpr bool value = type::value; //!< The "`T` has `load` method" trait
+};
+
+/**
+ * @brief A template to test whether a type requires a constant amount of space on disk
+ * 
+ * A template to test whether a type requires a constant amount of space on disk. By
+ * default any type does not use constant space on disk.
+ * 
+ * @tparam T is the type to be tested
+ * @tparam ENABLE is an optional parameter to enable/disable the template
+ */
+template <typename T, typename ENABLE = void>
+struct uses_constant_space_on_disk : std::false_type {};
+
+// a template specialization for arithmetic and enumerative types.
+// These types uses constant spaces on disk.
+template <typename T>
+struct uses_constant_space_on_disk<T, std::enable_if_t<std::is_arithmetic_v<T> 
+    || std::is_enum_v<T>>> : std::true_type {};
+
+#define CHECK_CONSTANT_SPACE_ON_DISK(...) \
+    constexpr auto constant_space_on_disk() noexcept { return std::tie(__VA_ARGS__); } \
+    constexpr auto constant_space_on_disk() const noexcept { return std::tie(__VA_ARGS__); }
+
+template <typename T>
+concept Constant_Space_on_Disk = requires(T t) { t.constant_space_on_disk(); };
+
+// Meta-function to turn tuple of references into tuple of decayed types
+template <typename Tuple>
+struct decay_tuple;
+
+template <typename... Ts>
+struct decay_tuple<std::tuple<Ts...>> {
+    using type = std::tuple<std::remove_cvref_t<Ts>...>;
+};
+
+template <typename Tuple>
+using decay_tuple_t = typename decay_tuple<Tuple>::type;
+
+// Specialization for Constant_Space_on_Disk structs
+template <Constant_Space_on_Disk T>
+struct uses_constant_space_on_disk<T, void> {
+    using tuple_type = decay_tuple_t<decltype(std::declval<T>().constant_space_on_disk())>;
+
+    static constexpr bool value =
+        std::apply([](auto&&... members) constexpr {
+            return (uses_constant_space_on_disk<std::decay_t<decltype(members)>>::value && ...);
+        }, tuple_type{});
 };
 
 /**
