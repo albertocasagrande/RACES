@@ -2,8 +2,8 @@
  * @file sbs_signature.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some SBS example
- * @version 0.11
- * @date 2025-07-07
+ * @version 0.12
+ * @date 2025-09-12
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE(SBS_type_read)
     using namespace RACES::Mutations;
 
     std::list<std::pair<std::string, std::pair<std::string, char>>> tests{
-        {"A[A>C]T",{"TTA", 'G'}},
-        {"a[G>T]T",{"TCA", 'A'}}
+        {"A[A>C]C",{"GTT", 'G'}},
+        {"a[G>T]G",{"CCT", 'A'}}
     };
 
     for (const auto& [input, results]: tests) {
