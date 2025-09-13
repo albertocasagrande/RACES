@@ -2,10 +2,10 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 1.0
- * @date 2024-10-24
+ * @version 1.1
+ * @date 2025-09-13
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -36,6 +36,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/mpl/list.hpp>
+
+#include "common.hpp"
 
 #include "archive.hpp"
 #include "simulation.hpp"
@@ -80,29 +82,10 @@ struct ArchiveFixture {
     }
 
     ~ArchiveFixture()
-    {}
-};
-
-std::filesystem::path get_a_temporary_path()
-{
-    namespace fs = std::filesystem;
-
-    fs::path tmp_dir = fs::temp_directory_path();
-
-    std::string basename{"file_"};
-    std::string name = basename + "0";
-    size_t counter = 0;
-
-    while (fs::exists(tmp_dir / name)) {
-        std::ostringstream oss;
-
-        oss << basename << ++counter;
-
-        name = oss.str();
+    {
+        std::filesystem::remove_all(simulation.get_logger().get_directory());
     }
-
-    return tmp_dir / name;
-}
+};
 
 template<typename T>
 void basic_type_test(const std::vector<T>& to_save)
