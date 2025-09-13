@@ -2,7 +2,7 @@
  * @file bucket.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines bucket
- * @version 1.0
+ * @version 1.1
  * @date 2025-09-13
  *
  * @copyright Copyright (c) 2023-2025
@@ -967,6 +967,7 @@ public:
         std::streampos initial_pos; //!< the position of the first read value from the file
         std::streampos read_pos;    //!< the position of the value to be read from the file
         size_t available_in_cache;  //!< the number of values available in the cache
+        size_t iterated;            //!< the number of values already reached
 
         /**
          * @brief Randomly choose a value from the cache
@@ -982,6 +983,8 @@ public:
                 const size_t pos = dist(random_generator);
 
                 std::swap(cache[pos], cache[available_in_cache-1]);
+
+                ++iterated;
             }
         }
 
@@ -994,7 +997,7 @@ public:
         const_iterator(Bucket<VALUE> const* bucket, const std::streampos initial_pos,
                        const size_t cache_size):
             bucket{bucket}, cache{cache_size}, initial_pos{initial_pos},
-            read_pos{initial_pos}
+            read_pos{initial_pos}, iterated{0}
         {
             available_in_cache = bucket->load_buffer(cache, this->read_pos,
                                                      this->initial_pos, true);
@@ -1007,7 +1010,8 @@ public:
          * @brief The empty constructor
          */
         const_iterator():
-            bucket{nullptr}, cache{0}, initial_pos{0}, read_pos{0}, available_in_cache{0}
+            bucket{nullptr}, cache{0}, initial_pos{0}, read_pos{0}, available_in_cache{0},
+            iterated{0}
         {}
 
         /**
@@ -1063,6 +1067,28 @@ public:
         bool is_end() const
         {
             return available_in_cache == 0 && read_pos == initial_pos;
+        }
+
+        /**
+         * @brief Get the number of values in the tour already reached
+         * 
+         * @return the number of values in the bucket that have already been
+         *      reached by the tour
+         */
+        inline const size_t& reached_values() const
+        {
+            return iterated;
+        }
+
+        /**
+         * @brief Get the number of values to complete the tour
+         * 
+         * @return the number of values in the bucket that have not been
+         *      reached by the tour yet
+         */
+        inline size_t remaining_values() const
+        {
+            return bucket->size()-reached_values();
         }
 
         /**
