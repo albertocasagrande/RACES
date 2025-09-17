@@ -2,8 +2,8 @@
  * @file bucket.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines bucket
- * @version 1.1
- * @date 2025-09-13
+ * @version 1.2
+ * @date 2025-09-17
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -72,7 +72,7 @@ class Bucket
 
     size_t num_of_values;   //!< the number of values in the bucket (i.e., bucket size)
 
-    size_t cache_size;      //!< the write cache size
+    size_t cacheable_values;    //!< the number of the cacheable values
     std::list<VALUE> write_cache; //!< the write cache
 
     /**
@@ -179,7 +179,7 @@ class Bucket
         std::vector<size_t> positions(num_of_chunks);
         std::iota(positions.begin(), positions.end(), 0);
 
-        std::vector<VALUE> cache{cache_size};
+        std::vector<VALUE> cache{max_chunk_size};
         std::streampos read_pos{0};
 
         size_t value_in_caches = load_buffer(cache, read_pos);
@@ -315,10 +315,6 @@ class Bucket
      */
     void init_bucket()
     {
-        if (cache_size==0) {
-            throw std::domain_error("The cache size must be positive");
-        }
-
         if (std::filesystem::exists(filepath)) {
             if (!std::filesystem::is_regular_file(filepath)) {
                 std::ostringstream oss;
@@ -406,7 +402,7 @@ public:
          * @param[in] bucket is a pointer to the bucket over which iterate
          */
         explicit const_iterator(Bucket<VALUE> const *bucket):
-            bucket{bucket}, cache{bucket->cache_size}, read_pos{0},
+            bucket{bucket}, cache{bucket->cacheable_values}, read_pos{0},
             index{0}, available_in_cache{0}
         {
             available_in_cache = bucket->load_buffer(cache, this->read_pos);
@@ -519,13 +515,15 @@ public:
      * is created and saved to the new file.
      *
      * @param[in] filepath is the path of the associated bucket file
-     * @param[in] cache_size is the write cache size
+     * @param[in] cache_size is the write cache size in bytes
      */
     Bucket(const std::filesystem::path filepath,
-           const size_t cache_size=10000):
+           const size_t cache_size=sizeof(VALUE)):
         filepath{filepath}, size_pos{0}, data_pos{0}, file_size{0},
-        num_of_values{0}, cache_size{cache_size}, write_cache{}
+        num_of_values{0}
     {
+        set_max_cache_size(cache_size);
+
         init_bucket();
     }
 
@@ -538,7 +536,7 @@ public:
      */
     Bucket(const Bucket& orig):
         filepath{orig.filepath}, size_pos{0}, data_pos{0}, file_size{0},
-        num_of_values{0}, cache_size{orig.cache_size}, write_cache{}
+        num_of_values{0}, cacheable_values{orig.cacheable_values}, write_cache{}
     {
         const_cast<Bucket&>(orig).flush();
 
@@ -558,7 +556,7 @@ public:
         const_cast<Bucket&>(orig).flush();
 
         filepath = orig.filepath;
-        cache_size = orig.cache_size;
+        cacheable_values = orig.cacheable_values;
 
         init_bucket();
 
@@ -580,7 +578,7 @@ public:
         std::swap(data_pos, orig.data_pos);
         std::swap(file_size, orig.file_size);
         std::swap(num_of_values, orig.num_of_values);
-        std::swap(cache_size, orig.cache_size);
+        std::swap(cacheable_values, orig.cacheable_values);
         std::swap(write_cache, orig.write_cache);
 
         return *this;
@@ -593,7 +591,7 @@ public:
      */
     void push_back(VALUE&& value)
     {
-        if (write_cache.size()>=cache_size) {
+        if (write_cache.size()>=cacheable_values) {
             flush();
         }
 
@@ -608,7 +606,7 @@ public:
      */
     void push_back(const VALUE& value)
     {
-        if (write_cache.size()>=cache_size) {
+        if (write_cache.size()>=cacheable_values) {
             flush();
         }
 
@@ -630,7 +628,29 @@ public:
      * @param[in] tmp_dir is the path of the temporary files
      */
     template<typename RANDOM_GENERATOR>
+    inline void shuffle(RANDOM_GENERATOR& random_generator,
+                 const std::filesystem::path tmp_dir = std::filesystem::temp_directory_path())
+    {
+        shuffle(random_generator, get_cache_size(), tmp_dir);
+    }
+
+    /**
+     * @brief Shuffle the values in the bucket
+     *
+     * This method shuffles the bucket’s values randomly, ensuring a
+     * uniform distribution. At any moment, the number of values held
+     * in memory does not exceed the specified cache size. To ensure
+     * this memory constraint, copies of the bucket values are
+     * temporarily stored in a set of disk-based files.
+     *
+     * @tparam RANDOM_GENERATOR is a random number generator type
+     * @param[in, out] random_generator is a random number generator
+     * @param[in] buffer_size is the buffer size in bytes
+     * @param[in] tmp_dir is the path of the temporary files
+     */
+    template<typename RANDOM_GENERATOR>
     void shuffle(RANDOM_GENERATOR& random_generator,
+                 size_t buffer_size,
                  const std::filesystem::path tmp_dir = std::filesystem::temp_directory_path())
     {
         flush();
@@ -639,14 +659,38 @@ public:
             return;
         }
 
-        const size_t max_buffer_size = cache_size/2;
-        const auto chunk_paths = split_in_random_chunks(random_generator, max_buffer_size,
+        size_t buff_values = buffer_size/sizeof(VALUE);
+        if (buff_values >= size()) {
+            std::vector<VALUE> buffer(std::max(buff_values, size()));
+
+            load_buffer(buffer, data_pos);
+
+            const auto shuffled_path(get_a_temporary_path("RACES_shuffled_tmp", tmp_dir));
+
+            Binary::Out archive(shuffled_path);
+            Binary::Out::write_header(archive, "RACES Bucket", 0);
+
+            archive & num_of_values;
+            for (const auto& value: buffer) {
+                archive & value;
+            }
+
+            std::filesystem::rename(shuffled_path, filepath);
+    
+            return;
+        }
+
+        // split buffer size between reader and writer
+        buffer_size /= 2;
+        buff_values = buffer_size/sizeof(VALUE);
+
+        const auto chunk_paths = split_in_random_chunks(random_generator, buff_values,
                                                         "tmp_chunk", tmp_dir);
 
-        std::vector<VALUE> buffer(max_buffer_size);
+        std::vector<VALUE> buffer(buff_values);
 
-        const std::filesystem::path shuffled_path(tmp_dir / "shuffled.tmp");
-        Bucket shuffled_bucket(shuffled_path, max_buffer_size);
+        const auto shuffled_path(get_a_temporary_path("RACES_shuffled_tmp", tmp_dir));
+        Bucket shuffled_bucket(shuffled_path, buffer_size);
 
         for (const auto& chunk_path: chunk_paths) {
             const auto end_of_buffer = load_buffer(buffer, chunk_path);
@@ -704,28 +748,35 @@ public:
     }
 
     /**
-     * @brief Set the bucket's write cache size
+     * @brief Set the maximum bucket's read cache size
      *
-     * @param[in] cache_size is the new write cache size
+     * @param[in] cache_size is the new maximum read cache size in bytes
      */
-    inline void set_cache_size(const size_t& cache_size)
+    void set_max_cache_size(const size_t& cache_size)
     {
-        if (cache_size==0) {
-            throw std::domain_error("The cache size must be positive");
+        if (cache_size<sizeof(VALUE)) {
+            std::ostringstream oss;
+
+            oss << "Bucket: the minimum cache size is "
+                << sizeof(VALUE) << ".";
+            throw std::domain_error(oss.str());
         }
 
-        this->cache_size = cache_size;
+        this->cacheable_values = cache_size/sizeof(VALUE);
     }
 
     /**
-     * @brief Get the bucket's write cache size
+     * @brief Get the bucket's read cache size
      *
-     * @return a constant reference to the bucket's write
-     *      cache size
+     * This method returns the read cache size in bytes. The values
+     * returned by this method may differ from those set by either 
+     * the constructor or `set_max_cache_size()`.
+     * 
+     * @return the read cache size in bytes
      */
-    inline const size_t& get_cache_size() const
+    inline size_t get_cache_size() const
     {
-        return cache_size;
+        return this->cacheable_values*sizeof(VALUE);
     }
 
     /**
@@ -825,7 +876,7 @@ public:
      *
      * @tparam RANDOM_GENERATOR is the type of the random number generator
      * @param random_generator is the random number generator used for the tour
-     * @param cache_size is the tour read cache size
+     * @param cache_size is the tour read cache size in bytes
      * @return a random tour for the buffer
      */
     template<typename RANDOM_GENERATOR>
@@ -848,7 +899,7 @@ public:
     template<typename RANDOM_GENERATOR>
     inline BucketRandomTour<VALUE, RANDOM_GENERATOR> random_tour(const RANDOM_GENERATOR& random_generator) const
     {
-        return random_tour(random_generator, cache_size);
+        return random_tour(random_generator, get_cache_size());
     }
 
     /**
@@ -942,7 +993,7 @@ class BucketRandomTour
 
     RANDOM_GENERATOR random_generator; //!< the random number generator
 
-    size_t cache_size;      //!< the cache size
+    size_t cacheable_values;    //!< the number of cached values
 
 public:
     /**
@@ -993,10 +1044,11 @@ public:
          *
          * @param[in, out] bucket is a pointer to the bucket whose values must be iterated
          * @param[in] initial_pos is the first position to be read from the bucket file
+         * @param[in] cacheable_values is the maximum number of cached values
          */
         const_iterator(Bucket<VALUE> const* bucket, const std::streampos initial_pos,
-                       const size_t cache_size):
-            bucket{bucket}, cache{cache_size}, initial_pos{initial_pos},
+                       const size_t cacheable_values):
+            bucket{bucket}, cache{cacheable_values}, initial_pos{initial_pos},
             read_pos{initial_pos}, iterated{0}
         {
             available_in_cache = bucket->load_buffer(cache, this->read_pos,
@@ -1021,7 +1073,7 @@ public:
          */
         const_iterator& operator++()
         {
-            if (bucket != nullptr) {
+            if (bucket != nullptr && !is_end()) {
                 if (available_in_cache>0) {
                     --available_in_cache;
                 }
@@ -1029,7 +1081,11 @@ public:
                     available_in_cache = bucket->load_buffer(cache, read_pos, initial_pos);
                 }
 
-                select_a_value_in_cache();
+                if (is_end()) {
+                    ++iterated;
+                } else {
+                    select_a_value_in_cache();
+                }
             }
 
             return *this;
@@ -1088,7 +1144,7 @@ public:
          */
         inline size_t remaining_values() const
         {
-            return bucket->size()-reached_values();
+            return (bucket->size()+1)-reached_values();
         }
 
         /**
@@ -1135,14 +1191,15 @@ public:
      *      requested
      * @param[in] random_generator is the random number generator that
      *      randomizes the tour
-     * @param cache_size is the cache size
+     * @param cache_size is the cache size in bytes
      */
     BucketRandomTour(const Bucket<VALUE>& bucket,
                      const RANDOM_GENERATOR& random_generator,
-                     const size_t cache_size=10000):
-        bucket{bucket}, random_generator{random_generator},
-        cache_size{cache_size}
-    {}
+                     const size_t cache_size=sizeof(VALUE)):
+        bucket{bucket}, random_generator{random_generator}
+    {
+        this->set_max_cache_size(cache_size);
+    }
 
     /**
      * @brief Create an iterator referring to the random tour initial position
@@ -1168,7 +1225,7 @@ public:
             }
         }
 
-        return const_iterator(&bucket, begin_pos, cache_size);
+        return const_iterator(&bucket, begin_pos, cacheable_values);
     }
 
     /**
@@ -1182,28 +1239,35 @@ public:
     }
 
     /**
-     * @brief Set the bucket's read cache size
+     * @brief Set the maximum bucket's read cache size
      *
-     * @param[in] cache_size is the new read cache size
+     * @param[in] cache_size is the new maximum read cache size in bytes
      */
-    inline void set_cache_size(const size_t& cache_size)
+    void set_max_cache_size(const size_t& cache_size)
     {
-        if (cache_size==0) {
-            throw std::domain_error("The cache size must be positive");
+        if (cache_size<sizeof(VALUE)) {
+            std::ostringstream oss;
+
+            oss << "BucketRandomTour: the minimum cache size is "
+                << sizeof(VALUE) << ".";
+            throw std::domain_error(oss.str());
         }
 
-        this->cache_size = cache_size;
+        this->cacheable_values = cache_size/sizeof(VALUE);
     }
 
     /**
      * @brief Get the bucket's read cache size
      *
-     * @return a constant reference to the bucket's read
-     *      cache size
+     * This method returns the read cache size in bytes. The values
+     * returned by this method may differ from those set by either 
+     * the constructor or `set_max_cache_size()`.
+     * 
+     * @return the read cache size in bytes
      */
     inline const size_t& get_cache_size() const
     {
-        return cache_size;
+        return this->cacheable_values*sizeof(VALUE);
     }
 
     /**
