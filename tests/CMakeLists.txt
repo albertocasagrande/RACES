@@ -35,7 +35,7 @@ if(${Boost_unit_test_framework_FOUND})
     link_directories(${Boost_LIBRARY_DIRS})
     set(TEST_LIBRARIES ${Boost_LIBRARIES} ${BUILD_LIB_TARGET} )
 
-    set(RACES_TESTS archive fasta_reader context_index genome_mutations bucket)
+    set(RACES_TESTS archive fasta_reader context_index genome_mutations bucket index)
 
     foreach(TEST ${RACES_TESTS})
         add_executable( test_${TEST} ${TEST}.cpp)
