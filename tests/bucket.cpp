@@ -2,8 +2,8 @@
  * @file bucket.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Bucket tests
- * @version 1.0
- * @date 2025-09-13
+ * @version 1.1
+ * @date 2025-09-17
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -39,7 +39,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "common.hpp"
+#include "utils.hpp"
 
 #include "bucket.hpp"
 

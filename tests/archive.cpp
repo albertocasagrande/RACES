@@ -2,8 +2,8 @@
  * @file archive.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Some archive tests
- * @version 1.1
- * @date 2025-09-13
+ * @version 1.2
+ * @date 2025-09-17
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -37,13 +37,11 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/mpl/list.hpp>
 
-#include "common.hpp"
-
 #include "archive.hpp"
 #include "simulation.hpp"
 #include "ending_conditions.hpp"
 #include "logger.hpp"
-
+#include "utils.hpp"
 
 struct ArchiveFixture {
     long double time_horizon;

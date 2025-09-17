@@ -1,9 +1,9 @@
 /**
- * @file common.hpp
+ * @file utils.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines functions shared among some tests
+ * @brief Implement utility functions
  * @version 1.0
- * @date 2025-09-13
+ * @date 2025-09-17
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -28,32 +28,43 @@
  * SOFTWARE.
  */
 
-#ifndef __RACES_TESTS_COMMON__
-#define __RACES_TESTS_COMMON__
 
 #include <string>
-#include <sstream>
 #include <filesystem>
+#include <sstream>
 
-std::filesystem::path get_a_temporary_path()
+#include "utils.hpp"
+
+std::filesystem::path
+get_a_temporary_path(const std::string& prefix,
+                     const std::filesystem::path parent_dir)
 {
-    namespace fs = std::filesystem;
-
-    fs::path tmp_dir = fs::temp_directory_path();
-
-    std::string basename{"file_"};
-    std::string name = basename + "0";
-    size_t counter = 0;
-
-    while (fs::exists(tmp_dir / name)) {
+    if (!std::filesystem::exists(parent_dir)) {
         std::ostringstream oss;
 
-        oss << basename << ++counter;
+        oss << "get_a_temporary_path: the directory \""
+            << to_string(parent_dir)
+            << "\" does not exist.";
 
-        name = oss.str();
+        throw std::domain_error(oss.str());
     }
 
-    return tmp_dir / name;
-}
+    if (!std::filesystem::is_directory(parent_dir)) {
+        std::ostringstream oss;
 
-#endif // __RACES_TESTS_COMMON__
+        oss << "get_a_temporary_path: the directory \""
+            << to_string(parent_dir)
+            << "\" is not a directory.";
+
+        throw std::domain_error(oss.str());
+    }
+
+    size_t counter{0};
+    std::filesystem::path tmp_path;
+    do {
+        tmp_path = parent_dir / (prefix + std::to_string(counter));
+        ++counter;
+    } while (std::filesystem::exists(tmp_path));
+
+    return tmp_path;
+}

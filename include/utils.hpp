@@ -2,8 +2,8 @@
  * @file utils.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines utility functions
- * @version 1.2
- * @date 2025-05-19
+ * @version 1.3
+ * @date 2025-09-17
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -114,6 +114,18 @@ inline static TYPE ceil_div(const TYPE& x, const TYPE& y)
 {
     return 1 + ((x - 1) / y);
 }
+
+/**
+ * @brief Get the a temporary path
+ *
+ * @param[in] prefix is the prefix of the path basename
+ * @param[in] parent_dir is the parent directory of the resulting path
+ * @return a path that does not exists, whose parent directory
+ *      is `parent_dir`, and whose basename prefix is `prefix`
+ */
+std::filesystem::path
+get_a_temporary_path(const std::string& prefix="RACES_tmp_",
+                     const std::filesystem::path parent_dir=std::filesystem::temp_directory_path());
 
 namespace std
 {

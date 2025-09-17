@@ -72,6 +72,7 @@ set(RACES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/timed_event.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/tissue_sample.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/warning.cpp
 )
 
