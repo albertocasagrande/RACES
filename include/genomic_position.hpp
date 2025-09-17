@@ -2,8 +2,8 @@
  * @file genomic_position.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genomic position and related functions
- * @version 1.1
- * @date 2025-07-11
+ * @version 1.2
+ * @date 2025-09-17
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -84,6 +84,16 @@ struct GenomicPosition
     GenomicPosition(const ChromosomeId& chromosome_id, const ChrPosition& position);
 
     /**
+     * @brief Get the identifier of the chromosome
+     *
+     * @return a constant reference to the identifier of the chromosome
+     */
+    inline const ChromosomeId& get_chromosome_id() const
+    {
+        return chr_id;
+    }
+
+    /**
      * @brief Test whether two genomic position are the same
      *
      * @param genomic_position is the genomic position to test
@@ -160,6 +170,8 @@ struct GenomicPosition
 
         return g_pos;
     }
+
+    CHECK_CONSTANT_SPACE_ON_DISK(chr_id, position)
 };
 
 
