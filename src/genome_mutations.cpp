@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.14
- * @date 2025-07-09
+ * @version 1.15
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -275,7 +275,7 @@ bool ChromosomeMutations::has_context_free(const SID& mutation) const
     if (!contains(mutation)) {
         std::ostringstream oss;
 
-        oss << mutation << " is does not lays in the chromsome "
+        oss << mutation << " is does not lays in the chromosome "
             << id() << ".";
         throw std::domain_error(oss.str());
     }
@@ -639,6 +639,31 @@ bool GenomeMutations::apply(const MutationSpec<SID>& mutation_spec)
     auto chr_it = find_chromosome(chromosomes, mutation_spec.chr_id);
 
     return chr_it->second.apply(mutation_spec);
+}
+
+bool GenomeMutations::apply(const MutationList& mutation_list)
+{
+    bool success{true};
+
+    for (auto list_it = mutation_list.begin();
+            list_it != mutation_list.end(); ++list_it) {
+        switch(list_it.get_type()) {
+            case MutationList::SID_TURN:
+                success = success && apply(list_it.get_last_SID());
+                break;
+            case MutationList::CNA_TURN:
+                success = success && apply(list_it.get_last_CNA());
+                break;
+            case MutationList::WGD_TURN:
+                duplicate_alleles();
+                break;
+            default:
+                throw std::runtime_error("GenomeMutations::apply(const MutationList&):"
+                                         " Unsupported mutation type");
+        }
+    }
+
+    return success;
 }
 
 bool GenomeMutations::remove_mutation(const GenomicPosition& genomic_position)

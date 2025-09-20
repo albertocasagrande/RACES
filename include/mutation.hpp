@@ -2,8 +2,8 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a general class for mutations
- * @version 1.2
- * @date 2025-07-09
+ * @version 1.3
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -87,12 +87,12 @@ struct Mutation : public GenomicPosition
      * This enumeration defines the set of supported
      * mutation nature.
      * A mutation can either be DRIVER, PASSENGER,
-     * PRENEOPLASTIC, GERMLINE, or UNDEFINED.
+     * PRE_NEOPLASTIC, GERMLINE, or UNDEFINED.
      */
     enum Nature {
         DRIVER,
         PASSENGER,
-        PRENEOPLASTIC,
+        PRE_NEOPLASTIC,
         GERMINAL,
         UNDEFINED
     };

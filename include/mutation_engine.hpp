@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.25
- * @date 2025-07-14
+ * @version 1.26
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -424,7 +424,7 @@ class MutationEngine
      * @brief Randomly select the number of mutations according to a Poisson distribution
      *
      * @param genome_size is the genome size
-     * @param passenger_mutation_rate is the rate of the passanger mutations
+     * @param passenger_mutation_rate is the rate of the passenger mutations
      * @return is the randomly selected number of mutations
      */
     size_t number_of_mutations(GenomeMutations::Length genome_size,
@@ -499,7 +499,7 @@ class MutationEngine
      *
      * @param node is a phylogenetic forest node representing a cell
      * @param cell_mutations are the cell mutations
-     * @param CNA_rate is the rate of passegers CNAs
+     * @param CNA_rate is the rate of passenger CNAs
      */
     void place_CNAs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
                     const double& CNA_rate)
@@ -595,25 +595,25 @@ class MutationEngine
     }
 
     /**
-     * @brief Get the number of indiced SBSs of a given type
+     * @brief Get the number of loci available for an SBS type
      *
-     * @param mutation_type is the type of the aimed SBS
-     * @return the number of indiced SBSs of type `mutation_type`
+     * @param SBS_type is the type of the aimed SBS
+     * @return the number of loci available for `mutation_type`
      */
-    inline size_t count_available(const SBSType& mutation_type) const
+    inline size_t count_available(const SBSType& SBS_type) const
     {
-        return context_index[mutation_type.get_context()].size();
+        return context_index[SBS_type.get_context()].size();
     }
 
     /**
-     * @brief Get the number of indiced indels of a given type
+     * @brief Get the number of loci available for an ID type
      *
-     * @param mutation_type is the type of the aimed SBS
-     * @return the number of indiced SBSs of type `mutation_type`
+     * @param ID_type is the type of the aimed ID
+     * @return Get the number of loci available for `mutation_type`
      */
-    inline size_t count_available(const IDType& mutation_type) const
+    inline size_t count_available(const IDType& ID_type) const
     {
-        return rs_index.count_available_for(mutation_type);
+        return rs_index.count_available_for(ID_type);
     }
 
     /**
@@ -1179,12 +1179,12 @@ class MutationEngine
     /**
      * @brief Get the driver mutation map
      *
-     * This method returns a map from the mutant identifier to the correspoding
+     * This method returns a map from the mutant identifier to the corresponding
      * driver mutations.
      *
      * @param descendants_forest is a descendent forest
      * @return a map associating the mutants in `descendants_forest` to the
-     *              correspoding driver mutations.
+     *              corresponding driver mutations.
      */
     std::map<Mutants::MutantId, DriverMutations>
     get_driver_mutation_map(const Mutants::DescendantsForest& descendants_forest) const
@@ -1378,7 +1378,7 @@ class MutationEngine
     {
         auto num_mutations = static_cast<size_t>(std::max(0.0, num_of_mutations_dist(generator)));
         place_SIDs<MUTATION_TYPE>(nullptr, cell_mutations, signature_name,
-                                  num_mutations, Mutation::PRENEOPLASTIC);
+                                  num_mutations, Mutation::PRE_NEOPLASTIC);
     }
 
     /**
@@ -1546,7 +1546,7 @@ public:
      * its driver mutations) and all its species to the mutations engine.
      *
      * @param name is the name of the mutant
-     * @param epistate_passenger_rates is a map from epigenomic status to
+     * @param epistate_passenger_rates is a map from epigenetic status to
      *          passenger rate
      * @param driver_SIDs is a list of driver SIDs
      * @param driver_CNAs is a list of driver CNAs
@@ -1573,7 +1573,7 @@ public:
      * its driver mutations) and all its species to the mutations engine.
      *
      * @param name is the name of the mutant
-     * @param epistate_passenger_rates is a map from epigenomic status to
+     * @param epistate_passenger_rates is a map from epigenetic status to
      *          passenger rate
      * @param driver_SIDs is a list of driver SIDs
      * @param driver_CNAs is a list of driver CNAs
@@ -1682,47 +1682,47 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
-     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
+     * @param num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
+     * @param num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
      * @param seed is the random generator seed
-     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
+     * @param pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     inline
     PhylogeneticForest
     place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                    const size_t& num_of_preneoplatic_SNVs,
-                    const size_t& num_of_preneoplatic_indels,
+                    const size_t& num_of_pre_neoplastic_SNVs,
+                    const size_t& num_of_pre_neoplastic_indels,
                     const int& seed=0,
-                    const std::string& preneoplatic_SNV_signature_name="SBS1",
-                    const std::string& preneoplatic_indel_signature_name="ID1")
+                    const std::string& pre_neoplastic_SNV_signature_name="SBS1",
+                    const std::string& pre_neoplastic_indel_signature_name="ID1")
     {
-        return place_mutations(descendants_forest, num_of_preneoplatic_SNVs,
-                               num_of_preneoplatic_indels, nullptr, seed,
-                               preneoplatic_SNV_signature_name,
-                               preneoplatic_indel_signature_name);
+        return place_mutations(descendants_forest, num_of_pre_neoplastic_SNVs,
+                               num_of_pre_neoplastic_indels, nullptr, seed,
+                               pre_neoplastic_SNV_signature_name,
+                               pre_neoplastic_indel_signature_name);
     }
 
     /**
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
-     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
+     * @param num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
+     * @param num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
-     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
+     * @param pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     PhylogeneticForest
     place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                    const size_t& num_of_preneoplatic_SNVs,
-                    const size_t& num_of_preneoplatic_indels,
+                    const size_t& num_of_pre_neoplastic_SNVs,
+                    const size_t& num_of_pre_neoplastic_indels,
                     UI::ProgressBar *progress_bar, const int& seed=0,
-                    const std::string& preneoplatic_SNV_signature_name="SBS1",
-                    const std::string& preneoplatic_indel_signature_name="ID1")
+                    const std::string& pre_neoplastic_SNV_signature_name="SBS1",
+                    const std::string& pre_neoplastic_indel_signature_name="ID1")
     {
         using namespace RACES::Mutants;
         using namespace RACES::Mutants::Evolutions;
@@ -1757,11 +1757,11 @@ public:
         for (auto& root: forest.get_roots()) {
             GenomeMutations mutations = wild_type_structure;
 
-            // place preneoplastic mutations
-            place_SIDs<SBSType>(&root, mutations, preneoplatic_SNV_signature_name,
-                                num_of_preneoplatic_SNVs, Mutation::PRENEOPLASTIC);
-            place_SIDs<IDType>(&root, mutations, preneoplatic_indel_signature_name,
-                               num_of_preneoplatic_indels, Mutation::PRENEOPLASTIC);
+            // place pre-neoplastic mutations
+            place_SIDs<SBSType>(&root, mutations, pre_neoplastic_SNV_signature_name,
+                                num_of_pre_neoplastic_SNVs, Mutation::PRE_NEOPLASTIC);
+            place_SIDs<IDType>(&root, mutations, pre_neoplastic_indel_signature_name,
+                               num_of_pre_neoplastic_indels, Mutation::PRE_NEOPLASTIC);
 
             place_mutations(root, mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
@@ -1783,25 +1783,26 @@ public:
      * @brief Place genomic mutations on a descendants forest
      *
      * @param descendants_forest is a descendants forest
-     * @param num_of_preneoplatic_SNVs is the number of preneoplastic SNVs
-     * @param num_of_preneoplatic_indels is the number of preneoplastic indels
+     * @param num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
+     * @param num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
      * @param progress_bar is a progress bar pointer
      * @param seed is the random generator seed
-     * @param preneoplatic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param preneoplatic_indel_signature_name is the pre-neoplastic indel signature name
+     * @param pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     PhylogeneticForest
     place_mutations(const Mutants::DescendantsForest& descendants_forest,
-                    const size_t& num_of_preneoplatic_SNVs,
-                    const size_t& num_of_preneoplatic_indels,
+                    const size_t& num_of_pre_neoplastic_SNVs,
+                    const size_t& num_of_pre_neoplastic_indels,
                     UI::ProgressBar& progress_bar, const int& seed=0,
-                    const std::string& preneoplatic_SNV_signature_name="SBS1",
-                    const std::string& preneoplatic_indel_signature_name="ID1")
+                    const std::string& pre_neoplastic_SNV_signature_name="SBS1",
+                    const std::string& pre_neoplastic_indel_signature_name="ID1")
     {
-        return place_mutations(descendants_forest, num_of_preneoplatic_SNVs,
-                               num_of_preneoplatic_indels, &progress_bar, seed,
-                               preneoplatic_SNV_signature_name, preneoplatic_indel_signature_name);
+        return place_mutations(descendants_forest, num_of_pre_neoplastic_SNVs,
+                               num_of_pre_neoplastic_indels, &progress_bar, seed,
+                               pre_neoplastic_SNV_signature_name,
+                               pre_neoplastic_indel_signature_name);
     }
 
     /**
@@ -1827,7 +1828,7 @@ public:
      * @param indel_dist is the distribution of the number of cell specific indels
      * @param SNV_signature_name is the SNV signature name
      * @param indel_signature_name is the indel signature name
-     * @param forest_preneoplastic_prob is the probability for a pre-neoplastic
+     * @param forest_pre_neoplastic_prob is the probability for a pre-neoplastic
      *   mutation in the forest to be selected for a wild-type sample
      * @return a list of wild-type samples; each of them has size `num_of_cells`.
      */
@@ -1839,16 +1840,16 @@ public:
                           std::normal_distribution<double>& common_indel_dist,
                           const std::string& SNV_signature_name="SBS1",
                           const std::string& indel_signature_name="ID1",
-                          const double& forest_preneoplastic_prob=1)
+                          const double& forest_pre_neoplastic_prob=1)
     {
         using namespace Mutants::Evolutions;
 
         std::list<SampleGenomeMutations> samples;
 
         std::uniform_real_distribution<double> pnp_dist;
-        for (const auto& [cell_id, pnp_mutations] : forest.get_preneoplastic_mutations()) {
+        for (const auto& [cell_id, pnp_mutations] : forest.get_pre_neoplastic_mutations()) {
             auto sample_common_mutations = germline_mutations->copy_structure();
-            if (pnp_dist(generator) < forest_preneoplastic_prob) {
+            if (pnp_dist(generator) < forest_pre_neoplastic_prob) {
                 for (auto mut_it = pnp_mutations.begin(); mut_it != pnp_mutations.end();
                     ++mut_it) {
 

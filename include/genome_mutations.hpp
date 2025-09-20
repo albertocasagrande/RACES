@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.11
- * @date 2025-07-09
+ * @version 1.12
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -39,6 +39,7 @@
 
 #include "mutation.hpp"
 #include "mutation_spec.hpp"
+#include "mutation_list.hpp"
 #include "context_index.hpp"
 
 #include "allele.hpp"
@@ -183,11 +184,11 @@ private:
      * chromosomes, the method copy of the original data member into a data
      * object exclusively pointed by the current `ChromosomeMutations` object.
      *
-     * @warning In order to avoid unneccessary and time-consuming copies of the
+     * @warning In order to avoid unnecessary and time-consuming copies of the
      *     chromosome mutation data, the chromosome mutation data pointer should
      *     be exclusively maintained by the `ChromosomeMutations` object during
      *     the call to this method. If needed, the returned pointer can be used
-     *     for backup purpouse.
+     *     for backup purpose.
      *
      * @return the shared pointer to the original data for backup
      */
@@ -199,10 +200,10 @@ private:
      * This method is meant to be used to retrieve an allele that is going
      * to be changed. It guarantees that the data member is exclusive.
      *
-     * @warning In order to avoid unneccessary and time-consuming copies of the
+     * @warning In order to avoid unnecessary and time-consuming copies of the
      *     chromosome mutation data, the chromosome mutation data pointer should
      *     be exclusively maintained by the `ChromosomeMutations` object during
-     *     the call to this method. For backup purpouse, use the second component
+     *     the call to this method. For backup purpose, use the second component
      *     of the returned pair.
      *
      * @param allele_id is the identifier of the allele to find
@@ -329,7 +330,7 @@ public:
      * @return `true` if and only if the chromosome have an allele having `allele_id`
      *          as allele identifier and the whole `genomic_region` is contained
      *          in this allele
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      * @throw std::out_of_range the chromosome has not the allele `allele_id`
      */
     bool allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
@@ -375,7 +376,7 @@ public:
      * @param mutation is a mutation
      * @return `true` if and only if the allele does not contains
      *      SID mutations in the one-base neighborhood of `mutation`
-     * @throw std::domain_error `mutation` does not lays in the chromosome
+     * @throw std::domain_error `mutation` does not lay in the chromosome
      */
     bool has_context_free(const SID& mutation) const;
 
@@ -394,7 +395,7 @@ public:
      * @param[in] nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      */
     bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                         AlleleId& new_allele_id,
@@ -413,7 +414,7 @@ public:
      * @param[in] nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      */
     inline bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                                const Mutation::Nature& nature=Mutation::UNDEFINED)
@@ -436,7 +437,7 @@ public:
      * @param nature is the nature of the deletion
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the allele has been removed
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      */
     bool remove_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                        const Mutation::Nature& nature=Mutation::UNDEFINED);
@@ -481,7 +482,7 @@ public:
      *      must be placed
      * @return `true` if and only if the chromosome do not contain any other
      *      SID mutations in `mutation`'s mutational context
-     * @throw std::domain_error `mutation` does not lays in the chromosome
+     * @throw std::domain_error `mutation` does not lay in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
@@ -497,7 +498,7 @@ public:
      * @param mutation_spec is the SID mutation to be applied in the chromosome
      * @return `true` if and only if the chromosome do not contain any other
      *      SID mutations in `mutation`'s mutational context
-     * @throw std::domain_error `mutation` does not lays in the chromosome
+     * @throw std::domain_error `mutation` does not lay in the chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
@@ -547,7 +548,7 @@ public:
      * @param genomic_position is the position of the SID mutation to be
      *      removed
      * @return `true` if and only if a SID occurred at `genomic_position`
-     * @throw std::domain_error `genomic_position` does not lays in the
+     * @throw std::domain_error `genomic_position` does not lay in the
      *      chromosome
      * @throw std::out_of_range the chromosome has not the allele
      *      `allele_id` or `genomic_position` does not lay in the allele
@@ -573,7 +574,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Genome Mutations", 0);
+        ARCHIVE::write_header(archive, "RACES Genome Mutations", 1);
 
         archive & _data;
     }
@@ -590,13 +591,47 @@ public:
     {
         ChromosomeMutations chr_mutations;
 
-        ARCHIVE::read_header(archive, "RACES Genome Mutations", 0);
+        ARCHIVE::read_header(archive, "RACES Genome Mutations", 1);
 
         archive & chr_mutations._data;
 
         return chr_mutations;
     }
 };
+
+/**
+ * @brief Test whether two `ChromosomeMutations` objects are the same
+ *
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `true` is and only if `lhs` and `rhs` represent the same
+ *      chromosome, i.e., have the same alleles, contain the same
+ *      mutations, and have the same length and chromosome id
+ */
+inline bool operator==(const RACES::Mutations::ChromosomeMutations& lhs,
+                       const RACES::Mutations::ChromosomeMutations& rhs)
+{
+    return (lhs.id() == rhs.id()) && (lhs.size() == rhs.size())
+            && (lhs.allelic_size() == rhs.allelic_size())
+            && (lhs.get_alleles() == rhs.get_alleles());
+}
+
+/**
+ * @brief Test whether two `ChromosomeMutations` objects differ
+ *
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `false` is and only if `lhs` and `rhs` represent the same
+ *      chromosome, i.e., have the same alleles, contain the same
+ *      mutations, and have the same length and chromosome id
+ */
+inline bool operator!=(const RACES::Mutations::ChromosomeMutations& lhs,
+                       const RACES::Mutations::ChromosomeMutations& rhs)
+{
+    return (lhs.id() != rhs.id()) || (lhs.size() != rhs.size())
+            || (lhs.allelic_size() != rhs.allelic_size())
+            || (lhs.get_alleles() != rhs.get_alleles());
+}
 
 /**
  * @brief A class to represent the mutations of a genome
@@ -768,7 +803,7 @@ public:
      * @param genomic_region is the region on which the check is performed
      * @return `true` if and only if the whole `genomic_region` is contained
      *          in the allele `allele_id` of the corresponding chromosome
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      * @throw std::out_of_range the chromosome has not the allele `allele_id`
      */
     bool allele_contains(const AlleleId& allele_id, const GenomicRegion& genomic_region) const;
@@ -788,7 +823,7 @@ public:
      * @param[in] nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      */
     bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                         AlleleId& new_allele_id,
@@ -807,7 +842,7 @@ public:
      * @param[in] nature is the nature of the amplification
      * @return `true` if and only if the all the fragments touching `genomic_region`
      *      have `allele_id` among their allele ids and the region has been amplified
-     * @throw std::domain_error `genomic_region` does not lays in this chromosome
+     * @throw std::domain_error `genomic_region` does not lay in this chromosome
      */
     inline bool amplify_region(const GenomicRegion& genomic_region, const AlleleId& allele_id,
                                const Mutation::Nature& nature=Mutation::UNDEFINED)
@@ -865,17 +900,17 @@ public:
     /**
      * @brief Apply a SID mutation in a context free position
      *
-     * This method tries to apply a SID mutation. If the chromosome contains another
+     * This method tries to apply a SID mutation. If the genome contains another
      * SID mutation occurring in the mutational context of the specified SID, then
      * the application fails.
      *
-     * @param mutation is the SID mutation to be applied in the chromosome
+     * @param mutation is the SID mutation to be applied to the genome
      * @param allele_id is the identifier of the allele in which the SID mutation
      *      must be placed
-     * @return `true` if and only if the chromosome do not contain any other
+     * @return `true` if and only if the genome do not contain any other
      *      SID mutations in `mutation`'s mutational context
-     * @throw std::domain_error `mutation` does not lays in the chromosome
-     * @throw std::out_of_range the chromosome has not the allele
+     * @throw std::domain_error `mutation` does not lay to the genome
+     * @throw std::out_of_range the genome has not the allele
      *      `allele_id` or `mutation` does not lay in the allele
      */
     bool apply(const SID& mutation, const AlleleId& allele_id);
@@ -883,18 +918,35 @@ public:
     /**
      * @brief Apply a SID mutation in a context free position
      *
-     * This method tries to apply a SID mutation. If the chromosome contains another
+     * This method tries to apply a SID mutation. If the genome contains another
      * SID mutation occurring in the mutational context of the specified SID, then
      * the application fails.
      *
-     * @param mutation_spec is the SID mutation to be applied in the chromosome
-     * @return `true` if and only if the chromosome do not contain any other
+     * @param mutation_spec is the SID mutation to be applied to the genome
+     * @return `true` if and only if the genome do not contain any other
      *      SID mutations in `mutation`'s mutational context
-     * @throw std::domain_error `mutation` does not lays in the chromosome
-     * @throw std::out_of_range the chromosome has not the allele
-     *      `allele_id` or `mutation` does not lay in the allele
+     * @throw std::domain_error `mutation` does not lay to the genome
+     * @throw std::out_of_range `mutation_spec` does not lay in the corresponding
+     *      genome allele
      */
     bool apply(const MutationSpec<SID>& mutation_spec);
+
+    /**
+     * @brief Apply a list of mutations
+     *
+     * This method tries to apply a list of mutations. If all mutations in
+     * the list are applied the method returns `true`. Otherwise, it returns
+     * `false`.
+     *
+     * @param mutation_list is the list of mutations to be applied
+     * @return `true` if and only if all mutations in the list are applied
+     *      the method returns `true`
+     * @throw std::domain_error any mutation in `mutation_list` does not lay
+     *      to the genome
+     * @throw std::out_of_range any mutation in `mutation_spec` does not lay
+     *      in the corresponding genome allele
+     */
+    bool apply(const MutationList& mutation_list);
 
     /**
      * @brief Remove a SID mutation
@@ -912,7 +964,7 @@ public:
      * @param mutation is a mutation
      * @return `true` if and only if the allele does not contains
      *      SID mutations in the one-base neighborhood of `mutation`
-     * @throw std::domain_error `mutation` does not lays in the genome
+     * @throw std::domain_error `mutation` does not lay in the genome
      */
     bool has_context_free(const SID& mutation) const;
 
@@ -933,7 +985,7 @@ public:
      * It returns a `GenomeMutations` object that has the same chromosomes and
      * alleles of the current objects, but misses the original SNVs and indels.
      *
-     * @return a `GenomeMutations` object that has the same chromsomes and
+     * @return a `GenomeMutations` object that has the same chromosomes and
      *      alleles of the current objects, but misses the original SNVs and
      *      indels
      */
@@ -999,6 +1051,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
+        ARCHIVE::write_header(archive, "RACES GenomeMutations", 0);
+
         archive & chromosomes;
     }
 
@@ -1012,6 +1066,8 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static GenomeMutations load(ARCHIVE& archive)
     {
+        ARCHIVE::read_header(archive, "RACES GenomeMutations", 0);
+
         GenomeMutations g_mutations;
 
         archive & g_mutations.chromosomes;
@@ -1103,6 +1159,36 @@ struct SampleGenomeMutations
     SampleGenomeMutations(const std::string& name,
                           const std::shared_ptr<GenomeMutations>& germline_mutations);
 };
+
+/**
+ * @brief Test whether two `GenomeMutations` objects are the same
+ *
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `true` is and only if `lhs` and `rhs` represent the same
+ *      genome, i.e., have the same chromosomes and contain the same
+ *      mutations
+ */
+inline bool operator==(const RACES::Mutations::GenomeMutations& lhs,
+                       const RACES::Mutations::GenomeMutations& rhs)
+{
+    return (lhs.get_chromosomes() == rhs.get_chromosomes());
+}
+
+/**
+ * @brief Test whether two `GenomeMutations` objects differ
+ *
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `false` is and only if `lhs` and `rhs` represent the same
+ *      genome, i.e., have the same chromosomes and contain the same
+ *      mutations
+ */
+inline bool operator!=(const RACES::Mutations::GenomeMutations& lhs,
+                       const RACES::Mutations::GenomeMutations& rhs)
+{
+    return (lhs.get_chromosomes() != rhs.get_chromosomes());
+}
 
 }   // Mutations
 
