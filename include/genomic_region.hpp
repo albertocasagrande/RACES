@@ -1,9 +1,9 @@
 /**
  * @file genomic_region.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines genomic region
- * @version 1.2
- * @date 2025-07-09
+ * @brief Defines genomic regions
+ * @version 1.3
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -515,6 +515,36 @@ public:
         return g_region;
     }
 };
+
+
+/**
+ * @brief Test whether two `GenomicRegion` objects are the same
+ * 
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `true` is and only if `lhs` and `rhs` represent the same
+ *      allele fragment, i.e., have the same allele fragments and allele history
+ */
+inline bool operator==(const RACES::Mutations::GenomicRegion& lhs,
+                       const RACES::Mutations::GenomicRegion& rhs)
+{
+    return (lhs.get_initial_position() == rhs.get_initial_position())
+            && (lhs.size() == rhs.size());
+}
+
+/**
+ * @brief Test whether two `GenomicRegion` objects differ
+ * 
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `false` is and only if `lhs` and `rhs` represent the same
+ *      allele fragment, i.e., have the same allele fragments and allele history
+ */
+inline bool operator!=(const RACES::Mutations::GenomicRegion& lhs,
+                       const RACES::Mutations::GenomicRegion& rhs)
+{
+    return !(lhs == rhs);
+}
 
 }   // Mutations
 
