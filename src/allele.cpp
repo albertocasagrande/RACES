@@ -2,8 +2,8 @@
  * @file allele.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements allele representation
- * @version 1.5
- * @date 2025-07-09
+ * @version 1.6
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -426,6 +426,56 @@ Allele Allele::copy_structure() const
     }
 
     return copy;
+}
+
+bool operator==(const RACES::Mutations::AlleleFragment& lhs,
+                const RACES::Mutations::AlleleFragment& rhs)
+{
+    using namespace RACES::Mutations;
+
+    if (static_cast<const GenomicRegion&>(lhs) != static_cast<const GenomicRegion&>(rhs)) {
+        return false;
+    }
+
+    if (lhs.get_mutations().size() != rhs.get_mutations().size()) {
+        return false;
+    }
+    
+    auto lhs_it = lhs.get_mutations().begin();
+    for (const auto& [pos, rhs_sid_ptr] : rhs.get_mutations()) {
+        if (*rhs_sid_ptr != *(lhs_it->second)) {
+            return false;
+        }
+
+        ++lhs_it;
+    }
+
+    return true;
+}
+
+bool operator!=(const RACES::Mutations::AlleleFragment& lhs,
+                const RACES::Mutations::AlleleFragment& rhs)
+{
+    using namespace RACES::Mutations;
+
+    if (static_cast<const GenomicRegion&>(lhs) != static_cast<const GenomicRegion&>(rhs)) {
+        return true;
+    }
+
+    if (lhs.get_mutations().size() != rhs.get_mutations().size()) {
+        return true;
+    }
+    
+    auto lhs_it = lhs.get_mutations().begin();
+    for (const auto& [pos, rhs_sid_ptr] : rhs.get_mutations()) {
+        if (*rhs_sid_ptr != *(lhs_it->second)) {
+            return true;
+        }
+
+        ++lhs_it;
+    }
+
+    return false;
 }
 
 }   // Mutations

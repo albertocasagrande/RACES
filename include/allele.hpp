@@ -2,10 +2,10 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 1.4
- * @date 2024-10-26
+ * @version 1.5
+ * @date 2025-09-20
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -46,7 +46,7 @@ namespace Mutations
 /**
  * @brief A identifier type for alleles
  */
-typedef size_t AlleleId;
+typedef uint16_t AlleleId;
 
 // define a random allele identifier
 #define RANDOM_ALLELE std::numeric_limits<RACES::Mutations::AlleleId>::max()
@@ -115,11 +115,11 @@ class AlleleFragment : public GenomicRegion
      * alleles, the method copy of the original data member into a data
      * object exclusively pointed by the current `AlleleFragment` object.
      *
-     * @warning In order to avoid unneccessary and time-consuming copies of 
+     * @warning In order to avoid unnecessary and time-consuming copies of 
      *     the allele fragment data, the allele fragment data pointer should
      *     be exclusively maintained by the `AlleleFragment` object during
      *     the call to this method. If needed, the returned pointer can be 
-     *     used for backup purpouse.
+     *     used for backup purpose.
      *
      * @return the shared pointer to the original data for backup
      */
@@ -279,8 +279,6 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES AlleleFragment", 0);
-
         archive & static_cast<const GenomicRegion&>(*this)
                 & _data;
     }
@@ -295,8 +293,6 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     inline static AlleleFragment load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES AlleleFragment", 0);
-
         AlleleFragment a_fragment;
 
         archive & static_cast<GenomicRegion&>(a_fragment)
@@ -305,6 +301,29 @@ public:
         return a_fragment;
     }
 };
+
+
+/**
+ * @brief Test whether two `AlleleFragment` objects are the same
+ * 
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `true` is and only if `lhs` and `rhs` represent the same
+ *      allele fragment, i.e., have the same allele fragments and allele history
+ */
+bool operator==(const RACES::Mutations::AlleleFragment& lhs,
+                const RACES::Mutations::AlleleFragment& rhs);
+
+/**
+ * @brief Test whether two `AlleleFragment` objects differ
+ * 
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `false` is and only if `lhs` and `rhs` represent the same
+ *      allele fragment, i.e., have the same allele fragments and allele history
+ */
+bool operator!=(const RACES::Mutations::AlleleFragment& lhs,
+                const RACES::Mutations::AlleleFragment& rhs);
 
 /**
  * @brief A possible representation for an allele
@@ -561,6 +580,37 @@ public:
     }
 };
 
+
+/**
+ * @brief Test whether two `Allele` objects are the same
+ * 
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `true` is and only if `lhs` and `rhs` represent the same
+ *      allele, i.e., have the same allele fragments and allele history
+ */
+inline bool operator==(const RACES::Mutations::Allele& lhs,
+                       const RACES::Mutations::Allele& rhs)
+{
+    return (lhs.get_history() == rhs.get_history()) 
+            && (lhs.get_fragments() == rhs.get_fragments());
+}
+
+/**
+ * @brief Test whether two `Allele` objects differ
+ * 
+ * @param lhs is the left-hand side of the relation
+ * @param rhs is the right-hand side of the relation
+ * @return `false` is and only if `lhs` and `rhs` represent the same
+ *      allele, i.e., have the same allele fragments and allele history
+ */
+inline bool operator!=(const RACES::Mutations::Allele& lhs,
+                       const RACES::Mutations::Allele& rhs)
+{
+    return (lhs.get_history() != rhs.get_history()) 
+            || (lhs.get_fragments() != rhs.get_fragments());
+}
+
 }   // Mutations
 
 }   // RACES
@@ -575,8 +625,8 @@ namespace std
  * @param allele_fragment is the allele fragment to be written
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const RACES::Mutations::AlleleFragment& allele_fragment);
-
+std::ostream& operator<<(std::ostream& os,
+                         const RACES::Mutations::AlleleFragment& allele_fragment);
 
 /**
  * @brief Write allele data in a stream
@@ -585,7 +635,8 @@ std::ostream& operator<<(std::ostream& os, const RACES::Mutations::AlleleFragmen
  * @param allele is the allele to be written
  * @return a reference to output stream
  */
-std::ostream& operator<<(std::ostream& os, const RACES::Mutations::Allele& allele);
+std::ostream& operator<<(std::ostream& os,
+                         const RACES::Mutations::Allele& allele);
 
 } // std
 
