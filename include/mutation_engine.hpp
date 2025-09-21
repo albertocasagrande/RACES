@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.26
- * @date 2025-09-20
+ * @version 1.27
+ * @date 2025-09-21
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -692,7 +692,7 @@ class MutationEngine
                         << "\".";
                     warning(WarningType::NO_MUT_FOR_CONTEXT, oss.str());
                 }
-                
+
                 if constexpr(std::is_base_of_v<IDType, MUTATION_TYPE>) {
                     oss << "No mutations for repetition pattern \""
                         << it->second << "\".";
@@ -748,7 +748,7 @@ class MutationEngine
             // get name and probability of the current signature
             const auto& signature_name = exposure_it->first;
             const auto& signature_prob = exposure_it->second;
-            
+
             // update exposure pointer
             ++exposure_it;
 
@@ -1006,6 +1006,7 @@ class MutationEngine
                     break;
                     case DriverMutations::WGD_TURN:
                         cell_mutations.duplicate_alleles();
+                        node.add_whole_genome_doubling();
                         break;
                     default:
                         throw std::runtime_error("Unsupported driver mutation type.");
@@ -1023,14 +1024,15 @@ class MutationEngine
      * to the cell sample.
      *
      * @param[in] node is a phylogenetic forest node representing a cell
-     * @param[in] ancestor_mutations is the genomic mutation of the ancestor
+     * @param[in,out] node_mutations is the genomic mutation of `node`'s ancestor. At the
+     *      end of the call, it contains the genomic mutations of `node`
      * @param[in] passenger_rates is the map associating species ids to their passenger rates
      * @param[in] driver_mutations is the map associating mutant ids and mutations
      * @param[in] ancestor_mutations is the genomic mutation of the ancestor
      * @param[in,out] visited_nodes is the number of visited nodes
      * @param[in,out] progress_bar is a progress bar pointer
      */
-    void place_mutations(PhylogeneticForest::node& node, const GenomeMutations& ancestor_mutations,
+    void place_mutations(PhylogeneticForest::node& node, GenomeMutations& node_mutations,
                          const std::map<Mutants::SpeciesId, PassengerRates>& passenger_rates,
                          std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
@@ -1040,10 +1042,11 @@ class MutationEngine
         const size_t context_stack_size = context_stack.size();
         const size_t rs_stack_size = rs_stack.size();
 
-        CellGenomeMutations cell_mutations(static_cast<const Mutants::Cell&>(node),
-                                           ancestor_mutations);
+        if (!node.is_root()) {
+            node.arising_mutations() = MutationList();
+        }
 
-        place_driver_mutations(node, cell_mutations, driver_mutations);
+        place_driver_mutations(node, node_mutations, driver_mutations);
 
         auto rates_it = passenger_rates.find(node.get_species_id());
         if (rates_it == passenger_rates.end()) {
@@ -1051,9 +1054,9 @@ class MutationEngine
 
             throw std::runtime_error("Unknown species \""+ species_name +"\"");
         }
-        place_passengers<SBSType>(node, cell_mutations, rates_it->second);
-        place_passengers<IDType>(node, cell_mutations, rates_it->second);
-        place_CNAs(node, cell_mutations, rates_it->second.cna);
+        place_passengers<SBSType>(node, node_mutations, rates_it->second);
+        place_passengers<IDType>(node, node_mutations, rates_it->second);
+        place_CNAs(node, node_mutations, rates_it->second.cna);
 
         ++visited_nodes;
         if (progress_bar != nullptr) {
@@ -1065,19 +1068,21 @@ class MutationEngine
         }
 
         if (node.is_leaf()) {
-            auto mut_ptr = std::make_shared<CellGenomeMutations>();
+            auto sample_statistics = node.forest->sample_statistics[node.get_sample().get_id()];
 
-            std::swap(cell_mutations, *mut_ptr);
-
-            auto& phylo_forest = node.get_forest();
-            auto cell_id = static_cast<const Mutants::Cell&>(node).get_id();
-
-            phylo_forest.leaves_mutations[cell_id] = mut_ptr;
+            ++sample_statistics.number_of_cells;
+            sample_statistics.total_allelic_size += node_mutations.allelic_size();
         } else {
-            for (auto child: node.children()) {
-                place_mutations(child, cell_mutations, passenger_rates, driver_mutations,
+            auto children = node.children();
+
+            for (auto child_it = children.begin(); child_it != children.end()-1; ++child_it) {
+                GenomeMutations child_mutations{node_mutations};
+
+                place_mutations(*child_it, child_mutations, passenger_rates, driver_mutations,
                                 visited_nodes, progress_bar);
             }
+            place_mutations(children.back(), node_mutations, passenger_rates, driver_mutations,
+                            visited_nodes, progress_bar);
         }
 
         if (!infinite_sites_model) {
@@ -1755,15 +1760,17 @@ public:
 
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
-            GenomeMutations mutations = wild_type_structure;
+            GenomeMutations root_mutations = wild_type_structure;
+
+            forest.arising_mutations[root.get_id()] = MutationList();
 
             // place pre-neoplastic mutations
-            place_SIDs<SBSType>(&root, mutations, pre_neoplastic_SNV_signature_name,
+            place_SIDs<SBSType>(&root, root_mutations, pre_neoplastic_SNV_signature_name,
                                 num_of_pre_neoplastic_SNVs, Mutation::PRE_NEOPLASTIC);
-            place_SIDs<IDType>(&root, mutations, pre_neoplastic_indel_signature_name,
+            place_SIDs<IDType>(&root, root_mutations, pre_neoplastic_indel_signature_name,
                                num_of_pre_neoplastic_indels, Mutation::PRE_NEOPLASTIC);
 
-            place_mutations(root, mutations, species_rates, driver_mutations,
+            place_mutations(root, root_mutations, species_rates, driver_mutations,
                             visited_node, progress_bar);
         }
 

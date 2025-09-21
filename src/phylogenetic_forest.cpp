@@ -2,10 +2,10 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.8
- * @date 2024-11-05
+ * @version 1.9
+ * @date 2025-09-21
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -41,6 +41,10 @@ namespace RACES
 namespace Mutations
 {
 
+PhylogeneticForest::SampleStatistics::SampleStatistics():
+    total_allelic_size{0}, number_of_cells{0}
+{}
+
 PhylogeneticForest::PhylogeneticForest():
     DescendantsForest()
 {}
@@ -55,21 +59,157 @@ PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId
 
 void PhylogeneticForest::node::add_new_mutation(const MutationSpec<SID>& mutation)
 {
-    get_forest().novel_mutations[cell_id].insert(mutation);
+    get_forest().arising_mutations[cell_id].insert(mutation);
     get_forest().SID_first_cells[mutation].insert(cell_id);
 }
 
 void PhylogeneticForest::node::add_new_mutation(const CNA& cna)
 {
-    get_forest().novel_mutations[cell_id].insert(cna);
+    get_forest().arising_mutations[cell_id].insert(cna);
     get_forest().CNA_first_cells[cna].insert(cell_id);
+}
+
+void PhylogeneticForest::node::add_whole_genome_doubling()
+{
+    get_forest().arising_mutations[cell_id].insert_WGD();
+}
+
+PhylogeneticForest::GenomeMutationTour::GenomeMutationTour(const PhylogeneticForest *forest,
+                                                           const bool only_leaves,
+                                                           const bool with_germinal):
+    forest{forest}, only_leaves{only_leaves}, with_germinal{with_germinal}
+{}
+
+PhylogeneticForest::GenomeMutationTour::GenomeMutationTour():
+    forest{nullptr}, with_germinal{false}
+{}
+
+PhylogeneticForest::GenomeMutationTour::GenomeMutationTour(const PhylogeneticForest& forest,
+                                                           const bool only_leaves,
+                                                           const bool with_germinal):
+    GenomeMutationTour(&forest, only_leaves, with_germinal)
+{}
+
+PhylogeneticForest::GenomeMutationTour::const_iterator::const_iterator(const PhylogeneticForest* forest,
+                                                                       const bool& only_leaves,
+                                                                       const bool& with_germinal,
+                                                                       const bool& begin):
+    forest{forest}, only_leaves{only_leaves}, tour_end{false}
+{
+    if (forest != nullptr && begin) {
+        auto forest_roots = forest->get_roots();
+        for (auto root_it = forest_roots.rbegin();
+                root_it != forest_roots.rend(); ++root_it) {
+            const auto& germline_mutations = forest->get_germline_mutations();
+            GenomeMutations mutations;
+
+            if (with_germinal) {
+                mutations = germline_mutations;
+            } else {
+                mutations = germline_mutations.copy_structure();
+            }
+            mutations.apply(root_it->arising_mutations());
+
+            iterator_stack.emplace(static_cast<const Mutants::Cell&>(*root_it),
+                                   std::move(mutations));
+        }
+
+        std::swap(node_mutations, iterator_stack.top());
+
+        iterator_stack.pop();
+
+        if (only_leaves) {
+            this->operator++();
+        }
+    } else {
+        tour_end = true;
+    }
+}
+
+PhylogeneticForest::GenomeMutationTour::const_iterator::const_iterator():
+    forest{nullptr}, only_leaves{false}, tour_end{true}
+{}
+
+PhylogeneticForest::GenomeMutationTour::const_iterator&
+PhylogeneticForest::GenomeMutationTour::const_iterator::operator++()
+{
+    const_node node{forest, node_mutations.get_id()};
+
+    if (node.is_leaf()) {
+        if (iterator_stack.empty()) {
+            tour_end = true;
+
+            return *this;
+        }
+
+        // take a new cell genome mutations object from the stack
+        std::swap(node_mutations, iterator_stack.top());
+        iterator_stack.pop();
+
+        if (!only_leaves) {
+            return *this;
+        }
+
+        // update the node
+        node = const_node{forest, node_mutations.get_id()};
+    }
+
+    bool next_node_found = node.is_leaf();
+    while (!next_node_found) {
+        auto children = node.children();
+
+        // place all children's cell genome mutations, but the first one, into the stack
+        for (auto child_it = children.rbegin();
+                child_it != children.rend()-1; ++child_it) {
+
+            CellGenomeMutations child_mutations{static_cast<const Mutants::Cell&>(*child_it),
+                                                node_mutations};
+            child_mutations.apply(child_it->arising_mutations());
+
+            iterator_stack.emplace(std::move(child_mutations));
+        }
+
+        // apply the first children mutations to the current cell genome mutations
+        std::swap(node, children.front());
+        node_mutations.apply(node.arising_mutations());
+
+        next_node_found = node.is_leaf() || !only_leaves;
+    }
+
+    // update the cell
+    static_cast<Mutants::Cell&>(node_mutations) = static_cast<const Mutants::Cell&>(node);
+
+    return *this;
+}
+
+bool PhylogeneticForest::GenomeMutationTour::const_iterator::operator==(const const_iterator& rhs) const
+{
+    if (this->forest != rhs.forest) {
+        return false;
+    }
+
+    if (this->iterator_stack.size() != rhs.iterator_stack.size()) {
+        return false;
+    }
+
+    if (this->iterator_stack.size()==0) {
+        if (this->tour_end != rhs.tour_end) {
+            return false;
+        }
+
+        if (this->tour_end) {
+            return true;
+        }
+    }
+
+    return this->iterator_stack.top() == rhs.iterator_stack.top();
 }
 
 PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellId& cell_id) const
 {
     if (get_cells().count(cell_id)==0) {
-        throw std::runtime_error("The forest does not contain the cell "
-                                 "having the specified identifier");
+        throw std::domain_error("The cell " + std::to_string(cell_id)
+                                + " is not in the forest.");
     }
 
     return PhylogeneticForest::const_node(this, cell_id);
@@ -78,8 +218,8 @@ PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellI
 PhylogeneticForest::node PhylogeneticForest::get_node(const Mutants::CellId& cell_id)
 {
     if (get_cells().count(cell_id)==0) {
-        throw std::runtime_error("The forest does not contain the cell "
-                                 "having the specified identifier");
+        throw std::domain_error("The cell " + std::to_string(cell_id)
+                                + " is not in the forest.");
     }
 
     return PhylogeneticForest::node(this, cell_id);
@@ -134,11 +274,13 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
     static_cast<Mutants::DescendantsForest&>(forest) = Mutants::DescendantsForest::get_subforest_for(sample_names);
 
     for (const auto& [cell_id, cell]: forest.get_cells()) {
-        forest.novel_mutations[cell_id] = novel_mutations.at(cell_id);
-        if (forest.is_leaf(cell_id)) {
-            forest.leaves_mutations[cell_id] = leaves_mutations.at(cell_id);
-        }
+        forest.arising_mutations[cell_id] = arising_mutations.at(cell_id);
     }
+
+    const auto samples = forest.get_samples();
+    const auto sample_id = samples.front().get_id();
+
+    forest.sample_statistics[sample_id] = sample_statistics.at(sample_id);
 
     forest.SID_first_cells = filter_by_cells_in(SID_first_cells, forest);
     forest.CNA_first_cells = filter_by_cells_in(CNA_first_cells, forest);
@@ -146,18 +288,52 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
     return forest;
 }
 
-const CellGenomeMutations&
-PhylogeneticForest::get_leaf_mutations(const Mutants::CellId& cell_id) const
+CellGenomeMutations PhylogeneticForest::get_cell_mutations(const Mutants::CellId& cell_id,
+                                                           const bool& with_germinal) const
 {
-    if (is_leaf(cell_id)) {
-        return *(leaves_mutations.at(cell_id));
+    if (arising_mutations.count(cell_id) == 0) {
+        throw std::domain_error("The cell " + std::to_string(cell_id)
+                                + " is not in the forest.");
     }
 
-    throw std::domain_error(std::to_string(cell_id)+" is not a leaf of the forest");
+    auto node = get_node(cell_id);
+
+    const Mutants::Cell cell = static_cast<const Mutants::Cell&>(node);
+
+    // find the branch from root to the node
+    std::stack<Mutants::CellId> cell_id_stack;
+    do {
+        cell_id_stack.push(node.get_id());
+
+        node = node.parent();
+    } while (!node.is_root());
+
+    // initialize the node genome mutations to the wild-type with or
+    // without germline
+    CellGenomeMutations node_mutations;
+    if (with_germinal) {
+        node_mutations = CellGenomeMutations{cell, *germline_mutations};
+    } else {
+        node_mutations = CellGenomeMutations{cell, germline_mutations->copy_structure()};
+    }
+
+    // browse the branch down to the node and apply the arising mutations
+    while (!cell_id_stack.empty()) {
+        node_mutations.apply(arising_mutations.at(cell_id_stack.top()));
+
+        cell_id_stack.pop();
+    }
+
+    return node_mutations;
 }
 
-std::list<SampleGenomeMutations> PhylogeneticForest::get_sample_mutations_list() const
+std::list<SampleGenomeMutations>
+PhylogeneticForest::get_sample_mutations_list(const bool& with_germinal) const
 {
+    // TODO: For memory reasons, we don't want to store a list of the genome
+    // mutations of all samples. This method will became deprecated, and it
+    // will be replaced by a less demanding alternative.
+
     using namespace Mutants::Evolutions;
 
     std::list<SampleGenomeMutations> sample_mutations_list;
@@ -167,10 +343,10 @@ std::list<SampleGenomeMutations> PhylogeneticForest::get_sample_mutations_list()
         sample_mutation_map.insert({sample.get_id(), &(sample_mutations_list.back())});
     }
 
-    for (const auto& [cell_id, mutations_ptr] : leaves_mutations) {
-        const auto& sample = get_samples()[get_coming_from().at(cell_id)];
+    for (const auto& leaf_mutations : get_leaf_mutation_tour(with_germinal)) {
+        const auto& sample = get_samples()[get_coming_from().at(leaf_mutations.get_id())];
         auto& sample_genomic_mutations = *(sample_mutation_map.at(sample.get_id()));
-        sample_genomic_mutations.mutations.push_back(mutations_ptr);
+        sample_genomic_mutations.mutations.push_back(std::make_shared<CellGenomeMutations>(leaf_mutations));
     }
 
     return sample_mutations_list;
@@ -191,8 +367,14 @@ find_sample_index(const std::vector<RACES::Mutants::Evolutions::TissueSample>& s
     throw std::runtime_error("Unknown sample \""+sample_name+"\".");
 }
 
-SampleGenomeMutations PhylogeneticForest::get_sample_mutations(const std::string& sample_name) const
+SampleGenomeMutations
+PhylogeneticForest::get_sample_mutations(const std::string& sample_name,
+                                         const bool& with_germinal) const
 {
+    // TODO: For memory reasons, we don't want to store a list of the genome
+    // mutations of all samples. This method will became deprecated, and it
+    // will be replaced by a less demanding alternative.
+
     using namespace Mutants::Evolutions;
 
     SampleGenomeMutations sample_mutations(sample_name, germline_mutations);
@@ -200,21 +382,23 @@ SampleGenomeMutations PhylogeneticForest::get_sample_mutations(const std::string
     const size_t sample_idx = find_sample_index(get_samples(), sample_name);
 
     for (const auto& cell_id : get_samples()[sample_idx].get_cell_ids()) {
-        sample_mutations.mutations.push_back(leaves_mutations.at(cell_id));
+        auto cell_mutations = std::make_shared<CellGenomeMutations>();
+        *cell_mutations = get_cell_mutations(cell_id, with_germinal);
+        sample_mutations.mutations.push_back(cell_mutations);
     }
 
     return sample_mutations;
 }
 
 std::map<Mutants::CellId, MutationList>
-PhylogeneticForest::get_preneoplastic_mutations() const
+PhylogeneticForest::get_pre_neoplastic_mutations() const
 {
     std::map<Mutants::CellId, MutationList> pnp_mutations;
 
     for (const auto& root: get_roots()) {
-        auto it = novel_mutations.find(root.cell_id);
+        auto it = arising_mutations.find(root.cell_id);
 
-        if (it != novel_mutations.end()) {
+        if (it != arising_mutations.end()) {
             MutationList root_mutations;
 
             for (auto mut_it = it->second.begin(); mut_it != it->second.end();
@@ -225,7 +409,7 @@ PhylogeneticForest::get_preneoplastic_mutations() const
                     {
                         const auto& mutation = mut_it.get_last_SID();
 
-                        if (mutation.nature == SID::PRENEOPLASTIC) {
+                        if (mutation.nature == SID::PRE_NEOPLASTIC) {
                             root_mutations.insert(mutation);
                         }
                         break;
@@ -234,7 +418,7 @@ PhylogeneticForest::get_preneoplastic_mutations() const
                     {
                         const auto& mutation = mut_it.get_last_CNA();
 
-                        if (mutation.nature == SID::PRENEOPLASTIC) {
+                        if (mutation.nature == SID::PRE_NEOPLASTIC) {
                             root_mutations.insert(mutation);
                         }
                         break;
@@ -252,12 +436,12 @@ PhylogeneticForest::get_preneoplastic_mutations() const
 }
 
 SampleGenomeMutations PhylogeneticForest::get_normal_sample(const std::string& name,
-                                                            const bool& with_preneoplastic) const
+                                                            const bool& with_pre_neoplastic) const
 {
     SampleGenomeMutations sample(name, germline_mutations);
 
-    if (with_preneoplastic) {
-        for (auto& [cell_id, cell_genome] : get_normal_genomes(with_preneoplastic)) {
+    if (with_pre_neoplastic) {
+        for (auto& [cell_id, cell_genome] : get_normal_genomes(with_pre_neoplastic)) {
             auto genome = std::make_shared<CellGenomeMutations>();
 
             std::swap(cell_genome, *genome);
@@ -272,39 +456,14 @@ SampleGenomeMutations PhylogeneticForest::get_normal_sample(const std::string& n
 }
 
 std::map<Mutants::CellId, CellGenomeMutations>
-PhylogeneticForest::get_normal_genomes(const bool& with_preneoplastic) const
+PhylogeneticForest::get_normal_genomes(const bool& with_pre_neoplastic) const
 {
     std::map<Mutants::CellId, CellGenomeMutations> normal_genomes;
 
-    if (with_preneoplastic) {
-        for (const auto& [cell_id, pnp_mutations] : get_preneoplastic_mutations()) {
+    if (with_pre_neoplastic) {
+        for (const auto& [cell_id, pnp_mutations] : get_pre_neoplastic_mutations()) {
             auto cell_genome = CellGenomeMutations(germline_mutations->copy_structure());
-            for (auto mut_it = pnp_mutations.begin(); mut_it != pnp_mutations.end();
-                ++mut_it) {
-
-                switch(mut_it.get_type()) {
-                    case MutationList::SID_TURN:
-                    {
-                        const auto& mutation = mut_it.get_last_SID();
-
-                        cell_genome.apply(mutation);
-                        break;
-                    }
-                    case MutationList::CNA_TURN:
-                    {
-                        const auto& mutation = mut_it.get_last_CNA();
-
-                        cell_genome.apply(mutation);
-                        break;
-                    }
-                    case MutationList::WGD_TURN:
-                    {
-                        cell_genome.duplicate_alleles();
-                    }
-                    default:
-                        break;
-                }
-            }
+            cell_genome.apply(pnp_mutations);
 
             normal_genomes.insert({cell_id, std::move(cell_genome)});
         }
@@ -323,8 +482,8 @@ PhylogeneticForest::get_CNA_break_points() const
 {
     std::map<ChromosomeId, std::set<ChrPosition>> b_points;
 
-    for (const auto& [cell_id, cell_ptr] : get_leaves_mutations()) {
-        for (const auto& [chr_id, cb_points] : cell_ptr->get_CNA_break_points()) {
+    for (const auto& leaf_mutations : get_leaf_mutation_tour()) {
+        for (const auto& [chr_id, cb_points] : leaf_mutations.get_CNA_break_points()) {
             auto& chr_b_points = b_points[chr_id];
             for (const auto& cb_point : cb_points) {
                 chr_b_points.insert(cb_point);
@@ -356,8 +515,8 @@ PhylogeneticForest::get_allelic_count(const size_t& min_allelic_size) const
 
     PhylogeneticForest::AllelicCount allelic_count;
 
-    for (const auto& [cell_id, mutations] : leaves_mutations) {
-        auto allelic_map = mutations->get_allelic_map(b_points, min_allelic_size);
+    for (const auto& leaf_mutations : get_leaf_mutation_tour()) {
+        auto allelic_map = leaf_mutations.get_allelic_map(b_points, min_allelic_size);
 
         update_allelic_count_on(allelic_count, allelic_map);
     }
@@ -374,14 +533,9 @@ PhylogeneticForest::get_allelic_count(const std::list<Mutants::CellId>& cell_ids
     PhylogeneticForest::AllelicCount allelic_count;
 
     for (const auto& cell_id : cell_ids) {
-        auto cell_it = leaves_mutations.find(cell_id);
-        if (cell_it == leaves_mutations.end()) {
-            throw std::domain_error("The cell "+std::to_string(cell_id)
-                                    + " is not a leaf of the phylogenetic"
-                                    + "forest.");
-        }
+        const auto cell_mutations = get_cell_mutations(cell_id);
 
-        auto allelic_map = cell_it->second->get_allelic_map(b_points, min_allelic_size);
+        auto allelic_map = cell_mutations.get_allelic_map(b_points, min_allelic_size);
 
         update_allelic_count_on(allelic_count, allelic_map);
     }
@@ -406,11 +560,11 @@ PhylogeneticForest::get_allelic_count(const std::string& sample_name,
 
 void PhylogeneticForest::clear()
 {
-    DescendantsForest::clear();
-    leaves_mutations.clear();
-    novel_mutations.clear();
+    arising_mutations.clear();
     SID_first_cells.clear();
     CNA_first_cells.clear();
+    sample_statistics.clear();
+    DescendantsForest::clear();
 }
 
 }   // Mutants

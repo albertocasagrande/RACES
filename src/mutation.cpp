@@ -2,8 +2,8 @@
  * @file mutation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implement a general class for mutations
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-09-21
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -57,7 +57,7 @@ std::string Mutation::get_nature_description(const Mutation::Nature& nature)
         return "driver";
       case Mutation::Nature::PASSENGER:
         return "passenger";
-      case Mutation::Nature::PRENEOPLASTIC:
+      case Mutation::Nature::PRE_NEOPLASTIC:
         return "pre-neoplastic";
       case Mutation::Nature::GERMINAL:
         return "germinal";
