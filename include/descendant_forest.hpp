@@ -2,10 +2,10 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 1.1
- * @date 2024-06-11
+ * @version 1.2
+ * @date 2025-09-21
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -56,7 +56,7 @@ class DescendantsForest
     /**
      * @brief Species data
      *
-     * This structure privatly stores species data.
+     * This structure privately stores species data.
      */
     struct SpeciesData
     {
@@ -584,9 +584,28 @@ public:
     /**
      * @brief Get the forest roots
      *
-     * @return std::vector<const_node>
+     * @return a vector containing constant nodes referring to
+     *      forest roots
      */
     std::vector<const_node> get_roots() const;
+
+    /**
+     * @brief Get the number of forest leaves
+     *
+     * @return the number of forest leaves
+     */
+    inline size_t num_of_leaves() const
+    {
+        return coming_from.size();
+    }
+
+    /**
+     * @brief Get the forest leaves
+     *
+     * @return a vector containing constant nodes referring to
+     *      forest leaves
+     */
+    std::vector<const_node> get_leaves() const;
 
     /**
      * @brief Get the forest roots
@@ -653,7 +672,7 @@ public:
      * @brief Check whether a cell is represented by a forest leaf
      *
      * @param cell_id is a cell identifier
-     * @return `true` if and only if `cell_id` is the indentifier of a cell represented
+     * @return `true` if and only if `cell_id` is the identifier of a cell represented
      *      by one of the forest leaves
      */
     bool is_leaf(const CellId& cell_id) const;
