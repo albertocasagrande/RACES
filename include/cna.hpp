@@ -2,8 +2,8 @@
  * @file cna.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class for copy number alterations
- * @version 1.2
- * @date 2025-07-09
+ * @version 1.3
+ * @date 2025-09-21
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -57,7 +57,6 @@ struct CNA : public Mutation
     using Length = GenomicRegion::Length;
 
     Length length;      //!< The CNA length
-    //GenomicRegion region; //!< CNA region
     AlleleId source;    //!< source allele id
     AlleleId dest;      //!< destination allele id
     Type type;          //!< amplification/deletion flag

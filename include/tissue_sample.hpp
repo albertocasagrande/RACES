@@ -2,10 +2,10 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-09-21
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -76,7 +76,7 @@ public:
      *
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumour_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumour cells in
      *      the bounding box
      */
     TissueSample(const RACES::Time& time,
@@ -89,7 +89,7 @@ public:
      * @param name is the sample name
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumour_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumour cells in
      *      the bounding box
      */
     TissueSample(const std::string& name, const RACES::Time& time,
@@ -101,7 +101,7 @@ public:
      *
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumour_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumour cells in
      *      the bounding box
      * @param cell_ids is a list of the identifiers of the sample cells
      */
@@ -116,7 +116,7 @@ public:
      * @param name is the sample name
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
-     * @param tumour_cells_in_bbox is the number of tumeral cells in
+     * @param tumour_cells_in_bbox is the number of tumour cells in
      *      the bounding box
      * @param cell_ids is a list of the identifiers of the sample cells
      */
