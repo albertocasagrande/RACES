@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 1.2
- * @date 2025-02-20
+ * @version 1.3
+ * @date 2025-09-23
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -54,8 +54,8 @@ Simulation::AddedCell::AddedCell(const SpeciesId& species, const PositionInTissu
 
 Simulation::Simulation(int random_seed):
     logger(), last_snapshot_time(system_clock::now()), secs_between_snapshots(0),
-    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(false),
-    storage_enabled(true)
+    time(0), next_cell_id(Cell::first_tumour_cell_id()), death_activation_level(1),
+    duplicate_internal_cells(false), storage_enabled(true)
 {
     random_gen.seed(random_seed);
 
@@ -65,8 +65,8 @@ Simulation::Simulation(int random_seed):
 
 Simulation::Simulation(const std::filesystem::path& log_directory, int random_seed):
     logger(log_directory), last_snapshot_time(system_clock::now()), secs_between_snapshots(0),
-    time(0), next_cell_id(0), death_activation_level(1), duplicate_internal_cells(false),
-    storage_enabled(true)
+    time(0), next_cell_id(Cell::first_tumour_cell_id()), death_activation_level(1),
+    duplicate_internal_cells(false), storage_enabled(true)
 {
     random_gen.seed(random_seed);
 
@@ -159,7 +159,8 @@ void select_liveness_event_in_species(CellEvent& event, Tissue& tissue,
 
 template<typename GENERATOR_TYPE>
 void select_epigenetic_event_in_species(CellEvent& event, Tissue& tissue, const Species& species,
-                                        std::uniform_real_distribution<double>& uni_dist, GENERATOR_TYPE& random_gen)
+                                        std::uniform_real_distribution<double>& uni_dist,
+                                        GENERATOR_TYPE& random_gen)
 {
     const auto num_of_cells = species.num_of_cells_available_for(CellEventType::EPIGENETIC_SWITCH);
 
@@ -391,11 +392,11 @@ const CellInTissue& Simulation::choose_border_cell_in(const MutantId& mutant_id,
 
     for (const auto& [m_name, m_id]: mutant_name2id) {
         if (m_id == mutant_id) {
-            throw std::runtime_error("No border cells avaiable for \"" + m_name + "\".");
+            throw std::runtime_error("No border cells available for \"" + m_name + "\".");
         }
     }
 
-    throw std::runtime_error("No border cells avaiable for unknown mutant (id: "
+    throw std::runtime_error("No border cells available for unknown mutant (id: "
                              + std::to_string(mutant_id) + ").");
 }
 
@@ -585,7 +586,7 @@ CellEvent Simulation::select_next_cell_event()
     }
 
     if (event.delay == std::numeric_limits<Time>::max()) {
-        throw std::runtime_error("No event available for the selecton.");
+        throw std::runtime_error("No event available for the selection.");
     }
 
     return event;
@@ -978,7 +979,7 @@ void Simulation::reset()
     statistics = TissueStatistics();
     time = 0;
 
-    next_cell_id = 0;
+    next_cell_id = Cell::first_tumour_cell_id();
 
     death_enabled.clear();
 

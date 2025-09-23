@@ -2,10 +2,10 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 1.1
- * @date 2024-06-18
+ * @version 1.2
+ * @date 2025-09-23
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -68,7 +68,7 @@ struct BinaryLogger : public BasicLogger
 
     /**
      * @brief Get the cell file information file path
-     * 
+     *
      * @param log_directory is the log directory path
      * @return the cell file information file path
      */
@@ -80,7 +80,7 @@ struct BinaryLogger : public BasicLogger
 
     /**
      * @brief Get the cell file information file path
-     * 
+     *
      * @return the cell file information file path
      */
     inline std::filesystem::path get_cell_file_info_path() const
@@ -90,8 +90,8 @@ struct BinaryLogger : public BasicLogger
 
     /**
      * @brief Save the cell file infomation file
-     * 
-     * This methdo save the cell file information file
+     *
+     * This method save the cell file information file
      */
     void save_cell_file_info() const;
 
@@ -124,14 +124,16 @@ public:
         Archive::Binary::In cell_archive;   //!< stream of the currently open cell archive
 
         /**
-         * @brief Get the position in the archives
+         * @brief Get the position of a cell in the log archive
          *
-         * @param cell_id
-         * @return std::streampos
+         * @param cell_id is the identifier of a cell
+         * @return the position in the log archive of the cell having
+         *      `cell_id` as identifier
          */
         inline std::streampos get_cell_pos(const CellId& cell_id) const
         {
-            return (cell_id % cells_per_archive)*bytes_per_cell;
+            return ((cell_id-Cell::first_tumour_cell_id()) % cells_per_archive)
+                        *bytes_per_cell;
         }
 
     public:

@@ -2,10 +2,10 @@
  * @file cell.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements cell representation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-09-23
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -40,7 +40,7 @@ namespace Mutants
 {
 
 Cell::Cell():
-    Cell(0, WILD_TYPE_SPECIES, 0, 0)
+    Cell(EMBRYO_CELL_ID, WILD_TYPE_SPECIES, EMBRYO_CELL_ID, 0)
 {}
 
 Cell::Cell(const CellId& id, const SpeciesId species_id):

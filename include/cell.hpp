@@ -2,10 +2,10 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-09-23
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -55,6 +55,13 @@ class Simulation;
  * @brief The cell identifier type
  */
 using CellId = uint64_t;
+
+/**
+ * @brief An identifier for the embryo cell id
+ *
+ * This macro represents the identifier of the embryo cell.
+ */
+#define EMBRYO_CELL_ID 0
 
 /**
  * @brief A class representing cells
@@ -151,6 +158,16 @@ public:
     inline const SpeciesId& get_species_id() const
     {
         return species_id;
+    }
+
+    /**
+     * @brief Get the first tumour cell identifier
+     *available
+     * @return the first tumour cell identifier
+     */
+    static inline constexpr CellId first_tumour_cell_id()
+    {
+        return EMBRYO_CELL_ID + 1;
     }
 
     /**
