@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.7
- * @date 2025-09-21
+ * @version 1.8
+ * @date 2025-09-24
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -105,9 +105,12 @@ public:
 private:
     using CellIdSet = std::set<Mutants::CellId>;
 
+    using MutationsPerCell = std::map<Mutants::CellId, MutationList>;
+
     using TissueSampleId = Mutants::Evolutions::TissueSampleId;
 
-    std::map<Mutants::CellId, MutationList> arising_mutations;      //!< The mutations arising in the forest cells
+    MutationsPerCell pre_neoplastic_mutations;   //!< The pre-neoplastic mutations per forest root
+    MutationsPerCell arising_mutations;          //!< The non-pre-neoplastic mutations arising in the forest cells
     std::map<SID, CellIdSet> SID_first_cells;      //!< A map associating each SID to the first cells in which it occurred
     std::map<CNA, CellIdSet> CNA_first_cells;      //!< A map associating each CNA to the first cells in which it occurred
 
@@ -136,13 +139,16 @@ public:
         /**
          * @brief Get the genome mutations of the cell represented by the node
          *
+         * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+         *      mutations
          * @param[in] with_germinal is a Boolean flag to add/avoid germinal mutations
          * @return a constant reference to the genome mutations of the cell
          *      represented by the node
          */
-        inline CellGenomeMutations cell_mutations(const bool& with_germinal=false) const
+        inline CellGenomeMutations cell_mutations(const bool& with_pre_neoplastic=true,
+                                                  const bool& with_germinal=false) const
         {
-            return forest->get_cell_mutations(get_id(), with_germinal);
+            return forest->get_cell_mutations(get_id(), with_pre_neoplastic, with_germinal);
         }
 
         /**
@@ -172,16 +178,50 @@ public:
          * @return a constant reference to the list of mutations arising in the
          *      cell represented by this node
          */
-        const MutationList& arising_mutations() const
+        inline const MutationList& arising_mutations() const
         {
             return forest->arising_mutations.at(get_id());
         }
+
+        /**
+         * @brief Get the pre-neoplastic mutations of the cell represented by this node
+         *
+         * This method returns the pre-neoplastic mutations arising in the cell represented
+         * by this node if this node is a root of the considered forest. Otherwise, it throws
+         * an `std::runtime_error` exception.
+         *
+         * @return a constant reference to the list of pre-neoplastic mutations arising
+         *      in the cell represented by this node
+         * @throw `std::runtime_error` if the current node is not a forest root
+         */
+        const MutationList& pre_neoplastic_mutations() const;
 
         friend class PhylogeneticForest;
     };
 
     class node : public Mutants::DescendantsForest::_node<PhylogeneticForest>
     {
+        /**
+         * @brief Add the current cell node as first cell occurrence for a SID
+         *
+         * @param[in] sid is the SID appearing for the first time in the current
+         *      node cell
+         */
+        inline void add_first_cell(const MutationSpec<SID>& sid)
+        {
+            get_forest().SID_first_cells[sid].insert(cell_id);
+        }
+
+        /**
+         * @brief Add the current cell node as first cell occurrence for a CNA
+         *
+         * @param[in] cna is the CNA appearing for the first time in the current
+         *      node cell
+         */
+        inline void add_first_cell(const CNA& cna)
+        {
+            get_forest().CNA_first_cells[cna].insert(cell_id);
+        }
     public:
         /**
          * @brief A constructor for a constant node
@@ -215,23 +255,30 @@ public:
         /**
          * @brief Add a newly introduced mutation
          *
-         * @param[in] mutation is a SID mutation that was introduced in the corresponding
-         *      cell and was not present in the cell parent
+         * @tparam MUTATION_TYPE is the type of mutation
+         * @param[in] mutation is a mutation that has appeared for the first time in the cell
+         *      corresponding to the current node
          */
-        void add_new_mutation(const MutationSpec<SID>& mutation);
-
-        /**
-         * @brief Add a newly introduced mutation
-         *
-         * @param[in] cna is a CNA that was introduced in the corresponding
-         *      cell and was not present in the cell parent
-         */
-        void add_new_mutation(const CNA& cna);
+        template<typename MUTATION_TYPE,
+                 std::enable_if_t<std::is_same_v<MUTATION_TYPE,MutationSpec<SID>>
+                                                 || std::is_same_v<MUTATION_TYPE,CNA>, bool> = true>
+        void add_new_mutation(const MUTATION_TYPE& mutation)
+        {
+            if (mutation.nature == Mutation::PRE_NEOPLASTIC) {
+                get_forest().pre_neoplastic_mutations[cell_id].insert(mutation);
+            } else {
+                get_forest().arising_mutations[cell_id].insert(mutation);
+            }
+            add_first_cell(mutation);
+        }
 
         /**
          * @brief Add the whole genome doubling to the node mutations
          */
-        void add_whole_genome_doubling();
+        inline void add_whole_genome_doubling()
+        {
+            get_forest().arising_mutations[cell_id].insert_WGD();
+        }
 
         /**
          * @brief Get the mutations arising in the cell represented by this node
@@ -239,7 +286,7 @@ public:
          * @return a constant reference to the list of mutations arising in the
          *      cell represented by this node
          */
-        const MutationList& arising_mutations() const
+        inline const MutationList& arising_mutations() const
         {
             return forest->arising_mutations.at(get_id());
         }
@@ -250,7 +297,7 @@ public:
          * @return a reference to the list of mutations arising in the
          *      cell represented by this node
          */
-        MutationList& arising_mutations()
+        inline MutationList& arising_mutations()
         {
             return forest->arising_mutations[get_id()];
         }
@@ -270,17 +317,21 @@ public:
     {
         PhylogeneticForest const* forest;   //!< A pointer to the forest
         bool only_leaves;       //!< A Boolean flag to enable/disable internal node visit
+        bool with_pre_neoplastic;   //!< A Boolean flag to add/avoid pre-neoplastic mutations
         bool with_germinal;     //!< A Boolean flag to add/avoid germline mutations
 
         /**
          * @brief Construct a new Genome Mutation Tour object
          *
-         * @param forest is a constant pointer to the forest
-         * @param only_leaves is a Boolean flag to enable/disable internal node visit
-         * @param with_germinal is Boolean flag to add/avoid germline mutations in the
+         * @param[in] forest is a constant pointer to the forest
+         * @param[in] only_leaves is a Boolean flag to enable/disable internal node visit
+         * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+         *      mutations
+         * @param[in] with_germinal is Boolean flag to add/avoid germline mutations in the
          *      produced genome mutations
          */
         GenomeMutationTour(const PhylogeneticForest* forest,
+                           const bool with_pre_neoplastic,
                            const bool only_leaves,
                            const bool with_germinal);
     public:
@@ -309,15 +360,18 @@ public:
             /**
              * @brief A constructor
              *
-             * @param forest is a constant pointer to the forest
-             * @param only_leaves is a Boolean flag to enable/disable internal node visit
-             * @param with_germinal is Boolean flag to add/avoid germline mutations in the
+             * @param[in] forest is a constant pointer to the forest
+             * @param[in] only_leaves is a Boolean flag to enable/disable internal node visit
+             * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+             *      mutations
+             * @param[in] with_germinal is Boolean flag to add/avoid germline mutations in the
              *      produced genome mutations
-             * @param begin is a Boolean flag to establish whether the new object is
+             * @param[in] begin is a Boolean flag to establish whether the new object is
              *      referring at the begining of the tour or at the end
              */
             const_iterator(const PhylogeneticForest* forest,
                            const bool& only_leaves,
+                           const bool& with_pre_neoplastic,
                            const bool& with_germinal,
                            const bool& begin=true);
         public:
@@ -372,7 +426,7 @@ public:
              * This method checks whether two `const_iterator` are
              * the same.
              *
-             * @param rhs is the right-hand side of the equality
+             * @param[in] rhs is the right-hand side of the equality
              * @return `true` if and only if this object and `rhs`
              *      iterates over the same tour and refer to the
              *      same node
@@ -384,7 +438,7 @@ public:
              *
              * This method checks whether two `const_iterator` differ.
              *
-             * @param rhs is the right-hand side of the inequality
+             * @param[in] rhs is the right-hand side of the inequality
              * @return `true` if and only if this object and `rhs`
              *      iterates over different tours or refer to different
              *      nodes
@@ -405,13 +459,16 @@ public:
         /**
          * @brief Construct a new Genome Mutation Tour object
          *
-         * @param forest is a constant reference to the forest
-         * @param only_leaves is a Boolean flag to enable/disable internal node visit
-         * @param with_germinal is Boolean flag to add/avoid germline mutations in the
+         * @param[in] forest is a constant reference to the forest
+         * @param[in] only_leaves is a Boolean flag to enable/disable internal node visit
+         * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+         *      mutations
+         * @param[in] with_germinal is Boolean flag to add/avoid germline mutations in the
          *      produced genome mutations
          */
         GenomeMutationTour(const PhylogeneticForest& forest,
                            const bool only_leaves,
+                           const bool with_pre_neoplastic,
                            const bool with_germinal);
 
         /**
@@ -422,6 +479,7 @@ public:
         inline GenomeMutationTour::const_iterator begin() const
         {
             return const_iterator{forest, only_leaves,
+                                  with_pre_neoplastic,
                                   with_germinal, true};
         }
 
@@ -433,6 +491,7 @@ public:
         inline GenomeMutationTour::const_iterator end() const
         {
             return const_iterator{forest, only_leaves,
+                                  with_pre_neoplastic,
                                   with_germinal, false};
         }
 
@@ -510,21 +569,27 @@ public:
      * @brief Get the genome mutations of a cell represented in the forest
      *
      * @param[in] cell_id is a cell identifier of a cell represented in the forest
+     * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+     *      mutations
      * @param[in] with_germinal is a Boolean flag to add/avoid germinal mutations
      * @return the genome mutations of the cell with identifier `cell_id`
      */
     CellGenomeMutations get_cell_mutations(const Mutants::CellId& cell_id,
+                                           const bool& with_pre_neoplastic=true,
                                            const bool& with_germinal=false) const;
 
     /**
      * @brief Get a tour over the genome mutations of the forest leaves
      *
+     * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+     *      mutations
      * @param[in] with_germinal is a Boolean flag to add/avoid germinal mutations
      * @return a tour over the genome mutations of the forest leaves
      */
-    inline GenomeMutationTour get_leaf_mutation_tour(const bool with_germinal=false) const
+    inline GenomeMutationTour get_leaf_mutation_tour(const bool with_pre_neoplastic=true,
+                                                     const bool with_germinal=false) const
     {
-        return GenomeMutationTour{this, true, with_germinal};
+        return GenomeMutationTour{this, true, with_pre_neoplastic, with_germinal};
     }
 
     /**
@@ -597,9 +662,13 @@ public:
     /**
      * @brief Get the pre-neoplastic mutations
      *
-     * @return A map of pre-neoplastic mutations grouped by forest root cell identifier.
+     * @return A constant reference to the map of pre-neoplastic mutations grouped by forest
+     *      root cell identifier
      */
-    std::map<Mutants::CellId, MutationList> get_pre_neoplastic_mutations() const;
+    inline const std::map<Mutants::CellId, MutationList>& get_pre_neoplastic_mutations() const
+    {
+        return pre_neoplastic_mutations;
+    }
 
     /**
      * @brief Build a sample containing normal cells
@@ -704,9 +773,10 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 3);
+        ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 4);
 
         archive & static_cast<const Mutants::DescendantsForest&>(*this)
+                & pre_neoplastic_mutations
                 & arising_mutations
                 & SID_first_cells
                 & CNA_first_cells
@@ -725,13 +795,14 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
     static PhylogeneticForest load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES Phylogenetic Forest", 3);
+        ARCHIVE::read_header(archive, "RACES Phylogenetic Forest", 4);
 
         PhylogeneticForest forest;
 
         forest.germline_mutations = std::make_shared<GenomeMutations>();
 
         archive & static_cast<Mutants::DescendantsForest&>(forest)
+                & forest.pre_neoplastic_mutations
                 & forest.arising_mutations
                 & forest.SID_first_cells
                 & forest.CNA_first_cells

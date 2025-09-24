@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.27
- * @date 2025-09-21
+ * @version 1.28
+ * @date 2025-09-24
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -1042,9 +1042,7 @@ class MutationEngine
         const size_t context_stack_size = context_stack.size();
         const size_t rs_stack_size = rs_stack.size();
 
-        if (!node.is_root()) {
-            node.arising_mutations() = MutationList();
-        }
+        node.arising_mutations() = MutationList();
 
         place_driver_mutations(node, node_mutations, driver_mutations);
 
@@ -1762,7 +1760,7 @@ public:
         for (auto& root: forest.get_roots()) {
             GenomeMutations root_mutations = wild_type_structure;
 
-            forest.arising_mutations[root.get_id()] = MutationList();
+            forest.pre_neoplastic_mutations[root.get_id()] = MutationList();
 
             // place pre-neoplastic mutations
             place_SIDs<SBSType>(&root, root_mutations, pre_neoplastic_SNV_signature_name,

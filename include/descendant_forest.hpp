@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 1.2
- * @date 2025-09-21
+ * @version 1.3
+ * @date 2025-09-24
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -708,11 +708,11 @@ public:
     std::string get_species_name(const SpeciesId& species_id) const;
 
     /**
-     * @brief Get the forest root cells
+     * @brief Get the forest root cell identifiers
      *
-     * @return a constant reference to the forest root cells
+     * @return a constant reference to the forest root cell identifiers
      */
-    inline const std::set<CellId>& get_root_cells() const
+    inline const std::set<CellId>& get_root_cell_ids() const
     {
         return roots;
     }
