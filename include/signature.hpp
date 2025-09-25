@@ -2,10 +2,10 @@
  * @file signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational signatures
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-09-25
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -32,8 +32,13 @@
 #define __RACES_SIGNATURE__
 
 #include <string>
+#include <vector>
+#include <random>   // std::discrete_distribution
 #include <map>
 #include <set>
+#include <ranges>    // std::views::keys and std::views::values
+#include <initializer_list>
+
 #include <istream>
 #include <sstream>
 
@@ -67,7 +72,8 @@ class Signature;
 template<typename MUTATION_TYPE>
 class SignatureExprResult
 {
-    std::map<MUTATION_TYPE, double> value_map; //!< the mutation type-value map
+    std::map<MUTATION_TYPE, size_t> pos_map; //!< the mutation type-position map
+    std::vector<double> probabilities;    //!< the probability distribution
 
     /**
      * @brief The constructor
@@ -75,38 +81,32 @@ class SignatureExprResult
      * This constructor is private and it is meant to be exclusively called by
      * `Signature`'s methods.
      *
-     * @param value_map is a mutation type-value map
+     * @param[in] pos_map is the mutation type-position map
+     * @param[in, out] probabilities is the vector of the probability distribution
      */
-    SignatureExprResult(const std::map<MUTATION_TYPE, double>& value_map):
-            value_map(value_map)
-    {}
+    SignatureExprResult(const std::vector<MUTATION_TYPE>& mutations,
+                        std::vector<double>&& probabilities):
+            pos_map{}, probabilities{std::move(probabilities)}
+    {
+        size_t pos{0};
+        for (const auto& mutation : mutations) {
+            pos_map.emplace(mutation, pos++);
+        }
+    }
 public:
+
     /**
      * @brief The empty constructor
      */
-    SignatureExprResult():
-            value_map()
+    SignatureExprResult<MUTATION_TYPE>():
+        pos_map{}, probabilities{}
     {}
-
-    /**
-     * @brief Cast to `Signature<MUTATION_TYPE>`
-     *
-     * This method tries to cast a signature expression to a
-     * signature. When the expression does not represent a
-     * probability distribution a `std::domain_error` is thrown.
-     *
-     * @return the corresponding `Signature<MUTATION_TYPE>` object
-     */
-    inline operator Signature<MUTATION_TYPE>()
-    {
-        return Signature<MUTATION_TYPE>(value_map);
-    }
 
     /**
      * @brief Inplace multiply by an arithmetic value
      *
      * @tparam T is the type of the multiplicand
-     * @param value is the multiplicand
+     * @param[in] value is the multiplicand
      * @return a reference to the updated object
      */
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
@@ -121,8 +121,8 @@ public:
             throw std::domain_error(oss.str());
         }
 
-        for (auto& [type, type_value]: value_map) {
-            type_value *= value;
+        for (auto& prob: probabilities) {
+            prob *= value;
         }
 
         return *this;
@@ -131,22 +131,25 @@ public:
     /**
      * @brief Inplace add a signature expression value
      *
-     * @param expression_value is a signature expression value
+     * @param[in] expression_value is a signature expression value
      * @return a reference to the updated object
      */
     SignatureExprResult<MUTATION_TYPE>&
-    operator+(SignatureExprResult<MUTATION_TYPE>&& expression_value)
+    operator+(const SignatureExprResult<MUTATION_TYPE>& expression_value)
     {
-        for (auto& [type, prob]: value_map) {
-            auto it = expression_value.value_map.find(type);
-            if (it != expression_value.value_map.end()) {
-                prob += expression_value.value_map[type];
+        for (auto& [type, pos]: pos_map) {
+            auto it = expression_value.pos_map.find(type);
+            if (it != expression_value.pos_map.end()) {
+                const auto& ex_pos = it->second;
+                probabilities[pos] += expression_value.probabilities[ex_pos];
             }
         }
 
-        for (const auto& [type, prob]: expression_value.value_map) {
-            if (value_map.count(type)==0) {
-                value_map[type] = prob;
+        for (const auto& [type, pos]: expression_value.pos_map) {
+            if (pos_map.count(type)==0) {
+                pos_map.emplace(type, probabilities.size());
+
+                probabilities.push_back(expression_value.probabilities[pos]);
             }
         }
 
@@ -156,26 +159,67 @@ public:
     /**
      * @brief Inplace add a signature
      *
-     * @param signature is a signature
+     * @param[in] signature is a signature
      * @return a reference to the updated object
      */
     SignatureExprResult<MUTATION_TYPE>& operator+(const Signature<MUTATION_TYPE>& signature)
     {
-        for (auto& [type, prob]: value_map) {
-            prob += signature(type);
-        }
+        const auto sign_prob = signature.probabilities();
 
-        for (const auto& [type, prob]: signature) {
-            if (value_map.count(type)==0) {
-                value_map[type] = prob;
+        auto prob_it = sign_prob;
+        for (const auto& mutation: signature.domain()) {
+            auto found = pos_map.find(mutation);
+
+            if (found == pos_map.end()) {
+                pos_map.emplace(mutation, probabilities.size());
+
+                probabilities.push_back(*prob_it);
+            } else {
+                probabilities[found->second] += *prob_it;
             }
+
+            ++prob_it;
         }
 
         return *this;
     }
 
-    template<typename MUTATION_TYPE2>
-    friend class Signature;
+    /**
+     * @brief Cast to `std::map<MUTATION_TYPE, double>`
+     *
+     * This method tries to cast a signature expression to a
+     * signature map.
+     *
+     * @return the corresponding `std::map<MUTATION_TYPE, double>` object
+     */
+    operator std::map<MUTATION_TYPE, double>()
+    {
+        std::map<MUTATION_TYPE, double> dist_map;
+
+        for (const auto& [type, pos] : pos_map) {
+            dist_map.emplace(type, probabilities[pos]);
+        }
+
+        return dist_map;
+    }
+
+    /**
+     * @brief Cast to `Signature<MUTATION_TYPE>`
+     *
+     * This method tries to cast a signature expression to a
+     * signature. When the expression does not represent a
+     * probability distribution a `std::domain_error` is thrown.
+     *
+     * @return the corresponding `Signature<MUTATION_TYPE>` object
+     */
+    inline operator Signature<MUTATION_TYPE>()
+    {
+        const auto dist_map = static_cast<std::map<MUTATION_TYPE, double>>(*this);
+
+        return Signature<MUTATION_TYPE>(dist_map);
+    }
+
+    friend class Signature<MUTATION_TYPE>;
 };
 
 /**
@@ -189,13 +233,15 @@ public:
 template<typename MUTATION_TYPE>
 class Signature
 {
-    std::map<MUTATION_TYPE, double> dist_map; //!< the signature probability distribution map
+    std::vector<MUTATION_TYPE> mutations; //!< the mutation types
+
+    std::discrete_distribution<size_t> dist;    //!< the discrete distribution
 
     /**
      * @brief Check whether two value are about the same
      *
-     * @param x is a value
-     * @param y is a value
+     * @param[in] x is a value
+     * @param[in] y is a value
      * @return `true` if and only if `x` and `y` differ for an establish value at most
      */
     static inline bool is_about(const double& x, const double& y)
@@ -206,8 +252,8 @@ class Signature
     /**
      * @brief Read a row of a file representing signatures
      *
-     * @param in is the input stream
-     * @param delimiter is the character delimiting the columns
+     * @param[in, out] in is the input stream
+     * @param[in] delimiter is the character delimiting the columns
      * @return the vector of the field in the read row
      */
     static std::vector<std::string> read_row(std::istream& in, const char& delimiter)
@@ -236,8 +282,8 @@ class Signature
      * This method read a map name-(mutation type-probability map) from a
      * stream.
      *
-     * @param in is the input stream
-     * @param delimiter is the character delimiting the columns
+     * @param[in, out] in is the input stream
+     * @param[in] delimiter is the character delimiting the columns
      * @return a map name-(mutation type-probability map)
      */
     static std::map<std::string, std::map<MUTATION_TYPE, double>>
@@ -277,21 +323,22 @@ public:
      * @brief The empty constructor
      */
     Signature():
-        dist_map()
-    {
-        dist_map[MUTATION_TYPE()] = 1;
-    }
+        mutations{1}, dist{std::initializer_list<double>{1.0}}
+    {}
 
     /**
      * @brief A constructor
      *
-     * @param distribution is a mutation type-value map representing a distribution
+     * @param[in] distribution is a mutation type-value map representing a distribution
      */
     explicit Signature(const std::map<MUTATION_TYPE, double>& distribution):
-        dist_map(distribution)
+        mutations{std::views::keys(distribution).begin(),
+                  std::views::keys(distribution).end()},
+        dist{std::views::values(distribution).begin(),
+             std::views::values(distribution).end()}
     {
-        double partial = 0;
-        for (const auto& [type, prob]: dist_map) {
+        double partial{0};
+        for (const auto& [type, prob]: distribution) {
             if (prob<0 || prob>1) {
                 std::ostringstream oss;
 
@@ -311,69 +358,74 @@ public:
     }
 
     /**
-     * @brief Get the initial constant iterator
+     * @brief Get the signature domain
      *
-     * @return the initial constant iterator
+     * @return the signature domain
      */
-    inline const_iterator begin() const
+    inline const std::vector<MUTATION_TYPE>& domain() const
     {
-        return dist_map.begin();
+        return mutations;
     }
 
     /**
-     * @brief Get the final constant iterator
+     * @brief Get the signature probabilities
      *
-     * @return the final constant iterator
+     * @return the signature probabilities
      */
-    inline const_iterator end() const
+    inline std::vector<double> probabilities() const
     {
-        return dist_map.end();
+        return dist.probabilities();
     }
 
     /**
-     * @brief Get the probability associated to a mutation type
+     * @brief Choose a random mutation type
      *
-     * @param type is the mutation type whose probability is aimed
-     * @return the probability of `type`
+     * @tparam RANDOM_GENERATOR is a random number generator type
+     * @param[in, out] generator is a random number generator
+     * @return a random mutation type according to the signature distribution
      */
-    double operator()(const MUTATION_TYPE& type) const
+    template<typename RANDOM_GENERATOR>
+    inline const MUTATION_TYPE& choose(RANDOM_GENERATOR& generator)
     {
-        auto it = dist_map.find(type);
-        if (it != dist_map.end()) {
-            return it->second;
-        }
+        return mutations[dist(generator)];
+    }
 
-        return 0;
+    /**
+     * @brief Reset the signature probability distribution
+     */
+    inline void reset()
+    {
+        dist.reset();
     }
 
     /**
      * @brief Multiply by an arithmetic value
      *
      * @tparam T is the type of the multiplicand
-     * @param value is the multiplicand
+     * @param[in] value is the multiplicand
      * @return the resulting signature expression value
      */
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
     inline SignatureExprResult<MUTATION_TYPE> operator*(const T& value) const
     {
-        return SignatureExprResult<MUTATION_TYPE>(dist_map) * value;
+        return SignatureExprResult<MUTATION_TYPE>(mutations, probabilities()) * value;
     }
 
     /**
      * @brief Add a signature
      *
-     * @param signature is a signature
+     * @param[in] signature is a signature
      * @return the resulting signature expression value
      */
     inline SignatureExprResult<MUTATION_TYPE> operator+(const Signature& signature) const
     {
-        return SignatureExprResult<MUTATION_TYPE>(dist_map) + signature;
+        return SignatureExprResult<MUTATION_TYPE>(mutations, probabilities()) + signature;
     }
 
     /**
      * @brief Read signature from a input stream
      *
-     * @param in is the input stream
+     * @param[in, out] in is the input stream
      * @return a map that associates the name of the signatures in the file
      *         and the corresponding signature.
      */
@@ -404,8 +456,8 @@ public:
     /**
      * @brief Read signature from a input stream
      *
-     * @param in is the input stream
-     * @param signature_names is the set of the requested signature
+     * @param[in, out] in is the input stream
+     * @param[in] signature_names is the set of the requested signature
      * @return a map that associates the name of the signatures in the file that
      *         match `signature_names` and the corresponding signature.
      */
@@ -426,6 +478,8 @@ public:
 
         return result;
     }
+
+    friend class SignatureExprResult<MUTATION_TYPE>;
 };
 
 /**
@@ -433,8 +487,8 @@ public:
  *
  * @tparam MUTATION_TYPE is the mutation type
  * @tparam T is the type of the arithmetic value
- * @param value is the arithmetic value
- * @param signature
+ * @param[in] value is the arithmetic value
+ * @param[in] signature
  * @return a `SignatureExprResult<MUTATION_TYPE>` object representing the
  *         the multiplication result
  */

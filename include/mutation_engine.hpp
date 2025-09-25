@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendants forest
- * @version 1.28
- * @date 2025-09-24
+ * @version 1.29
+ * @date 2025-09-25
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -103,9 +103,9 @@ public:
     /**
      * @brief Record the SIDs of a cell genome
      *
-     * @param sample_name is the name of the sample from which the cell has
+     * @param[in] sample_name is the name of the sample from which the cell has
      *          been extracted
-     * @param cell_mutations are the mutations of the cell whose statistics
+     * @param[in] cell_mutations are the mutations of the cell whose statistics
      *          is about to be recorded
      * @return a reference to the updated object
      */
@@ -140,8 +140,8 @@ public:
     /**
      * @brief Write in a stream a table summarizing SID statistics
      *
-     * @param os is the output stream
-     * @param separator is the column separator
+     * @param[in, out] os is the output stream
+     * @param[in] separator is the column separator
      * @return a reference to the updated stream
      */
     std::ostream& write_SIDs_table(std::ostream& os, const char separator='\t');
@@ -149,8 +149,8 @@ public:
     /**
      * @brief Write in a stream a table summarizing CNA statistics
      *
-     * @param os is the output stream
-     * @param separator is the column separator
+     * @param[in, out] os is the output stream
+     * @param[in] separator is the column separator
      * @return a reference to the updated stream
      */
     std::ostream& write_CNAs_table(std::ostream& os, const char separator='\t');
@@ -180,49 +180,23 @@ template<typename GENOME_WIDE_POSITION = uint32_t, typename RANDOM_GENERATOR = s
 class MutationEngine
 {
     /**
-     * @brief The inverse cumulative signature
-     *
-     * The mutational signatures are the probability distributions of mutation
-     * types. If we arbitrary assign an order to mutation type, given a mutation
-     * and a mutation type MUTATION_TYPE, we can compute the probability of
-     * randomly choosing a mutation type smaller or equal to MUTATION_TYPE.
-     * The inverse cumulative signature associates such a probability to
-     * MUTATION_TYPE itself for all the mutation types MUTATION_TYPE.
+     * @brief A collection of signatures
      *
      * @tparam MUTATION_TYPE is a mutation type
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    using InverseCumulativeSignature = std::map<double, MUTATION_TYPE>;
+    using Signatures = std::map<std::string, Signature<MUTATION_TYPE>>;
 
     /**
-     * @brief A collection of inverse cumulative signatures
-     *
-     * @tparam MUTATION_TYPE is a mutation type
+     * @brief A collection of SBS signatures
      */
-    template<typename MUTATION_TYPE,
-             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    using InverseCumulativeSignatures = std::map<std::string, InverseCumulativeSignature<MUTATION_TYPE>>;
+    using SBSSignatures = Signatures<SBSType>;
 
     /**
-     * @brief The SBS inverse cumulative signature type
+     * @brief A collection of ID signatures
      */
-    using InverseCumulativeSBS = InverseCumulativeSignature<SBSType>;
-
-    /**
-     * @brief The ID inverse cumulative signature type
-     */
-    using InverseCumulativeID = InverseCumulativeSignature<IDType>;
-
-    /**
-     * @brief A collection of SBS inverse cumulative signatures
-     */
-    using InverseCumulativeSBSs = InverseCumulativeSignatures<SBSType>;
-
-    /**
-     * @brief A collection of ID inverse cumulative signatures
-     */
-    using InverseCumulativeIDs = InverseCumulativeSignatures<IDType>;
+    using IDSignatures = Signatures<IDType>;
 
     /**
      * @brief The stack of contexts removed from the context index
@@ -243,8 +217,8 @@ class MutationEngine
     IDTypeStack rs_stack;   //!< the stack of the repetition removed from `rs_index`
 
     std::map<Time, MutationalExposure> timed_exposures[2];  //!< the timed exposures
-    InverseCumulativeSBSs inv_cumulative_SBSs;              //!< the inverse cumulative SBS
-    InverseCumulativeIDs inv_cumulative_IDs;                //!< the inverse cumulative INDEL
+    SBSSignatures SBS_signatures;   //!< the SBS signatures
+    IDSignatures ID_signatures;     //!< the INDEL signatures
 
     MutationalProperties mutational_properties;  //!< the species mutational properties
 
@@ -264,7 +238,7 @@ class MutationEngine
      * @brief Select a random value in a set
      *
      * @tparam T is the type of objects in the set
-     * @param values is a list of values from which a random value must be selected
+     * @param[in] values is a list of values from which a random value must be selected
      * @return a random value among those in `values`
      */
     template<typename T>
@@ -284,44 +258,13 @@ class MutationEngine
     }
 
     /**
-     * @brief Compute the inverse cumulative signature
-
-     * The mutational signatures are the probability distributions of mutation
-     * types. If we arbitrary assign an order to mutation type, given a mutation
-     * and a mutation type T, we can compute the probability of randomly choosing
-     * a mutation type smaller or equal to T. The inverse cumulative signature
-     * associates such a probability to T itself for all the mutation types T.
-     *
-     * @param signature is a mutation signature
-     * @return the inverse cumulative signature of `signature`
-     */
-    template<typename MUTATION_TYPE,
-             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    static InverseCumulativeSignature<MUTATION_TYPE>
-    get_inv_cumulative_signature(const Signature<MUTATION_TYPE>& signature)
-    {
-        InverseCumulativeSignature<MUTATION_TYPE> inv_cumulative;
-        double cumulative_prob = 0;
-        for (const auto& [m_type, prob]: signature) {
-            if (prob != 0) {
-                cumulative_prob += prob;
-
-                inv_cumulative.insert({cumulative_prob, m_type});
-            }
-        }
-
-        return inv_cumulative;
-    }
-
-    /**
      * @brief Get the exposure according to a cell birth time
      *
      * The active exposure depend on the simulation time. It must be selected in
      * agreement with cell birth times.
      *
      * @tparam MUTATION_TYPE is the type of the mutation whose exposures are aimed
-     * @param mutation_type is the type of mutation affected by the exposure
-     * @param cell is the cell whose birth time select the exposure
+     * @param[in] cell is the cell whose birth time select the exposure
      * @return a constant reference to exposure that are associated
      *         to `cell` birth time
      */
@@ -423,8 +366,8 @@ class MutationEngine
     /**
      * @brief Randomly select the number of mutations according to a Poisson distribution
      *
-     * @param genome_size is the genome size
-     * @param passenger_mutation_rate is the rate of the passenger mutations
+     * @param[in] genome_size is the genome size
+     * @param[in] passenger_mutation_rate is the rate of the passenger mutations
      * @return is the randomly selected number of mutations
      */
     size_t number_of_mutations(GenomeMutations::Length genome_size,
@@ -440,10 +383,10 @@ class MutationEngine
     /**
      * @brief Place the CNAs in a cell genome in the phylogenetic forest
      *
-     * @param node is a phylogenetic forest node representing a cell
-     * @param cell_mutations are the cell mutations
-     * @param num_of_mutations is the number of CNA to apply
-     * @param nature is the nature of the mutations
+     * @param[in, out] node is a phylogenetic forest node representing a cell
+     * @param[in, out] cell_mutations are the cell mutations
+     * @param[in] num_of_mutations is the number of CNA to apply
+     * @param[in] nature is the nature of the mutations
      */
     void place_CNAs(PhylogeneticForest::node* node, GenomeMutations& cell_mutations,
                     const size_t& num_of_mutations, const Mutation::Nature& nature)
@@ -497,9 +440,9 @@ class MutationEngine
     /**
      * @brief Place the CNAs in a cell genome in the phylogenetic forest
      *
-     * @param node is a phylogenetic forest node representing a cell
-     * @param cell_mutations are the cell mutations
-     * @param CNA_rate is the rate of passenger CNAs
+     * @param[in, out] node is a phylogenetic forest node representing a cell
+     * @param[in, out] cell_mutations are the cell mutations
+     * @param[in] CNA_rate is the rate of passenger CNAs
      */
     void place_CNAs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
                     const double& CNA_rate)
@@ -512,8 +455,8 @@ class MutationEngine
     /**
      * @brief Get the available alleles for placing a SID
      *
-     * @param mutation is the mutation to be placed
-     * @param cell_mutations are the non-germinal mutations of a cell
+     * @param[in] mutation is the mutation to be placed
+     * @param[in] cell_mutations are the non-germinal mutations of a cell
      * @return a list of the identifiers of the available alleles
      */
     std::list<AlleleId> get_available_alleles(const SID& mutation,
@@ -597,7 +540,7 @@ class MutationEngine
     /**
      * @brief Get the number of loci available for an SBS type
      *
-     * @param SBS_type is the type of the aimed SBS
+     * @param[in] SBS_type is the type of the aimed SBS
      * @return the number of loci available for `mutation_type`
      */
     inline size_t count_available(const SBSType& SBS_type) const
@@ -608,7 +551,7 @@ class MutationEngine
     /**
      * @brief Get the number of loci available for an ID type
      *
-     * @param ID_type is the type of the aimed ID
+     * @param[in] ID_type is the type of the aimed ID
      * @return Get the number of loci available for `mutation_type`
      */
     inline size_t count_available(const IDType& ID_type) const
@@ -617,23 +560,42 @@ class MutationEngine
     }
 
     /**
-     * @brief Get the inverse cumulative signatures of a type
+     * @brief Get the signatures of a type
      *
      * @tparam MUTATION_TYPE is the mutation type
-     * @return the inverse cumulative signatures of the type
-     *      `MUTATION_TYPE`
+     * @return the signatures of the type `MUTATION_TYPE`
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
-    const InverseCumulativeSignatures<MUTATION_TYPE>&
-    get_inverse_cumulative_signatures() const
+    Signatures<MUTATION_TYPE>& get_signatures()
     {
         if constexpr(std::is_base_of_v<MUTATION_TYPE, SBSType>) {
-            return inv_cumulative_SBSs;
+            return SBS_signatures;
         }
 
         if constexpr(std::is_base_of_v<MUTATION_TYPE, IDType>) {
-            return inv_cumulative_IDs;
+            return ID_signatures;
+        }
+
+        throw std::runtime_error("Unsupported mutation type.");
+    }
+
+    /**
+     * @brief Get the signatures of a type
+     *
+     * @tparam MUTATION_TYPE is the mutation type
+     * @return the signatures of the type `MUTATION_TYPE`
+     */
+    template<typename MUTATION_TYPE,
+             std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
+    const Signatures<MUTATION_TYPE>& get_signatures() const
+    {
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, SBSType>) {
+            return SBS_signatures;
+        }
+
+        if constexpr(std::is_base_of_v<MUTATION_TYPE, IDType>) {
+            return ID_signatures;
         }
 
         throw std::runtime_error("Unsupported mutation type.");
@@ -642,11 +604,11 @@ class MutationEngine
     /**
      * @brief Place the SIDs in a cell genome in the phylogenetic forest
      *
-     * @param node is a phylogenetic forest node representing a cell
-     * @param cell_mutations are the cell mutations
-     * @param signature_name is the name of the signature used to find the mutations
-     * @param num_of_mutations is the number of SIDs to apply
-     * @param nature is the nature of the mutations
+     * @param[in, out] node is a phylogenetic forest node representing a cell
+     * @param[in, out] cell_mutations are the cell mutations
+     * @param[in] signature_name is the name of the signature used to find the mutations
+     * @param[in] num_of_mutations is the number of SIDs to apply
+     * @param[in] nature is the nature of the mutations
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
@@ -654,24 +616,20 @@ class MutationEngine
                     const std::string& signature_name, const size_t& num_of_mutations,
                     const Mutation::Nature& nature)
     {
-        // get the inverse cumulative signature
-        const auto& inv_cum_signatures = get_inverse_cumulative_signatures<MUTATION_TYPE>();
-        const auto& inv_cum_signature = inv_cum_signatures.at(signature_name);
-
-        std::uniform_real_distribution<> u_dist(0,1);
+        // get the signature
+        auto& signature = get_signatures<MUTATION_TYPE>().at(signature_name);
 
         // while some of the requested mutations have not been set
         size_t new_mutations{0};
         while (new_mutations < num_of_mutations) {
             // randomly pick a mutation type according to the current signature
-            auto it = inv_cum_signature.lower_bound(u_dist(generator));
+            const auto mutation_type = signature.choose(generator);
 
-            if ((it != inv_cum_signature.end())
-                    && (count_available(it->second) > 0)) {
+            if (count_available(mutation_type) > 0) {
 
                 // select a mutation among those having the selected mutation
                 // type and that are available in the corresponding index
-                auto sid = select_SID(it->second);
+                auto sid = select_SID(mutation_type);
 
                 sid.cause = signature_name;
                 sid.nature = nature;
@@ -688,14 +646,14 @@ class MutationEngine
             } else {
                 std::ostringstream oss;
                 if constexpr(std::is_base_of_v<SBSType, MUTATION_TYPE>) {
-                    oss << "No mutations for context \"" << it->second
+                    oss << "No mutations for context \"" << mutation_type
                         << "\".";
                     warning(WarningType::NO_MUT_FOR_CONTEXT, oss.str());
                 }
 
                 if constexpr(std::is_base_of_v<IDType, MUTATION_TYPE>) {
                     oss << "No mutations for repetition pattern \""
-                        << it->second << "\".";
+                        << mutation_type << "\".";
                     warning(WarningType::NO_MUT_FOR_RPATTERN, oss.str());
                 }
             }
@@ -706,7 +664,7 @@ class MutationEngine
      * @brief Get the passenger rate of a specific mutation type
      *
      * @tparam MUTATION_TYPE is the mutation type of the aimed rate
-     * @param rates are the passenger rates
+     * @param[in] rates are the passenger rates
      * @return the passenger rate of the mutation type `MUTATION_TYPE`
      */
     template<typename MUTATION_TYPE,
@@ -727,9 +685,9 @@ class MutationEngine
     /**
      * @brief Place mutations on the genome of a phylogenetic forest cell
      *
-     * @param node is a phylogenetic forest node representing a cell
-     * @param cell_mutations are the cell mutations
-     * @param rates are the passenger mutation rates
+     * @param[in, out] node is a phylogenetic forest node representing a cell
+     * @param[in, out] cell_mutations are the cell mutations
+     * @param[in] rates are the passenger mutation rates
      */
     template<typename MUTATION_TYPE,
              std::enable_if_t<std::is_base_of_v<MutationType, MUTATION_TYPE>, bool> = true>
@@ -921,8 +879,8 @@ class MutationEngine
      * @brief Place a mutation
      *
      * @tparam MUTATION_TYPE is the type of mutation to be placed
-     * @param mutation is the mutation to be placed
-     * @param cell_mutations is the cell genome where the mutation must be placed
+     * @param[in, out] mutation is the mutation to be placed
+     * @param[in, out] cell_mutations is the cell genome where the mutation must be placed
      * @return `true` if and only if the mutation was correctly placed
      */
     template<typename MUTATION_TYPE,
@@ -944,9 +902,9 @@ class MutationEngine
      * @brief Place a driver mutation
      *
      * @tparam MUTATION_TYPE is the type of mutation
-     * @param mutation is the placed mutation
-     * @param node is the node in which the mutation first occurred
-     * @param mutant_name is the name of the mutant which the mutation is
+     * @param[in, out] mutation is the placed mutation
+     * @param[in, out] node is the node in which the mutation first occurred
+     * @param[in] mutant_name is the name of the mutant which the mutation is
      *   a driver of
      */
     template<typename MUTATION_TYPE,
@@ -973,9 +931,9 @@ class MutationEngine
     /**
      * @brief Place the driver mutations
      *
-     * @param node is a phylogenetic forest node representing a cell
-     * @param cell_mutations are the cell mutations
-     * @param driver_mutations is the map associating mutant ids and mutations
+     * @param[in, out] node is a phylogenetic forest node representing a cell
+     * @param[in, out] cell_mutations are the cell mutations
+     * @param[in, out] driver_mutations is the map associating mutant ids and mutations
      */
     void place_driver_mutations(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
                                 std::map<Mutants::MutantId, DriverMutations>& driver_mutations)
@@ -1151,7 +1109,7 @@ class MutationEngine
      * This method returns a map from species identifier to the corresponding
      * passenger rates.
      *
-     * @param descendants_forest is a descendent forest
+     * @param[in] descendants_forest is a descendent forest
      * @return a map associating a species in `descendants_forest` to its
      *          passenger rates
      */
@@ -1185,7 +1143,7 @@ class MutationEngine
      * This method returns a map from the mutant identifier to the corresponding
      * driver mutations.
      *
-     * @param descendants_forest is a descendent forest
+     * @param[in] descendants_forest is a descendent forest
      * @return a map associating the mutants in `descendants_forest` to the
      *              corresponding driver mutations.
      */
@@ -1216,7 +1174,7 @@ class MutationEngine
      * This method returns the vector of CNAs that are contained in the parameter
      * vector and lay in one of the chromosomes mentioned in the context index.
      *
-     * @param CNAs is a list of CNAs
+     * @param[in] CNAs is a list of CNAs
      * @return the vector of CNAs that are contained in `CNAs` and lay in one of
      *          the chromosomes mentioned in the context index.
      */
@@ -1243,8 +1201,8 @@ class MutationEngine
      * This method checks whether germline contains the reference sequence chromosomes
      * and throws a `std::out_of_range` exception this is not the case.
      *
-     * @param context_index is a context index
-     * @param germline_mutations are the germline mutations
+     * @param[in] context_index is a context index
+     * @param[in] germline_mutations are the germline mutations
      */
     static void check_genomes_consistency(const ContextIndex<GENOME_WIDE_POSITION>& context_index,
                                           const GenomeMutations& germline_mutations)
@@ -1275,7 +1233,7 @@ class MutationEngine
     /**
      * @brief Split mutational exposure by mutation type
      *
-     * @param exposure is an exposure
+     * @param[in] exposure is an exposure
      * @return a map from mutation type to the corresponding mutational exposure
      */
     std::map<MutationType::Type, MutationalExposure>
@@ -1284,9 +1242,9 @@ class MutationEngine
         std::map<MutationType::Type, MutationalExposure> exposures;
 
         for (const auto& [name, coeff]: exposure) {
-            if (inv_cumulative_SBSs.count(name)>0) {
+            if (SBS_signatures.count(name)>0) {
                 exposures[MutationType::Type::SBS][name]=coeff;
-            } else if (inv_cumulative_IDs.count(name)>0) {
+            } else if (ID_signatures.count(name)>0) {
                 exposures[MutationType::Type::INDEL][name]=coeff;
             } else {
                 throw std::runtime_error("Unknown signature " + name + ".");
@@ -1309,9 +1267,9 @@ class MutationEngine
      * values sum up to 1. If this is not the case, this method
      * throw a domain error exception.
      *
-     * @param prob_map is a map whose values are the key probabilities
-     * @param prob_name is the name of the probability map
-     * @param approx_error is the approximation error
+     * @param[in] prob_map is a map whose values are the key probabilities
+     * @param[in] prob_name is the name of the probability map
+     * @param[in] approx_error is the approximation error
      */
     template<typename KEYS, typename VALUES>
     static void validate_probability(const std::map<KEYS, VALUES>& prob_map,
@@ -1336,7 +1294,7 @@ class MutationEngine
     /**
      * @brief Check whether any species has a mutation rate greater than 0
      *
-     * @param mutation_type is a mutation type (i.e., INDEL or SBS)
+     * @param[in] mutation_type is a mutation type (i.e., INDEL or SBS)
      * @return `true` if and only if any specified species has a rate
      *  for `mutation_type` greater than 0
      */
@@ -1368,9 +1326,9 @@ class MutationEngine
      * @brief Place SNV and indels in normal cells
      *
      * @tparam MUTATION_TYPE is the type of the SIDs
-     * @param cell_mutations is the cell genome
-     * @param signature_name is the name of the signature of the SIDs
-     * @param num_of_mutations_dist is a distribution for the number of
+     * @param[in, out] cell_mutations is the cell genome
+     * @param[in] signature_name is the name of the signature of the SIDs
+     * @param[in] num_of_mutations_dist is a distribution for the number of
      *      SIDs to be placed
      */
     template<typename MUTATION_TYPE,
@@ -1391,8 +1349,8 @@ class MutationEngine
      * either SIDs or CNAs. The returned regions are expanded by a shadow.
      *
      * @tparam MUTATION_TYPE is the type of mutations
-     * @param mutations is the list of mutations whose regions are aimed
-     * @param expansion_size is the region expansion size
+     * @param[in] mutations is the list of mutations whose regions are aimed
+     * @param[in] expansion_size is the region expansion size
      * @return a list of regions of `mutations` expanded by
      *      `expansion_size`
      */
@@ -1427,7 +1385,7 @@ class MutationEngine
     /**
      * @brief Filter out passenger CNAs that overlaps one region in a list
      *
-     * @param region_filter is the list of regions that does not overlap the
+     * @param[in, out] region_filter is the list of regions that does not overlap the
      *      valid passenger CNAs
      */
     inline void filter_passenger_CNAs(std::list<GenomicRegion>&& region_filter)
@@ -1438,7 +1396,7 @@ class MutationEngine
     /**
      * @brief Filter out passenger CNAs that overlaps one region in a list
      *
-     * @param region_filter is the list of regions that does not overlap the
+     * @param[in] region_filter is the list of regions that does not overlap the
      *      valid passenger CNAs
      */
     void filter_passenger_CNAs(const std::list<GenomicRegion>& region_filter)
@@ -1455,6 +1413,21 @@ class MutationEngine
             }
         }
     }
+
+    /**
+     * @brief Reset the signatures' probability distributions
+     */
+    void signature_reset()
+    {
+        for (auto& signature : std::views::values(SBS_signatures)) {
+            signature.reset();
+        }
+
+        for (auto& signature : std::views::values(ID_signatures)) {
+            signature.reset();
+        }
+    }
+
 public:
     bool infinite_sites_model;   //!< a flag to enable/disable infinite sites model
 
@@ -1471,16 +1444,16 @@ public:
     /**
      * @brief A constructor
      *
-     * @param context_index is the genome context index
-     * @param repetition_index is the genome repetition index
-     * @param SBS_signatures is the map of the SBS signatures
-     * @param ID_signatures is the map of the indel signatures
-     * @param germline_mutations are the germline mutations
-     * @param driver_storage is the storage of driver mutations
-     * @param passenger_CNAs is the vector of the admissible passenger CNAs
-     * @param driver_CNA_min_distance is the minimum distance between a driver
+     * @param[in, out] context_index is the genome context index
+     * @param[in, out] repetition_index is the genome repetition index
+     * @param[in] SBS_signatures is the map of the SBS signatures
+     * @param[in] ID_signatures is the map of the indel signatures
+     * @param[in] germline_mutations are the germline mutations
+     * @param[in] driver_storage is the storage of driver mutations
+     * @param[in] passenger_CNAs is the vector of the admissible passenger CNAs
+     * @param[in] driver_CNA_min_distance is the minimum distance between a driver
      *      mutation and a passenger CNA
-     * @param warning is the warning function
+     * @param[in] warning is the warning function
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    RSIndex& repetition_index,
@@ -1500,17 +1473,17 @@ public:
     /**
      * @brief A constructor
      *
-     * @param context_index is the genome context index
-     * @param repetition_index is the genome repetition index
-     * @param SBS_signatures is the map of the SBS signatures
-     * @param ID_signatures is the map of the indel signatures
-     * @param mutational_properties are the mutational properties of all the species
-     * @param germline_mutations are the germline mutations
-     * @param driver_storage is the storage of driver mutations
-     * @param passenger_CNAs is the vector of the admissible passenger CNAs
-     * @param driver_CNA_min_distance is the minimum distance between a driver
+     * @param[in, out] context_index is the genome context index
+     * @param[in, out] repetition_index is the genome repetition index
+     * @param[in] SBS_signatures is the map of the SBS signatures
+     * @param[in] ID_signatures is the map of the indel signatures
+     * @param[in] mutational_properties are the mutational properties of all the species
+     * @param[in] germline_mutations are the germline mutations
+     * @param[in] driver_storage is the storage of driver mutations
+     * @param[in] passenger_CNAs is the vector of the admissible passenger CNAs
+     * @param[in] driver_CNA_min_distance is the minimum distance between a driver
      *      mutation and a passenger CNA
-     * @param warning is the warning function
+     * @param[in] warning is the warning function
      */
     MutationEngine(ContextIndex<GENOME_WIDE_POSITION>& context_index,
                    RSIndex& repetition_index,
@@ -1523,6 +1496,7 @@ public:
                    const unsigned int& driver_CNA_min_distance=10000,
                    WarningFunction warning=RACES::warning):
         generator(), context_index(context_index), rs_index(repetition_index),
+        SBS_signatures{SBS_signatures}, ID_signatures{ID_signatures},
         mutational_properties(mutational_properties),
         germline_mutations(std::make_shared<GenomeMutations>(germline_mutations)),
         dm_genome(germline_mutations.copy_structure()),
@@ -1532,14 +1506,6 @@ public:
         warning{warning}, infinite_sites_model{true}, avoid_homozygous_losses{true}
     {
         MutationEngine::check_genomes_consistency(context_index, germline_mutations);
-
-        for (const auto& [name, SBS_signature]: SBS_signatures) {
-            inv_cumulative_SBSs[name] = get_inv_cumulative_signature(SBS_signature);
-        }
-
-        for (const auto& [name, ID_signatures]: ID_signatures) {
-            inv_cumulative_IDs[name] = get_inv_cumulative_signature(ID_signatures);
-        }
     }
 
     /**
@@ -1548,12 +1514,12 @@ public:
      * This method add the properties of a mutant (i.e., its passenger rates,
      * its driver mutations) and all its species to the mutations engine.
      *
-     * @param name is the name of the mutant
-     * @param epistate_passenger_rates is a map from epigenetic status to
+     * @param[in] name is the name of the mutant
+     * @param[in] epistate_passenger_rates is a map from epigenetic status to
      *          passenger rate
-     * @param driver_SIDs is a list of driver SIDs
-     * @param driver_CNAs is a list of driver CNAs
-     * @param wg_doubling is a Boolean flag to enable whole genome doubling
+     * @param[in] driver_SIDs is a list of driver SIDs
+     * @param[in] driver_CNAs is a list of driver CNAs
+     * @param[in] wg_doubling is a Boolean flag to enable whole genome doubling
      * @return a reference to the updated object
      */
     MutationEngine& add_mutant(const std::string& name,
@@ -1575,12 +1541,12 @@ public:
      * This method add the properties of a mutant (i.e., its passenger rates,
      * its driver mutations) and all its species to the mutations engine.
      *
-     * @param name is the name of the mutant
-     * @param epistate_passenger_rates is a map from epigenetic status to
+     * @param[in] name is the name of the mutant
+     * @param[in] epistate_passenger_rates is a map from epigenetic status to
      *          passenger rate
-     * @param driver_SIDs is a list of driver SIDs
-     * @param driver_CNAs is a list of driver CNAs
-     * @param application_order is the list of application order
+     * @param[in] driver_SIDs is a list of driver SIDs
+     * @param[in] driver_CNAs is a list of driver CNAs
+     * @param[in] application_order is the list of application order
      * @return a reference to the updated object
      */
     MutationEngine& add_mutant(const std::string& name,
@@ -1611,8 +1577,8 @@ public:
      * of a map.
      *
      * @tparam VALUE_TYPE is the map value type
-     * @param signature_map is a map whose keys are the signature names
-     * @param exposure is an exposure
+     * @param[in] signature_map is a map whose keys are the signature names
+     * @param[in] exposure is an exposure
      */
     template<typename VALUE_TYPE>
     static void validate_signature_names(const std::map<std::string, VALUE_TYPE>& signature_map,
@@ -1631,8 +1597,8 @@ public:
      * This method add a exposure that will be applied from the specified simulation
      * time on.
      *
-     * @param time is the simulation time from which the exposure will be applied
-     * @param exposure is a SNV-indel exposure
+     * @param[in] time is the simulation time from which the exposure will be applied
+     * @param[in] exposure is a SNV-indel exposure
      * @return a reference to the updated object
      */
     MutationEngine& add(const Time& time, const MutationalExposure& exposure)
@@ -1659,8 +1625,8 @@ public:
      * This method add a exposure that will be applied from the specified simulation
      * time on.
      *
-     * @param time is the simulation time from which the exposure will be applied
-     * @param exposure is an SNV-indel exposure
+     * @param[in] time is the simulation time from which the exposure will be applied
+     * @param[in, out] exposure is an SNV-indel exposure
      * @return a reference to the updated object
      */
     MutationEngine& add(const Time& time, MutationalExposure&& exposure)
@@ -1673,7 +1639,7 @@ public:
      *
      * This method add a default exposure.
      *
-     * @param default_exposure is the exposure at time 0
+     * @param[in] default_exposure is the exposure at time 0
      * @return a reference to the updated object
      */
     MutationEngine& add(const MutationalExposure& default_exposure)
@@ -1684,12 +1650,12 @@ public:
     /**
      * @brief Place genomic mutations on a descendants forest
      *
-     * @param descendants_forest is a descendants forest
-     * @param num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
-     * @param num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
-     * @param seed is the random generator seed
-     * @param pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
+     * @param[in] descendants_forest is a descendants forest
+     * @param[in] num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
+     * @param[in] num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
+     * @param[in] seed is the random generator seed
+     * @param[in] pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param[in] pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     inline
@@ -1710,13 +1676,13 @@ public:
     /**
      * @brief Place genomic mutations on a descendants forest
      *
-     * @param descendants_forest is a descendants forest
-     * @param num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
-     * @param num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
-     * @param progress_bar is a progress bar pointer
-     * @param seed is the random generator seed
-     * @param pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
+     * @param[in] descendants_forest is a descendants forest
+     * @param[in] num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
+     * @param[in] num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
+     * @param[in, out] progress_bar is a progress bar pointer
+     * @param[in] seed is the random generator seed
+     * @param[in] pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param[in] pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     PhylogeneticForest
@@ -1756,6 +1722,8 @@ public:
 
         auto wild_type_structure = germline_mutations->copy_structure();
 
+        signature_reset();
+
         size_t visited_node = 0;
         for (auto& root: forest.get_roots()) {
             GenomeMutations root_mutations = wild_type_structure;
@@ -1787,13 +1755,13 @@ public:
     /**
      * @brief Place genomic mutations on a descendants forest
      *
-     * @param descendants_forest is a descendants forest
-     * @param num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
-     * @param num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
-     * @param progress_bar is a progress bar pointer
-     * @param seed is the random generator seed
-     * @param pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
-     * @param pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
+     * @param[in] descendants_forest is a descendants forest
+     * @param[in] num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
+     * @param[in] num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
+     * @param[in, out] progress_bar is a progress bar pointer
+     * @param[in] seed is the random generator seed
+     * @param[in] pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
+     * @param[in] pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
      * @return a phylogenetic forest having the structure of `descendants_forest`
      */
     PhylogeneticForest
@@ -1813,7 +1781,7 @@ public:
     /**
      * @brief Get the a sample of wild-type cells
      *
-     * @param pn_mutations is a list of pre-neoplastic mutations
+     * @param[in] pn_mutations is a list of pre-neoplastic mutations
      * @return a sample of a single wild-type cell
      */
     inline SampleGenomeMutations
@@ -1827,13 +1795,15 @@ public:
     /**
      * @brief Get the a sample of wild-type cells
      *
-     * @param forest is a phylogenetic forest
-     * @param num_of_cells is the number of cells in the wild-type samples
-     * @param SNV_dist is the distribution of the number of cell specific SNVs
-     * @param indel_dist is the distribution of the number of cell specific indels
-     * @param SNV_signature_name is the SNV signature name
-     * @param indel_signature_name is the indel signature name
-     * @param forest_pre_neoplastic_prob is the probability for a pre-neoplastic
+     * @param[in] forest is a phylogenetic forest
+     * @param[in] num_of_cells is the number of cells in the wild-type samples
+     * @param[in, out] SNV_dist is the distribution of the number of cell specific SNVs
+     * @param[in, out] indel_dist is the distribution of the number of cell specific indels
+     * @param[in, out] common_SNV_dist is the distribution of the number of cell specific SNVs
+     * @param[in, out] common_indel_dist is the distribution of the number of cell specific indels
+     * @param[in] SNV_signature_name is the SNV signature name
+     * @param[in] indel_signature_name is the indel signature name
+     * @param[in] forest_pre_neoplastic_prob is the probability for a pre-neoplastic
      *   mutation in the forest to be selected for a wild-type sample
      * @return a list of wild-type samples; each of them has size `num_of_cells`.
      */
@@ -1911,7 +1881,7 @@ public:
     /**
      * @brief Check whether a default mutation type exposure has been set
      *
-     * @param mutation_type is the type of mutation affected by the exposure
+     * @param[in] mutation_type is the type of mutation affected by the exposure
      * @return `true` if and only if a default mutation type exposure has been set
      */
     inline bool has_default_exposure(const MutationType::Type& mutation_type) const
