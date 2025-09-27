@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.10
- * @date 2025-09-24
+ * @version 1.11
+ * @date 2025-09-27
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -29,6 +29,7 @@
  */
 
 #include <set>
+#include <ranges>
 #include <algorithm>
 
 #include "phylogenetic_forest.hpp"
@@ -258,10 +259,13 @@ filter_by_cells_in(const std::map<MUTATION, std::set<Mutants::CellId>>& mutation
     std::map<MUTATION, std::set<Mutants::CellId>> filtered_map;
 
     for (const auto& [mutation, cell_ids]: mutation_map) {
-        auto& in_forest = filtered_map[mutation];
+        std::set<Mutants::CellId>* in_forest = nullptr;
         for (const auto& cell_id : cell_ids) {
             if (forest.get_cells().count(cell_id)>0) {
-                in_forest.insert(cell_id);
+                if (in_forest == nullptr) {
+                    in_forest = &(filtered_map[mutation]);
+                }
+                in_forest->insert(cell_id);
             }
         }
     }
@@ -276,21 +280,25 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
 
     static_cast<Mutants::DescendantsForest&>(forest) = Mutants::DescendantsForest::get_subforest_for(sample_names);
 
-    for (const auto& [cell_id, cell]: forest.get_cells()) {
-        forest.arising_mutations.emplace(cell_id, arising_mutations.at(cell_id));
-    }
-
     for (const auto& root_id : forest.get_root_cell_ids()) {
         forest.pre_neoplastic_mutations.emplace(root_id, pre_neoplastic_mutations.at(root_id));
     }
 
-    const auto samples = forest.get_samples();
-    const auto sample_id = samples.front().get_id();
+    for (const auto& cell_id: std::views::keys(forest.get_cells())) {
+        forest.arising_mutations.emplace(cell_id, arising_mutations.at(cell_id));
+    }
 
-    forest.sample_statistics.emplace(sample_id, sample_statistics.at(sample_id));
+    for (const auto& sample : forest.get_samples()) {
+        const auto& sample_id = sample.get_id();
+
+        forest.sample_statistics.emplace(sample_id, sample_statistics.at(sample_id));
+    }
 
     forest.SID_first_cells = filter_by_cells_in(SID_first_cells, forest);
     forest.CNA_first_cells = filter_by_cells_in(CNA_first_cells, forest);
+
+    forest.germline_mutations = germline_mutations;
+    forest.mutational_properties = mutational_properties;
 
     return forest;
 }

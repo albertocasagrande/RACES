@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.8
- * @date 2025-09-24
+ * @version 1.9
+ * @date 2025-09-27
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -364,8 +364,7 @@ public:
              * @param[in] only_leaves is a Boolean flag to enable/disable internal node visit
              * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
              *      mutations
-             * @param[in] with_germinal is Boolean flag to add/avoid germline mutations in the
-             *      produced genome mutations
+             * @param[in] with_germinal is Boolean flag to add/avoid germline mutations
              * @param[in] begin is a Boolean flag to establish whether the new object is
              *      referring at the begining of the tour or at the end
              */
@@ -739,14 +738,6 @@ public:
      */
     AllelicCount get_allelic_count(const std::string& sample_name,
                                    const size_t& min_allelic_size=0) const;
-
-    /**
-     * @brief Get the normal genome structure
-     *
-     * @param[in] with_pre_neoplastic is a Boolean flag to add pre-neoplastic CNAs
-     * @return the normal genome without SNVs and indels
-     */
-    GenomeMutations get_normal_genome_structure(const bool& with_pre_neoplastic=true) const;
 
     /**
      * @brief Get the sample statistics
