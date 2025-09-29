@@ -2,8 +2,8 @@
  * @file read.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines sequencing reads
- * @version 1.4
- * @date 2025-08-21
+ * @version 1.5
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -133,25 +133,25 @@ class Read
     /**
      * @brief An in-order forward iterator for mutations
      *
-     * This class simulates an iterator over the merged passenger
+     * This class simulates an iterator over the merged somatic
      * and germline mutations.
      */
     class MutationIterator
     {
-        std::map<GenomicPosition, std::shared_ptr<SID>> const* passengers;     //!< The passenger map
-        std::map<GenomicPosition, std::shared_ptr<SID>> const* germlines;      //!< The germline map
+        std::map<GenomicPosition, std::shared_ptr<SID>> const* somatic;     //!< The somatic map
+        std::map<GenomicPosition, std::shared_ptr<SID>> const* germline;      //!< The germline map
 
-        std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator p_it;    //!< The passenger iterator
+        std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator s_it;    //!< The somatic iterator
         std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator g_it;    //!< The germline iterator
 
         Direction direction;    //!< Iterator direction
 
-        bool p_begin;   //!< A Boolean flag that holds when the passenger iterator has already reached the begin
-        bool p_end;     //!< A Boolean flag that holds when the passenger iterator has already reached the end
+        bool p_begin;   //!< A Boolean flag that holds when the somatic iterator has already reached the begin
+        bool p_end;     //!< A Boolean flag that holds when the somatic iterator has already reached the end
         bool g_begin;   //!< A Boolean flag that holds when the germline iterator has already reached the begin
         bool g_end;     //!< A Boolean flag that holds when the germline iterator has already reached the end
 
-        bool p_it_curr;   //!< A Boolean flag that holds when the referenced mutation is a passenger mutation
+        bool s_it_curr;   //!< A Boolean flag that holds when the referenced mutation is a somatic mutation
 
         /**
          * @brief Set the current mutation
@@ -161,15 +161,15 @@ class Read
         /**
          * @brief Construct a new Forward Mutation Iterator object
          *
-         * @param germlines is the germline SID map
-         * @param passengers is the passenger SID map
+         * @param germline is the germline SID map
+         * @param somatic is the somatic SID map
          * @param germline_it is an germline SID map iterator
-         * @param passenger_it is an passenger SID map iterator
+         * @param somatic_it is an somatic SID map iterator
          */
-        MutationIterator(const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
-                            const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+        MutationIterator(const std::map<GenomicPosition, std::shared_ptr<SID>>& germline,
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>& somatic,
                             const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& germline_it,
-                            const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& passenger_it);
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& somatic_it);
 
     public:
         using difference_type   =   std::ptrdiff_t;
@@ -188,13 +188,13 @@ class Read
         /**
          * @brief
          *
-         * @param germlines
-         * @param passengers
+         * @param germline
+         * @param somatic
          * @param genomic_position
          * @return MutationIterator
          */
-        static MutationIterator lower_bound(const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
-                                            const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+        static MutationIterator lower_bound(const std::map<GenomicPosition, std::shared_ptr<SID>>& germline,
+                                            const std::map<GenomicPosition, std::shared_ptr<SID>>& somatic,
                                             const GenomicPosition& genomic_position);
 
         /**
@@ -204,7 +204,7 @@ class Read
          */
         inline reference operator*() const
         {
-            return *(p_it_curr?p_it:g_it);
+            return *(s_it_curr?s_it:g_it);
         }
 
         /**
@@ -214,7 +214,7 @@ class Read
          */
         inline const_pointer operator->() const
         {
-            return (p_it_curr?p_it.operator->():g_it.operator->());
+            return (s_it_curr?s_it.operator->():g_it.operator->());
         }
 
         /**
@@ -251,7 +251,7 @@ class Read
          * @brief Test whether the begin of the iterator has been reached
          *
          * @return `true` if and only if the iterator reached the begin
-         *      of the germline and passenger maps
+         *      of the germline and somatic maps
          */
         inline bool is_begin() const
         {
@@ -262,7 +262,7 @@ class Read
          * @brief Test whether the end of the iterator has been reached
          *
          * @return `true` if and only if the iterator reached the end
-         *      of the germline and passenger maps
+         *      of the germline and somatic maps
          */
         inline bool is_end() const
         {
@@ -278,7 +278,7 @@ class Read
          */
         inline bool operator==(const MutationIterator& a) const
         {
-            return p_it == a.p_it && g_it == a.g_it;
+            return s_it == a.s_it && g_it == a.g_it;
         }
 
         /**
@@ -290,7 +290,7 @@ class Read
          */
         inline bool operator!=(const MutationIterator& a) const
         {
-            return p_it != a.p_it || g_it != a.g_it;
+            return s_it != a.s_it || g_it != a.g_it;
         }
     };
 
@@ -330,14 +330,14 @@ public:
      * @brief A read constructor
      *
      * @param reference is the reference sequence
-     * @param germlines is the position-mutation map for germline mutations
-     * @param passengers is the position-mutation map for passenger mutations
+     * @param germline is the position-mutation map for germline mutations
+     * @param somatic is the position-mutation map for somatic mutations
      * @param genomic_position is the aimed position of the first base in the read
      * @param read_size is the aimed read size
      */
     Read(const std::string& reference,
-         const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
-         const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+         const std::map<GenomicPosition, std::shared_ptr<SID>>& germline,
+         const std::map<GenomicPosition, std::shared_ptr<SID>>& somatic,
          const GenomicPosition& genomic_position,
          const size_t& read_size);
 

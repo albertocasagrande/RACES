@@ -2,8 +2,8 @@
  * @file read.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements sequencing reads
- * @version 1.4
- * @date 2025-07-09
+ * @version 1.5
+ * @date 2025-07-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -48,49 +48,49 @@ void Read::MutationIterator::set_current_mutation()
 {
     if (direction == Direction::FORWARD) {
         if (p_end) {
-            p_it_curr = false;
+            s_it_curr = false;
         } else {
-            p_it_curr = (g_end ? true : p_it->first.position<g_it->first.position);
+            s_it_curr = (g_end ? true : s_it->first.position<g_it->first.position);
         }
     } else {
         if (p_begin) {
-            p_it_curr = false;
+            s_it_curr = false;
         } else {
-            p_it_curr = (g_begin ? true : p_it->first.position > g_it->first.position);
+            s_it_curr = (g_begin ? true : s_it->first.position > g_it->first.position);
         }
     }
 }
 
-Read::MutationIterator::MutationIterator(const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
-                            const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+Read::MutationIterator::MutationIterator(const std::map<GenomicPosition, std::shared_ptr<SID>>& germline,
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>& somatic,
                             const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& germline_it,
-                            const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& passenger_it):
-    passengers{&passengers}, germlines{&germlines},
-    p_it{passenger_it}, g_it{germline_it},
+                            const std::map<GenomicPosition, std::shared_ptr<SID>>::const_iterator& somatic_it):
+    somatic{&somatic}, germline{&germline},
+    s_it{somatic_it}, g_it{germline_it},
     direction{Direction::FORWARD},
-    p_begin{passengers.begin() == passenger_it},
-    p_end{passengers.end() == passenger_it},
-    g_begin{germlines.begin() == germline_it},
-    g_end{germlines.end() == germline_it}
+    p_begin{somatic.begin() == somatic_it},
+    p_end{somatic.end() == somatic_it},
+    g_begin{germline.begin() == germline_it},
+    g_end{germline.end() == germline_it}
 {
     set_current_mutation();
 }
 
 Read::MutationIterator::MutationIterator():
-    passengers{nullptr}, germlines{nullptr}, p_it{}, g_it{},
+    somatic{nullptr}, germline{nullptr}, s_it{}, g_it{},
     direction{Read::Direction::FORWARD},
     p_begin{true}, p_end{true}, g_begin{true}, g_end{true}
 {}
 
 Read::MutationIterator
-Read::MutationIterator::lower_bound(const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
-                                    const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+Read::MutationIterator::lower_bound(const std::map<GenomicPosition, std::shared_ptr<SID>>& germline,
+                                    const std::map<GenomicPosition, std::shared_ptr<SID>>& somatic,
                                     const GenomicPosition& genomic_position)
 {
-    auto g_it = germlines.lower_bound(genomic_position);
-    auto p_it = passengers.lower_bound(genomic_position);
+    auto g_it = germline.lower_bound(genomic_position);
+    auto s_it = somatic.lower_bound(genomic_position);
 
-    return {germlines, passengers, g_it, p_it};
+    return {germline, somatic, g_it, s_it};
 }
 
 Read::MutationIterator&
@@ -98,16 +98,16 @@ Read::MutationIterator::operator++()
 {
     if (direction == Direction::BACKWARD) {
         if (!p_end) {
-            ++p_it;
+            ++s_it;
 
-            if (p_it == passengers->end()) {
+            if (s_it == somatic->end()) {
                 p_end = true;
             }
         }
         if (!g_end) {
             ++g_it;
 
-            if (g_it == germlines->end()) {
+            if (g_it == germline->end()) {
                 g_end = true;
             }
         }
@@ -122,12 +122,12 @@ Read::MutationIterator::operator++()
         return *this;
     }
 
-    if (p_it_curr) {
-        ++p_it;
+    if (s_it_curr) {
+        ++s_it;
         p_begin = false;
 
-        if (p_it == passengers->end()) {
-            p_it_curr = false;
+        if (s_it == somatic->end()) {
+            s_it_curr = false;
             p_end = true;
 
             return *this;
@@ -140,8 +140,8 @@ Read::MutationIterator::operator++()
         ++g_it;
         g_begin = false;
 
-        if (g_it == germlines->end()) {
-            p_it_curr = true;
+        if (g_it == germline->end()) {
+            s_it_curr = true;
             g_end = true;
 
             return *this;
@@ -152,7 +152,7 @@ Read::MutationIterator::operator++()
         }
     }
 
-    p_it_curr = (p_it->first.position < g_it->first.position);
+    s_it_curr = (s_it->first.position < g_it->first.position);
 
     return *this;
 }
@@ -171,16 +171,16 @@ Read::MutationIterator::operator--()
 {
     if (direction == Direction::FORWARD) {
         if (!p_begin) {
-            --p_it;
+            --s_it;
 
-            if (p_it == passengers->begin()) {
+            if (s_it == somatic->begin()) {
                 p_begin = true;
             }
         }
         if (!g_begin) {
             --g_it;
 
-            if (g_it == germlines->begin()) {
+            if (g_it == germline->begin()) {
                 g_begin = true;
             }
         }
@@ -195,23 +195,23 @@ Read::MutationIterator::operator--()
         return *this;
     }
 
-    if (p_it_curr) {
-        if (p_it == passengers->begin()) {
-            p_it_curr = false;
+    if (s_it_curr) {
+        if (s_it == somatic->begin()) {
+            s_it_curr = false;
             p_begin = true;
 
             return *this;
         }
 
-        --p_it;
+        --s_it;
         p_end = false;
 
         if (g_begin) {
             return *this;
         }
     } else {
-        if (g_it == germlines->begin()) {
-            p_it_curr = true;
+        if (g_it == germline->begin()) {
+            s_it_curr = true;
             g_begin = true;
 
             return *this;
@@ -225,7 +225,7 @@ Read::MutationIterator::operator--()
         }
     }
 
-    p_it_curr = (p_it->first.position >= g_it->first.position);
+    s_it_curr = (s_it->first.position >= g_it->first.position);
 
     return *this;
 }
@@ -422,13 +422,13 @@ void update_alignment(std::vector<MatchingType>& alignment,
 }
 
 Read::Read(const std::string& reference,
-           const std::map<GenomicPosition, std::shared_ptr<SID>>& germlines,
-           const std::map<GenomicPosition, std::shared_ptr<SID>>& passengers,
+           const std::map<GenomicPosition, std::shared_ptr<SID>>& germline,
+           const std::map<GenomicPosition, std::shared_ptr<SID>>& somatic,
            const GenomicPosition& genomic_position,
            const size_t& read_size):
     genomic_position{genomic_position}
 {
-    auto it = MutationIterator::lower_bound(germlines, passengers,
+    auto it = MutationIterator::lower_bound(germline, somatic,
                                             genomic_position);
 
     // remove initial deletions from the read
