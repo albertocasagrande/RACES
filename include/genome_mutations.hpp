@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.12
- * @date 2025-09-20
+ * @version 1.13
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -943,7 +943,7 @@ public:
      *      the method returns `true`
      * @throw std::domain_error any mutation in `mutation_list` does not lay
      *      to the genome
-     * @throw std::out_of_range any mutation in `mutation_spec` does not lay
+     * @throw std::out_of_range any mutation in `mutation_list` does not lay
      *      in the corresponding genome allele
      */
     bool apply(const MutationList& mutation_list);
@@ -1136,28 +1136,6 @@ struct CellGenomeMutations : public Mutants::Cell, public GenomeMutations
 
         return cg_mutations;
     }
-};
-
-/**
- * @brief A structure representing the genome mutations of a tissue sample
- */
-struct SampleGenomeMutations
-{
-    using CellMutationsPtr = std::shared_ptr<CellGenomeMutations>;
-
-    std::shared_ptr<GenomeMutations> germline_mutations;    //!< The germline mutations
-    std::list<CellMutationsPtr> mutations;                  //!< The list of cell genome mutations
-
-    const std::string name;                  //!< The sample name
-
-    /**
-     * @brief The constructor
-     *
-     * @param name is the sample name
-     * @param germline_mutations are the germline mutations
-     */
-    SampleGenomeMutations(const std::string& name,
-                          const std::shared_ptr<GenomeMutations>& germline_mutations);
 };
 
 /**

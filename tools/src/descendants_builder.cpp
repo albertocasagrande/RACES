@@ -1,11 +1,11 @@
 /**
  * @file descendants_builder.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Main file for the RACES descendants forest builder
- * @version 1.0
- * @date 2024-06-10
+ * @brief Main file for the RACES descendant forest builder
+ * @version 1.1
+ * @date 2025-09-29
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -97,7 +97,7 @@ public:
 
         try {
             auto species_simulation = load_species_simulation(snapshot_path, true);
-            DescendantsForest forest(species_simulation);
+            DescendantForest forest(species_simulation);
 
             RACES::Mutants::IO::phyloXMLStream os;
 

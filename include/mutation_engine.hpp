@@ -1,9 +1,9 @@
 /**
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Defines a class to place mutations on a descendants forest
- * @version 1.29
- * @date 2025-09-25
+ * @brief Defines a class to place mutations on a descendant forest
+ * @version 1.30
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -94,12 +94,6 @@ class MutationStatistics
     SampleMutationStatistics overall_statistics;    //!< Overall statistics
     std::map<std::string, SampleMutationStatistics> sample_statistics;  //!< Statistics per sample
 
-public:
-    /**
-     * @brief The empty constructor
-     */
-    MutationStatistics();
-
     /**
      * @brief Record the SIDs of a cell genome
      *
@@ -111,30 +105,33 @@ public:
      */
     MutationStatistics& record(const std::string& sample_name,
                                const CellGenomeMutations& cell_mutations);
+public:
+    /**
+     * @brief The empty constructor
+     */
+    MutationStatistics();
 
     /**
      * @brief Record the SIDs in a list of sample genomic mutations
      *
-     * @param[in] mutations_list is a list of sample mutations
+     * @param[in] forest is a phylogenetic forest
      * @param[in,out] progress_bar is a progress bar pointer
      * @return a reference to the updated object
      */
-    MutationStatistics&
-    record(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list,
-           UI::ProgressBar* progress_bar=nullptr);
+    MutationStatistics& record(const PhylogeneticForest& forest,
+                               UI::ProgressBar* progress_bar=nullptr);
 
     /**
      * @brief Record the SIDs in a list of sample genomic mutations
      *
-     * @param[in] mutations_list is a list of sample mutations
+     * @param[in] forest is a phylogenetic forest
      * @param[in,out] progress_bar is a progress bar pointer
      * @return a reference to the updated object
      */
-    inline MutationStatistics&
-    record(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list,
-           UI::ProgressBar& progress_bar)
+    inline MutationStatistics& record(const PhylogeneticForest& forest,
+                                      UI::ProgressBar& progress_bar)
     {
-        return record(mutations_list, &progress_bar);
+        return record(forest, &progress_bar);
     }
 
     /**
@@ -171,7 +168,7 @@ using MutationalExposure = std::map<std::string, double>;
  * @brief The mutation engine
  *
  * The objects of this class place mutations on the cell genome according
- * to a descendants forest
+ * to a descendant forest
  *
  * @tparam GENOME_WIDE_POSITION is the type used to represent genome-wise position
  * @tparam RANDOM_GENERATOR is the type of random generator
@@ -974,7 +971,7 @@ class MutationEngine
     }
 
     /**
-     * @brief Place the mutations on the genomes of a descendants forest node
+     * @brief Place the mutations on the genomes of a descendant forest node
      *
      * This method recursively places the mutations on the nodes of a descendants
      * forest. All the genome mutations associated to the forest leaves are
@@ -1109,19 +1106,19 @@ class MutationEngine
      * This method returns a map from species identifier to the corresponding
      * passenger rates.
      *
-     * @param[in] descendants_forest is a descendent forest
-     * @return a map associating a species in `descendants_forest` to its
+     * @param[in] descendant_forest is a descendent forest
+     * @return a map associating a species in `descendant_forest` to its
      *          passenger rates
      */
     std::map<Mutants::SpeciesId, PassengerRates>
-    get_species_rate_map(const Mutants::DescendantsForest& descendants_forest) const
+    get_species_rate_map(const Mutants::DescendantForest& descendant_forest) const
     {
         using namespace RACES::Mutants;
 
         std::map<SpeciesId, PassengerRates> species_rates;
 
-        for (const auto& [species_id, species_data] : descendants_forest.get_species_data()) {
-            const auto mutant_name = descendants_forest.get_mutant_name(species_data.mutant_id);
+        for (const auto& [species_id, species_data] : descendant_forest.get_species_data()) {
+            const auto mutant_name = descendant_forest.get_mutant_name(species_data.mutant_id);
             const auto species_name = mutant_name
                                       + MutantProperties::signature_to_string(species_data.signature);
 
@@ -1143,19 +1140,19 @@ class MutationEngine
      * This method returns a map from the mutant identifier to the corresponding
      * driver mutations.
      *
-     * @param[in] descendants_forest is a descendent forest
-     * @return a map associating the mutants in `descendants_forest` to the
+     * @param[in] descendant_forest is a descendent forest
+     * @return a map associating the mutants in `descendant_forest` to the
      *              corresponding driver mutations.
      */
     std::map<Mutants::MutantId, DriverMutations>
-    get_driver_mutation_map(const Mutants::DescendantsForest& descendants_forest) const
+    get_driver_mutation_map(const Mutants::DescendantForest& descendant_forest) const
     {
         using namespace RACES::Mutants;
 
         std::map<MutantId, DriverMutations> driver_mutations;
 
-        for (const auto& [species_id, species_data] : descendants_forest.get_species_data()) {
-            const auto mutant_name = descendants_forest.get_mutant_name(species_data.mutant_id);
+        for (const auto& [species_id, species_data] : descendant_forest.get_species_data()) {
+            const auto mutant_name = descendant_forest.get_mutant_name(species_data.mutant_id);
 
             auto driver_it = mutational_properties.get_driver_mutations().find(mutant_name);
 
@@ -1648,45 +1645,45 @@ public:
     }
 
     /**
-     * @brief Place genomic mutations on a descendants forest
+     * @brief Place genomic mutations on a descendant forest
      *
-     * @param[in] descendants_forest is a descendants forest
+     * @param[in] descendant_forest is a descendant forest
      * @param[in] num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
      * @param[in] num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
      * @param[in] seed is the random generator seed
      * @param[in] pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
      * @param[in] pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
-     * @return a phylogenetic forest having the structure of `descendants_forest`
+     * @return a phylogenetic forest having the structure of `descendant_forest`
      */
     inline
     PhylogeneticForest
-    place_mutations(const Mutants::DescendantsForest& descendants_forest,
+    place_mutations(const Mutants::DescendantForest& descendant_forest,
                     const size_t& num_of_pre_neoplastic_SNVs,
                     const size_t& num_of_pre_neoplastic_indels,
                     const int& seed=0,
                     const std::string& pre_neoplastic_SNV_signature_name="SBS1",
                     const std::string& pre_neoplastic_indel_signature_name="ID1")
     {
-        return place_mutations(descendants_forest, num_of_pre_neoplastic_SNVs,
+        return place_mutations(descendant_forest, num_of_pre_neoplastic_SNVs,
                                num_of_pre_neoplastic_indels, nullptr, seed,
                                pre_neoplastic_SNV_signature_name,
                                pre_neoplastic_indel_signature_name);
     }
 
     /**
-     * @brief Place genomic mutations on a descendants forest
+     * @brief Place genomic mutations on a descendant forest
      *
-     * @param[in] descendants_forest is a descendants forest
+     * @param[in] descendant_forest is a descendant forest
      * @param[in] num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
      * @param[in] num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
      * @param[in, out] progress_bar is a progress bar pointer
      * @param[in] seed is the random generator seed
      * @param[in] pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
      * @param[in] pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
-     * @return a phylogenetic forest having the structure of `descendants_forest`
+     * @return a phylogenetic forest having the structure of `descendant_forest`
      */
     PhylogeneticForest
-    place_mutations(const Mutants::DescendantsForest& descendants_forest,
+    place_mutations(const Mutants::DescendantForest& descendant_forest,
                     const size_t& num_of_pre_neoplastic_SNVs,
                     const size_t& num_of_pre_neoplastic_indels,
                     UI::ProgressBar *progress_bar, const int& seed=0,
@@ -1713,10 +1710,10 @@ public:
         forest.germline_mutations = germline_mutations;
         forest.mutational_properties = mutational_properties;
 
-        static_cast<DescendantsForest&>(forest) = descendants_forest;
+        static_cast<DescendantForest&>(forest) = descendant_forest;
 
-        auto species_rates = get_species_rate_map(descendants_forest);
-        auto driver_mutations = get_driver_mutation_map(descendants_forest);
+        auto species_rates = get_species_rate_map(descendant_forest);
+        auto driver_mutations = get_driver_mutation_map(descendant_forest);
 
         auto chr_regions = context_index.get_chromosome_regions();
 
@@ -1753,129 +1750,29 @@ public:
     }
 
     /**
-     * @brief Place genomic mutations on a descendants forest
+     * @brief Place genomic mutations on a descendant forest
      *
-     * @param[in] descendants_forest is a descendants forest
+     * @param[in] descendant_forest is a descendant forest
      * @param[in] num_of_pre_neoplastic_SNVs is the number of pre-neoplastic SNVs
      * @param[in] num_of_pre_neoplastic_indels is the number of pre-neoplastic indels
      * @param[in, out] progress_bar is a progress bar pointer
      * @param[in] seed is the random generator seed
      * @param[in] pre_neoplastic_SNV_signature_name is the pre-neoplastic SNV signature name
      * @param[in] pre_neoplastic_indel_signature_name is the pre-neoplastic indel signature name
-     * @return a phylogenetic forest having the structure of `descendants_forest`
+     * @return a phylogenetic forest having the structure of `descendant_forest`
      */
     PhylogeneticForest
-    place_mutations(const Mutants::DescendantsForest& descendants_forest,
+    place_mutations(const Mutants::DescendantForest& descendant_forest,
                     const size_t& num_of_pre_neoplastic_SNVs,
                     const size_t& num_of_pre_neoplastic_indels,
                     UI::ProgressBar& progress_bar, const int& seed=0,
                     const std::string& pre_neoplastic_SNV_signature_name="SBS1",
                     const std::string& pre_neoplastic_indel_signature_name="ID1")
     {
-        return place_mutations(descendants_forest, num_of_pre_neoplastic_SNVs,
+        return place_mutations(descendant_forest, num_of_pre_neoplastic_SNVs,
                                num_of_pre_neoplastic_indels, &progress_bar, seed,
                                pre_neoplastic_SNV_signature_name,
                                pre_neoplastic_indel_signature_name);
-    }
-
-    /**
-     * @brief Get the a sample of wild-type cells
-     *
-     * @param[in] pn_mutations is a list of pre-neoplastic mutations
-     * @return a sample of a single wild-type cell
-     */
-    inline SampleGenomeMutations
-    get_wild_type_sample(const std::list<MutationSpec<SID>>& pn_mutations)
-    {
-         std::binomial_distribution<size_t> bin_dist(0, 0);
-
-        return get_wild_type_sample(1, bin_dist, bin_dist, "SBS1", "ID1", pn_mutations);
-    }
-
-    /**
-     * @brief Get the a sample of wild-type cells
-     *
-     * @param[in] forest is a phylogenetic forest
-     * @param[in] num_of_cells is the number of cells in the wild-type samples
-     * @param[in, out] SNV_dist is the distribution of the number of cell specific SNVs
-     * @param[in, out] indel_dist is the distribution of the number of cell specific indels
-     * @param[in, out] common_SNV_dist is the distribution of the number of cell specific SNVs
-     * @param[in, out] common_indel_dist is the distribution of the number of cell specific indels
-     * @param[in] SNV_signature_name is the SNV signature name
-     * @param[in] indel_signature_name is the indel signature name
-     * @param[in] forest_pre_neoplastic_prob is the probability for a pre-neoplastic
-     *   mutation in the forest to be selected for a wild-type sample
-     * @return a list of wild-type samples; each of them has size `num_of_cells`.
-     */
-    std::list<SampleGenomeMutations>
-    get_wild_type_samples(const PhylogeneticForest& forest, const size_t& num_of_cells,
-                          std::normal_distribution<double>& SNV_dist,
-                          std::normal_distribution<double>& indel_dist,
-                          std::normal_distribution<double>& common_SNV_dist,
-                          std::normal_distribution<double>& common_indel_dist,
-                          const std::string& SNV_signature_name="SBS1",
-                          const std::string& indel_signature_name="ID1",
-                          const double& forest_pre_neoplastic_prob=1)
-    {
-        using namespace Mutants::Evolutions;
-
-        std::list<SampleGenomeMutations> samples;
-
-        std::uniform_real_distribution<double> pnp_dist;
-        for (const auto& [cell_id, pnp_mutations] : forest.get_pre_neoplastic_mutations()) {
-            auto sample_common_mutations = germline_mutations->copy_structure();
-            if (pnp_dist(generator) < forest_pre_neoplastic_prob) {
-                for (auto mut_it = pnp_mutations.begin(); mut_it != pnp_mutations.end();
-                    ++mut_it) {
-
-                    switch(mut_it.get_type()) {
-                        case MutationList::SID_TURN:
-                        {
-                            const auto& mutation = mut_it.get_last_SID();
-
-                            sample_common_mutations.apply(mutation);
-                            break;
-                        }
-                        case MutationList::CNA_TURN:
-                        {
-                            const auto& mutation = mut_it.get_last_CNA();
-
-                            sample_common_mutations.apply(mutation);
-                            break;
-                        }
-                        case MutationList::WGD_TURN:
-                        {
-                            sample_common_mutations.duplicate_alleles();
-                        }
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            place_SIDs_in_normal<SBSType>(sample_common_mutations, SNV_signature_name,
-                                          common_SNV_dist);
-
-            place_SIDs_in_normal<IDType>(sample_common_mutations, indel_signature_name,
-                                         common_indel_dist);
-
-            SampleGenomeMutations sample_mutations("wild-type_" + std::to_string(cell_id),
-                                                   germline_mutations);
-            for (size_t i=0; i<num_of_cells; ++i) {
-                auto mutations = std::make_shared<CellGenomeMutations>(sample_common_mutations);
-
-                place_SIDs_in_normal<SBSType>(sample_common_mutations, SNV_signature_name,
-                                              SNV_dist);
-                place_SIDs_in_normal<IDType>(sample_common_mutations, indel_signature_name,
-                                             indel_dist);
-
-                sample_mutations.mutations.push_back(mutations);
-            }
-
-            samples.push_back(std::move(sample_mutations));
-        }
-
-        return samples;
     }
 
     /**

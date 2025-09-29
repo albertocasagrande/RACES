@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.9
- * @date 2025-09-27
+ * @version 1.10
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -48,9 +48,9 @@ namespace Mutations
 {
 
 /**
- * @brief A class representing descendants forests
+ * @brief A class representing descendant forests
  */
-class PhylogeneticForest : public Mutants::DescendantsForest
+class PhylogeneticForest : public Mutants::DescendantForest
 {
 public:
 
@@ -125,7 +125,7 @@ public:
     /**
      * @brief A constant node of the forest
      */
-    class const_node : public Mutants::DescendantsForest::_const_node<PhylogeneticForest>
+    class const_node : public Mutants::DescendantForest::_const_node<PhylogeneticForest>
     {
     public:
         /**
@@ -158,7 +158,7 @@ public:
          */
         inline const_node parent() const
         {
-            return Mutants::DescendantsForest::_const_node<PhylogeneticForest>::parent<const_node>();
+            return Mutants::DescendantForest::_const_node<PhylogeneticForest>::parent<const_node>();
         }
 
         /**
@@ -169,7 +169,7 @@ public:
          */
         inline std::vector<const_node> children() const
         {
-            return Mutants::DescendantsForest::_const_node<PhylogeneticForest>::children<const_node>();
+            return Mutants::DescendantForest::_const_node<PhylogeneticForest>::children<const_node>();
         }
 
         /**
@@ -199,7 +199,7 @@ public:
         friend class PhylogeneticForest;
     };
 
-    class node : public Mutants::DescendantsForest::_node<PhylogeneticForest>
+    class node : public Mutants::DescendantForest::_node<PhylogeneticForest>
     {
         /**
          * @brief Add the current cell node as first cell occurrence for a SID
@@ -238,7 +238,7 @@ public:
          */
         inline node parent()
         {
-            return Mutants::DescendantsForest::_node<PhylogeneticForest>::parent<node>();
+            return Mutants::DescendantForest::_node<PhylogeneticForest>::parent<node>();
         }
 
         /**
@@ -249,7 +249,7 @@ public:
          */
         inline std::vector<node> children()
         {
-            return Mutants::DescendantsForest::_node<PhylogeneticForest>::children<node>();
+            return Mutants::DescendantForest::_node<PhylogeneticForest>::children<node>();
         }
 
         /**
@@ -547,7 +547,7 @@ public:
      * @brief Get the forest for a subset of the tissue samples
      *
      * @param[in] sample_names are the names of the samples to be considered
-     * @return the descendants forest for the tissue samples whose name is
+     * @return the descendant forest for the tissue samples whose name is
      *          in `sample_names`
      */
     PhylogeneticForest get_subforest_for(const std::vector<std::string>& sample_names) const;
@@ -614,31 +614,6 @@ public:
     }
 
     /**
-     * @brief Get the list of sample mutations
-     *
-     * @param[in] with_germinal is a Boolean flag to add/avoid germinal mutations
-     * @return the list of sample mutations
-     * @todo For memory reasons, we don't want to store a list of the genome
-     *      mutations of all samples. This method will became deprecated, and
-     *      it will be replaced by a less demanding alternative.
-     */
-    std::list<SampleGenomeMutations>
-    get_sample_mutations_list(const bool& with_germinal=false) const;
-
-    /**
-     * @brief Get the list of sample mutations
-     *
-     * @param[in] sample_name is the name of the sample whose mutations are aimed
-     * @param[in] with_germinal is a Boolean flag to add/avoid germinal mutations
-     * @return the mutations of the sample whose name is `sample_name`
-     * @todo For memory reasons, we don't want to store a list of the genome
-     *      mutations of an entire sample. This method will became deprecated,
-     *      and it will be replaced by a less demanding alternative
-     */
-    SampleGenomeMutations get_sample_mutations(const std::string& sample_name,
-                                               const bool& with_germinal=false) const;
-
-    /**
      * @brief Get the germline mutations
      *
      * @return A constant reference to germline mutations
@@ -670,33 +645,20 @@ public:
     }
 
     /**
-     * @brief Build a sample containing normal cells
+     * @brief Build the wild type genomes
      *
-     * This method builds a sample of different cells whose genome contains the forest
-     * germline mutations. If the pre-neoplastic mutations are also requested the sample
-     * contains one cell per forest root. In this case, the genome of each cell contains
-     * the germline mutations and the pre-neoplastic mutations of the associated root.
-     * If the pre-neoplastic mutations are not requested, the returned sample exclusively
-     * contains one cell with the germline mutations.
+     * This method build the wild-type genome of the embryo cell and of every cell
+     * represented by a root in the forest.
      *
-     * @param[in] name is the name of the resulting sample
-     * @param[in] with_pre_neoplastic is a Boolean flag to include the pre-neoplastic mutations
-     *   in the resulting sample
-     * @return A sample containing cells whose genomes have the forest germline
-     *   mutations and, upon request, the pre-neoplastic mutations too
-     */
-    SampleGenomeMutations get_normal_sample(const std::string& name="sample",
-                                            const bool& with_pre_neoplastic=true) const;
-
-    /**
-     * @brief Build the normal genomes
-     *
-     * @param[in] with_pre_neoplastic is a Boolean flag to include the pre-neoplastic mutations
-     *   in the resulting genomes
-     * @return a map that associates to each forest root the corresponding normal genome
+     * @param[in] with_pre_neoplastic is a Boolean flag to add/avoid pre-neoplastic
+     *      mutations
+     * @param[in] with_germinal is a Boolean flag to include the germinal mutations
+     * @return a map that associates to each forest root and to the embryo cell
+     *      the corresponding wild type genome.
      */
     std::map<Mutants::CellId, CellGenomeMutations>
-    get_normal_genomes(const bool& with_pre_neoplastic=true) const;
+    get_wild_type_genomes(const bool with_pre_neoplastic=true,
+                          const bool with_germinal=true) const;
 
     /**
      * @brief Get the CNA break points
@@ -766,7 +728,7 @@ public:
     {
         ARCHIVE::write_header(archive, "RACES Phylogenetic Forest", 4);
 
-        archive & static_cast<const Mutants::DescendantsForest&>(*this)
+        archive & static_cast<const Mutants::DescendantForest&>(*this)
                 & pre_neoplastic_mutations
                 & arising_mutations
                 & SID_first_cells
@@ -792,7 +754,7 @@ public:
 
         forest.germline_mutations = std::make_shared<GenomeMutations>();
 
-        archive & static_cast<Mutants::DescendantsForest&>(forest)
+        archive & static_cast<Mutants::DescendantForest&>(forest)
                 & forest.pre_neoplastic_mutations
                 & forest.arising_mutations
                 & forest.SID_first_cells

@@ -2,8 +2,8 @@
  * @file read_simulator.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes to simulate sequencing
- * @version 1.3
- * @date 2025-05-07
+ * @version 1.4
+ * @date 2025-07-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -30,6 +30,7 @@
 
 #include <string>
 #include <regex>
+#include <ranges>
 
 #include <algorithm>
 
@@ -46,6 +47,46 @@ namespace Mutations
 namespace SequencingSimulations
 {
 
+SequencingTargets::SampleTarget::SampleTarget():
+    sample_name{}, sample_id{NORMAL_SAMPLE_ID},
+    num_of_tumour_cells{0}, num_of_wild_types{}
+{}
+
+SequencingTargets::SampleTarget
+SequencingTargets::SampleTarget::build_normal_sample_target()
+{
+    SampleTarget target;
+
+    target.sample_name = "normal sample";
+    target.sample_id = NORMAL_SAMPLE_ID;
+
+    target.num_of_wild_types.emplace(EMBRYO_CELL_ID, 1);
+
+    return target;
+}
+
+size_t SequencingTargets::SampleTarget::num_of_cells() const
+{
+    size_t total_number{num_of_tumour_cells};
+
+    for (const auto& num_of_wild_type: std::views::values(num_of_wild_types)) {
+        total_number += num_of_wild_type;
+    }
+    return total_number;
+}
+
+SequencingTargets::SequencingTargets(const PhylogeneticForest& forest, const double& purity,
+                                     const bool& with_pre_neoplastic,
+                                     const bool& with_germinal,
+                                     std::map<Mutants::CellId, CellGenomeMutations>&& wild_type_genomes,
+                                     std::map<Mutants::Evolutions::TissueSampleId, SampleTarget>&& sample_targets):
+    phylo_forest{&forest}, seq_purity{purity},
+    pre_neoplastic{with_pre_neoplastic},
+    germinal{with_germinal},
+    wt_genomes{std::move(wild_type_genomes)},
+    target_map{std::move(sample_targets)}
+{}
+
 ChrCoverage::ChrCoverage()
 {}
 
@@ -56,7 +97,6 @@ ChrCoverage::ChrCoverage(const ChromosomeId& chromosome_id, const GenomicRegion:
         throw std::domain_error("A chromosome cannot have length 0.");
     }
 }
-
 
 void ChrCoverage::increase_coverage(const ChrPosition& begin_pos, const size_t& read_size)
 {
@@ -224,15 +264,23 @@ ChrSampleStatistics::ChrSampleStatistics():
     ChrCoverage()
 {}
 
+ChrSampleStatistics::ChrSampleStatistics(const ChrSampleStatistics& original):
+    ChrCoverage(original), SID_data{original.SID_data}
+{}
+
 ChrSampleStatistics::ChrSampleStatistics(const ChromosomeId& chromosome_id,
                                          const GenomicRegion::Length& size,
-                                         const std::list<SampleGenomeMutations>& mutations_list):
+                                         const PhylogeneticForest& forest,
+                                         const bool& with_germline):
     ChrCoverage(chromosome_id, size)
 {
-    for (const SampleGenomeMutations& mutations : mutations_list) {
-        account_for(mutations.germline_mutations->get_chromosome(chromosome_id));
-        for (const auto& cell_genome_ptr : mutations.mutations) {
-            account_for(cell_genome_ptr->get_chromosome(chromosome_id));
+    if (with_germline) {
+        account_for(forest.get_germline_mutations().get_chromosome(chromosome_id));
+    }
+
+    for (const auto& sid : std::views::keys(forest.get_mutation_first_cells())) {
+        if (sid.get_chromosome_id() == chromosome_id) {
+            SID_data.emplace(sid, SIDData{sid, 0});
         }
     }
 }
@@ -273,7 +321,7 @@ void ChrSampleStatistics::update(const SID& mutation)
     auto SID_data_it = SID_data.find(mutation);
 
     if (SID_data_it == SID_data.end()) {
-        SID_data.insert({mutation, {mutation, 1}});
+        SID_data.emplace(mutation, SIDData{mutation, 1});
     } else {
         SID_data_it->second.update(mutation);
     }
@@ -388,7 +436,7 @@ void create_dir(const std::filesystem::path& directory)
     }
 }
 
-void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
+void SampleStatistics::add_coverage(const ChrSampleStatistics& chr_stats)
 {
     const auto& chr_id = chr_stats.get_chr_id();
 
@@ -401,7 +449,6 @@ void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
     }
 
     for (const auto&[mutation, data] : chr_stats.get_data()) {
-        SID_data.insert({mutation, data});
         locus_coverage[mutation] = chr_stats.get_coverage(mutation);
     }
 
@@ -414,6 +461,22 @@ void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
         Archive::Binary::Out out_archive(chr_filename);
         static_cast<const ChrCoverage&>(chr_stats).save(out_archive);
     }
+}
+
+void SampleStatistics::add_chr_statistics(const ChrSampleStatistics& chr_stats)
+{
+    add_coverage(chr_stats);
+
+    for (const auto&[mutation, data] : chr_stats.get_data()) {
+        SID_data.emplace(mutation, data);
+    }
+}
+
+void SampleStatistics::add_chr_statistics(ChrSampleStatistics&& chr_stats)
+{
+    add_coverage(chr_stats);
+
+    SID_data.merge(chr_stats.get_data());
 }
 
 ChrCoverage SampleStatistics::get_chr_coverage(const ChromosomeId& chr_id) const
@@ -520,8 +583,8 @@ get_sample_coverages_for_SIDs(const std::map<std::string, SampleStatistics>& sta
 
     for (auto& [sample_name, sample_stats]: stats_map) {
         ChrCoverage chr_coverage;
-        auto it = sample_locus_coverage.insert({sample_name,
-                                                sample_stats.get_coverage()}).first;
+        auto it = sample_locus_coverage.emplace(sample_name,
+                                                sample_stats.get_coverage()).first;
 
         for (auto& [mutation, occurrences] : SID_occurrences) {
             auto& sample_coverage = it->second;
@@ -530,8 +593,8 @@ get_sample_coverages_for_SIDs(const std::map<std::string, SampleStatistics>& sta
                         || !chr_coverage.is_initialized()) {
                     chr_coverage = sample_stats.get_chr_coverage(mutation.chr_id);
                 }
-                sample_coverage.insert({GenomicPosition(mutation),
-                                        chr_coverage.get_coverage(mutation)});
+                sample_coverage.emplace(GenomicPosition(mutation),
+                                        chr_coverage.get_coverage(mutation));
             }
         }
     }
@@ -579,13 +642,30 @@ bool SampleSetStatistics::is_canonical() const
 }
 
 const SampleStatistics& SampleSetStatistics::add_chr_statistics(const std::string& sample_name,
+                                                                ChrSampleStatistics&& chr_statistics,
+                                                                const bool coverage_save)
+{
+    auto found = stats_map.find(sample_name);
+
+    if (found == stats_map.end()) {
+        found = stats_map.emplace(sample_name,
+                                  SampleStatistics{data_dir, sample_name, coverage_save}).first;
+    }
+
+    found->second.add_chr_statistics(chr_statistics);
+
+    return found->second;
+}
+
+const SampleStatistics& SampleSetStatistics::add_chr_statistics(const std::string& sample_name,
                                                                 const ChrSampleStatistics& chr_statistics,
                                                                 const bool coverage_save)
 {
     auto found = stats_map.find(sample_name);
 
     if (found == stats_map.end()) {
-        found = stats_map.insert({sample_name, SampleStatistics(data_dir, sample_name, coverage_save)}).first;
+        found = stats_map.emplace(sample_name,
+                                  SampleStatistics{data_dir, sample_name, coverage_save}).first;
     }
 
     found->second.add_chr_statistics(chr_statistics);
@@ -602,7 +682,7 @@ const SampleStatistics& SampleSetStatistics::add_statistics(const SampleStatisti
         throw std::domain_error("The current object already contains a statistics for sample.");
     }
 
-    return stats_map.insert({name, sample_statistics}).first->second;
+    return stats_map.emplace(name, sample_statistics).first->second;
 }
 
 const SampleStatistics& SampleSetStatistics::operator[](const std::string& sample_name) const
@@ -634,10 +714,10 @@ void SampleSetStatistics::save_VAF_CSVs(const std::string& base_name,
     RACES::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     size_t chr_processes{0};
-    for (const auto& chr_id : repr_chr_ids) {
+    for (const auto& chr_id : chr_ids) {
         std::string chr_str = GenomicPosition::chrtos(chr_id);
 
-        progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
+        progress_bar.set_progress(100*chr_processes/chr_ids.size(),
                                   "Saving chr. " + chr_str + " VAFs");
 
         save_VAF_CSV(base_name + chr_str + ".csv", chr_id);
@@ -666,7 +746,7 @@ get_total_SID_coverage(const std::map<std::string, SampleStatistics>& stats_map,
     std::map<GenomicPosition, BaseCoverage> total_locus_coverage;
 
     for (const auto& [mutation, total_mutation_data]: total_SID_data) {
-        auto it = total_locus_coverage.insert({mutation,0}).first;
+        auto it = total_locus_coverage.emplace(mutation,0).first;
         auto& coverage = it->second;
         for (const auto& [sample_name, sample_stats]: stats_map) {
             coverage += sample_stats.get_coverage(mutation);
@@ -690,7 +770,7 @@ void SampleSetStatistics::canonize()
             if (SID_data.count(mutation)==0) {
                 // add the SID among those mentioned by the sample
                 // statistics
-                SID_data.insert({mutation, {mutation, 0}});
+                SID_data.emplace(mutation, SIDData{mutation, 0});
 
                 // if the coverage of the chromosome containing the SID
                 // has not been loaded yet
@@ -703,8 +783,8 @@ void SampleSetStatistics::canonize()
 
                 // add the coverage for the added SID
                 auto& locus_coverage = sample_stats.locus_coverage;
-                locus_coverage.insert({GenomicPosition(mutation),
-                                       chr_coverage.get_coverage(mutation)});
+                locus_coverage.emplace(GenomicPosition(mutation),
+                                       chr_coverage.get_coverage(mutation));
             }
         }
     }
@@ -728,7 +808,7 @@ std::set<std::string> get_descriptions(const std::set<Mutation::Nature>& types)
     std::set<std::string> string_types;
 
     for (const auto& type: types) {
-        string_types.insert(SID::get_nature_description(type));
+        string_types.emplace(SID::get_nature_description(type));
     }
 
     return string_types;
@@ -818,10 +898,10 @@ void SampleSetStatistics::save_coverage_images(const std::string& base_name,
     RACES::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     size_t chr_processes{0};
-    for (const auto& chr_id : repr_chr_ids) {
+    for (const auto& chr_id : chr_ids) {
         std::string chr_str = GenomicPosition::chrtos(chr_id);
 
-        progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
+        progress_bar.set_progress(100*chr_processes/chr_ids.size(),
                                   "Saving chr. " + chr_str + " coverage");
 
         save_coverage_image( base_name + chr_str + "_coverage.jpg", chr_id);
@@ -950,10 +1030,10 @@ void SampleSetStatistics::save_SID_histograms(const std::string& base_name,
     RACES::UI::ProgressBar progress_bar(progress_bar_stream, quiet);
 
     size_t chr_processes{0};
-    for (const auto& chr_id : repr_chr_ids) {
+    for (const auto& chr_id : chr_ids) {
         std::string chr_str = GenomicPosition::chrtos(chr_id);
 
-        progress_bar.set_progress(100*chr_processes/repr_chr_ids.size(),
+        progress_bar.set_progress(100*chr_processes/chr_ids.size(),
                                   "Saving chr. " + chr_str + " histogram");
 
         save_SID_histogram( base_name + chr_str + "_hist.jpg", chr_id);

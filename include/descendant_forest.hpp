@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 1.3
- * @date 2025-09-24
+ * @version 1.4
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -37,6 +37,8 @@
 #include <queue>
 #include <string>
 #include <limits>
+#include <ranges>
+#include <functional>
 
 #include "cell.hpp"
 #include "binary_logger.hpp"
@@ -49,10 +51,21 @@ namespace Mutants
 {
 
 /**
- * @brief A class representing descendants forests
+ * @brief The concept of cell id labelling function
  */
-class DescendantsForest
+template <typename T>
+concept CellIdLabellingFunction =
+    std::is_constructible_v< std::function<std::string(const CellId&)>,
+    std::decay_t<T> >;
+
+/**
+ * @brief A class representing descendant forests
+ */
+class DescendantForest
 {
+public:
+    using SamplePosition = Evolutions::TissueSampleId;
+private:
     /**
      * @brief Species data
      *
@@ -117,7 +130,7 @@ private:
     std::map<MutantId, std::string> mutant_names;   //!< The mutant id to mutant name map
 
     std::vector<Evolutions::TissueSample> samples;  //!< The vector of the samples that produced the forest
-    std::map<CellId, uint16_t> coming_from;         //!< The map associating each leaf to the sample which it comes from
+    std::map<CellId, SamplePosition> coming_from;   //!< The map associating each leaf to the sample which it comes from
 
     /**
      * @brief Grow a forest from a sample of cells
@@ -138,7 +151,7 @@ private:
             parent_ids.insert(cell_id);
 
             // record leaves children, i.e., none
-            branches[cell_id] = std::set<CellId>();
+            branches.emplace(cell_id, std::set<CellId>{});
         }
 
         std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());
@@ -165,7 +178,7 @@ private:
                 roots.insert(cell.get_id());
             }
 
-            cells.insert(std::make_pair(cell.get_id(),cell));
+            cells.emplace(cell.get_id(), cell);
         }
     }
 
@@ -192,7 +205,7 @@ private:
         uint16_t i{0};
         for (const auto& sample: samples) {
             for (const auto& cell_id: sample.get_cell_ids()) {
-                coming_from.insert(std::make_pair(cell_id, i));
+                coming_from.emplace(cell_id, i);
             }
             ++i;
         }
@@ -231,7 +244,7 @@ protected:
      * @return a constant reference to the map associating each leaf to the
      *      sample which it comes from
      */
-    inline const std::map<CellId, uint16_t>& get_coming_from() const
+    inline const std::map<CellId, SamplePosition>& get_coming_from() const
     {
         return coming_from;
     }
@@ -264,7 +277,7 @@ protected:
          *
          * This method returns a constant reference to a cell.
          * Notice that the cells in the forest should be modified
-         * exclusively by using `DescendantsForest::node` methods
+         * exclusively by using `DescendantForest::node` methods
          *
          * @return a constant reference to a cell
          */
@@ -538,31 +551,31 @@ protected:
     };
 
 public:
-    using const_node = _const_node<DescendantsForest>;
-    using node = _node<DescendantsForest>;
+    using const_node = _const_node<DescendantForest>;
+    using node = _node<DescendantForest>;
 
     /**
      * @brief The empty constructor
      */
-    DescendantsForest();
+    DescendantForest();
 
     /**
-     * @brief Construct a descendants forest by using a tissue sample of a simulation
+     * @brief Construct a descendant forest by using a tissue sample of a simulation
      *
-     * This method builds a descendants forest by using mutant simulation
+     * This method builds a descendant forest by using mutant simulation
      * pre-sampled cells as leaves.
      *
      * @param simulation is a simulation
      */
-    DescendantsForest(const Evolutions::Simulation& simulation);
+    DescendantForest(const Evolutions::Simulation& simulation);
 
     /**
-     * @brief Construct a descendants forest by using a tissue sample of a simulation
+     * @brief Construct a descendant forest by using a tissue sample of a simulation
      *
      * @param simulation is a simulation
      * @param tissue_samples is a list of tissue samples coming from the simulation
      */
-    DescendantsForest(const Evolutions::Simulation& simulation,
+    DescendantForest(const Evolutions::Simulation& simulation,
                       const std::list<Evolutions::TissueSample>& tissue_samples);
 
     /**
@@ -635,11 +648,74 @@ public:
      * @brief Get the tissue samples that produced the forest
      *
      * @return a constant reference to a vector of tissue samples
-     *      that produced the descendants forest
+     *      that produced the descendant forest
      */
     inline const std::vector<Evolutions::TissueSample>& get_samples() const
     {
         return samples;
+    }
+
+    /**
+     * @brief Count how many leaves are progeny of each root
+     *
+     * @return A map that, for any sample and for any root, reports how many cells
+     *      in the sample are represented by a leave that is progeny of the root.
+     */
+    std::map<Mutants::Evolutions::TissueSampleId, std::map<Mutants::CellId, size_t>>
+    count_cells_per_root() const;
+
+    /**
+     * @brief Partition the forest samples
+     *
+     * This method partition the forest samples according to a labelling function that
+     * associated a cell id to a string. The names of the resulting samples follow the
+     * regular expression `<old sample name>_<label>`.
+     *
+     * @tparam LABELLING_FUNCTION is a cell id labelling function
+     * @param labelling is a function labelling each forest cell identifier
+     *      with a string
+     */
+    template<CellIdLabellingFunction LABELLING_FUNCTION>
+    void partition_samples(const LABELLING_FUNCTION& labelling)
+    {
+        using TissueSample = Evolutions::TissueSample;
+        std::map<std::string, TissueSample> new_samples;
+
+        for (const auto& [cell_id, sample_pos] : coming_from) {
+            const auto& old_sample = samples[sample_pos];
+
+            std::string new_sample_name = old_sample.get_name()
+                                            + "_" + labelling(cell_id);
+
+            auto found = new_samples.find(new_sample_name);
+            if (found == new_samples.end()) {
+                TissueSample new_sample{new_sample_name,
+                                        old_sample.get_time(),
+                                        old_sample.get_bounding_box(),
+                                        old_sample.get_tumour_cells_in_bbox()};
+
+                new_sample.add_cell_id(cell_id);
+
+                new_samples.emplace(new_sample_name, std::move(new_sample));
+            } else {
+                found->second.add_cell_id(cell_id);
+            }
+        }
+
+        samples = std::vector<TissueSample>(new_samples.size());
+
+        SamplePosition pos = 0;
+        auto sample_it = samples.begin();
+        for (auto& sample : std::views::values(new_samples)) {
+            for (const auto& cell_id : sample.get_cell_ids()) {
+                coming_from[cell_id] = pos;
+            }
+
+            std::swap(*sample_it,  sample);
+
+            ++sample_it;
+            ++pos;
+        }
     }
 
     /**
@@ -663,10 +739,10 @@ public:
      * @brief Get the forest for a subset of the tissue samples
      *
      * @param sample_names are the names of the samples to be considered
-     * @return the descendants forest for the tissue samples whose name is
+     * @return the descendant forest for the tissue samples whose name is
      *          in `sample_names`
      */
-    DescendantsForest get_subforest_for(const std::vector<std::string>& sample_names) const;
+    DescendantForest get_subforest_for(const std::vector<std::string>& sample_names) const;
 
     /**
      * @brief Check whether a cell is represented by a forest leaf
@@ -766,7 +842,7 @@ public:
     void clear();
 
     /**
-     * @brief Save a descendants forest in an archive
+     * @brief Save a descendant forest in an archive
      *
      * @tparam ARCHIVE is the output archive type
      * @param archive is the output archive
@@ -774,7 +850,7 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "RACES Descendants Forest", 0);
+        ARCHIVE::write_header(archive, "RACES Descendants Forest", 1);
 
         archive & roots
                 & cells
@@ -786,18 +862,18 @@ public:
     }
 
     /**
-     * @brief Load a descendants forest from an archive
+     * @brief Load a descendant forest from an archive
      *
      * @tparam ARCHIVE is the input archive type
      * @param archive is the input archive
-     * @return the load descendants forest
+     * @return the load descendant forest
      */
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::In, ARCHIVE>, bool> = true>
-    inline static DescendantsForest load(ARCHIVE& archive)
+    inline static DescendantForest load(ARCHIVE& archive)
     {
-        ARCHIVE::read_header(archive, "RACES Descendants Forest", 0);
+        ARCHIVE::read_header(archive, "RACES Descendants Forest", 1);
 
-        DescendantsForest forest;
+        DescendantForest forest;
 
         archive & forest.roots
                 & forest.cells

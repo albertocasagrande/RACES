@@ -2,10 +2,10 @@
  * @file phyloXML.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements phyloXML stream
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-09-29
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -64,7 +64,7 @@ void phyloXMLStream::change_indentation_level(const size_t level)
     indent_string = oss.str();
 }
 
-phyloXMLStream& phyloXMLStream::operator<<(const DescendantsForest& forest)
+phyloXMLStream& phyloXMLStream::operator<<(const DescendantForest& forest)
 {
     if (closed) {
         throw std::runtime_error("The stream has been already closed");
@@ -115,7 +115,7 @@ phyloXMLStream& phyloXMLStream::operator<<(const SpeciesId& species_id)
     return *this;
 }
 
-phyloXMLStream& phyloXMLStream::operator<<(const DescendantsForest::const_node& node)
+phyloXMLStream& phyloXMLStream::operator<<(const DescendantForest::const_node& node)
 {
     if (closed) {
         throw std::runtime_error("The stream has been already closed");

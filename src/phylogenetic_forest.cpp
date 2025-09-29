@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.11
- * @date 2025-09-27
+ * @version 1.12
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -47,15 +47,15 @@ PhylogeneticForest::SampleStatistics::SampleStatistics():
 {}
 
 PhylogeneticForest::PhylogeneticForest():
-    DescendantsForest()
+    DescendantForest()
 {}
 
 PhylogeneticForest::const_node::const_node(const PhylogeneticForest* forest, const Mutants::CellId cell_id):
-    Mutants::DescendantsForest::_const_node<PhylogeneticForest>(forest, cell_id)
+    Mutants::DescendantForest::_const_node<PhylogeneticForest>(forest, cell_id)
 {}
 
 PhylogeneticForest::node::node(PhylogeneticForest* forest, const Mutants::CellId cell_id):
-    Mutants::DescendantsForest::_node<PhylogeneticForest>(forest, cell_id)
+    Mutants::DescendantForest::_node<PhylogeneticForest>(forest, cell_id)
 {}
 
 const MutationList& PhylogeneticForest::const_node::pre_neoplastic_mutations() const
@@ -254,7 +254,7 @@ std::vector<PhylogeneticForest::node> PhylogeneticForest::get_roots()
 template<typename MUTATION>
 std::map<MUTATION, std::set<Mutants::CellId>>
 filter_by_cells_in(const std::map<MUTATION, std::set<Mutants::CellId>>& mutation_map,
-                   const Mutants::DescendantsForest& forest)
+                   const Mutants::DescendantForest& forest)
 {
     std::map<MUTATION, std::set<Mutants::CellId>> filtered_map;
 
@@ -278,7 +278,7 @@ PhylogeneticForest::get_subforest_for(const std::vector<std::string>& sample_nam
 {
     PhylogeneticForest forest;
 
-    static_cast<Mutants::DescendantsForest&>(forest) = Mutants::DescendantsForest::get_subforest_for(sample_names);
+    static_cast<Mutants::DescendantForest&>(forest) = Mutants::DescendantForest::get_subforest_for(sample_names);
 
     for (const auto& root_id : forest.get_root_cell_ids()) {
         forest.pre_neoplastic_mutations.emplace(root_id, pre_neoplastic_mutations.at(root_id));
@@ -348,109 +348,36 @@ CellGenomeMutations PhylogeneticForest::get_cell_mutations(const Mutants::CellId
     return node_mutations;
 }
 
-std::list<SampleGenomeMutations>
-PhylogeneticForest::get_sample_mutations_list(const bool& with_germinal) const
-{
-    // TODO: For memory reasons, we don't want to store a list of the genome
-    // mutations of all samples. This method will became deprecated, and it
-    // will be replaced by a less demanding alternative.
-
-    using namespace Mutants::Evolutions;
-
-    std::list<SampleGenomeMutations> sample_mutations_list;
-    std::map<TissueSampleId, SampleGenomeMutations*> sample_mutation_map;
-    for (const auto& sample: get_samples()) {
-        sample_mutations_list.emplace_back(sample.get_name(), germline_mutations);
-        sample_mutation_map.insert({sample.get_id(), &(sample_mutations_list.back())});
-    }
-
-    for (const auto& leaf_mutations : get_leaf_mutation_tour(with_germinal)) {
-        const auto& sample = get_samples()[get_coming_from().at(leaf_mutations.get_id())];
-        auto& sample_genomic_mutations = *(sample_mutation_map.at(sample.get_id()));
-        sample_genomic_mutations.mutations.push_back(std::make_shared<CellGenomeMutations>(leaf_mutations));
-    }
-
-    return sample_mutations_list;
-}
-
-size_t
-find_sample_index(const std::vector<RACES::Mutants::Evolutions::TissueSample>& sample_list,
-                 const std::string& sample_name)
-{
-    size_t idx=0;
-    for (const auto& sample: sample_list) {
-        if (sample.get_name() == sample_name) {
-            return idx;
-        }
-        ++idx;
-    }
-
-    throw std::runtime_error("Unknown sample \""+sample_name+"\".");
-}
-
-SampleGenomeMutations
-PhylogeneticForest::get_sample_mutations(const std::string& sample_name,
-                                         const bool& with_germinal) const
-{
-    // TODO: For memory reasons, we don't want to store a list of the genome
-    // mutations of all samples. This method will became deprecated, and it
-    // will be replaced by a less demanding alternative.
-
-    using namespace Mutants::Evolutions;
-
-    SampleGenomeMutations sample_mutations(sample_name, germline_mutations);
-
-    const size_t sample_idx = find_sample_index(get_samples(), sample_name);
-
-    for (const auto& cell_id : get_samples()[sample_idx].get_cell_ids()) {
-        auto cell_mutations = std::make_shared<CellGenomeMutations>();
-        *cell_mutations = get_cell_mutations(cell_id, with_germinal);
-        sample_mutations.mutations.push_back(cell_mutations);
-    }
-
-    return sample_mutations;
-}
-
-SampleGenomeMutations PhylogeneticForest::get_normal_sample(const std::string& name,
-                                                            const bool& with_pre_neoplastic) const
-{
-    SampleGenomeMutations sample(name, germline_mutations);
-
-    if (with_pre_neoplastic) {
-        for (auto& [cell_id, cell_genome] : get_normal_genomes(with_pre_neoplastic)) {
-            auto genome = std::make_shared<CellGenomeMutations>();
-
-            std::swap(cell_genome, *genome);
-
-            sample.mutations.push_back(genome);
-        }
-    } else {
-        sample.mutations.push_back(std::make_shared<CellGenomeMutations>(germline_mutations->copy_structure()));
-    }
-
-    return sample;
-}
-
 std::map<Mutants::CellId, CellGenomeMutations>
-PhylogeneticForest::get_normal_genomes(const bool& with_pre_neoplastic) const
+PhylogeneticForest::get_wild_type_genomes(const bool with_pre_neoplastic,
+                                          const bool with_germinal) const
 {
-    std::map<Mutants::CellId, CellGenomeMutations> normal_genomes;
+    GenomeMutations germinal;
 
-    if (with_pre_neoplastic) {
-        for (const auto& [cell_id, pnp_mutations] : get_pre_neoplastic_mutations()) {
-            auto cell_genome = CellGenomeMutations(germline_mutations->copy_structure());
-            cell_genome.apply(pnp_mutations);
-
-            normal_genomes.insert({cell_id, std::move(cell_genome)});
-        }
+    if (with_germinal) {
+        germinal = get_germline_mutations();
     } else {
-        for (const auto& root : get_roots()) {
-            normal_genomes.insert({root.get_id(),
-                                   CellGenomeMutations(germline_mutations->copy_structure())});
-        }
+        germinal = get_germline_mutations().copy_structure();
     }
 
-    return normal_genomes;
+    std::map<Mutants::CellId, CellGenomeMutations> wild_type_genomes;
+    wild_type_genomes.emplace(EMBRYO_CELL_ID,
+                              CellGenomeMutations{germinal});
+
+    for (const auto& root_id : get_root_cell_ids()) {
+        PhylogeneticForest::const_node root{this, root_id};
+
+        const Mutants::Cell& root_cell = static_cast<const Mutants::Cell&>(root);
+        CellGenomeMutations root_mutations{root_cell, germinal};
+
+        if (with_pre_neoplastic) {
+            root_mutations.apply(root.pre_neoplastic_mutations());
+        }
+
+        wild_type_genomes.emplace(root_id, std::move(root_mutations));
+    }
+
+    return wild_type_genomes;
 }
 
 std::map<ChromosomeId, std::set<ChrPosition>>
@@ -540,7 +467,7 @@ void PhylogeneticForest::clear()
     SID_first_cells.clear();
     CNA_first_cells.clear();
     sample_statistics.clear();
-    DescendantsForest::clear();
+    DescendantForest::clear();
 }
 
 }   // Mutants

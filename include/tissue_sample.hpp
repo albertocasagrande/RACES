@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 1.1
- * @date 2025-09-21
+ * @version 1.2
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -33,6 +33,7 @@
 
 #include <iostream>
 
+#include <limits>
 #include <list>
 
 #include "position_set.hpp"
@@ -48,7 +49,9 @@ namespace Mutants
 namespace Evolutions
 {
 
-using TissueSampleId = uint16_t;
+using TissueSampleId = uint32_t;
+
+#define NORMAL_SAMPLE_ID std::numeric_limits<Mutants::Evolutions::TissueSampleId>::max()
 
 /**
  * @brief A class to represent tissue samples

@@ -2,8 +2,8 @@
  * @file descendant_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for descendant forests
- * @version 1.1
- * @date 2025-07-21
+ * @version 1.2
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -41,41 +41,41 @@ namespace RACES
 namespace Mutants
 {
 
-DescendantsForest::SpeciesData::SpeciesData()
+DescendantForest::SpeciesData::SpeciesData()
 {}
 
-DescendantsForest::SpeciesData::SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature):
+DescendantForest::SpeciesData::SpeciesData(const MutantId& mutant_id, const MethylationSignature& signature):
     mutant_id(mutant_id), signature(signature)
 {}
 
-DescendantsForest::const_node DescendantsForest::get_node(const CellId& cell_id) const
+DescendantForest::const_node DescendantForest::get_node(const CellId& cell_id) const
 {
     if (cells.count(cell_id)==0) {
         throw std::runtime_error("The forest does not contain the cell "
                                  "having the specified identifier");
     }
 
-    return DescendantsForest::const_node(this, cell_id);
+    return DescendantForest::const_node(this, cell_id);
 }
 
-DescendantsForest::node DescendantsForest::get_node(const CellId& cell_id)
+DescendantForest::node DescendantForest::get_node(const CellId& cell_id)
 {
     if (cells.count(cell_id)==0) {
         throw std::runtime_error("The forest does not contain the cell "
                                  "having the specified identifier");
     }
 
-    return DescendantsForest::node(this, cell_id);
+    return DescendantForest::node(this, cell_id);
 }
 
-DescendantsForest::DescendantsForest()
+DescendantForest::DescendantForest()
 {}
 
-DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation):
-    DescendantsForest(simulation, simulation.get_tissue_samples())
+DescendantForest::DescendantForest(const Evolutions::Simulation& simulation):
+    DescendantForest(simulation, simulation.get_tissue_samples())
 {}
 
-DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation,
+DescendantForest::DescendantForest(const Evolutions::Simulation& simulation,
                                      const std::list<Evolutions::TissueSample>& tissue_samples)
 {
     std::set<MutantId> mutant_ids;
@@ -98,40 +98,40 @@ DescendantsForest::DescendantsForest(const Evolutions::Simulation& simulation,
     grow_from(tissue_samples, reader);
 }
 
-std::vector<DescendantsForest::const_node> DescendantsForest::get_roots() const
+std::vector<DescendantForest::const_node> DescendantForest::get_roots() const
 {
-    std::vector<DescendantsForest::const_node> nodes;
+    std::vector<DescendantForest::const_node> nodes;
 
     for (const auto& root_id : roots) {
-        nodes.push_back(DescendantsForest::const_node(this, root_id));
+        nodes.push_back(DescendantForest::const_node(this, root_id));
     }
 
     return nodes;
 }
 
-std::vector<DescendantsForest::node> DescendantsForest::get_roots()
+std::vector<DescendantForest::node> DescendantForest::get_roots()
 {
-    std::vector<DescendantsForest::node> nodes;
+    std::vector<DescendantForest::node> nodes;
 
     for (const auto& root_id : roots) {
-        nodes.push_back(DescendantsForest::node(this, root_id));
+        nodes.push_back(DescendantForest::node(this, root_id));
     }
 
     return nodes;
 }
 
-std::vector<DescendantsForest::const_node> DescendantsForest::get_leaves() const
+std::vector<DescendantForest::const_node> DescendantForest::get_leaves() const
 {
-    std::vector<DescendantsForest::const_node> leaves;
+    std::vector<DescendantForest::const_node> leaves;
 
     for (const auto& [leaf_id, sample_idx] : coming_from) {
-        leaves.push_back(DescendantsForest::const_node(this, leaf_id));
+        leaves.push_back(DescendantForest::const_node(this, leaf_id));
     }
 
     return leaves;
 }
 
-std::string DescendantsForest::get_species_name(const SpeciesId& species_id) const
+std::string DescendantForest::get_species_name(const SpeciesId& species_id) const
 {
     const auto& species_it = species_data.find(species_id);
     if (species_it == species_data.end()) {
@@ -144,7 +144,7 @@ std::string DescendantsForest::get_species_name(const SpeciesId& species_id) con
                 MutantProperties::signature_to_string(data.signature);
 }
 
-bool is_crucial(const DescendantsForest::const_node& node, const std::list<std::list<CellId>>& sticks_from)
+bool is_crucial(const DescendantForest::const_node& node, const std::list<std::list<CellId>>& sticks_from)
 {
     if (sticks_from.size()>1) {
         // if sticks_from contains more than one stick, then this node is
@@ -163,7 +163,7 @@ bool is_crucial(const DescendantsForest::const_node& node, const std::list<std::
 }
 
 std::list<CellId>
-DescendantsForest::collect_sticks_from(std::list<std::list<CellId>>& sticks, const CellId& cell_id,
+DescendantForest::collect_sticks_from(std::list<std::list<CellId>>& sticks, const CellId& cell_id,
                                        const double& birth_time_threshold) const
 {
     std::list<std::list<CellId>> sticks_from;
@@ -201,7 +201,7 @@ DescendantsForest::collect_sticks_from(std::list<std::list<CellId>>& sticks, con
     return {};
 }
 
-std::list<std::list<CellId>> DescendantsForest::get_sticks(const double birth_time_threshold) const
+std::list<std::list<CellId>> DescendantForest::get_sticks(const double birth_time_threshold) const
 {
     std::list<std::list<CellId>> sticks;
 
@@ -213,7 +213,7 @@ std::list<std::list<CellId>> DescendantsForest::get_sticks(const double birth_ti
 }
 
 std::map<CellId, size_t>
-count_descendants_in_subtree(const DescendantsForest& forest,
+count_descendants_in_subtree(const DescendantForest& forest,
                              const std::list<CellId>& leaf_ids)
 {
     std::map<CellId, size_t> counter;
@@ -237,7 +237,7 @@ count_descendants_in_subtree(const DescendantsForest& forest,
     return counter;
 }
 
-CellId find_tree_coalescent(const DescendantsForest& forest, const CellId& root,
+CellId find_tree_coalescent(const DescendantForest& forest, const CellId& root,
                             const std::map<CellId, size_t>& counter)
 {
     const auto& num_of_leaves = counter.at(root);
@@ -265,7 +265,7 @@ CellId find_tree_coalescent(const DescendantsForest& forest, const CellId& root,
 }
 
 std::vector<CellId>
-DescendantsForest::get_coalescent_cells(const std::list<CellId>& cell_ids) const
+DescendantForest::get_coalescent_cells(const std::list<CellId>& cell_ids) const
 {
     const auto counter = count_descendants_in_subtree(*this, cell_ids);
 
@@ -282,7 +282,7 @@ DescendantsForest::get_coalescent_cells(const std::list<CellId>& cell_ids) const
 }
 
 size_t
-DescendantsForest::height() const
+DescendantForest::height() const
 {
     size_t curr_height{0};
 
@@ -293,8 +293,36 @@ DescendantsForest::height() const
     return curr_height;
 }
 
+
+std::map<Mutants::Evolutions::TissueSampleId, std::map<Mutants::CellId, size_t>>
+DescendantForest::count_cells_per_root() const
+{
+    std::map<Mutants::Evolutions::TissueSampleId, std::map<Mutants::CellId, size_t>> counter;
+
+    for (const auto& root_id : get_root_cell_ids()) {
+        std::list<Mutants::CellId> queue{root_id};
+
+        while (!queue.empty()) {
+            const auto node = this->get_node(queue.front());
+            queue.pop_front();
+
+            if (node.is_leaf()) {
+                auto& sample_counter = counter[node.get_sample().get_id()];
+
+                ++(sample_counter[root_id]);
+            } else {
+                for (const auto& child_id : branches.at(node.get_id())) {
+                    queue.push_back(child_id);
+                }
+            }
+        }
+    }
+
+    return counter;
+}
+
 std::vector<CellId>
-DescendantsForest::get_coalescent_cells() const
+DescendantForest::get_coalescent_cells() const
 {
     std::list<CellId> leaf_ids;
 
@@ -307,8 +335,8 @@ DescendantsForest::get_coalescent_cells() const
     return get_coalescent_cells(leaf_ids);
 }
 
-DescendantsForest
-DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_names) const
+DescendantForest
+DescendantForest::get_subforest_for(const std::vector<std::string>& sample_names) const
 {
     std::set<std::string> names(sample_names.begin(), sample_names.end());
     std::set<std::string> found_names;
@@ -338,13 +366,13 @@ DescendantsForest::get_subforest_for(const std::vector<std::string>& sample_name
         throw std::domain_error(oss.str());
     }
 
-    DescendantsForest subforest = *this;
+    DescendantForest subforest = *this;
     subforest.grow_from(tissue_samples, cells);
 
     return subforest;
 }
 
-bool DescendantsForest::is_leaf(const CellId& cell_id) const
+bool DescendantForest::is_leaf(const CellId& cell_id) const
 {
     auto branches_it = branches.find(cell_id);
 
@@ -354,7 +382,7 @@ bool DescendantsForest::is_leaf(const CellId& cell_id) const
     return branches_it->second.size()==0;
 }
 
-void DescendantsForest::clear()
+void DescendantForest::clear()
 {
     cells.clear();
     roots.clear();

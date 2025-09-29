@@ -1,9 +1,9 @@
 /**
  * @file mutation_engine.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
- * @brief Implements a class to place mutations on a descendants forest
- * @version 1.2
- * @date 2025-07-09
+ * @brief Implements a class to place mutations on a descendant forest
+ * @version 1.3
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -90,33 +90,29 @@ MutationStatistics& MutationStatistics::record(const std::string& sample_name,
     return *this;
 }
 
-MutationStatistics& MutationStatistics::record(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list,
+MutationStatistics& MutationStatistics::record(const PhylogeneticForest& forest,
                                                UI::ProgressBar* progress_bar)
 {
     using namespace RACES;
     using namespace RACES::Mutations;
 
-    size_t total_steps{0};
+    size_t total_steps{forest.num_of_leaves()};
     size_t recorded{0};
 
     if (progress_bar!=nullptr) {
         progress_bar->set_message("Collecting mutation data");
-
-        for (const auto& sample_mutations : mutations_list) {
-            total_steps += sample_mutations.mutations.size();
-        }
     }
 
-    for (const auto& sample_mutations : mutations_list) {
-        const auto& sample_name = sample_mutations.name;
-        for (const auto& mut_ptr: sample_mutations.mutations) {
-            record(sample_name, *mut_ptr);
+    for (const auto& leaf_mutations : forest.get_leaf_mutation_tour()) {
+        const auto& leaf_sample = forest.get_node(leaf_mutations.get_id()).get_sample();
+        const auto& sample_name = leaf_sample.get_name();
 
-            if (progress_bar!=nullptr) {
-                size_t percentage = 100*(++recorded)/total_steps;
-                if (percentage>(progress_bar->get_progress())) {
-                    progress_bar->set_progress(percentage);
-                }
+        record(sample_name, leaf_mutations);
+
+        if (progress_bar!=nullptr) {
+            size_t percentage = 100*(++recorded)/total_steps;
+            if (percentage>(progress_bar->get_progress())) {
+                progress_bar->set_progress(percentage);
             }
         }
     }

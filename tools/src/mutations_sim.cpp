@@ -2,8 +2,8 @@
  * @file mutations_sim.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Main file for the RACES mutations simulator
- * @version 1.4
- * @date 2024-08-09
+ * @version 1.5
+ * @date 2025-09-29
  *
  * @copyright Copyright (c) 2023-2024
  *
@@ -127,8 +127,8 @@ class MutationsSimulator : public BasicExecutable
     double sequencer_error_rate;
     std::string SIDs_csv_filename;
     std::string CNAs_csv_filename;
-    std::string preneoplatic_SNV_signature_name;
-    std::string preneoplatic_ID_signature_name;
+    std::string pre_neoplastic_SNV_signature_name;
+    std::string pre_neoplastic_ID_signature_name;
     std::string germline_csv_filename;
     std::string germline_subject;
     bool epigenetic_FACS;
@@ -206,27 +206,27 @@ class MutationsSimulator : public BasicExecutable
     template<typename ABSOLUTE_GENOME_POSITION, typename RANDOM_GENERATOR>
     RACES::Mutations::PhylogeneticForest
     place_mutations(RACES::Mutations::MutationEngine<ABSOLUTE_GENOME_POSITION,RANDOM_GENERATOR>& engine,
-                    const RACES::Mutants::DescendantsForest& forest,
-                    const size_t& num_of_preneoplastic_SNVs,
-                    const size_t& num_of_preneoplastic_IDs,
-                    const std::string& preneoplatic_SNV_signature,
-                    const std::string& preneoplatic_indel_signature) const
+                    const RACES::Mutants::DescendantForest& forest,
+                    const size_t& num_of_pre_neoplastic_SNVs,
+                    const size_t& num_of_pre_neoplastic_IDs,
+                    const std::string& pre_neoplastic_SNV_signature,
+                    const std::string& pre_neoplastic_indel_signature) const
     {
         if (quiet) {
-            return engine.place_mutations(forest, num_of_preneoplastic_SNVs,
-                                          num_of_preneoplastic_IDs, 0,
-                                          preneoplatic_SNV_signature,
-                                          preneoplatic_indel_signature);
+            return engine.place_mutations(forest, num_of_pre_neoplastic_SNVs,
+                                          num_of_pre_neoplastic_IDs, 0,
+                                          pre_neoplastic_SNV_signature,
+                                          pre_neoplastic_indel_signature);
         }
 
         RACES::UI::ProgressBar progress_bar(std::cout);
 
         progress_bar.set_message("Placing mutations");
 
-        auto phylo_forest = engine.place_mutations(forest, num_of_preneoplastic_SNVs,
-                                                   num_of_preneoplastic_IDs, progress_bar,
-                                                   0, preneoplatic_SNV_signature,
-                                                   preneoplatic_indel_signature);
+        auto phylo_forest = engine.place_mutations(forest, num_of_pre_neoplastic_SNVs,
+                                                   num_of_pre_neoplastic_IDs, progress_bar,
+                                                   0, pre_neoplastic_SNV_signature,
+                                                   pre_neoplastic_indel_signature);
 
         progress_bar.set_message("Mutations placed");
 
@@ -240,7 +240,7 @@ class MutationsSimulator : public BasicExecutable
         return nlohmann::json::parse(simulation_stream);
     }
 
-    void process_statistics(const std::list<RACES::Mutations::SampleGenomeMutations>& mutations_list) const
+    void process_statistics(const RACES::Mutations::PhylogeneticForest& forest) const
     {
         using namespace RACES::UI;
         using namespace RACES::Mutations;
@@ -251,7 +251,7 @@ class MutationsSimulator : public BasicExecutable
 
             MutationStatistics statistics;
 
-            statistics.record(mutations_list, bar);
+            statistics.record(forest, bar);
 
             if (SIDs_csv_filename != "") {
                 std::ofstream os(SIDs_csv_filename);
@@ -265,51 +265,6 @@ class MutationsSimulator : public BasicExecutable
                 statistics.write_CNAs_table(os);
             }
         }
-    }
-
-    static void
-    split_by_epigenetic_status(std::list<RACES::Mutations::SampleGenomeMutations>& FACS_samples,
-                               const RACES::Mutations::SampleGenomeMutations& sample_mutations,
-                               std::map<RACES::Mutants::SpeciesId, std::string> methylation_map)
-    {
-        using namespace RACES::Mutants;
-        using namespace RACES::Mutants::Evolutions;
-        using namespace RACES::Mutations;
-
-        std::map<SpeciesId, SampleGenomeMutations*> meth_samples;
-
-        for (const auto& cell_mutations : sample_mutations.mutations) {
-            auto found = meth_samples.find(cell_mutations->get_species_id());
-
-            if (found == meth_samples.end()) {
-                auto new_name = sample_mutations.name+"_"+
-                                    methylation_map.at(cell_mutations->get_species_id());
-
-                FACS_samples.emplace_back(new_name, sample_mutations.germline_mutations);
-
-                FACS_samples.back().mutations.push_back(cell_mutations);
-
-                meth_samples.insert({cell_mutations->get_species_id(), &(FACS_samples.back())});
-            } else {
-                (found->second)->mutations.push_back(cell_mutations);
-            }
-        }
-    }
-
-    static std::list<RACES::Mutations::SampleGenomeMutations>
-    split_by_epigenetic_status(const std::list<RACES::Mutations::SampleGenomeMutations>& sample_mutations_list,
-                               const std::map<RACES::Mutants::SpeciesId, std::string>& methylation_map)
-    {
-        using namespace RACES::Mutants;
-        using namespace RACES::Mutants::Evolutions;
-
-        std::list<RACES::Mutations::SampleGenomeMutations> FACS_samples;
-
-        for (const auto& sample_mutations : sample_mutations_list) {
-            split_by_epigenetic_status(FACS_samples, sample_mutations, methylation_map);
-        }
-
-        return FACS_samples;
     }
 
     template<typename TISSUE_SAMPLE,
@@ -414,6 +369,23 @@ class MutationsSimulator : public BasicExecutable
         }
     }
 
+    class MethylationLabelling
+    {
+        RACES::Mutants::DescendantForest const* forest;
+    public:
+        MethylationLabelling(const RACES::Mutants::DescendantForest& forest):
+            forest{&forest}
+        {}
+
+        std::string operator()(const RACES::Mutants::CellId& cell_id) const
+        {
+            auto node = forest->get_node(cell_id);
+
+            const auto& signature = node.get_methylation_signature();
+            return RACES::Mutants::MutantProperties::signature_to_string(signature);
+        }
+    };
+
     template<typename GENOME_WIDE_POSITION>
     void run_abs_position() const
     {
@@ -434,21 +406,15 @@ class MutationsSimulator : public BasicExecutable
 
         ReadSimulator<> read_simulator;
 
-        Mutants::DescendantsForest descendants_forest;
+        Mutants::DescendantForest descendant_forest;
         MutationalProperties mutational_properties;
 
-        std::map<SpeciesId, std::string> methylation_map;
         {
             auto species_simulation = load_species_simulation(snapshot_path, quiet);
 
-            for (const auto& species : species_simulation.tissue()) {
-                const auto& signature = species.get_methylation_signature();
-                methylation_map[species.get_id()] = MutantProperties::signature_to_string(signature);
-            }
-
             auto samples = get_samples(species_simulation, simulation_cfg);
 
-            descendants_forest = Mutants::DescendantsForest(species_simulation, samples);
+            descendant_forest = Mutants::DescendantForest(species_simulation, samples);
 
             mutational_properties = ConfigReader::get_mutational_properties(simulation_cfg);
         }
@@ -510,17 +476,17 @@ class MutationsSimulator : public BasicExecutable
         add_exposures(engine, exposures_json, "SBS");
         add_exposures(engine, exposures_json, "indel");
 
-        auto num_of_pnp_SNV = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg, "SNV");
-        auto num_of_pnp_indel = ConfigReader::get_number_of_neoplastic_mutations(simulation_cfg, "indel");
+        auto num_of_pnp_SNV = ConfigReader::get_number_of_pre_neoplastic_mutations(simulation_cfg, "SNV");
+        auto num_of_pnp_indel = ConfigReader::get_number_of_pre_neoplastic_mutations(simulation_cfg, "indel");
 
-        auto phylogenetic_forest = place_mutations(engine, descendants_forest, num_of_pnp_SNV,
-                                                   num_of_pnp_indel, preneoplatic_SNV_signature_name,
-                                                   preneoplatic_ID_signature_name);
-
-        auto mutations_list = phylogenetic_forest.get_sample_mutations_list();
+        auto forest = place_mutations(engine, descendant_forest, num_of_pnp_SNV,
+                                      num_of_pnp_indel, pre_neoplastic_SNV_signature_name,
+                                      pre_neoplastic_ID_signature_name);
 
         if (epigenetic_FACS) {
-            mutations_list = split_by_epigenetic_status(mutations_list, methylation_map);
+            MethylationLabelling labelling{forest};
+
+            forest.partition_samples(labelling);
         }
 
         if (coverage>0) {
@@ -528,22 +494,21 @@ class MutationsSimulator : public BasicExecutable
 
             RACES::Sequencers::Illumina::BasicSequencer sequencer(sequencer_error_rate);
 
-            auto normal_sample = phylogenetic_forest.get_normal_sample("normale_sample", true);
-            const auto statistics = read_simulator(sequencer, mutations_list, coverage, normal_sample, purity);
+            const auto statistics = read_simulator(sequencer, forest, coverage, purity);
 
             saving_statistics_data_and_images(statistics);
         }
 
-        process_statistics(mutations_list);
+        process_statistics(forest);
     }
 
     void test_file_existence(boost::program_options::variables_map vm, const std::string& name,
-                             const std::filesystem::path& file, const std::string& productor="") const
+                             const std::filesystem::path& file, const std::string& producer="") const
     {
         if (!vm.count(name)) {
             std::string msg = "The " + name + " file is mandatory.";
-            if (productor.size()>0) {
-                msg = msg + " You can produce it by using `" + productor +"`.";
+            if (producer.size()>0) {
+                msg = msg + " You can produce it by using `" + producer + "`.";
             }
             print_help_and_exit(msg, 1);
         }
@@ -575,7 +540,7 @@ class MutationsSimulator : public BasicExecutable
         }
 
         test_file_existence(vm, "driver mutations", driver_mutations_filename);
-        test_file_existence(vm, "context index", context_index_filename, "build_contex_index");
+        test_file_existence(vm, "context index", context_index_filename, "build_context_index");
         test_file_existence(vm, "repetition index", rs_index_filename, "build_repetition_index");
         test_file_existence(vm, "SBS signature", SBS_filename);
         test_file_existence(vm, "ID signature", ID_filename);
@@ -710,11 +675,11 @@ public:
             ("germline-subject,J", po::value<std::string>(&germline_subject),
              "name of the germline subject" )
             ("pnp-SNV,S",
-             po::value<std::string>(&preneoplatic_SNV_signature_name)->default_value("SBS1"),
-             "name of the preneoplastic SNV signature" )
+             po::value<std::string>(&pre_neoplastic_SNV_signature_name)->default_value("SBS1"),
+             "name of the pre-neoplastic SNV signature" )
             ("pnp-indel,I",
-             po::value<std::string>(&preneoplatic_ID_signature_name)->default_value("ID1"),
-             "name of the preneoplastic indel signature" )
+             po::value<std::string>(&pre_neoplastic_ID_signature_name)->default_value("ID1"),
+             "name of the pre-neoplastic indel signature" )
             ("mutations-CSV,M", po::value<std::string>(&SIDs_csv_filename),
              "mutations CSV output file")
             ("CNAs-CSV,C", po::value<std::string>(&CNAs_csv_filename),
