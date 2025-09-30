@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.10
- * @date 2025-09-29
+ * @version 1.11
+ * @date 2025-09-30
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -479,7 +479,7 @@ public:
         {
             return const_iterator{forest, only_leaves,
                                   with_pre_neoplastic,
-                                  with_germinal, true};
+                                  with_germinal, forest->num_of_nodes()>0};
         }
 
         /**
