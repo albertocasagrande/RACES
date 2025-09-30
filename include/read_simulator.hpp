@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.24
- * @date 2025-09-29
+ * @version 1.25
+ * @date 2025-09-30
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -2241,10 +2241,6 @@ public:
                 && !sequencer.supports_paired_reads()) {
             throw std::domain_error(sequencer.get_model_name()
                                     + " does not support paired reads.");
-        }
-
-        if (forest.get_samples().size()==0) {
-            return SampleSetStatistics(output_directory);
         }
 
         auto targets = SequencingTargets::get_targets(random_generator, forest,
