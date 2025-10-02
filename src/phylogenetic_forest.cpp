@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.13
+ * @version 1.14
  * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
@@ -273,7 +273,7 @@ void update_allelic_count_on(PhylogeneticForest::AllelicCount& allelic_count,
 }
 
 PhylogeneticForest::AllelicCount
-PhylogeneticForest::get_allelic_count(const size_t& min_allelic_size) const
+PhylogeneticForest::get_allelic_count(const AlleleCounter& min_allelic_size) const
 {
     auto b_points = get_CNA_break_points();
 
@@ -290,7 +290,7 @@ PhylogeneticForest::get_allelic_count(const size_t& min_allelic_size) const
 
 PhylogeneticForest::AllelicCount
 PhylogeneticForest::get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
-                                      const size_t& min_allelic_size) const
+                                      const AlleleCounter& min_allelic_size) const
 {
     auto b_points = get_CNA_break_points();
 

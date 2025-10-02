@@ -2,8 +2,8 @@
  * @file bucket.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines bucket
- * @version 1.2
- * @date 2025-09-17
+ * @version 1.3
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -64,7 +64,7 @@ class BucketRandomTour;
 template<typename VALUE>
 class Bucket
 {
-    const std::filesystem::path filepath;   //!< the name of the file storing the bucket
+    std::filesystem::path filepath;   //!< the name of the file storing the bucket
 
     std::streampos size_pos;    //!< the position of the bucket size in the file
     std::streampos data_pos;    //!< the position of the first value in the file
@@ -676,7 +676,7 @@ public:
             }
 
             std::filesystem::rename(shuffled_path, filepath);
-    
+
             return;
         }
 
@@ -769,9 +769,9 @@ public:
      * @brief Get the bucket's read cache size
      *
      * This method returns the read cache size in bytes. The values
-     * returned by this method may differ from those set by either 
+     * returned by this method may differ from those set by either
      * the constructor or `set_max_cache_size()`.
-     * 
+     *
      * @return the read cache size in bytes
      */
     inline size_t get_cache_size() const
@@ -1127,7 +1127,7 @@ public:
 
         /**
          * @brief Get the number of values in the tour already reached
-         * 
+         *
          * @return the number of values in the bucket that have already been
          *      reached by the tour
          */
@@ -1138,7 +1138,7 @@ public:
 
         /**
          * @brief Get the number of values to complete the tour
-         * 
+         *
          * @return the number of values in the bucket that have not been
          *      reached by the tour yet
          */
@@ -1260,9 +1260,9 @@ public:
      * @brief Get the bucket's read cache size
      *
      * This method returns the read cache size in bytes. The values
-     * returned by this method may differ from those set by either 
+     * returned by this method may differ from those set by either
      * the constructor or `set_max_cache_size()`.
-     * 
+     *
      * @return the read cache size in bytes
      */
     inline const size_t& get_cache_size() const

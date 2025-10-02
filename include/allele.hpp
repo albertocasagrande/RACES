@@ -2,8 +2,8 @@
  * @file allele.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines allele representation
- * @version 1.5
- * @date 2025-09-20
+ * @version 1.6
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -46,7 +46,12 @@ namespace Mutations
 /**
  * @brief A identifier type for alleles
  */
-typedef uint16_t AlleleId;
+using AlleleId = uint16_t;
+
+/**
+ * @brief A counter type for allele
+ */
+using AlleleCounter = uint16_t;
 
 // define a random allele identifier
 #define RANDOM_ALLELE std::numeric_limits<RACES::Mutations::AlleleId>::max()
@@ -65,7 +70,7 @@ class AlleleFragment : public GenomicRegion
      * `AlleleFragment:_data`.
      */
     class Data
-    {    
+    {
         std::map<GenomicPosition,
                  std::shared_ptr<SID>> mutations;  //!< the fragment SIDs
     public:
@@ -115,10 +120,10 @@ class AlleleFragment : public GenomicRegion
      * alleles, the method copy of the original data member into a data
      * object exclusively pointed by the current `AlleleFragment` object.
      *
-     * @warning In order to avoid unnecessary and time-consuming copies of 
+     * @warning In order to avoid unnecessary and time-consuming copies of
      *     the allele fragment data, the allele fragment data pointer should
      *     be exclusively maintained by the `AlleleFragment` object during
-     *     the call to this method. If needed, the returned pointer can be 
+     *     the call to this method. If needed, the returned pointer can be
      *     used for backup purpose.
      *
      * @return the shared pointer to the original data for backup
@@ -305,7 +310,7 @@ public:
 
 /**
  * @brief Test whether two `AlleleFragment` objects are the same
- * 
+ *
  * @param lhs is the left-hand side of the relation
  * @param rhs is the right-hand side of the relation
  * @return `true` is and only if `lhs` and `rhs` represent the same
@@ -316,7 +321,7 @@ bool operator==(const RACES::Mutations::AlleleFragment& lhs,
 
 /**
  * @brief Test whether two `AlleleFragment` objects differ
- * 
+ *
  * @param lhs is the left-hand side of the relation
  * @param rhs is the right-hand side of the relation
  * @return `false` is and only if `lhs` and `rhs` represent the same
@@ -583,7 +588,7 @@ public:
 
 /**
  * @brief Test whether two `Allele` objects are the same
- * 
+ *
  * @param lhs is the left-hand side of the relation
  * @param rhs is the right-hand side of the relation
  * @return `true` is and only if `lhs` and `rhs` represent the same
@@ -592,13 +597,13 @@ public:
 inline bool operator==(const RACES::Mutations::Allele& lhs,
                        const RACES::Mutations::Allele& rhs)
 {
-    return (lhs.get_history() == rhs.get_history()) 
+    return (lhs.get_history() == rhs.get_history())
             && (lhs.get_fragments() == rhs.get_fragments());
 }
 
 /**
  * @brief Test whether two `Allele` objects differ
- * 
+ *
  * @param lhs is the left-hand side of the relation
  * @param rhs is the right-hand side of the relation
  * @return `false` is and only if `lhs` and `rhs` represent the same
@@ -607,7 +612,7 @@ inline bool operator==(const RACES::Mutations::Allele& lhs,
 inline bool operator!=(const RACES::Mutations::Allele& lhs,
                        const RACES::Mutations::Allele& rhs)
 {
-    return (lhs.get_history() != rhs.get_history()) 
+    return (lhs.get_history() != rhs.get_history())
             || (lhs.get_fragments() != rhs.get_fragments());
 }
 

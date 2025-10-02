@@ -2,7 +2,7 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.17
+ * @version 1.18
  * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
@@ -438,14 +438,13 @@ void ChromosomeMutations::duplicate_alleles()
 
 std::map<ChrPosition, AllelicType>
 ChromosomeMutations::get_allelic_map(const std::set<ChrPosition>& break_points,
-                                     const size_t& min_allelic_size) const
+                                     AlleleCounter min_num_of_alleles) const
 {
-    size_t allelic_size{min_allelic_size};
     std::map<ChrPosition, std::map<AlleleId, uint32_t>> allele_counter;
     for (const auto& [allele_id, allele] : get_alleles()) {
         const auto orig_allele_id = allele.get_history().front();
-        if (orig_allele_id+1>allelic_size) {
-            allelic_size = orig_allele_id+1;
+        if (orig_allele_id+1 > min_num_of_alleles) {
+            min_num_of_alleles = orig_allele_id+1;
         }
         for (const auto& [pos, fragment] : allele.get_fragments()) {
             auto bp_it = break_points.find(pos.position);
@@ -468,7 +467,7 @@ ChromosomeMutations::get_allelic_map(const std::set<ChrPosition>& break_points,
 
     std::map<ChrPosition, AllelicType> allelic_map;
     for (const auto& [pos, counter] : allele_counter) {
-        AllelicType atype(allelic_size, 0);
+        AllelicType atype(min_num_of_alleles, 0);
 
         for (const auto& [allele_id, count] : counter) {
             atype[allele_id] = count;
@@ -744,7 +743,7 @@ void GenomeMutations::duplicate_alleles()
 
 GenomeMutations::AllelicMap
 GenomeMutations::get_allelic_map(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
-                                 const size_t& min_allelic_size) const
+                                 const AlleleCounter& min_allelic_size) const
 {
     AllelicMap allelic_map;
     for (const auto& [chr_id, chr] : get_chromosomes()) {

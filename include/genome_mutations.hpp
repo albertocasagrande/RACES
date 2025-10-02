@@ -2,7 +2,7 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.14
+ * @version 1.15
  * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
@@ -546,7 +546,7 @@ public:
      * @brief Get the allelic map of some chromosome fragments
      *
      * @param break_points are the fragment break points
-     * @param min_allelic_size is the minimum number of alleles
+     * @param min_num_of_alleles is the minimum number of alleles
      *    to report
      * @return A map that associates each break point to the
      *    allelic type of the genomic fragment beginning at the
@@ -554,7 +554,7 @@ public:
      */
     std::map<ChrPosition, AllelicType>
     get_allelic_map(const std::set<ChrPosition>& break_points,
-                    const size_t& min_allelic_size=0) const;
+                    AlleleCounter min_num_of_alleles=0) const;
 
     /**
      * @brief Remove a SID mutation
@@ -1037,18 +1037,19 @@ public:
     /**
      * @brief Get the allelic map of the fragments
      *
-     * @param min_allelic_size is the minimum number of alleles
+     * @param min_num_of_alleles is the minimum number of alleles
      *    to report
      * @return A map that, for each chromosome identifier,
      *    associates each of the genome break points to the allelic
      *    type of the genomic fragment beginning at the break point
      *    and ending at the following break point
      */
-    inline AllelicMap get_allelic_map(const size_t& min_allelic_size=0) const
+    inline AllelicMap
+    get_allelic_map(const AlleleCounter& min_num_of_alleles=0) const
     {
         const auto b_points = get_CNA_break_points();
 
-        return get_allelic_map(b_points, min_allelic_size);
+        return get_allelic_map(b_points, min_num_of_alleles);
     }
 
     /**
@@ -1066,7 +1067,7 @@ public:
      */
     AllelicMap
     get_allelic_map(const std::map<ChromosomeId, std::set<ChrPosition>>& break_points,
-                    const size_t& min_allelic_size=0) const;
+                    const AlleleCounter& min_allelic_size=0) const;
 
     /**
      * @brief Get the CNA break points

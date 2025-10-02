@@ -2,8 +2,8 @@
  * @file signature.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines mutational signatures
- * @version 1.1
- * @date 2025-09-25
+ * @version 1.2
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -98,7 +98,7 @@ public:
     /**
      * @brief The empty constructor
      */
-    SignatureExprResult<MUTATION_TYPE>():
+    SignatureExprResult():
         pos_map{}, probabilities{}
     {}
 

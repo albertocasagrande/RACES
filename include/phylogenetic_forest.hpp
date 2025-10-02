@@ -2,7 +2,7 @@
  * @file phylogenetic_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for phylogenetic forests
- * @version 1.12
+ * @version 1.13
  * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
@@ -46,6 +46,27 @@ namespace RACES
 
 namespace Mutations
 {
+
+/**
+ * @brief The template dependent data for the template `PhylogeneticForest::MutationTour`
+ *
+ * @tparam MUTATION_CONTAINER is the structure that contains the mutations,
+ *      i.e., `GenomeMutations` or `ChromosomeMutations`
+ */
+template<typename MUTATION_CONTAINER>
+struct ExtraTourData
+{};
+
+/**
+ * @brief The `PhylogeneticForest::MutationTour` data for `ChromosomeMutations`
+ *
+ * This is a specialization of `ExtraTourData` for `ChromosomeMutations`.
+ */
+template<>
+struct ExtraTourData<ChromosomeMutations>
+{
+    ChromosomeId chr_id;    //!< The chromosome identificator
+};
 
 /**
  * @brief A class representing descendant forests
@@ -303,29 +324,6 @@ public:
         }
 
         friend class PhylogeneticForest;
-    };
-
-private:
-
-    /**
-     * @brief The template dependent data for the template `MutationTour`
-     *
-     * @tparam MUTATION_CONTAINER is the structure that contains the mutations,
-     *      i.e., `GenomeMutations` or `ChromosomeMutations`
-     */
-    template<typename MUTATION_CONTAINER>
-    struct ExtraTourData
-    {};
-
-    /**
-     * @brief The `MutationTour` data for `ChromosomeMutations`
-     *
-     * This is a specialization of `ExtraTourData` for `ChromosomeMutations`.
-     */
-    template<>
-    struct ExtraTourData<ChromosomeMutations>
-    {
-        ChromosomeId chr_id;    //!< The chromosome identificator
     };
 
 public:
@@ -900,7 +898,7 @@ public:
      * @return A map that, for each chromosome and for each break point, reports
      *   the number of leaves per allelic type
      */
-    AllelicCount get_allelic_count(const size_t& min_allelic_size=0) const;
+    AllelicCount get_allelic_count(const AlleleCounter& min_allelic_size=0) const;
 
     /**
      * @brief Get the allelic count of a set of cells
@@ -913,7 +911,7 @@ public:
      *   allelic type
      */
     AllelicCount get_allelic_count(const std::list<Mutants::CellId>& cell_ids,
-                                   const size_t& min_allelic_size=0) const;
+                                   const AlleleCounter& min_allelic_size=0) const;
 
     /**
      * @brief Get the allelic count of a sample
