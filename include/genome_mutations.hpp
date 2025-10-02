@@ -2,8 +2,8 @@
  * @file genome_mutations.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines genome and chromosome data structures
- * @version 1.13
- * @date 2025-09-29
+ * @version 1.14
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -508,6 +508,22 @@ public:
     }
 
     /**
+     * @brief Apply a list of mutations
+     *
+     * This method applies the mutations that lays in this chromosome.
+     * If a mutations in the list does not affect this chromosome,
+     * it is not applied. If all mutations in the list are applied
+     * the method returns `true`. Otherwise, it returns `false`.
+     *
+     * @param mutation_list is the list of mutations to be applied
+     * @return `true` if and only if all mutations in the list are applied
+     *      the method returns `true`
+     * @throw std::out_of_range any mutation in `mutation_list` does not lay
+     *      in the corresponding genome allele
+     */
+    bool apply_contained(const MutationList& mutation_list);
+
+    /**
      * @brief Copy genomic structure
      *
      * This method copies the genomic structure of the current objects.
@@ -925,7 +941,7 @@ public:
      * @param mutation_spec is the SID mutation to be applied to the genome
      * @return `true` if and only if the genome do not contain any other
      *      SID mutations in `mutation`'s mutational context
-     * @throw std::domain_error `mutation` does not lay to the genome
+     * @throw std::domain_error `mutation` does not lay into the genome
      * @throw std::out_of_range `mutation_spec` does not lay in the corresponding
      *      genome allele
      */
@@ -942,11 +958,31 @@ public:
      * @return `true` if and only if all mutations in the list are applied
      *      the method returns `true`
      * @throw std::domain_error any mutation in `mutation_list` does not lay
-     *      to the genome
+     *      into the genome
      * @throw std::out_of_range any mutation in `mutation_list` does not lay
      *      in the corresponding genome allele
      */
     bool apply(const MutationList& mutation_list);
+
+    /**
+     * @brief Apply a list of mutations
+     *
+     * This method tries to apply the mutations in a list that lays in this
+     * genome. If all mutations in the list are applied the method returns
+     * `true`. Otherwise, it returns `false`.
+     *
+     * @param mutation_list is the list of mutations to be applied
+     * @return `true` if and only if all mutations in the list are applied
+     *      the method returns `true`
+     * @throw std::domain_error any mutation in `mutation_list` does not lay
+     *      into the genome
+     * @throw std::out_of_range any mutation in `mutation_list` does not lay
+     *      in the corresponding genome allele
+     */
+    inline bool apply_contained(const MutationList& mutation_list)
+    {
+        return apply(mutation_list);
+    }
 
     /**
      * @brief Remove a SID mutation

@@ -2,8 +2,8 @@
  * @file phylogenetic_forest.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements classes and function for phylogenetic forests
- * @version 1.12
- * @date 2025-09-29
+ * @version 1.13
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -68,145 +68,6 @@ const MutationList& PhylogeneticForest::const_node::pre_neoplastic_mutations() c
 
     throw std::runtime_error("const_node::pre_neoplastic_mutations(): The "
                              "node is not a forest root.");
-}
-
-PhylogeneticForest::GenomeMutationTour::GenomeMutationTour(const PhylogeneticForest *forest,
-                                                           const bool only_leaves,
-                                                           const bool with_pre_neoplastic,
-                                                           const bool with_germinal):
-    forest{forest}, only_leaves{only_leaves}, with_pre_neoplastic{with_pre_neoplastic},
-    with_germinal{with_germinal}
-{}
-
-PhylogeneticForest::GenomeMutationTour::GenomeMutationTour():
-    forest{nullptr}, with_pre_neoplastic{true}, with_germinal{false}
-{}
-
-PhylogeneticForest::GenomeMutationTour::GenomeMutationTour(const PhylogeneticForest& forest,
-                                                           const bool only_leaves,
-                                                           const bool with_pre_neoplastic,
-                                                           const bool with_germinal):
-    GenomeMutationTour(&forest, only_leaves, with_pre_neoplastic, with_germinal)
-{}
-
-PhylogeneticForest::GenomeMutationTour::const_iterator::const_iterator(const PhylogeneticForest* forest,
-                                                                       const bool& only_leaves,
-                                                                       const bool& with_pre_neoplastic,
-                                                                       const bool& with_germinal,
-                                                                       const bool& begin):
-    forest{forest}, only_leaves{only_leaves}, tour_end{false}
-{
-    if (forest != nullptr && begin) {
-        auto forest_roots = forest->get_roots();
-        for (auto root_it = forest_roots.rbegin();
-                root_it != forest_roots.rend(); ++root_it) {
-            const auto& germline_mutations = forest->get_germline_mutations();
-            GenomeMutations mutations;
-
-            if (with_germinal) {
-                mutations = germline_mutations;
-            } else {
-                mutations = germline_mutations.copy_structure();
-            }
-            mutations.apply(root_it->arising_mutations());
-
-            if (with_pre_neoplastic) {
-                mutations.apply(root_it->pre_neoplastic_mutations());
-            }
-
-            iterator_stack.emplace(static_cast<const Mutants::Cell&>(*root_it),
-                                   std::move(mutations));
-        }
-
-        std::swap(node_mutations, iterator_stack.top());
-
-        iterator_stack.pop();
-
-        if (only_leaves) {
-            this->operator++();
-        }
-    } else {
-        tour_end = true;
-    }
-}
-
-PhylogeneticForest::GenomeMutationTour::const_iterator::const_iterator():
-    forest{nullptr}, only_leaves{false}, tour_end{true}
-{}
-
-PhylogeneticForest::GenomeMutationTour::const_iterator&
-PhylogeneticForest::GenomeMutationTour::const_iterator::operator++()
-{
-    const_node node{forest, node_mutations.get_id()};
-
-    if (node.is_leaf()) {
-        if (iterator_stack.empty()) {
-            tour_end = true;
-
-            return *this;
-        }
-
-        // take a new cell genome mutations object from the stack
-        std::swap(node_mutations, iterator_stack.top());
-        iterator_stack.pop();
-
-        if (!only_leaves) {
-            return *this;
-        }
-
-        // update the node
-        node = const_node{forest, node_mutations.get_id()};
-    }
-
-    bool next_node_found = node.is_leaf();
-    while (!next_node_found) {
-        auto children = node.children();
-
-        // place all children's cell genome mutations, but the first one, into the stack
-        for (auto child_it = children.rbegin();
-                child_it != children.rend()-1; ++child_it) {
-
-            CellGenomeMutations child_mutations{static_cast<const Mutants::Cell&>(*child_it),
-                                                node_mutations};
-            child_mutations.apply(child_it->arising_mutations());
-
-            iterator_stack.emplace(std::move(child_mutations));
-        }
-
-        // apply the first children mutations to the current cell genome mutations
-        std::swap(node, children.front());
-        node_mutations.apply(node.arising_mutations());
-
-        next_node_found = node.is_leaf() || !only_leaves;
-    }
-
-    // update the cell
-    static_cast<Mutants::Cell&>(node_mutations) = static_cast<const Mutants::Cell&>(node);
-
-    return *this;
-}
-
-bool PhylogeneticForest::GenomeMutationTour::const_iterator::operator==(const const_iterator& rhs) const
-{
-    if (this->forest != rhs.forest) {
-        return false;
-    }
-
-    if (this->iterator_stack.size() != rhs.iterator_stack.size()) {
-        return false;
-    }
-
-    if (this->iterator_stack.size()==0) {
-        if (this->tour_end != rhs.tour_end) {
-            return false;
-        }
-
-        if (this->tour_end) {
-            return true;
-        }
-    }
-
-    return this->iterator_stack.top() == rhs.iterator_stack.top();
 }
 
 PhylogeneticForest::const_node PhylogeneticForest::get_node(const Mutants::CellId& cell_id) const
@@ -385,7 +246,7 @@ PhylogeneticForest::get_CNA_break_points() const
 {
     std::map<ChromosomeId, std::set<ChrPosition>> b_points;
 
-    for (const auto& leaf_mutations : get_leaf_mutation_tour()) {
+    for (const auto& [leaf_id, leaf_mutations] : get_leaf_mutation_tour()) {
         for (const auto& [chr_id, cb_points] : leaf_mutations.get_CNA_break_points()) {
             auto& chr_b_points = b_points[chr_id];
             for (const auto& cb_point : cb_points) {
@@ -418,8 +279,8 @@ PhylogeneticForest::get_allelic_count(const size_t& min_allelic_size) const
 
     PhylogeneticForest::AllelicCount allelic_count;
 
-    for (const auto& leaf_mutations : get_leaf_mutation_tour()) {
-        auto allelic_map = leaf_mutations.get_allelic_map(b_points, min_allelic_size);
+    for (const auto& [leaf_id, leaf_mutations] : get_leaf_mutation_tour()) {
+        const auto allelic_map = leaf_mutations.get_allelic_map(b_points, min_allelic_size);
 
         update_allelic_count_on(allelic_count, allelic_map);
     }

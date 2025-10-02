@@ -2,10 +2,10 @@
  * @file tissue_sample.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements tissue samples
- * @version 1.0
- * @date 2024-06-10
+ * @version 1.1
+ * @date 2025-10-02
  *
- * @copyright Copyright (c) 2023-2024
+ * @copyright Copyright (c) 2023-2025
  *
  * MIT License
  *
@@ -64,22 +64,44 @@ TissueSample::TissueSample(const Time& time, const RectangleSet& bounding_box,
     name = "S_"+std::to_string(id);
 }
 
+TissueSample::TissueSample(const Time& time, const RectangleSet& bounding_box,
+                           const size_t& tumour_cells_in_bbox,
+                           std::list<RACES::Mutants::CellId>&& cell_ids):
+    TissueSample("", time, bounding_box, tumour_cells_in_bbox, std::move(cell_ids))
+{
+    name = "S_"+std::to_string(id);
+}
+
 TissueSample::TissueSample(const std::string& name, const Time& time,
                            const RectangleSet& bounding_box,
                            const size_t& tumour_cells_in_bbox,
                            const std::list<RACES::Mutants::CellId>& cell_ids):
     id(counter++), time(time), bounding_box(bounding_box),
-    tumour_cells_in_bbox(tumour_cells_in_bbox), cell_ids(cell_ids),
+    tumour_cells_in_bbox(tumour_cells_in_bbox),
+    cell_ids{std::make_shared<std::list<CellId>>(cell_ids)},
     name(name)
 {}
 
+TissueSample::TissueSample(const std::string& name, const Time& time,
+                           const RectangleSet& bounding_box,
+                           const size_t& tumour_cells_in_bbox,
+                           std::list<RACES::Mutants::CellId>&& cell_ids):
+    id(counter++), time(time), bounding_box(bounding_box),
+    tumour_cells_in_bbox(tumour_cells_in_bbox), cell_ids{nullptr},
+    name(name)
+{
+    this->cell_ids = std::make_shared<std::list<CellId>>();
+
+    std::swap(*(this->cell_ids), cell_ids);
+}
+
 void TissueSample::add_cell_id(const RACES::Mutants::CellId& cell_id)
 {
-    if (bounding_box.size() == cell_ids.size()) {
+    if (bounding_box.size() == cell_ids->size()) {
         throw std::domain_error("The sample already contains all the cell ids");
     }
 
-    cell_ids.push_back(cell_id);
+    cell_ids->push_back(cell_id);
 }
 
 }   // Evolutions

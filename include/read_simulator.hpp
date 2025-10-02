@@ -2,8 +2,8 @@
  * @file read_simulator.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes to simulate sequencing
- * @version 1.25
- * @date 2025-09-30
+ * @version 1.26
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -1631,7 +1631,7 @@ private:
      * @param[in] chr_statistics are the chromosome statistics of the tissue sample
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] sample_target is the sample target
-     * @param[in] samplephylo_forest is the sample forest
+     * @param[in] sample_forest is the sample forest
      * @param[in] wild_type_genomes are the wild type genomes
      * @param[in] germline_chr_mut is a pointer to the germinal chromosome mutations of the
      *          considered cell. No germinal mutation is considered when it is set to `nullptr`
@@ -1648,14 +1648,13 @@ private:
                               ChrSampleStatistics& chr_statistics,
                               const RACES::IO::FASTA::ChromosomeData<RACES::IO::FASTA::Sequence>& chr_data,
                               const SequencingTargets::SampleTarget& sample_target,
-                              const PhylogeneticForest& samplephylo_forest,
+                              const PhylogeneticForest& sample_forest,
                               const ChromosomeMutations* germline_chr_mut, const size_t& total_steps,
                               size_t& steps, RACES::UI::ProgressBar& progress_bar,
                               std::ostream* SAM_stream=nullptr)
     {
-        for (const auto& cell_mutations: samplephylo_forest.get_leaf_mutation_tour()) {
-            const auto& chr_mutations = cell_mutations.get_chromosome(chr_data.chr_id);
-            const auto& cell_id = cell_mutations.get_id();
+        for (const auto& [cell_id, chr_mutations]: 
+                sample_forest.get_leaf_mutation_tour(chr_data.chr_id)) {
 
             generate_chromosome_reads(sequencer, sample_simulation_data, chr_statistics,
                                       chr_data, sample_target.sample_name, cell_id,
@@ -1680,7 +1679,7 @@ private:
      * @param[in] chr_statistics are the chromosome statistics of the tissue sample
      * @param[in] chr_data is the data about the chromosome from which the simulated read come from
      * @param[in] sample_target is the sample target
-     * @param[in] samplephylo_forest is the sample forest
+     * @param[in] sample_forest is the sample forest
      * @param[in] wild_type_genomes are the wild type genomes
      * @param[in] germline_chr_mut is a pointer to the germinal chromosome mutations of the
      *          considered cell. No germinal mutation is considered when it is set to `nullptr`
@@ -1761,9 +1760,9 @@ private:
         }
 
         if (sample_target.sample_id != NORMAL_SAMPLE_ID) {
-            const auto samplephylo_forest = forest.get_subforest_for({sample_target.sample_name});
+            const auto sample_forest = forest.get_subforest_for({sample_target.sample_name});
             generate_chr_tumour_reads(sequencer, sample_simulation_data, chr_statistics,
-                                    chr_data, sample_target, samplephylo_forest, germline_chr_mut,
+                                    chr_data, sample_target, sample_forest, germline_chr_mut,
                                     total_steps, steps, progress_bar, SAM_stream);
         }
 
@@ -1888,13 +1887,13 @@ private:
         std::map<Mutants::Evolutions::TissueSampleId, size_t> non_relevant;
 
         const auto& forest = targets.forest();
-        for (const auto& cell_mutations: forest.get_leaf_mutation_tour()) {
-            const auto leaf = forest.get_node(cell_mutations.get_id());
+        for (const auto& [leaf_id, leaf_mutations]: forest.get_leaf_mutation_tour()) {
+            const auto leaf = forest.get_node(leaf_id);
             const auto sample_id = leaf.get_sample().get_id();
 
             size_t& non_relevant_in_sample = non_relevant[sample_id];
             ReadSimulationData& sample_data = simulation_data[sample_id];
-            for (const auto& [chr_id, cell_chr]: cell_mutations.get_chromosomes()) {
+            for (const auto& [chr_id, cell_chr]: leaf_mutations.get_chromosomes()) {
                 const size_t allelic_size = cell_chr.allelic_size();
 
                 if (chromosome_ids.count(chr_id)) {

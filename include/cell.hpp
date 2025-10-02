@@ -2,8 +2,8 @@
  * @file cell.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines cell representation
- * @version 1.1
- * @date 2025-09-23
+ * @version 1.2
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -158,6 +158,18 @@ public:
     inline const SpeciesId& get_species_id() const
     {
         return species_id;
+    }
+
+    /**
+     * @brief Establish whether the cell has a parent
+     *
+     * @return `true` if and only if the cell has a parent.
+     *      The method returns `false` if the parent of the
+     *      cell is the cell itself.
+     */
+    inline bool has_parent() const
+    {
+        return get_id() != get_parent_id();
     }
 
     /**

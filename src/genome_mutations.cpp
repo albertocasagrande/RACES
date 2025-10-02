@@ -2,8 +2,8 @@
  * @file genome_mutations.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements genome and chromosome data structures
- * @version 1.16
- * @date 2025-09-29
+ * @version 1.17
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -324,6 +324,39 @@ bool ChromosomeMutations::apply(const SID& mutation, const AlleleId& allele_id)
     }
 
     return true;
+}
+
+bool ChromosomeMutations::apply_contained(const MutationList& mutation_list)
+{
+    bool success{true};
+
+    for (auto list_it = mutation_list.begin();
+            list_it != mutation_list.end(); ++list_it) {
+        switch(list_it.get_type()) {
+            case MutationList::SID_TURN:
+                if (list_it.get_last_SID().chr_id == id()) {
+                    success = success && apply(list_it.get_last_SID());
+                } else {
+                    success = false;
+                }
+                break;
+            case MutationList::CNA_TURN:
+                if (list_it.get_last_CNA().chr_id == id()) {
+                    success = success && apply(list_it.get_last_CNA());
+                } else {
+                    success = false;
+                }
+                break;
+            case MutationList::WGD_TURN:
+                duplicate_alleles();
+                break;
+            default:
+                throw std::runtime_error("ChromosomeMutations::apply(const MutationList&):"
+                                         " Unsupported mutation type");
+        }
+    }
+
+    return success;
 }
 
 bool ChromosomeMutations::remove_mutation(const GenomicPosition& genomic_position)

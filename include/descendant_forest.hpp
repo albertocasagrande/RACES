@@ -2,8 +2,8 @@
  * @file descendant_forest.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines classes and function for descendant forests
- * @version 1.4
- * @date 2025-09-29
+ * @version 1.5
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -133,52 +133,47 @@ private:
     std::map<CellId, SamplePosition> coming_from;   //!< The map associating each leaf to the sample which it comes from
 
     /**
-     * @brief Grow a forest from a sample of cells
+     * @brief Grow a forest from the cells of a sample
      *
-     * This function grows a forest from a sample of cells.
-     * The sample cells are the leaves of the forest and
+     * This function grows a forest from the cells in a sample.
+     * The cells will be represented as the leaves of the forest and
      * their ancestors are loaded from a cell storage.
      *
      * @tparam CELL_STORAGE is the type of the cell storage
-     * @param sample_ids is the cell id sample
+     * @param sample is the sample from which the forest must grow
      * @param cell_storage is the cell storage
      */
     template<typename CELL_STORAGE>
-    void grow_from(const std::list<CellId>& sample, CELL_STORAGE& cell_storage)
+    void grow_from(const Evolutions::TissueSample& sample, CELL_STORAGE& cell_storage)
     {
-        std::set<CellId> parent_ids;
-        for (const auto& cell_id: sample) {
-            parent_ids.insert(cell_id);
+        for (auto cell_id : sample.get_cell_ids()) {
+            // the sampled cells are leaves and we can add them to branch
+            branches.emplace(cell_id, EdgeTail{});
 
-            // record leaves children, i.e., none
-            branches.emplace(cell_id, std::set<CellId>{});
-        }
+            bool new_branch{true};
+            while (new_branch) {
+                const auto cell = cell_storage.at(cell_id);
+                cells.emplace(cell_id, cell);
 
-        std::priority_queue<CellId> queue(parent_ids.begin(), parent_ids.end());
+                if (cell.has_parent()) {
+                    const auto& parent_id = cell.get_parent_id();
+                    auto found = branches.find(parent_id);
 
-        while (!queue.empty()) {
-            auto cell = cell_storage.at(queue.top());
+                    if (found == branches.end()) {
+                        branches.emplace(parent_id, EdgeTail{cell_id});
 
-            queue.pop();
-            parent_ids.erase(cell.get_id());
+                        cell_id = parent_id;
+                    } else {
+                        found->second.insert(cell_id);
+                        new_branch = false;
+                    }
+                } else {
+                    // it is a root
+                    roots.insert(cell_id);
 
-            // if the cell is not an initial cell
-            if (cell.get_id()!=cell.get_parent_id()) {
-
-                // the cell id is not in the queue
-                if (parent_ids.count(cell.get_parent_id())==0) {
-
-                    // add its id to the queue
-                    queue.push(cell.get_parent_id());
-                    parent_ids.insert(cell.get_parent_id());
+                    new_branch = false;
                 }
-                branches[cell.get_parent_id()].insert(cell.get_id());
-            } else {
-                // it is a root
-                roots.insert(cell.get_id());
             }
-
-            cells.emplace(cell.get_id(), cell);
         }
     }
 
@@ -202,7 +197,7 @@ private:
         samples = std::vector<Evolutions::TissueSample>(tissue_samples.begin(),
                                                         tissue_samples.end());
 
-        uint16_t i{0};
+        SamplePosition i{0};
         for (const auto& sample: samples) {
             for (const auto& cell_id: sample.get_cell_ids()) {
                 coming_from.emplace(cell_id, i);
@@ -212,11 +207,8 @@ private:
 
         std::list<CellId> cell_ids;
         for (auto sample_it = tissue_samples.begin(); sample_it != tissue_samples.end(); ++sample_it) {
-            cell_ids.insert(cell_ids.end(), sample_it->get_cell_ids().begin(),
-                            sample_it->get_cell_ids().end());
+            grow_from(*sample_it, cell_storage);
         }
-
-        grow_from(cell_ids, cell_storage);
     }
 
     /**

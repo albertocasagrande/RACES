@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendant forest
- * @version 1.30
- * @date 2025-09-29
+ * @version 1.31
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -104,7 +104,7 @@ class MutationStatistics
      * @return a reference to the updated object
      */
     MutationStatistics& record(const std::string& sample_name,
-                               const CellGenomeMutations& cell_mutations);
+                               const GenomeMutations& cell_mutations);
 public:
     /**
      * @brief The empty constructor
@@ -1021,7 +1021,7 @@ class MutationEngine
         }
 
         if (node.is_leaf()) {
-            auto sample_statistics = node.forest->sample_statistics[node.get_sample().get_id()];
+            auto& sample_statistics = node.forest->sample_statistics[node.get_sample().get_id()];
 
             ++sample_statistics.number_of_cells;
             sample_statistics.total_allelic_size += node_mutations.allelic_size();

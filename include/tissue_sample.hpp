@@ -2,8 +2,8 @@
  * @file tissue_sample.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines tissue samples
- * @version 1.2
- * @date 2025-09-29
+ * @version 1.3
+ * @date 2025-10-02
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -35,6 +35,7 @@
 
 #include <limits>
 #include <list>
+#include <memory>
 
 #include "position_set.hpp"
 #include "cell.hpp"
@@ -64,7 +65,7 @@ class TissueSample
     RACES::Time time;           //!< The sampling time
     RectangleSet bounding_box;  //!< The sample bounding box
     size_t tumour_cells_in_bbox; //!< The number of tumour cells in the bounding box
-    std::list<CellId> cell_ids; //!< The list of cell identifier
+    std::shared_ptr<std::list<CellId>> cell_ids; //!< The list of cell identifier
 
     std::string name;           //!< The name of the sample
 public:
@@ -116,6 +117,20 @@ public:
     /**
      * @brief Construct a new cell sample
      *
+     * @param time is the sampling time
+     * @param bounding_box is the sample bounding box
+     * @param tumour_cells_in_bbox is the number of tumour cells in
+     *      the bounding box
+     * @param cell_ids is a list of the identifiers of the sample cells
+     */
+    TissueSample(const RACES::Time& time,
+                 const RACES::Mutants::RectangleSet& bounding_box,
+                 const size_t& tumour_cells_in_bbox,
+                 std::list<RACES::Mutants::CellId>&& cell_ids);
+
+    /**
+     * @brief Construct a new cell sample
+     *
      * @param name is the sample name
      * @param time is the sampling time
      * @param bounding_box is the sample bounding box
@@ -127,6 +142,21 @@ public:
                  const RACES::Mutants::RectangleSet& bounding_box,
                  const size_t& tumour_cells_in_bbox,
                  const std::list<RACES::Mutants::CellId>& cell_ids);
+
+    /**
+     * @brief Construct a new cell sample
+     *
+     * @param name is the sample name
+     * @param time is the sampling time
+     * @param bounding_box is the sample bounding box
+     * @param tumour_cells_in_bbox is the number of tumour cells in
+     *      the bounding box
+     * @param cell_ids is a list of the identifiers of the sample cells
+     */
+    TissueSample(const std::string& name, const RACES::Time& time,
+                 const RACES::Mutants::RectangleSet& bounding_box,
+                 const size_t& tumour_cells_in_bbox,
+                 std::list<RACES::Mutants::CellId>&& cell_ids);
 
     /**
      * @brief Add a cell id among those in the sample
@@ -204,7 +234,7 @@ public:
      */
     inline const std::list<RACES::Mutants::CellId>& get_cell_ids() const
     {
-        return cell_ids;
+        return *cell_ids;
     }
 
     /**
@@ -220,7 +250,7 @@ public:
                 & bounding_box
                 & tumour_cells_in_bbox
                 & id
-                & cell_ids
+                & *cell_ids
                 & name;
     }
 
@@ -251,7 +281,7 @@ public:
             TissueSample::counter = tissue_sample.id+1;
         }
 
-        archive & tissue_sample.cell_ids
+        archive & *(tissue_sample.cell_ids)
                 & tissue_sample.name;
 
         return tissue_sample;
