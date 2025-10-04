@@ -2,8 +2,8 @@
  * @file mutational_properties.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a class to represent the mutational properties
- * @version 1.3
- * @date 2025-03-12
+ * @version 1.4
+ * @date 2025-10-04
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -79,9 +79,22 @@ MutationalProperties::add_mutant(const std::string& mutant_name,
                                            driver_CNAs, application_order}});
 
     for (const auto& [epistate, passenger_rate] : epistate_passenger_rates) {
-        auto species_name = mutant_name+epistate;
+        auto species_name = mutant_name + epistate;
 
-        passenger_rates[species_name] = passenger_rate;
+        passenger_rates[species_name].change_value_at(0) = passenger_rate;
+    }
+
+    return *this;
+}
+
+MutationalProperties&
+MutationalProperties::change_rates_from(const Time& time, const std::string& mutant_name,
+                                        const std::map<std::string, PassengerRates>& epistate_passenger_rates)
+{
+    for (const auto& [epistate, p_rates] : epistate_passenger_rates) {
+        auto& t_p_rates = get_passenger_rates(mutant_name, epistate);
+
+        t_p_rates.from(time) = p_rates;
     }
 
     return *this;

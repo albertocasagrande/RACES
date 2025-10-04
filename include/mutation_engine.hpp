@@ -2,8 +2,8 @@
  * @file mutation_engine.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a class to place mutations on a descendant forest
- * @version 1.31
- * @date 2025-10-02
+ * @version 1.32
+ * @date 2025-10-04
  *
  * @copyright Copyright (c) 2023-2025
  *
@@ -439,12 +439,12 @@ class MutationEngine
      *
      * @param[in, out] node is a phylogenetic forest node representing a cell
      * @param[in, out] cell_mutations are the cell mutations
-     * @param[in] CNA_rate is the rate of passenger CNAs
+     * @param[in] rates are the passenger rates
      */
     void place_CNAs(PhylogeneticForest::node& node, GenomeMutations& cell_mutations,
-                    const double& CNA_rate)
+                    const PassengerRates& rates)
     {
-        const auto num_of_CNAs = number_of_mutations(cell_mutations.allelic_size(), CNA_rate);
+        const auto num_of_CNAs = number_of_mutations(cell_mutations.allelic_size(), rates.cna);
 
         place_CNAs(&node, cell_mutations, num_of_CNAs, Mutation::PASSENGER);
     }
@@ -988,7 +988,7 @@ class MutationEngine
      * @param[in,out] progress_bar is a progress bar pointer
      */
     void place_mutations(PhylogeneticForest::node& node, GenomeMutations& node_mutations,
-                         const std::map<Mutants::SpeciesId, PassengerRates>& passenger_rates,
+                         const std::map<Mutants::SpeciesId, Timed<PassengerRates>>& passenger_rates,
                          std::map<Mutants::MutantId, DriverMutations>& driver_mutations,
                          size_t& visited_nodes, UI::ProgressBar *progress_bar)
     {
@@ -1007,9 +1007,11 @@ class MutationEngine
 
             throw std::runtime_error("Unknown species \""+ species_name +"\"");
         }
-        place_passengers<SBSType>(node, node_mutations, rates_it->second);
-        place_passengers<IDType>(node, node_mutations, rates_it->second);
-        place_CNAs(node, node_mutations, rates_it->second.cna);
+
+        const auto& node_rates = rates_it->second.at(node.get_birth_time());
+        place_passengers<SBSType>(node, node_mutations, node_rates);
+        place_passengers<IDType>(node, node_mutations, node_rates);
+        place_CNAs(node, node_mutations, node_rates);
 
         ++visited_nodes;
         if (progress_bar != nullptr) {
@@ -1110,25 +1112,18 @@ class MutationEngine
      * @return a map associating a species in `descendant_forest` to its
      *          passenger rates
      */
-    std::map<Mutants::SpeciesId, PassengerRates>
+    std::map<Mutants::SpeciesId, Timed<PassengerRates>>
     get_species_rate_map(const Mutants::DescendantForest& descendant_forest) const
     {
         using namespace RACES::Mutants;
 
-        std::map<SpeciesId, PassengerRates> species_rates;
+        std::map<SpeciesId, Timed<PassengerRates>> species_rates;
 
         for (const auto& [species_id, species_data] : descendant_forest.get_species_data()) {
             const auto mutant_name = descendant_forest.get_mutant_name(species_data.mutant_id);
-            const auto species_name = mutant_name
-                                      + MutantProperties::signature_to_string(species_data.signature);
 
-            auto passenger_it = mutational_properties.get_passenger_rates().find(species_name);
-
-            if (passenger_it == mutational_properties.get_passenger_rates().end()) {
-                throw std::runtime_error("\""+species_name+"\" has no mutational rate");
-            }
-
-            species_rates[species_id] = passenger_it->second;
+            species_rates[species_id] = mutational_properties.get_passenger_rates(mutant_name,
+                                                                                  species_data.signature);
         }
 
         return species_rates;
@@ -1293,26 +1288,29 @@ class MutationEngine
      *
      * @param[in] mutation_type is a mutation type (i.e., INDEL or SBS)
      * @return `true` if and only if any specified species has a rate
-     *  for `mutation_type` greater than 0
+     *  for `mutation_type` greater than 0 at any time of the simulation
      */
     bool may_place_passengers(const MutationType::Type& mutation_type) const
     {
-        for (const auto& [species, passenger_rates] :
+        for (const auto& [species, timed_passenger_rates] :
                     mutational_properties.get_passenger_rates()) {
-            switch (mutation_type) {
-                case MutationType::Type::INDEL:
-                    if (passenger_rates.indel>0) {
-                        return true;
-                    }
-                    break;
-                case MutationType::Type::SBS:
-                    if (passenger_rates.snv>0) {
-                        return true;
-                    }
-                    break;
-                default:
-                    throw std::domain_error("Unsupported mutation type "
-                                            + std::to_string(static_cast<size_t>(mutation_type)));
+            for (const auto& passenger_rates :
+                    std::views::values(timed_passenger_rates)) {
+                switch (mutation_type) {
+                    case MutationType::Type::INDEL:
+                        if (passenger_rates.indel > 0) {
+                            return true;
+                        }
+                        break;
+                    case MutationType::Type::SBS:
+                        if (passenger_rates.snv > 0) {
+                            return true;
+                        }
+                        break;
+                    default:
+                        throw std::domain_error("Unsupported mutation type "
+                                                + std::to_string(static_cast<size_t>(mutation_type)));
+                }
             }
         }
 
@@ -1805,6 +1803,16 @@ public:
      * @return a constant reference to the mutational properties
      */
     inline const MutationalProperties& get_mutational_properties() const
+    {
+        return mutational_properties;
+    }
+
+    /**
+     * @brief Get the mutational properties
+     *
+     * @return a reference to the mutational properties
+     */
+    inline MutationalProperties& get_mutational_properties()
     {
         return mutational_properties;
     }
