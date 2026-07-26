@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 1.5
- * @date 2026-06-11
+ * @version 1.6
+ * @date 2026-07-26
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -54,7 +54,7 @@ namespace Evolutions
 std::string snapshot_prefix = "snapshot";
 
 BinaryLogger::BinaryLogger():
-    BinaryLogger("clones_"+BasicLogger::get_time_string())
+    BinaryLogger("clones_" + BasicLogger::get_time_string())
 {
 }
 
@@ -86,9 +86,15 @@ std::filesystem::path BinaryLogger::get_cell_archive_path(const std::filesystem:
 
 std::filesystem::path BinaryLogger::get_snapshot_path() const
 {
+    using namespace std::chrono;
+
+    const auto curr_time = system_clock::now().time_since_epoch();
+
+    const auto epoch_ms = duration_cast<microseconds>(curr_time).count();
+
     std::ostringstream oss;
 
-    oss << snapshot_prefix << "_" << BasicLogger::get_time_string() << ".dat";
+    oss << snapshot_prefix << "_" << std::hex << epoch_ms << ".dat";
 
     return directory / oss.str();
 }
@@ -107,7 +113,7 @@ std::filesystem::path BinaryLogger::find_last_snapshot_in(const std::filesystem:
                                         + "\" is not a directory.");
     }
 
-    std::regex re = build_regex(to_string(directory / (snapshot_prefix+"_\\d+-\\d+.dat")));
+    std::regex re = build_regex(to_string(directory / (snapshot_prefix+"_[a-zA-Z0-9]+.dat")));
 
     bool found{false};
     std::string last;
@@ -278,11 +284,13 @@ void BinaryLogger::record_initial_cell(const CellInTissue& cell)
 }
 
 
-void BinaryLogger::snapshot(const TissueSimulation& simulation)
+std::filesystem::path BinaryLogger::snapshot(const TissueSimulation& simulation)
 {
     Archive::Binary::Out archive(get_snapshot_path());
 
     archive & simulation;
+
+    return archive.filepath;
 }
 
 void BinaryLogger::reset(const std::filesystem::path& output_directory)

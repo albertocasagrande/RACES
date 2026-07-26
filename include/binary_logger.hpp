@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 1.3
- * @date 2026-02-06
+ * @version 1.4
+ * @date 2026-07-26
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -230,8 +230,9 @@ public:
      * @brief Save a simulation snapshot
      *
      * @param simulation is the simulation whose snapshot is requested
+     * @return the path of the snapshot file
      */
-    void snapshot(const TissueSimulation& simulation);
+    std::filesystem::path snapshot(const TissueSimulation& simulation);
 
     /**
      * @brief Flush archive data
