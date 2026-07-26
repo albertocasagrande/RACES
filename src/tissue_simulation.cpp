@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 1.18
- * @date 2026-07-23
+ * @version 1.19
+ * @date 2026-07-26
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -34,7 +34,7 @@
 #include <limits>
 
 #include "tissue_simulation.hpp"
-
+#include "utils.hpp"
 #include "error.hpp"
 
 namespace CLONES
@@ -57,23 +57,39 @@ TissueSimulation::StatusAtSnapshot::StatusAtSnapshot(const TissueSimulation& sim
     num_of_cells{simulation.tissue().num_of_mutated_cells()}
 {}
 
+TissueSimulation::SnapshotInfo::SnapshotInfo():
+    StatusAtSnapshot{}
+{}
+
+TissueSimulation::SnapshotInfo::SnapshotInfo(const TissueSimulation& simulation,
+                                             const std::filesystem::path& snapshot_file_path):
+    StatusAtSnapshot{simulation}, snapshot_file_path{snapshot_file_path}
+{}
+
+
 TissueSimulation::SnapshotTrigger::SnapshotTrigger():
     time_delta{std::numeric_limits<Duration::rep>::max()},
-    clock_delta{std::numeric_limits<Duration::rep>::max()},
+    clock_delta{std::numeric_limits<Time>::max()},
     cardinality_delta{std::numeric_limits<uint64_t>::max()}
 {}
 
 bool TissueSimulation::SnapshotTrigger::is_triggered_by(const TissueSimulation& simulation) const
 {
-    const auto& last_status = simulation.get_last_snapshot_status();
+    if (simulation.get_snapshot_info().size() == 0) {
+        return false;
+    }
+
+    const auto& last_status = simulation.get_snapshot_info().back();
 
     auto now = StatusAtSnapshot::Clock::now();
 
-    return ((last_status.get_num_of_cells() + cardinality_delta <=
-                simulation.tissue().num_of_cells())
-            || (last_status.get_clock() + clock_delta <=
-                simulation.get_time())
-            || (now - last_status.get_time() > time_delta));
+    return ((!std::is_max(cardinality_delta)
+             && (last_status.get_num_of_cells() + cardinality_delta <=
+                    simulation.tissue().num_of_cells()))
+            || (!std::is_max(clock_delta)
+                && (last_status.get_clock() + clock_delta <= simulation.get_time()))
+            || (!std::is_max(time_delta)
+                && (now - last_status.get_time() > time_delta)));
 }
 
 TissueSimulation::AddedCell::AddedCell():
@@ -86,7 +102,7 @@ TissueSimulation::AddedCell::AddedCell(const SpeciesId& species, const PositionI
 {}
 
 TissueSimulation::TissueSimulation(int random_seed):
-    logger{}, status_at_snapshot{}, snapshot_trigger{},
+    logger{}, snapshot_info{}, snapshot_trigger{},
     time{static_cast<Time>(0)},
     next_cell_id{Cell::first_tumour_cell_id()}, death_activation_level{1},
     duplicate_internal_cells{false}, storage_enabled{true}
@@ -98,7 +114,7 @@ TissueSimulation::TissueSimulation(int random_seed):
 }
 
 TissueSimulation::TissueSimulation(const std::filesystem::path& log_directory, int random_seed):
-    logger{log_directory}, status_at_snapshot{}, snapshot_trigger{},
+    logger{log_directory}, snapshot_info{}, snapshot_trigger{},
     time{static_cast<Time>(0)},
     next_cell_id{Cell::first_tumour_cell_id()}, death_activation_level{1},
     duplicate_internal_cells{false}, storage_enabled{true}
@@ -121,7 +137,7 @@ TissueSimulation& TissueSimulation::operator=(TissueSimulation&& orig)
     std::swap(lineage_graph, orig.lineage_graph);
     std::swap(mutant_name2id, orig.mutant_name2id);
     std::swap(logger, orig.logger);
-    std::swap(status_at_snapshot, orig.status_at_snapshot);
+    std::swap(snapshot_info, orig.snapshot_info);
     std::swap(snapshot_trigger, orig.snapshot_trigger);
     std::swap(statistics, orig.statistics);
     std::swap(time, orig.time);
@@ -1072,6 +1088,8 @@ TissueSimulation& TissueSimulation::place_cell(const SpeciesId& species_id, cons
     }
 
     statistics.record_placed_cell(species_id, time);
+
+    make_snapshot<CLONES::UI::ProgressBar>(nullptr);
 
     return *this;
 }

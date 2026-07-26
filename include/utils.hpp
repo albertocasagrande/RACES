@@ -2,8 +2,8 @@
  * @file utils.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines utility functions
- * @version 1.5
- * @date 2026-02-06
+ * @version 1.6
+ * @date 2026-07-26
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -37,6 +37,7 @@
 #include <set>
 #include <algorithm>
 #include <ostream>
+#include <limits>
 
 #include<regex>
 #include<clocale>
@@ -159,6 +160,20 @@ std::set<T> get_union(const std::set<T>& A, const std::set<T>& B)
                    std::inserter(C, C.end()));
 
     return C;
+}
+
+/**
+ * @brief Test whether a value is the maximum of its type
+ *
+ * @tparam VALUE_TYPE is the type of the value to be tested
+ * @param value is the value to be tested
+ * @return `true` if and only if `value` is the maximum
+ *   among all values representable by `value` type
+ */
+template<typename VALUE_TYPE>
+inline bool is_max(const VALUE_TYPE& value)
+{
+    return std::numeric_limits<VALUE_TYPE>::max() == value;
 }
 
 /**

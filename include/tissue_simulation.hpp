@@ -2,8 +2,8 @@
  * @file tissue_simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumour evolution simulation
- * @version 1.14
- * @date 2026-07-23
+ * @version 1.15
+ * @date 2026-07-26
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -89,7 +89,7 @@ public:
         StatusAtSnapshot();
 
         /**
-         * @brief Construct a new Status At Snapshot object
+         * @brief Construct a new `StatusAtSnapshot` object
          *
          * @param simulation is the tissue simulation whose snapshot
          *   has been taken
@@ -175,6 +175,77 @@ public:
             status.time = TimePoint(TimePoint::duration(ticks));
 
             return status;
+        }
+    };
+
+    /**
+     * @brief A class to represent snapshot information
+     */
+    struct SnapshotInfo : public StatusAtSnapshot
+    {
+        std::filesystem::path snapshot_file_path;   //!< The snapshot file path
+
+        /**
+         * @brief The empty constructor
+         */
+        SnapshotInfo();
+
+        /**
+         * @brief Construct a new `SnapshotInfo` object
+         *
+         * @param simulation is the tissue simulation whose snapshot
+         *   has been taken
+         * @param snapshot_file_path is the snapshot file path
+         */
+        SnapshotInfo(const TissueSimulation& simulation,
+                     const std::filesystem::path& snapshot_file_path);
+
+        /**
+         * @brief Get the snapshot file path
+         *
+         * @return a constant reference to the snapshot file path
+         */
+        inline const std::filesystem::path& get_file_path() const
+        {
+            return snapshot_file_path;
+        }
+
+        /**
+         * @brief Save an object of the class `SnapshotInfo` in an archive
+         *
+         * @tparam ARCHIVE is the output archive type
+         * @param archive is the output archive
+         */
+        template<typename ARCHIVE>
+          requires std::is_base_of_v<Archive::Basic::Out, ARCHIVE>
+        inline void save(ARCHIVE& archive) const
+        {
+            StatusAtSnapshot::save(archive);
+
+            archive & to_string(snapshot_file_path);
+        }
+
+        /**
+         * @brief Load an object of the class `SnapshotInfo` from an archive
+         *
+         * @tparam ARCHIVE is the input archive type
+         * @param archive is the input archive
+         * @return the loaded object
+         */
+        template<typename ARCHIVE>
+          requires std::is_base_of_v<Archive::Basic::In, ARCHIVE>
+        inline static SnapshotInfo load(ARCHIVE& archive)
+        {
+            SnapshotInfo info;
+
+            std::string file_path;
+
+            archive & static_cast<StatusAtSnapshot&>(info)
+                    & file_path;
+
+            info.snapshot_file_path = file_path;
+
+            return info;
         }
     };
 
@@ -398,7 +469,7 @@ protected:
 
     std::vector<Direction> valid_directions;   //!< valid simulation tissue directions
 
-    StatusAtSnapshot status_at_snapshot;    //!< The simulation status at the last snapshot
+    std::list<SnapshotInfo> snapshot_info;  //!< The list of the snapshot informations
     SnapshotTrigger snapshot_trigger;       //!< The object testing whether a snapshot is needed
 
     TissueStatistics statistics;     //!< The tissue simulation statistics
@@ -947,13 +1018,13 @@ public:
     }
 
     /**
-     * @brief Get the last snapshot status
+     * @brief Get the list of the snapshot information
      *
-     * @return the last snapshot status
+     * @return the list of the snapshot information
      */
-    inline const StatusAtSnapshot& get_last_snapshot_status() const
+    inline const std::list<SnapshotInfo>& get_snapshot_info() const
     {
-        return status_at_snapshot;
+        return snapshot_info;
     }
 
     /**
@@ -1533,13 +1604,13 @@ public:
     template<typename ARCHIVE, std::enable_if_t<std::is_base_of_v<Archive::Basic::Out, ARCHIVE>, bool> = true>
     inline void save(ARCHIVE& archive) const
     {
-        ARCHIVE::write_header(archive, "CLONES Tissue Simulation", 0);
+        ARCHIVE::write_header(archive, "CLONES Tissue Simulation", 1);
 
         archive & tissues
                 & lineage_graph
                 & mutant_name2id
                 & logger
-                & status_at_snapshot
+                & snapshot_info
                 & snapshot_trigger
                 & statistics
                 & time
@@ -1569,7 +1640,7 @@ public:
                 & simulation.lineage_graph
                 & simulation.mutant_name2id
                 & simulation.logger
-                & simulation.status_at_snapshot
+                & simulation.snapshot_info
                 & simulation.snapshot_trigger
                 & simulation.statistics
                 & simulation.time
@@ -1587,7 +1658,9 @@ public:
 
         simulation.init_valid_directions();
 
-        simulation.status_at_snapshot.set_time();
+        if (simulation.snapshot_info.size() > 0) {
+            simulation.snapshot_info.back().set_time();
+        }
 
         return simulation;
     }
@@ -1605,11 +1678,11 @@ void TissueSimulation::make_snapshot(INDICATOR *indicator)
             indicator->set_message("Saving snapshot");
         }
 
-        logger.snapshot(*this);
+        const auto snapshot_path = logger.snapshot(*this);
         logger.flush_archives();
-    }
 
-    status_at_snapshot = StatusAtSnapshot(*this);
+        snapshot_info.emplace_back(*this, snapshot_path);
+    }
 }
 
 template<typename PLOT_WINDOW>
