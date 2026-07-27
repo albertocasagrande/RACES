@@ -68,7 +68,7 @@ TissueSimulation::SnapshotInfo::SnapshotInfo(const TissueSimulation& simulation,
 
 
 TissueSimulation::SnapshotTrigger::SnapshotTrigger():
-    time_delta{std::numeric_limits<Duration::rep>::max()},
+    time_delta{std::numeric_limits<Duration>::max()},
     clock_delta{std::numeric_limits<Time>::max()},
     cardinality_delta{std::numeric_limits<uint64_t>::max()}
 {}
@@ -85,7 +85,7 @@ bool TissueSimulation::SnapshotTrigger::is_triggered_by(const TissueSimulation& 
 
     return ((!std::is_max(cardinality_delta)
              && (last_status.get_num_of_cells() + cardinality_delta <=
-                    simulation.tissue().num_of_cells()))
+                    simulation.tissue().num_of_mutated_cells()))
             || (!std::is_max(clock_delta)
                 && (last_status.get_clock() + clock_delta <= simulation.get_time()))
             || (!std::is_max(time_delta)
