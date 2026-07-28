@@ -2,8 +2,8 @@
  * @file simulation.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Define a tumour evolution simulation
- * @version 1.19
- * @date 2026-07-26
+ * @version 1.20
+ * @date 2026-07-27
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -508,10 +508,7 @@ TissueSimulation& TissueSimulation::simulate_mutation(const PositionInTissue& po
 
     simulate(mutation_event);
 
-    if (storage_enabled) {
-        logger.snapshot(*this);
-        logger.flush_archives();
-    }
+    make_snapshot();
 
     return *this;
 }
@@ -555,11 +552,9 @@ void TissueSimulation::handle_timed_event_queue(CellEvent& candidate_event)
 
         timed_event_queue.pop();
 
-        if (storage_enabled) {
-            if (timed_event_queue.top().time != timed_event.time
+        if (timed_event_queue.top().time != timed_event.time
                 || timed_event_queue.top().type != timed_event.type) {
-                logger.snapshot(*this);
-            }
+            make_snapshot();
         }
 
         switch(timed_event.type) {
@@ -1089,7 +1084,7 @@ TissueSimulation& TissueSimulation::place_cell(const SpeciesId& species_id, cons
 
     statistics.record_placed_cell(species_id, time);
 
-    make_snapshot<CLONES::UI::ProgressBar>(nullptr);
+    make_snapshot();
 
     return *this;
 }
@@ -1215,7 +1210,7 @@ TissueSimulation::sample_tissue(const SampleSpecification& specification)
     samples.push_back(sample);
     name2sample[specification.get_name()]=(samples.end()--);
 
-    make_snapshot<CLONES::UI::ProgressBar>(nullptr);
+    make_snapshot();
 
     return sample;
 }

@@ -2,8 +2,8 @@
  * @file tissue_simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumour evolution simulation
- * @version 1.15
- * @date 2026-07-26
+ * @version 1.16
+ * @date 2026-07-27
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -1456,6 +1456,16 @@ public:
      */
     template<typename INDICATOR>
     void make_snapshot(INDICATOR *indicator);
+
+    /**
+     * @brief Performs a simulation snapshot
+     *
+     * This method performs a simulation snapshot.
+     */
+    inline void make_snapshot()
+    {
+        make_snapshot<CLONES::UI::ProgressBar>(nullptr);
+    }
 
     /**
      * @brief Simulate tissue sampling
