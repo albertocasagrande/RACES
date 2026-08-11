@@ -2,8 +2,8 @@
  * @file species.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines species representation
- * @version 1.8
- * @date 2026-07-16
+ * @version 1.9
+ * @date 2026-08-11
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -234,7 +234,7 @@ public:
     }
 
     /**
-     * @brief A copy constructor
+     * @brief The copy constructor
      *
      * @param orig is the template object
      */

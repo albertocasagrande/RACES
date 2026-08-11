@@ -2,8 +2,8 @@
  * @file species.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements species representation methods
- * @version 1.6
- * @date 2026-06-26
+ * @version 1.7
+ * @date 2026-08-11
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -58,14 +58,13 @@ void Species::reset()
 }
 
 Species::Species(const SpeciesProperties& species_properties):
-    SpeciesProperties(species_properties), death_enabled{false},
-    last_insertion_time(0), simulated_cells(0)
+    SpeciesProperties{species_properties}, death_enabled{false},
+    last_insertion_time{0}, simulated_cells{0}
 {}
 
 Species::Species(const Species& orig):
-    SpeciesProperties(orig), death_enabled{orig.death_enabled},
-    last_insertion_time(orig.last_insertion_time),
-    simulated_cells(orig.simulated_cells)
+    SpeciesProperties{orig}, death_enabled{orig.death_enabled},
+    last_insertion_time{0}, simulated_cells{0}
 {
     for (const auto& [cell_id, cell_ptr]: orig.cells) {
         this->add(*cell_ptr);
@@ -74,6 +73,9 @@ Species::Species(const Species& orig):
     for (const auto& [cell_id, cell_ptr]: orig.duplication_enabled) {
         this->enable_duplication_for(cell_id);
     }
+
+    simulated_cells = orig.simulated_cells;
+    last_insertion_time = orig.last_insertion_time;
 }
 
 Species& Species::operator=(const Species& orig)
@@ -83,8 +85,6 @@ Species& Species::operator=(const Species& orig)
     static_cast<SpeciesProperties&>(*this) = static_cast<SpeciesProperties>(orig);
 
     death_enabled = orig.death_enabled;
-    last_insertion_time = orig.last_insertion_time;
-    simulated_cells = orig.simulated_cells;
 
     for (const auto& [cell_id, cell_ptr]: orig.cells) {
         this->add(*cell_ptr);
@@ -93,6 +93,9 @@ Species& Species::operator=(const Species& orig)
     for (const auto& [cell_id, cell_ptr]: orig.duplication_enabled) {
         this->enable_duplication_for(cell_id);
     }
+
+    last_insertion_time = orig.last_insertion_time;
+    simulated_cells = orig.simulated_cells;
 
     return *this;
 }
@@ -271,11 +274,11 @@ void swap(Species& a, Species& b)
 {
     std::swap(static_cast<SpeciesProperties&>(a),
               static_cast<SpeciesProperties&>(b));
-    std::swap(a.cells,b.cells);
-    std::swap(a.duplication_enabled,b.duplication_enabled);
-    std::swap(a.death_enabled,b.death_enabled);
-    std::swap(a.last_insertion_time,b.last_insertion_time);
-    std::swap(a.simulated_cells,b.simulated_cells);
+    std::swap(a.cells, b.cells);
+    std::swap(a.duplication_enabled, b.duplication_enabled);
+    std::swap(a.death_enabled, b.death_enabled);
+    std::swap(a.last_insertion_time, b.last_insertion_time);
+    std::swap(a.simulated_cells, b.simulated_cells);
 }
 
 }   // Evolutions
