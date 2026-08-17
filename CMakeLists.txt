@@ -18,6 +18,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.30.0")
 cmake_policy(SET CMP0167 NEW)
 endif()
 add_compile_options(-Wall -Wextra -Wpedantic)
+add_link_options(-lstdc++fs)
 
 set(CLONES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp

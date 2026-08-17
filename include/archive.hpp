@@ -2,8 +2,8 @@
  * @file archive.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines some archive classes and their methods
- * @version 1.13
- * @date 2026-07-16
+ * @version 1.14
+ * @date 2026-08-17
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -42,6 +42,7 @@
 #include <chrono>
 #include <concepts>
 #include <algorithm>
+#include <iostream>
 
 #include "progress_bar.hpp"
 
