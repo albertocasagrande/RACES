@@ -18,7 +18,10 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.30.0")
 cmake_policy(SET CMP0167 NEW)
 endif()
 add_compile_options(-Wall -Wextra -Wpedantic)
-add_link_options(-lstdc++fs)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_link_options(-lstdc++fs)
+endif()
 
 set(CLONES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/allele.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/archive.cpp
