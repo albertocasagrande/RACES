@@ -2,8 +2,8 @@
  * @file binary_logger.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a binary simulation logger
- * @version 1.4
- * @date 2026-07-26
+ * @version 1.5
+ * @date 2026-08-25
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -52,7 +52,7 @@ namespace Evolutions
  * The objects of this class record cell duplications and
  * tissue status in binary files
  */
-struct BinaryLogger : public BasicLogger
+class BinaryLogger : public BasicLogger
 {
     Archive::Binary::Out cell_archive; //!< the current cell output file
     size_t cells_per_file;             //!< the number of cells to be saved before changing file
@@ -232,7 +232,7 @@ public:
      * @param simulation is the simulation whose snapshot is requested
      * @return the path of the snapshot file
      */
-    std::filesystem::path snapshot(const TissueSimulation& simulation);
+    std::filesystem::path snapshot(TissueSimulation& simulation);
 
     /**
      * @brief Flush archive data

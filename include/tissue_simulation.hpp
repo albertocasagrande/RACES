@@ -2,8 +2,8 @@
  * @file tissue_simulation.hpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Defines a tumour evolution simulation
- * @version 1.16
- * @date 2026-07-27
+ * @version 1.17
+ * @date 2026-08-25
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -1676,6 +1676,8 @@ public:
     }
 
     ~TissueSimulation();
+
+    friend std::filesystem::path BinaryLogger::snapshot(TissueSimulation&);
 };
 
 /* Template implementations */
@@ -1688,10 +1690,7 @@ void TissueSimulation::make_snapshot(INDICATOR *indicator)
             indicator->set_message("Saving snapshot");
         }
 
-        const auto snapshot_path = logger.snapshot(*this);
-        logger.flush_archives();
-
-        snapshot_info.emplace_back(*this, snapshot_path);
+        logger.snapshot(*this);
     }
 }
 

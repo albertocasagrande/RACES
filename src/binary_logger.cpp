@@ -2,8 +2,8 @@
  * @file binary_logger.cpp
  * @author Alberto Casagrande (alberto.casagrande@uniud.it)
  * @brief Implements a binary simulation logger
- * @version 1.6
- * @date 2026-07-26
+ * @version 1.7
+ * @date 2026-08-25
  *
  * @copyright Copyright (c) 2023-2026
  *
@@ -283,14 +283,23 @@ void BinaryLogger::record_initial_cell(const CellInTissue& cell)
     record_cell(cell);
 }
 
-
-std::filesystem::path BinaryLogger::snapshot(const TissueSimulation& simulation)
+std::filesystem::path BinaryLogger::snapshot(TissueSimulation& simulation)
 {
-    Archive::Binary::Out archive(get_snapshot_path());
+    flush_archives();
 
-    archive & simulation;
+    const auto snapshot_path = get_snapshot_path();
 
-    return archive.filepath;
+    {
+        Archive::Binary::Out archive(snapshot_path);
+
+        simulation.snapshot_info.emplace_back(simulation, snapshot_path);
+
+        archive & simulation;
+
+        archive.flush();
+    }
+
+    return snapshot_path;
 }
 
 void BinaryLogger::reset(const std::filesystem::path& output_directory)
